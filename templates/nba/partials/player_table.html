@@ -1,0 +1,77 @@
+<div id="player-table">
+  {% if players %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
+          <tr>
+            <th scope="col" class="px-4 py-3 font-medium">Spieler</th>
+            <th scope="col" class="px-4 py-3 font-medium">Position</th>
+            <th scope="col" class="px-4 py-3 font-medium">Team</th>
+            <th scope="col" class="px-4 py-3 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
+          {% for player in players %}
+            <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+              <td class="px-4 py-3 font-medium">{{ player.full_name }}</td>
+              <td class="px-4 py-3">
+                <span class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-primary-100 text-xs font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-300"
+                      title="{{ player.get_position_display }}">
+                  {{ player.position }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
+                {% if player.team %}
+                  <span class="font-medium text-neutral-500 dark:text-neutral-400">{{ player.team.abbreviation }}</span>
+                  <span class="ml-1.5">{{ player.team.name }}</span>
+                {% else %}
+                  <span class="text-neutral-400 dark:text-neutral-500">Free Agent</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3">
+                {% if player.is_active %}
+                  <span class="badge badge-success">Aktiv</span>
+                {% else %}
+                  <span class="badge badge-neutral">Inaktiv</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+      <div class="flex items-center justify-between border-t border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">
+        <span class="text-neutral-500 dark:text-neutral-400">
+          {{ page_obj.paginator.count }} Spieler · Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}
+        </span>
+        <div class="flex gap-2">
+          {% if page_obj.has_previous %}
+            <a href="{% querystring page=page_obj.previous_page_number %}"
+               class="btn btn-secondary !px-3 !py-1.5 text-xs">Zurück</a>
+          {% endif %}
+          {% if page_obj.has_next %}
+            <a href="{% querystring page=page_obj.next_page_number %}"
+               class="btn btn-secondary !px-3 !py-1.5 text-xs">Weiter</a>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <div class="border-t border-neutral-200 px-4 py-3 text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+        {{ players|length }} Spieler
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="px-4 py-16 text-center">
+      {% if request.GET.q or request.GET.position or request.GET.team %}
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">Keine Treffer für diese Filter.</p>
+      {% else %}
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">Noch keine Spieler vorhanden.</p>
+        <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+          Spieler kommen aus dem Import von basketball.de, der noch nicht gebaut ist.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

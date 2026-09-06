@@ -1,0 +1,39 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Anmelden · {{ SITE_NAME }}{% endblock %}
+{% block heading %}Willkommen zurück{% endblock %}
+{% block subheading %}
+  <p class="mt-1.5 text-sm text-neutral-500 dark:text-neutral-400">
+    Melde dich mit deiner E-Mail-Adresse an.
+  </p>
+{% endblock %}
+
+{% block content %}
+<form method="post" class="space-y-5">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+      {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+  {% endif %}
+
+  {% include "partials/form_field.html" with field=form.username %}
+  {% include "partials/form_field.html" with field=form.password %}
+
+  <input type="hidden" name="next" value="{{ next }}">
+  <button type="submit" class="btn btn-primary w-full">Anmelden</button>
+</form>
+
+<p class="text-center text-sm">
+  <a href="{% url 'accounts:password-reset' %}"
+     class="font-medium text-primary-600 transition hover:text-primary-700 dark:text-primary-400">
+    Passwort vergessen?
+  </a>
+</p>
+
+<p class="border-t border-neutral-200 pt-5 text-center text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+  Konten werden vom Team angelegt. Wende dich an eine Koordinatorin oder einen
+  Koordinator, wenn du noch keinen Zugang hast.
+</p>
+{% endblock %}

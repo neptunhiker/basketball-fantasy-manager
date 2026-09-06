@@ -1,0 +1,17 @@
+{% if messages %}
+  <div class="space-y-2" role="status" aria-live="polite">
+    {% for message in messages %}
+      <div x-data="{ shown: true }" x-show="shown" x-cloak
+           class="flex items-start gap-3 rounded-xl border px-4 py-3 text-sm
+             {% if message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300
+             {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300
+             {% elif message.tags == 'warning' %}border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300
+             {% else %}border-neutral-200 bg-white text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300{% endif %}">
+        <span class="flex-1">{{ message }}</span>
+        <button type="button" @click="shown = false"
+                class="shrink-0 opacity-50 transition hover:opacity-100"
+                aria-label="Meldung schließen">&times;</button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

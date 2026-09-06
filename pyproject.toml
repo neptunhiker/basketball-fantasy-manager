@@ -1,0 +1,43 @@
+[project]
+name = "crossover-manager"
+version = "0.1.0"
+description = "Coach-participant matching manager"
+requires-python = "==3.13.*"
+dependencies = [
+    "django>=5.2,<6.0",
+    "django-environ>=0.12",
+    "psycopg[binary]>=3.2",
+    "whitenoise[brotli]>=6.9",
+    "django-anymail[resend]>=13.0",
+    "django-q2>=1.8",
+    "django-htmx>=1.23",
+    "gunicorn>=23.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14",
+    "pytest>=8.3",
+    "pytest-django>=4.9",
+    "pytest-cov>=6.0",
+    "pre-commit>=4.0",
+    "model-bakery>=1.20",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "DJ", "SIM", "RUF"]
+ignore = ["RUF012"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["test_*.py"]
+addopts = "--reuse-db"
+testpaths = ["tests"]

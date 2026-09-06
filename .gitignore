@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Django
+*.sqlite3
+staticfiles/
+media/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Tailwind: the binary and the generated stylesheet are build artefacts
+.bin/
+static/css/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

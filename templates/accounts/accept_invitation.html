@@ -1,0 +1,23 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Einladung annehmen · {{ SITE_NAME }}{% endblock %}
+{% block heading %}Konto einrichten{% endblock %}
+{% block subheading %}
+  <p class="mt-1.5 text-sm text-neutral-500 dark:text-neutral-400">
+    Schön, dass du dabei bist. Wähle ein Passwort für
+    <span class="font-medium text-tertiary-700 dark:text-neutral-200">{{ invited_user.email }}</span>.
+  </p>
+{% endblock %}
+
+{% block content %}
+<form method="post" class="space-y-5">
+  {% csrf_token %}
+  <div class="grid gap-4 sm:grid-cols-2">
+    {% include "partials/form_field.html" with field=form.first_name %}
+    {% include "partials/form_field.html" with field=form.last_name %}
+  </div>
+  {% include "partials/form_field.html" with field=form.new_password1 %}
+  {% include "partials/form_field.html" with field=form.new_password2 %}
+  <button type="submit" class="btn btn-primary w-full">Konto aktivieren</button>
+</form>
+{% endblock %}

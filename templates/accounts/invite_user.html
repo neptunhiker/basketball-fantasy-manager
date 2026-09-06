@@ -1,0 +1,26 @@
+{% extends "app.html" %}
+
+{% block title %}Person einladen · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}Person einladen{% endblock %}
+
+{% block content %}
+<div class="card max-w-lg p-8">
+  <p class="mb-6 text-sm text-neutral-600 dark:text-neutral-300">
+    Die eingeladene Person erhält eine E-Mail mit einem Link und setzt ihr
+    Passwort selbst. Der Link ist {{ INVITATION_TIMEOUT_DAYS }} Tage gültig.
+  </p>
+  <form method="post" class="space-y-5">
+    {% csrf_token %}
+    <div class="grid gap-4 sm:grid-cols-2">
+      {% include "partials/form_field.html" with field=form.first_name %}
+      {% include "partials/form_field.html" with field=form.last_name %}
+    </div>
+    {% include "partials/form_field.html" with field=form.email %}
+    {% include "partials/form_field.html" with field=form.is_staff %}
+    <div class="flex gap-3 pt-2">
+      <button type="submit" class="btn btn-primary">Einladung senden</button>
+      <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">Abbrechen</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

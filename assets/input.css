@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/* Templates and Python files that can contain class names. */
+@source "../templates";
+@source "../apps";
+
+/* Dark mode is toggled by a class on <html>, not by the OS alone, so the
+   user's choice can win. See the theme toggle in templates/base.html. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand ------------------------------------------------------------- */
+  --color-primary-50: #f4f3ff;
+  --color-primary-100: #ebe9fe;
+  --color-primary-200: #d9d6fe;
+  --color-primary-300: #c0b8fd;
+  --color-primary-400: #a89dfd;
+  --color-primary-500: #948afc;
+  --color-primary-600: #7c5ef3;
+  --color-primary-700: #6a48df;
+  --color-primary-800: #593bbb;
+  --color-primary-900: #4b3499;
+  --color-primary-950: #2d1d68;
+
+  --color-secondary-50: #fff4fb;
+  --color-secondary-100: #ffe8f7;
+  --color-secondary-200: #ffd3ef;
+  --color-secondary-300: #ffc0e9;
+  --color-secondary-400: #fface4;
+  --color-secondary-500: #fb7fd0;
+  --color-secondary-600: #ee56b5;
+  --color-secondary-700: #d13a95;
+  --color-secondary-800: #ac3179;
+  --color-secondary-900: #8d2c63;
+  --color-secondary-950: #56123a;
+
+  --color-tertiary-50: #f2f3f8;
+  --color-tertiary-100: #e3e4ef;
+  --color-tertiary-200: #c8cadf;
+  --color-tertiary-300: #a3a7c8;
+  --color-tertiary-400: #7b80ac;
+  --color-tertiary-500: #5d6291;
+  --color-tertiary-600: #464a75;
+  --color-tertiary-700: #1a1b41;
+  --color-tertiary-800: #161735;
+  --color-tertiary-900: #12132b;
+  --color-tertiary-950: #0b0c1b;
+
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-200: #e7e7ea;
+  --color-neutral-300: #d3d3d9;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-500: #71717a;
+  --color-neutral-600: #52525b;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-800: #27272a;
+  --color-neutral-900: #18181b;
+  --color-neutral-950: #0e0e10;
+
+  /* Type -------------------------------------------------------------- */
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+
+  /* Motion — restrained by design. */
+  --ease-gentle: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Legacy CSS variable kept for anything referencing it directly. */
+:root {
+  --bl-primary-color: var(--color-primary-500);
+  --bl-secondary-color: var(--color-secondary-400);
+  --bl-tertiary-color: var(--color-tertiary-700);
+  --bl-gradient: linear-gradient(90deg, #948afc, #fface4);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-neutral-50 text-tertiary-700 antialiased;
+    @apply dark:bg-neutral-950 dark:text-neutral-100;
+    font-family: var(--font-sans);
+  }
+
+  /* Alpine hides these until it initialises. */
+  [x-cloak] {
+    display: none !important;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-500;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Buttons — compose as `btn btn-primary`. Tailwind v4 cannot @apply a class
+     defined in the same layer, so the variants only add colour. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm
+      font-semibold transition duration-150 focus-visible:outline-2
+      focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    transition-timing-function: var(--ease-gentle);
+  }
+
+  .btn-primary {
+    @apply bg-primary-500 text-white shadow-sm hover:bg-primary-600
+      focus-visible:outline-primary-500;
+  }
+
+  .btn-secondary {
+    @apply border border-neutral-300 bg-white text-tertiary-700 shadow-sm
+      hover:bg-neutral-100 focus-visible:outline-primary-500
+      dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100
+      dark:hover:bg-neutral-800;
+  }
+
+  .btn-ghost {
+    @apply text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700
+      dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:outline-red-600;
+  }
+
+  /* Surfaces ---------------------------------------------------------- */
+  .card {
+    @apply rounded-2xl border border-neutral-200 bg-white shadow-sm
+      dark:border-neutral-800 dark:bg-neutral-900;
+  }
+
+  .form-label {
+    @apply mb-1.5 block text-sm font-medium text-tertiary-700 dark:text-neutral-200;
+  }
+
+  .form-error {
+    @apply mt-1.5 text-sm text-red-600 dark:text-red-400;
+  }
+
+  .form-help {
+    @apply mt-1.5 text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  /* Badges — compose as `badge badge-success`. */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400;
+  }
+
+  .badge-pending {
+    @apply bg-secondary-100 text-secondary-800 dark:bg-secondary-500/10
+      dark:text-secondary-300;
+  }
+
+  .badge-neutral {
+    @apply bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300;
+  }
+
+  /* The one place the brand gradient appears: thin accents, never fills. */
+  .gradient-rule {
+    background: var(--bl-gradient);
+  }
+}

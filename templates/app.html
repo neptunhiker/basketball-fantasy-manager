@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% comment %}Shell for signed-in pages: sidebar navigation plus content area.{% endcomment %}
+
+{% block body %}
+<div class="flex min-h-full" x-data="{ navOpen: false }">
+
+  {# Sidebar #}
+  <aside class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full border-r border-neutral-200 bg-white transition-transform duration-200 lg:translate-x-0 dark:border-neutral-800 dark:bg-neutral-900"
+         :class="navOpen && 'translate-x-0'">
+    <div class="flex h-16 items-center gap-2.5 px-6">
+      <span class="gradient-rule h-7 w-7 shrink-0 rounded-lg" aria-hidden="true"></span>
+      <span class="text-sm font-bold tracking-tight">{{ SITE_NAME }}</span>
+    </div>
+    <div class="gradient-rule mx-6 h-px"></div>
+
+    <nav class="space-y-1 px-3 py-5" aria-label="Hauptnavigation">
+      {% url 'core:dashboard' as dashboard_url %}
+      <a href="{{ dashboard_url }}"
+         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+           {% if request.path == dashboard_url %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
+        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>
+          <rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>
+        </svg>
+        Übersicht
+      </a>
+
+      {% url 'nba:team-list' as teams_url %}
+      <a href="{{ teams_url }}"
+         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+           {% if teams_url in request.path %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
+        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path stroke-linecap="round" d="M12 3v18M3 12h18M5.6 5.6a12.7 12.7 0 0 0 12.8 12.8M18.4 5.6a12.7 12.7 0 0 1-12.8 12.8"/>
+        </svg>
+        Teams
+      </a>
+
+      {% url 'nba:player-list' as players_url %}
+      <a href="{{ players_url }}"
+         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+           {% if players_url in request.path %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
+        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+        </svg>
+        Spieler
+      </a>
+
+      {% if request.user.is_staff %}
+        {% url 'accounts:user-list' as users_url %}
+        <a href="{{ users_url }}"
+           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+             {% if users_url in request.path %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
+          <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM22 20v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Benutzer
+        </a>
+      {% endif %}
+    </nav>
+
+    <div class="absolute inset-x-0 bottom-0 border-t border-neutral-200 p-3 dark:border-neutral-800">
+      <a href="{% url 'accounts:profile' %}"
+         class="flex items-center gap-3 rounded-lg px-3 py-2 transition hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">
+          {{ request.user.initials }}
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-medium">{{ request.user.display_name }}</span>
+          <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">{{ request.user.email }}</span>
+        </span>
+      </a>
+    </div>
+  </aside>
+
+  {# Backdrop for the mobile sidebar #}
+  <div x-show="navOpen" x-cloak @click="navOpen = false"
+       class="fixed inset-0 z-30 bg-tertiary-900/40 lg:hidden"></div>
+
+  {# Main column #}
+  <div class="flex min-w-0 flex-1 flex-col lg:pl-64">
+    <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-neutral-200 bg-neutral-50/80 px-4 backdrop-blur sm:px-6 dark:border-neutral-800 dark:bg-neutral-950/80">
+      <button type="button" @click="navOpen = !navOpen" class="btn btn-ghost h-9 w-9 !px-0 lg:hidden"
+              aria-label="Navigation umschalten">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      <h1 class="min-w-0 flex-1 truncate text-base font-semibold">{% block page_title %}{% endblock %}</h1>
+      {% block header_actions %}{% endblock %}
+      {% include "partials/theme_toggle.html" %}
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost">Abmelden</button>
+      </form>
+    </header>
+
+    <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-5xl space-y-6">
+        {% include "partials/messages.html" %}
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

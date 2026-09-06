@@ -1,0 +1,12 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Einladung ungültig · {{ SITE_NAME }}{% endblock %}
+{% block heading %}Einladung ungültig{% endblock %}
+
+{% block content %}
+<p class="text-sm text-neutral-600 dark:text-neutral-300">
+  Dieser Einladungslink ist abgelaufen oder wurde bereits verwendet. Bitte dein
+  Team, dir eine neue Einladung zu schicken.
+</p>
+<a href="{% url 'accounts:login' %}" class="btn btn-secondary w-full">Zur Anmeldung</a>
+{% endblock %}

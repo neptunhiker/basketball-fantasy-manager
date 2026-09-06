@@ -1,0 +1,21 @@
+# Local development: Postgres only. Run Django on the host with `uv run`.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: crossover
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      # 5432 is taken by another local project; this one uses 5433 on the host.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crossover"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

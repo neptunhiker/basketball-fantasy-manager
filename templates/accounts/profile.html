@@ -1,0 +1,33 @@
+{% extends "app.html" %}
+
+{% block title %}Profil · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}Profil{% endblock %}
+
+{% block content %}
+<div class="card p-8">
+  <div class="flex items-center gap-4">
+    <span class="flex h-14 w-14 items-center justify-center rounded-full bg-primary-100 text-lg font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">
+      {{ request.user.initials }}
+    </span>
+    <div>
+      <p class="font-semibold">{{ request.user.display_name }}</p>
+      <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ request.user.email }}</p>
+    </div>
+  </div>
+
+  <dl class="mt-8 grid gap-x-8 gap-y-4 border-t border-neutral-200 pt-6 sm:grid-cols-2 dark:border-neutral-800">
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">Rolle</dt>
+      <dd class="mt-1 text-sm">{% if request.user.is_superuser %}Administration{% elif request.user.is_staff %}Team{% else %}Coach{% endif %}</dd>
+    </div>
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">Dabei seit</dt>
+      <dd class="mt-1 text-sm">{{ request.user.date_joined|date:"j. F Y" }}</dd>
+    </div>
+  </dl>
+
+  <div class="mt-8 border-t border-neutral-200 pt-6 dark:border-neutral-800">
+    <a href="{% url 'accounts:password-change' %}" class="btn btn-secondary">Passwort ändern</a>
+  </div>
+</div>
+{% endblock %}

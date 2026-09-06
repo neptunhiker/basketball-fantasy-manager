@@ -1,0 +1,14 @@
+Hallo{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+{% if invited_by_name %}{{ invited_by_name }} hat{% else %}Wir haben{% endif %} dich zu {{ site_name }} eingeladen.
+
+Über diesen Link richtest du dein Konto ein und wählst ein Passwort:
+
+{{ invitation_url }}
+
+Der Link ist {{ expiry_days }} Tage gültig und kann nur einmal verwendet werden.
+
+Wenn du damit nichts anfangen kannst, ignoriere diese E-Mail einfach.
+
+Viele Grüße
+{{ site_name }}

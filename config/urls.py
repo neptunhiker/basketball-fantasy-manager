@@ -11,6 +11,6 @@ urlpatterns = [
     path("", include("apps.core.urls")),
 ]
 
-admin.site.site_header = "Crossover Manager"
-admin.site.site_title = "Crossover Manager"
+admin.site.site_header = "Basketball Fantasy Manager"
+admin.site.site_title = "Basketball Fantasy Manager"
 admin.site.index_title = "Verwaltung"

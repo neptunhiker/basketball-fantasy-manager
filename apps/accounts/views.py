@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth import views as auth_views
@@ -44,6 +45,9 @@ class PasswordResetView(auth_views.PasswordResetView):
     email_template_name = "accounts/email/password_reset_body.txt"
     subject_template_name = "accounts/email/password_reset_subject.txt"
     success_url = reverse_lazy("accounts:password-reset-done")
+    # Without the sites framework Django would fall back to the bare hostname
+    # here, so the mail would sign off as "127.0.0.1:8000".
+    extra_email_context = {"site_name": settings.SITE_NAME}
 
 
 class PasswordResetDoneView(auth_views.PasswordResetDoneView):

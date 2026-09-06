@@ -119,7 +119,7 @@ Q_CLUSTER = {
     "label": "Hintergrundaufgaben",
 }
 
-SITE_NAME = "Crossover Manager"
+SITE_NAME = "Basketball Fantasy Manager"
 
 LOGGING = {
     "version": 1,

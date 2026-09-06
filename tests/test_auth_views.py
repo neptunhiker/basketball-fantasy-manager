@@ -88,3 +88,13 @@ def test_healthz(client):
     response = client.get("/healthz")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+
+
+def test_password_reset_email_signs_off_with_the_product_name(client, user, settings):
+    """Django renders this mail without a request, so the context processor that
+    normally supplies SITE_NAME never runs. Without extra_email_context it would
+    fall back to the bare hostname and sign off as "testserver"."""
+    client.post(reverse("accounts:password-reset"), {"email": user.email})
+    body = mail.outbox[0].body
+    assert body.rstrip().endswith(settings.SITE_NAME)
+    assert "testserver" not in body.rstrip().splitlines()[-1]

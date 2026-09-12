@@ -13,7 +13,7 @@
     </div>
     <div class="gradient-rule mx-6 h-px"></div>
 
-    <nav class="space-y-1 px-3 py-5" aria-label="Hauptnavigation">
+    <nav class="space-y-1 px-3 py-5" aria-label="Main navigation">
       {% url 'core:dashboard' as dashboard_url %}
       <a href="{{ dashboard_url }}"
          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
@@ -22,7 +22,7 @@
           <rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>
           <rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>
         </svg>
-        Übersicht
+        Overview
       </a>
 
       {% url 'nba:team-list' as teams_url %}
@@ -43,7 +43,39 @@
         <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
         </svg>
-        Spieler
+        Players
+      </a>
+
+      {% url 'fantasy:roster-list' as rosters_url %}
+      <a href="{{ rosters_url }}"
+         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+           {% if rosters_url in request.path %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
+        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 4h6l1 4H8l1-4ZM6 8h12l-1.2 11a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8Z"/>
+        </svg>
+        Rosters
+      </a>
+
+      {% url 'fantasy:manager-list' as managers_url %}
+      <a href="{{ managers_url }}"
+         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+           {% if managers_url in request.path %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
+        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 15a2.5 2.5 0 0 1 5 0M9.5 10.5a1 1 0 1 0 0-.01M15 10h3M15 13.5h3"/>
+        </svg>
+        Managers
+      </a>
+
+      {% url 'fantasy:season-list' as seasons_url %}
+      <a href="{{ seasons_url }}"
+         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+           {% if seasons_url in request.path %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
+        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="16" rx="2"/>
+          <path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/>
+        </svg>
+        Seasons
       </a>
 
       {% if request.user.is_staff %}
@@ -54,21 +86,21 @@
           <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM22 20v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          Benutzer
+          Users
         </a>
       {% endif %}
     </nav>
 
     <div class="absolute inset-x-0 bottom-0 border-t border-neutral-200 p-3 dark:border-neutral-800">
-      <a href="{% url 'accounts:profile' %}"
+      {# The email is on the title rather than on screen: it answers "which #}
+      {# account is this" often enough to keep, but not often enough to spend #}
+      {# a line on -- and it was the only thing this card used to say twice. #}
+      <a href="{% url 'accounts:profile' %}" title="{{ request.user.email }}"
          class="flex items-center gap-3 rounded-lg px-3 py-2 transition hover:bg-neutral-100 dark:hover:bg-neutral-800">
         <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">
           {{ request.user.initials }}
         </span>
-        <span class="min-w-0 flex-1">
-          <span class="block truncate text-sm font-medium">{{ request.user.display_name }}</span>
-          <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">{{ request.user.email }}</span>
-        </span>
+        <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ request.user.abbreviated_name }}</span>
       </a>
     </div>
   </aside>
@@ -79,9 +111,15 @@
 
   {# Main column #}
   <div class="flex min-w-0 flex-1 flex-col lg:pl-64">
-    <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-neutral-200 bg-neutral-50/80 px-4 backdrop-blur sm:px-6 dark:border-neutral-800 dark:bg-neutral-950/80">
+    {# `gap-2 px-3` below `sm`, and the roomier spacing from there. The bar #}
+    {# carries up to eight children on a page like the roster builder, and #}
+    {# six gaps at 12px plus 32px of padding put it 38px over a 320px #}
+    {# screen: `Sign out` fell off the right edge and took the whole page #}
+    {# into a sideways scroll with it. The title already truncates to #}
+    {# nothing, so it was the spacing, not the content, that did not fit. #}
+    <header class="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-neutral-200 bg-neutral-50/80 px-3 backdrop-blur sm:gap-3 sm:px-4 lg:px-6 dark:border-neutral-800 dark:bg-neutral-950/80">
       <button type="button" @click="navOpen = !navOpen" class="btn btn-ghost h-9 w-9 !px-0 lg:hidden"
-              aria-label="Navigation umschalten">
+              aria-label="Toggle navigation">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
@@ -91,7 +129,19 @@
       {% include "partials/theme_toggle.html" %}
       <form method="post" action="{% url 'accounts:logout' %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-ghost">Abmelden</button>
+        {# The icon alone below `sm`, the words from there. Even with the #}
+        {# tighter spacing above, eight children and the word "Sign out" do #}
+        {# not fit a 320px screen, and this is the one of them whose meaning #}
+        {# an icon carries on its own. `aria-label` either way, so the button #}
+        {# says the same thing at every width to anything that is not #}
+        {# looking at it. #}
+        <button type="submit" aria-label="Sign out"
+                class="btn btn-ghost h-9 w-9 !px-0 sm:h-auto sm:w-auto sm:!px-3">
+          <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/>
+          </svg>
+          <span class="hidden sm:inline">Sign out</span>
+        </button>
       </form>
     </header>
 
@@ -103,4 +153,7 @@
     </main>
   </div>
 </div>
+
+{# Every modal is loaded in here. See templates/partials/modal.html. #}
+<div id="modal-root"></div>
 {% endblock %}

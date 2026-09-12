@@ -1,0 +1,91 @@
+{% extends "app.html" %}
+
+{% block title %}{{ roster.name }} · {{ SITE_NAME }}{% endblock %}
+
+{% block page_title %}
+  {# The name and the handle on one line, so the content below the header #}
+  {# starts at the content. `min-w-0` on the wrapper and `flex-1` on the #}
+  {# rename form are what let the name truncate instead of pushing the #}
+  {# handle out of the bar. #}
+  <span class="flex min-w-0 items-baseline gap-2.5">
+    {% include "fantasy/partials/roster_name.html" %}
+    {# Below `md` the bar is already full -- Trade, History, Rules, delete, #}
+    {# theme and Sign out -- so this steps aside there and the copy in the #}
+    {# content block takes over. Exactly one of the two is ever shown. #}
+    <span class="hidden shrink-0 items-baseline gap-1.5 text-xs font-normal text-neutral-500 md:flex dark:text-neutral-400">
+      Managed by
+      {# Links to Managers, which is where the handle can be renamed -- and #}
+      {# is the only screen that lists the account's other profiles. #}
+      <a href="{% url 'fantasy:manager-list' %}"
+         class="max-w-32 truncate font-medium text-tertiary-700 transition hover:text-primary-600 dark:text-neutral-200 dark:hover:text-primary-300">{{ roster.manager.nick_name }}</a>
+    </span>
+  </span>
+{% endblock %}
+
+{% block header_actions %}
+  {# Never disabled on an empty roster: this header is not re-rendered after a #}
+  {# buy, so a disabled button would stay disabled. The modal says so instead. #}
+  {# Icons below `sm`, words from there -- the same trade arrows the squad #}
+  {# rows use, so the small screen keeps the meaning without the width. #}
+  {# Without this the bar's seven children left the roster name 38px at #}
+  {# 390px and nothing at all at 320px: a page about one team that could #}
+  {# not say which team. `aria-label` on both, at every width. #}
+  <button type="button"
+          hx-get="{% url 'fantasy:roster-trade' roster.pk %}"
+          hx-target="#modal-root"
+          hx-swap="innerHTML"
+          aria-label="Trade"
+          class="btn btn-secondary h-9 w-9 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3">
+    <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
+    </svg>
+    <span class="hidden sm:inline">Trade</span>
+  </button>
+  <a href="{% url 'fantasy:roster-history' roster.pk %}"
+     aria-label="History"
+     class="btn btn-ghost h-9 w-9 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3">
+    <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/>
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5V12l3 2"/>
+    </svg>
+    <span class="hidden sm:inline">History</span>
+  </a>
+  <a href="{% url 'fantasy:roster-rules' roster.pk %}" class="btn btn-ghost hidden text-xs sm:inline-flex">
+    Rules
+  </a>
+  <button type="button"
+          hx-get="{% url 'fantasy:roster-delete' roster.pk %}"
+          hx-target="#modal-root"
+          hx-swap="innerHTML"
+          class="btn btn-ghost !px-2 text-neutral-400 hover:text-red-600 dark:hover:text-red-400"
+          aria-label="Delete roster">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/>
+    </svg>
+  </button>
+{% endblock %}
+
+{% block content %}
+{# The narrow-screen half of the header's `Managed by`. Not a duplicate on #}
+{# screen: this hides at `md` exactly where the header's copy appears, so #}
+{# the fact is stated once at every width. #}
+{# `mb-2` so it sits with the team card below rather than floating in the #}
+{# middle of the wrapper's `space-y-6`. It has to be a positive margin: #}
+{# Tailwind v4 compiles `space-y-6` to a `margin-block-end` on this element #}
+{# inside a `:where()`, which has no specificity, so any `mb-*` here #}
+{# *replaces* the 24px rather than adjusting it -- `-mb-2` set the gap to #}
+{# minus eight pixels and the card sat on top of this line. #}
+<p class="mb-2 flex min-w-0 items-baseline gap-1.5 text-xs text-neutral-500 md:hidden dark:text-neutral-400">
+  Managed by
+  <a href="{% url 'fantasy:manager-list' %}"
+     class="truncate font-medium text-tertiary-700 transition hover:text-primary-600 dark:text-neutral-200 dark:hover:text-primary-300">{{ roster.manager.nick_name }}</a>
+</p>
+
+{# Stacked, not columns, and the order is the argument: this page is about a #}
+{# team, so the team comes first at full width, and the market you change it #}
+{# in follows. The two used to sit side by side, which cost the squad two #}
+{# thirds of the page and left the roster reading as a sidebar to a search #}
+{# result. Spacing comes from the wrapper's `space-y-6` in app.html. #}
+{% include "fantasy/partials/roster_panel.html" %}
+{% include "fantasy/partials/player_picker.html" %}
+{% endblock %}

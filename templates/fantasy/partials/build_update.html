@@ -1,0 +1,8 @@
+{% comment %}
+  Response to a buy or a sell. Both halves of the page change: the team card
+  obviously, and the picker below it because the player moved between the two
+  and a new balance re-marks what is affordable.
+  The team card is the primary target; the picker rides along out of band.
+{% endcomment %}
+{% include "fantasy/partials/roster_panel.html" %}
+{% include "fantasy/partials/player_picker.html" with oob=True %}

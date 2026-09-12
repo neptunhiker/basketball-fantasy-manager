@@ -1,0 +1,13 @@
+{% extends "partials/modal.html" %}
+
+{% comment %}
+  The shell for the trade screen. Everything that changes as the user picks the
+  two sides lives in `partials/trade_body.html`, which swaps itself -- so this
+  template is fetched once per trade and the modal's open animation runs once.
+{% endcomment %}
+
+{% block modal_title %}Trade{% endblock %}
+
+{% block modal_content %}
+  {% include "fantasy/partials/trade_body.html" %}
+{% endblock %}

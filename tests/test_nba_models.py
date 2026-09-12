@@ -1,5 +1,6 @@
 import pytest
 from django.db.utils import IntegrityError
+from django.utils import timezone
 
 from apps.nba.models import Player, Team
 
@@ -72,3 +73,79 @@ def test_deleting_a_team_keeps_its_players(lakers):
     lakers.delete()
     player.refresh_from_db()
     assert player.team is None
+
+
+def test_hotness_score_counts_increases_and_equals_in_recent_snapshots(db):
+    from datetime import date, timedelta
+
+    from apps.fantasy.models import PlayerSnapshot, Season
+
+    season = Season.objects.create(
+        label="2025-26", starts_on=date(2025, 10, 1), ends_on=date(2026, 6, 30), is_current=True
+    )
+    player = Player.objects.create(last_name="Form", position=Player.Position.GUARD)
+    values = [10, 12, 12, 9, 11]
+    for index, fp_per_game in enumerate(values):
+        PlayerSnapshot.objects.create(
+            player=player,
+            season=season,
+            as_of=timezone.now() + timedelta(days=index),
+            salary=1,
+            total_fp=fp_per_game * (index + 1),
+            games_played=index + 1,
+            position=player.position,
+        )
+
+    assert player.hotness_score() == "2/4"
+
+
+def test_hotness_score_uses_only_the_latest_eleven_snapshots(db):
+    from datetime import date, timedelta
+
+    from apps.fantasy.models import PlayerSnapshot, Season
+
+    season = Season.objects.create(
+        label="2025-26", starts_on=date(2025, 10, 1), ends_on=date(2026, 6, 30), is_current=True
+    )
+    player = Player.objects.create(last_name="Recent", position=Player.Position.GUARD)
+    for index in range(12):
+        PlayerSnapshot.objects.create(
+            player=player,
+            season=season,
+            as_of=timezone.now() + timedelta(days=index),
+            salary=1,
+            total_fp=(index + 1) * (index + 1),
+            games_played=index + 1,
+            position=player.position,
+        )
+
+    assert player.hotness_score() == "10/10"
+
+
+def test_hotness_score_does_not_compare_across_seasons(db):
+    from datetime import date, timedelta
+
+    from apps.fantasy.models import PlayerSnapshot, Season
+
+    prior = Season.objects.create(
+        label="2024-25", starts_on=date(2024, 10, 1), ends_on=date(2025, 6, 30)
+    )
+    current = Season.objects.create(
+        label="2025-26", starts_on=date(2025, 10, 1), ends_on=date(2026, 6, 30), is_current=True
+    )
+    player = Player.objects.create(last_name="Seasonal", position=Player.Position.GUARD)
+    for season, day, total_fp, games in [
+        (prior, 1, 100, 10),
+        (current, 2, 10, 1),
+    ]:
+        PlayerSnapshot.objects.create(
+            player=player,
+            season=season,
+            as_of=timezone.now() + timedelta(days=day),
+            salary=1,
+            total_fp=total_fp,
+            games_played=games,
+            position=player.position,
+        )
+
+    assert player.hotness_score() is None

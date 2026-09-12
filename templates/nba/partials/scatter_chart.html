@@ -1,0 +1,116 @@
+{% load l10n %}
+<div x-data="{ selected: null, select(point) { this.selected = point.dataset } }"
+  class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] md:items-stretch">
+  <div class="min-w-0">
+    <svg viewBox="0 0 {{ chart.width|unlocalize }} {{ chart.height|unlocalize }}"
+      class="h-64 w-full"
+      role="img"
+      aria-label="{{ chart_label }}">
+  <g class="text-neutral-300 dark:text-neutral-700">
+    {% for tick in chart.x_ticks %}
+      <line x1="{{ tick.x|unlocalize }}" y1="{{ chart.plot_top|unlocalize }}"
+            x2="{{ tick.x|unlocalize }}" y2="{{ chart.plot_bottom|unlocalize }}"
+            stroke="currentColor" stroke-width="1" stroke-dasharray="3 4" />
+    {% endfor %}
+    {% for tick in chart.y_ticks %}
+      <line x1="{{ chart.plot_left|unlocalize }}" y1="{{ tick.y|unlocalize }}"
+            x2="{{ chart.plot_right|unlocalize }}" y2="{{ tick.y|unlocalize }}"
+            stroke="currentColor" stroke-width="1" stroke-dasharray="3 4" />
+    {% endfor %}
+  </g>
+
+  <g class="text-neutral-400 dark:text-neutral-500" fill="currentColor" font-size="12">
+    {% for tick in chart.y_ticks %}
+      <text x="{{ chart.label_right|unlocalize }}" y="{{ tick.y|unlocalize }}"
+            text-anchor="end" dominant-baseline="middle">${{ tick.value|floatformat:"-2g" }}M</text>
+    {% endfor %}
+    {% for tick in chart.x_ticks %}
+      <text x="{{ tick.x|unlocalize }}" y="{{ chart.label_bottom|unlocalize }}"
+            text-anchor="middle">{{ tick.value|floatformat:"-2g" }}</text>
+    {% endfor %}
+    <text x="{{ chart.plot_left|unlocalize }}" y="{{ chart.height|unlocalize }}"
+          text-anchor="start" font-size="11">{{ x_axis_label }}</text>
+    <text x="{{ chart.plot_left|unlocalize }}" y="10"
+          text-anchor="start" font-size="11">{{ y_axis_label }}</text>
+  </g>
+
+  <g class="text-secondary-400 dark:text-secondary-300">
+    {% for dot in chart.dots %}
+      <g>
+        <circle class="chart-hit"
+          cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="12"
+          tabindex="0"
+          role="button"
+          aria-label="{{ dot.label }}"
+          data-label="{{ dot.label }}"
+          data-ppg="{{ dot.x_value|floatformat:'2g' }}"
+          data-salary="{{ dot.y_value|floatformat:'2g' }}"
+          data-expected-salary="{{ dot.expected_salary|floatformat:'2g' }}"
+          data-detail-url="{{ dot.detail_url }}"
+          data-total-fp="{{ dot.total_fp|floatformat:'2g' }}"
+          data-games-played="{{ dot.games_played|default:'–' }}"
+          data-difference="{{ dot.difference|floatformat:'2g' }}"
+          data-hotness="{{ dot.hotness|default:'–' }}"
+          @mouseenter="select($el)"
+          @focus="select($el)" />
+        <circle class="chart-halo"
+                cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="10"
+                fill="currentColor" />
+        <circle class="chart-dot fill-white dark:fill-neutral-900"
+          cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="3"
+          stroke="currentColor" stroke-width="1.5" />
+        <text class="chart-readout fill-neutral-900 stroke-white dark:fill-white dark:stroke-neutral-900"
+              x="{{ dot.x|unlocalize }}" y="{{ dot.y|unlocalize }}"
+              text-anchor="middle" dy="-12" font-size="11" font-weight="600"
+              paint-order="stroke" stroke-width="4">{{ dot.label }}</text>
+      </g>
+    {% endfor %}
+    </g>
+    </svg>
+  </div>
+
+  <aside class="flex min-h-64 flex-col justify-center border-t border-neutral-200 pt-4 dark:border-neutral-800 md:border-l md:border-t-0 md:pl-4 md:pt-0"
+         aria-live="polite">
+    <div x-show="!selected" class="text-sm text-neutral-500 dark:text-neutral-400">
+      <p class="font-medium text-neutral-700 dark:text-neutral-200">Player details</p>
+      <p class="mt-1 text-xs leading-5">Hover over a point or focus it to inspect the player.</p>
+    </div>
+    <div x-show="selected" x-cloak>
+      <h3 class="mt-1 text-base font-semibold text-neutral-900 dark:text-white">
+        <a :href="selected?.detailUrl"
+           class="hover:text-primary-600 hover:underline dark:hover:text-primary-400"
+           x-text="selected?.label"></a>
+      </h3>
+      <dl class="mt-4 space-y-3 text-sm">
+        <div class="flex items-baseline justify-between gap-4">
+          <dt class="text-neutral-500 dark:text-neutral-400">Points per game</dt>
+          <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white"><span x-text="selected?.ppg"></span></dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4">
+          <dt class="text-neutral-500 dark:text-neutral-400">Actual salary</dt>
+          <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white">$<span x-text="selected?.salary"></span>M</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4">
+          <dt class="text-neutral-500 dark:text-neutral-400">Expected salary</dt>
+          <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white">$<span x-text="selected?.expectedSalary"></span>M</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4">
+          <dt class="text-neutral-500 dark:text-neutral-400">Difference</dt>
+          <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white">$<span x-text="selected?.difference"></span>M</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4">
+          <dt class="text-neutral-500 dark:text-neutral-400">Points</dt>
+          <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white" x-text="selected?.totalFp || '–'"></dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4">
+          <dt class="text-neutral-500 dark:text-neutral-400">Games played</dt>
+          <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white" x-text="selected?.gamesPlayed || '–'"></dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4">
+          <dt class="text-neutral-500 dark:text-neutral-400">Hotness</dt>
+          <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white" x-text="selected?.hotness || '–'"></dd>
+        </div>
+      </dl>
+    </div>
+  </aside>
+</div>

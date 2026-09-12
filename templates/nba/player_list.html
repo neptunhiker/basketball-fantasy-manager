@@ -1,23 +1,23 @@
 {% extends "app.html" %}
 
-{% block title %}Spieler · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Spieler{% endblock %}
+{% block title %}Players · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}Players{% endblock %}
 
 {% block content %}
 <div class="card overflow-hidden">
   <form class="border-b border-neutral-200 p-4 dark:border-neutral-800"
         hx-get="{% url 'nba:player-list' %}"
-        hx-trigger="input changed delay:300ms from:input[type=search], change from:select, change from:input[type=checkbox], search"
+        hx-trigger="input changed delay:300ms from:input[type=search], input changed delay:300ms from:input[type=number], change from:select, change from:input[type=checkbox], search"
         hx-target="#player-table"
         hx-swap="outerHTML"
         hx-push-url="true"
         hx-indicator="#player-indicator">
 
-    <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+    <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto]">
       <div>
-        <label for="player-search" class="sr-only">Nach Namen suchen</label>
+        <label for="player-search" class="sr-only">Search by name</label>
         <input type="search" id="player-search" name="q" value="{{ request.GET.q|default:'' }}"
-               placeholder="Nach Namen suchen…"
+               placeholder="Search by name…"
                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
       </div>
 
@@ -25,7 +25,7 @@
         <label for="player-position" class="sr-only">Position</label>
         <select id="player-position" name="position"
                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-          <option value="">Alle Positionen</option>
+          <option value="">All positions</option>
           {% for value, label in positions %}
             <option value="{{ value }}" {% if request.GET.position == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
@@ -36,21 +36,47 @@
         <label for="player-team" class="sr-only">Team</label>
         <select id="player-team" name="team"
                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-          <option value="">Alle Teams</option>
+          <option value="">All teams</option>
           {% for team in teams %}
             <option value="{{ team.abbreviation }}" {% if request.GET.team == team.abbreviation %}selected{% endif %}>{{ team.name }}</option>
           {% endfor %}
         </select>
       </div>
+
+      <div>
+        <label for="player-roster" class="sr-only">Roster</label>
+        <select id="player-roster" name="roster"
+                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+          <option value="">All players</option>
+          {% for roster in rosters %}
+            <option value="{{ roster.pk }}" {% if request.GET.roster == roster.pk|stringformat:'s' %}selected{% endif %}>{{ roster.name }}{% if rosters|length > 1 %} · {{ roster.manager.nick_name }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="player-max-salary" class="sr-only">Maximum salary in millions</label>
+        <input type="number" id="player-max-salary" name="max_salary"
+               value="{{ request.GET.max_salary|default:'' }}" min="0" step="0.1"
+               placeholder="Max salary ($M)"
+               class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+      </div>
     </div>
 
     <div class="mt-3 flex items-center justify-between gap-3">
-      <label class="flex cursor-pointer items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-        <input type="checkbox" name="inactive" value="1" {% if request.GET.inactive %}checked{% endif %}
-               class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
-        Auch inaktive Spieler anzeigen
-      </label>
-      <span id="player-indicator" class="htmx-indicator text-xs text-neutral-500">Suche läuft…</span>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <input type="checkbox" name="inactive" value="1" {% if request.GET.inactive %}checked{% endif %}
+                 class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
+          Include inactive players
+        </label>
+        <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <input type="checkbox" name="min_games" value="6" {% if request.GET.min_games == "6" %}checked{% endif %}
+                 class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
+          At least 6 games
+        </label>
+      </div>
+      <span id="player-indicator" class="htmx-indicator text-xs text-neutral-500">Searching…</span>
     </div>
   </form>
 

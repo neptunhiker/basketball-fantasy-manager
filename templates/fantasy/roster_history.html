@@ -1,0 +1,184 @@
+{% extends "app.html" %}
+{% load money %}
+
+{% comment %}
+  The roster's ledger. Read top to bottom it is the newest move first, which is
+  what someone coming to check "what did I just do" wants -- but the balance
+  column is computed forward from the start of the season in the view, so the
+  figure on any row is the balance that move produced, not a running total of
+  the rows above it.
+
+  The reconciliation banner is the reason the column is here at all: `cash` is a
+  stored balance and these rows are what moved it, so the two agreeing is a
+  claim worth showing rather than assuming.
+{% endcomment %}
+
+{% block title %}History · {{ roster.name }} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{{ roster.name }}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'fantasy:roster-build' roster.pk %}" class="btn btn-secondary text-xs">
+    Back to roster
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-6">
+
+  {# What the log adds up to #}
+  <div class="card overflow-hidden">
+    <div class="gradient-rule h-1"></div>
+    <div class="p-6">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
+            {{ roster.season.label }}
+          </p>
+          <h2 class="mt-1 text-xl font-bold tracking-tight">History</h2>
+          <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            Every buy, sell and trade, exactly as it was recorded.
+          </p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Cash</p>
+          <p class="text-2xl font-bold tabular-nums" title="{{ roster.cash|exact }}">
+            {{ roster.cash|millions }}
+          </p>
+        </div>
+      </div>
+
+      <dl class="mt-6 grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-4">
+        <div>
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">Starting cash</dt>
+          <dd class="mt-0.5 font-medium tabular-nums" title="{{ starting_cash|exact }}">
+            {{ starting_cash|millions }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">Buys</dt>
+          <dd class="mt-0.5 font-medium tabular-nums">{{ counts.BUY|default:0 }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">Sells</dt>
+          <dd class="mt-0.5 font-medium tabular-nums">{{ counts.SELL|default:0 }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">Trades</dt>
+          <dd class="mt-0.5 font-medium tabular-nums">{{ counts.TRADE|default:0 }}</dd>
+        </div>
+      </dl>
+
+      {% if rows %}
+        {% if reconciles %}
+          <p class="mt-6 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-800 dark:bg-green-500/10 dark:text-green-300">
+            Starting cash plus all {{ rows|length }} moves comes to exactly the
+            {{ roster.cash|millions }} the roster holds.
+          </p>
+        {% else %}
+          {# Unreachable through the service layer, which writes membership, #}
+          {# cash and the log in one atomic block. If this ever shows, #}
+          {# something wrote around it -- so it says so rather than hiding. #}
+          <p class="mt-6 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800 dark:bg-red-500/10 dark:text-red-200"
+             role="alert">
+            The history comes to {{ ledger_balance|millions }} but the roster holds
+            {{ roster.cash|millions }}. An entry is missing.
+          </p>
+        {% endif %}
+      {% endif %}
+
+      {% if unpriced %}
+        <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+          {{ unpriced }} move{{ unpriced|pluralize }} {{ unpriced|pluralize:"was,were" }} recorded
+          before the individual prices were kept — those rows show the net cash flow only.
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# The ledger itself #}
+  <div class="card overflow-hidden">
+    {% if rows %}
+      {# Seven columns do not fit a phone, so the table scrolls inside the card #}
+      {# rather than pushing the page sideways. #}
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[44rem] text-sm">
+          <thead>
+            <tr class="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+              <th scope="col" class="px-4 py-3 font-medium">When</th>
+              <th scope="col" class="px-3 py-3 font-medium">Kind</th>
+              <th scope="col" class="px-3 py-3 font-medium">Player out</th>
+              <th scope="col" class="px-3 py-3 font-medium">Player in</th>
+              <th scope="col" class="px-3 py-3 text-right font-medium">Cash flow</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">Cash after</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
+            {% for row in rows %}
+              <tr class="align-top">
+                <td class="whitespace-nowrap px-4 py-3 text-neutral-500 dark:text-neutral-400">
+                  {{ row.move.occurred_at|date:"M j, Y" }}
+                  <span class="block text-xs">{{ row.move.occurred_at|date:"H:i" }}</span>
+                </td>
+                <td class="px-3 py-3">
+                  <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-semibold
+                    {% if row.move.kind == 'BUY' %}
+                      bg-primary-100 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300
+                    {% elif row.move.kind == 'SELL' %}
+                      bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300
+                    {% else %}
+                      bg-secondary-100 text-secondary-700 dark:bg-secondary-400/15 dark:text-secondary-300
+                    {% endif %}">
+                    {{ row.move.get_kind_display }}
+                  </span>
+                </td>
+                <td class="px-3 py-3">
+                  {% if row.move.player_out %}
+                    <span class="block font-medium">{{ row.move.player_out.full_name }}</span>
+                    <span class="block text-xs tabular-nums text-neutral-500 dark:text-neutral-400"
+                          title="{{ row.move.price_out|exact }}">
+                      {{ row.move.price_out|millions }}
+                    </span>
+                  {% else %}
+                    <span class="text-neutral-300 dark:text-neutral-600">–</span>
+                  {% endif %}
+                </td>
+                <td class="px-3 py-3">
+                  {% if row.move.player_in %}
+                    <span class="block font-medium">{{ row.move.player_in.full_name }}</span>
+                    <span class="block text-xs tabular-nums text-neutral-500 dark:text-neutral-400"
+                          title="{{ row.move.price_in|exact }}">
+                      {{ row.move.price_in|millions }}
+                    </span>
+                  {% else %}
+                    <span class="text-neutral-300 dark:text-neutral-600">–</span>
+                  {% endif %}
+                </td>
+                <td class="whitespace-nowrap px-3 py-3 text-right tabular-nums"
+                    title="{{ row.move.cash_delta|exact }}">
+                  {% if row.move.cash_delta > 0 %}+{% endif %}{{ row.move.cash_delta|millions }}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums"
+                    title="{{ row.balance|exact }}">
+                  {{ row.balance|millions }}
+                </td>
+              </tr>
+            {% endfor %}
+            <tr class="bg-neutral-50 text-neutral-500 dark:bg-neutral-900/60 dark:text-neutral-400">
+              <td class="px-4 py-3" colspan="4">Season start</td>
+              <td class="px-3 py-3"></td>
+              <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums"
+                  title="{{ starting_cash|exact }}">
+                {{ starting_cash|millions }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="px-5 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+        No moves yet. As soon as you buy a player, it shows up here.
+      </p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

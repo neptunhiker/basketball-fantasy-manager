@@ -1,0 +1,175 @@
+{% extends "app.html" %}
+{% load money %}
+
+{% block title %}{{ player.full_name }} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{{ player.full_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="card overflow-hidden">
+    <div class="gradient-rule h-1"></div>
+    <div class="flex flex-wrap items-center gap-4 p-5 sm:p-6">
+      <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-lg font-bold text-primary-700 dark:bg-primary-500/15 dark:text-primary-300"
+            title="{{ player.get_position_display }}">
+        {{ player.position }}
+      </span>
+      <div class="min-w-0 flex-1">
+        <h2 class="text-xl font-bold tracking-tight">{{ player.full_name }}</h2>
+        <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
+          {{ player.get_position_display }}
+          {% if player.team %}
+            ·
+            <a href="{% url 'nba:team-detail' player.team.abbreviation|lower %}"
+               class="hover:text-primary-600 hover:underline dark:hover:text-primary-400">{{ player.team.name }}</a>
+          {% else %}
+            · <span class="text-neutral-400 dark:text-neutral-500">Free Agent</span>
+          {% endif %}
+          {% if not player.is_active %}<span class="badge badge-neutral ml-1">Inactive</span>{% endif %}
+        </p>
+      </div>
+      <a href="{% url 'nba:player-list' %}" class="btn btn-secondary shrink-0">All players</a>
+    </div>
+
+    <div class="grid grid-cols-2 gap-px border-t border-neutral-200 bg-neutral-200 sm:grid-cols-6 dark:border-neutral-800 dark:bg-neutral-800">
+      <div class="bg-white p-4 dark:bg-neutral-900">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">Current salary</p>
+        <p class="mt-1 text-lg font-bold tabular-nums" title="{{ player.current_salary|exact }}">
+          {{ player.current_salary|millions }}
+        </p>
+        {% if salary_since_first is not None %}
+          {# What these weeks did to his price -- the one figure a trade decision starts from. #}
+          <p class="mt-0.5 text-xs">
+            {% include "nba/partials/change.html" with value=salary_since_first unit="money" %}
+            <span class="text-neutral-400 dark:text-neutral-500">since {{ first_as_of|date:"M j" }}</span>
+          </p>
+        {% endif %}
+      </div>
+      <div class="bg-white p-4 dark:bg-neutral-900">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">Expected salary</p>
+        <p class="mt-1 text-lg font-bold tabular-nums" title="Based on current points per game">
+          {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
+        </p>
+      </div>
+      <div class="bg-white p-4 dark:bg-neutral-900">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">Points per game</p>
+        <p class="mt-1 text-lg font-bold tabular-nums">
+          {{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}
+        </p>
+      </div>
+      <div class="bg-white p-4 dark:bg-neutral-900">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">Points total</p>
+        <p class="mt-1 text-lg font-bold tabular-nums">
+          {{ player.current_total_fp|floatformat:"2g"|default:"–" }}
+        </p>
+      </div>
+      <div class="bg-white p-4 dark:bg-neutral-900">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">Games</p>
+        <p class="mt-1 text-lg font-bold tabular-nums">
+          {{ player.current_games_played|default_if_none:"–" }}
+        </p>
+      </div>
+      <div class="bg-white p-4 dark:bg-neutral-900">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">Hotness</p>
+        <p class="mt-1 text-lg font-bold tabular-nums" title="Increases in points per game across the latest snapshots">
+          {{ hotness_score|default:"–" }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card overflow-hidden">
+    <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+      <h2 class="text-sm font-semibold">Snapshots</h2>
+      <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+        One row per read, the newest on top, each with the change from the read below it.
+        The time is shown because the source can be read more than once a day.
+      </p>
+    </div>
+
+    <div class="border-b border-neutral-200 px-4 pb-2 pt-4 dark:border-neutral-800">
+      <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        Points per game across the season
+      </h3>
+
+      {% if fp_chart %}
+        {% include "nba/partials/line_chart.html" with chart=fp_chart chart_id="fp-per-game" chart_label="Points per game for "|add:player.full_name %}
+      {% else %}
+        <p class="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+          A trend line needs at least two snapshots with games played.
+        </p>
+      {% endif %}
+    </div>
+
+    {% if rows %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
+            <tr>
+              <th scope="col" class="px-4 py-3 font-medium">As of</th>
+              <th scope="col" class="px-4 py-3 font-medium">Team</th>
+              <th scope="col" class="px-4 py-3 font-medium">Pos.</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">Salary</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">Points</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">Avg/game</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">Games</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
+            {% for row in rows %}
+              <tr class="align-top transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                <td class="whitespace-nowrap px-4 py-3">
+                  <span class="font-medium">{{ row.snapshot.as_of|date:"M j, Y" }}</span>
+                  <span class="block text-xs text-neutral-400 dark:text-neutral-500">
+                    {{ row.snapshot.as_of|date:"D, H:i" }} · {{ row.snapshot.season.label }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
+                  {% if row.snapshot.team %}
+                    {# The team as the source reported it that Sunday: a move stays visible. #}
+                    <a href="{% url 'nba:team-detail' row.snapshot.team.abbreviation|lower %}"
+                       class="font-medium hover:text-primary-600 hover:underline dark:hover:text-primary-400"
+                       title="{{ row.snapshot.team.name }}">{{ row.snapshot.team.abbreviation }}</a>
+                  {% else %}
+                    <span class="text-neutral-400 dark:text-neutral-500">–</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">{{ row.snapshot.position }}</td>
+                <td class="px-4 py-3 text-right tabular-nums">
+                  <span class="font-medium" title="{{ row.snapshot.salary|exact }}">{{ row.snapshot.salary|millions }}</span>
+                  <span class="block text-xs">{% include "nba/partials/change.html" with value=row.salary_change unit="money" %}</span>
+                </td>
+                <td class="px-4 py-3 text-right tabular-nums">
+                  <span class="font-medium">{{ row.snapshot.total_fp|floatformat:"2g" }}</span>
+                  <span class="block text-xs">{% include "nba/partials/change.html" with value=row.total_fp_change unit="points" %}</span>
+                </td>
+                <td class="px-4 py-3 text-right tabular-nums">
+                  <span class="font-medium">{{ row.snapshot.fp_per_game|floatformat:"2g"|default:"–" }}</span>
+                  <span class="block text-xs">{% include "nba/partials/change.html" with value=row.fp_per_game_change unit="points" %}</span>
+                </td>
+                <td class="px-4 py-3 text-right tabular-nums">
+                  <span class="font-medium">{{ row.snapshot.games_played }}</span>
+                  <span class="block text-xs">{% include "nba/partials/change.html" with value=row.games_played_change unit="count" %}</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="border-t border-neutral-200 px-4 py-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+        {{ rows|length }} snapshot{{ rows|length|pluralize }}. Points and games are season
+        totals, so they grow from one snapshot to the next.
+      </div>
+    {% else %}
+      <div class="px-4 py-16 text-center">
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">
+          No snapshots on record for {{ player.full_name }} yet.
+        </p>
+        <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+          Snapshots come from the basketball.de import, which is not built yet.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

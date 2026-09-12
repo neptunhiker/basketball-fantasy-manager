@@ -1,0 +1,211 @@
+{% load money %}
+{# Two elements under the id, not one. The strip below has to stay pinned #}
+{# for the whole length of the market, and `position: sticky` is bounded by #}
+{# its containing block: inside the card it would be clipped by #}
+{# `overflow-hidden`, and inside `#roster-panel` above it would come #}
+{# unstuck exactly where the market begins. So the id moves out here and #}
+{# carries both halves. It is still the one swap target it always was -- #}
+{# the filter form's, and the out-of-band half of every buy, sell and #}
+{# trade -- so the strip's figures are re-rendered by the same responses #}
+{# that re-render the rows, with no second target to keep in step. #}
+<div id="player-picker" class="space-y-3" {% if oob %}hx-swap-oob="outerHTML"{% endif %}>
+
+  {# What the market is read against, kept in view. The team card states all #}
+  {# of this far more fully, and then scrolls away the moment you start #}
+  {# scanning the list -- which is exactly when it starts mattering. Pinned #}
+  {# under the app header, which is `h-16` and `border-box`, so `top-16` #}
+  {# lands flush against it at every width. `z-10` sits below the header's #}
+  {# `z-20` and above the rows it floats over. #}
+  {# Opaque, not the header's translucent treatment: this floats over dense #}
+  {# rows of names and salaries, and a translucent version leans on #}
+  {# `backdrop-filter` to keep them from ghosting through its own figures. #}
+  {# Where that does not composite the numbers are read against other #}
+  {# numbers, which is the one thing a strip of figures must not do. #}
+  <div class="sticky top-16 z-10 rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-sm sm:px-4 dark:border-neutral-800 dark:bg-neutral-900">
+    {# One row that is allowed to wrap, rather than figures that get hidden #}
+    {# by width. All of it fits on a line from about 360px, and below that #}
+    {# the badges drop to a second line on their own -- so nothing has to be #}
+    {# dropped on a small screen, and no breakpoint has to be guessed at. #}
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs sm:gap-x-4">
+
+      <p class="flex items-baseline gap-1.5">
+        <span class="text-neutral-500 dark:text-neutral-400">Cash</span>
+        {# A step up in size from its label and from everything beside it: #}
+        {# this is the one figure the strip exists for. #}
+        <span class="text-sm font-bold tabular-nums {% if roster.cash == 0 %}text-neutral-400 dark:text-neutral-500{% endif %}"
+              title="{{ roster.cash|exact }}">{{ roster.cash|millions }}</span>
+      </p>
+
+      <p class="flex items-baseline gap-1.5">
+        <span class="text-neutral-500 dark:text-neutral-400">Players</span>
+        <span class="font-semibold tabular-nums">{{ roster.player_count }} / {{ roster_size }}</span>
+      </p>
+
+      {# The positions are what earns this strip its height: cash says what #}
+      {# is affordable, these say what to look for. Same order and the same #}
+      {# codes as the sections in the team card, so the two read as one #}
+      {# statement rather than two summaries that have to be reconciled. #}
+      {# `sm:ml-auto` only: pushed to the far edge where there is room for #}
+      {# it, left with everything else on the line it wraps onto. #}
+      <ul class="flex flex-wrap items-center gap-1.5 sm:ml-auto">
+        {% for group in squad %}
+          {# Green once the minimum is met, quiet while it is not -- the #}
+          {# fraction says how far off, so no room goes on saying it twice. #}
+          {# Amber for a group with no minimum at all: that is a position #}
+          {# the app does not know, and it should not read as satisfied. #}
+          <li class="badge {% if not group.minimum %}badge-warning{% elif group.short %}badge-neutral{% else %}badge-success{% endif %}">
+            {# The letter for the eye, the word for a screen reader, which #}
+            {# would otherwise be read the bare initial. `sr-only` is #}
+            {# absolutely positioned, so it costs no gap in the flex row. #}
+            <span aria-hidden="true" class="font-bold">{{ group.code }}</span>
+            <span class="sr-only">{{ group.label }}</span>
+            <span class="tabular-nums">
+              {% if group.minimum %}{{ group.count }}/{{ group.minimum }}{% else %}{{ group.count }}{% endif %}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="card overflow-hidden">
+
+    {% if not signings_open %}
+      {# Said at the top of the thing that changed, rather than as a page-wide #}
+      {# banner: the list below is still useful, it just does something else now. #}
+      <p class="border-b border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+        Signings closed on {{ signings_close_at|date:"j F" }} at {{ signings_close_at|date:"H:i" }}.
+        A roster can still change shape through trades, but not size — so these
+        rows offer a swap rather than a signing.
+        {% if not roster.is_complete %}
+          {# The consequence, named plainly. `missing` will keep listing these #}
+          {# positions for the rest of the season and nothing can now fill them. #}
+          <span class="mt-1 block font-medium">
+            This roster is short at {{ roster.player_count }} of {{ roster_size }},
+            and a trade cannot add a player — so it stays short for the season.
+          </span>
+        {% endif %}
+      </p>
+    {% elif signings_close_at %}
+      <p class="border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+        Signings close on {{ signings_close_at|date:"j F" }} at {{ signings_close_at|date:"H:i" }}.
+        Every roster has to be complete by then: after it, trades can change who
+        is on a roster but not how many.
+      </p>
+    {% endif %}
+
+    <form id="picker-filters" class="border-b border-neutral-200 p-4 dark:border-neutral-800"
+          hx-get="{% url 'fantasy:roster-build' roster.pk %}"
+          hx-trigger="input changed delay:300ms from:input[type=search], change from:select, search"
+          hx-target="#player-picker"
+          hx-swap="outerHTML"
+          hx-indicator="#picker-indicator">
+      <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+        <div>
+          <label for="picker-search" class="sr-only">Search by name</label>
+          <input type="search" id="picker-search" name="q" value="{{ filters.q }}"
+                 placeholder="Search by name…"
+                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+        </div>
+        <div>
+          <label for="picker-position" class="sr-only">Position</label>
+          <select id="picker-position" name="position"
+                  class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+            <option value="">All positions</option>
+            {% for value, label in positions %}
+              <option value="{{ value }}" {% if filters.position == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="picker-team" class="sr-only">Team</label>
+          <select id="picker-team" name="team"
+                  class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+            <option value="">All teams</option>
+            {% for team in teams %}
+              <option value="{{ team.abbreviation }}" {% if filters.team == team.abbreviation %}selected{% endif %}>{{ team.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <span id="picker-indicator" class="htmx-indicator mt-2 block text-xs text-neutral-500">Searching…</span>
+    </form>
+
+    {% if available %}
+      <ul class="divide-y divide-neutral-200 dark:divide-neutral-800">
+        {% for player in available %}
+          {# Dimmed only while cash is the constraint. After signings close a #}
+          {# trade nets the two salaries, so what this roster can reach depends #}
+          {# on who it sends out -- unknowable until the modal, which does that #}
+          {# arithmetic properly. So the marking stops rather than mislead. #}
+          <li class="flex items-center gap-3 px-4 py-2.5 {% if signings_open and not player.affordable %}opacity-55{% endif %}">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+              {{ player.position }}
+            </span>
+            <span class="min-w-0 flex-1">
+              {# Reachable before signing, not only after: deciding whether a #}
+              {# salary is worth paying is exactly when the detail page is #}
+              {# wanted. Same link as the squad rows above and the Players #}
+              {# table. The row's `opacity-55` when unaffordable dims this too, #}
+              {# which is right -- out of reach to sign is still worth reading. #}
+              <a href="{% url 'nba:player-detail' player.slug %}"
+                 class="block truncate text-sm font-medium hover:text-primary-600 hover:underline dark:hover:text-primary-400">{{ player.full_name }}</a>
+              <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
+                {% if player.team %}{{ player.team.abbreviation }} · {{ player.team.name }}{% else %}Free Agent{% endif %}
+              </span>
+            </span>
+            <span class="shrink-0 text-sm tabular-nums {% if player.affordable or not signings_open %}font-medium{% else %}text-neutral-400 dark:text-neutral-500{% endif %}"
+                  title="{{ player.current_salary|exact }}">
+              {{ player.current_salary|millions }}
+            </span>
+
+            {% if not signings_open %}
+              {# The picker's whole purpose after the cutoff: this is how you #}
+              {# find an incoming player. `?in=` is the same query parameter the #}
+              {# squad panel's trade icon uses for the outgoing side. #}
+              <button type="button"
+                      hx-get="{% url 'fantasy:roster-trade' roster.pk %}?in={{ player.pk }}"
+                      hx-target="#modal-root"
+                      hx-swap="innerHTML"
+                      class="btn btn-secondary !px-2.5 !py-1 text-xs"
+                      aria-label="Trade for {{ player.full_name }}">
+                Trade for
+              </button>
+            {% elif roster.is_complete %}
+              <button type="button" disabled class="btn btn-secondary !px-2.5 !py-1 text-xs opacity-50"
+                      title="The roster is full">Full</button>
+            {% elif player.affordable %}
+              <button type="button"
+                      hx-post="{% url 'fantasy:roster-buy' roster.pk player.pk %}"
+                      hx-target="#roster-panel"
+                      hx-swap="outerHTML"
+                      hx-include="#picker-filters"
+                      class="btn btn-primary !px-2.5 !py-1 text-xs"
+                      aria-label="Sign {{ player.full_name }}">
+                Sign
+              </button>
+            {% else %}
+              <button type="button" disabled class="btn btn-secondary !px-2.5 !py-1 text-xs opacity-50"
+                      title="Not enough cash">Too dear</button>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="px-4 py-16 text-center">
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">
+          {% if filters.q or filters.position or filters.team %}
+            Nothing matches those filters.
+          {% else %}
+            No players with a salary on record.
+          {% endif %}
+        </p>
+        {% if not filters.q and not filters.position and not filters.team %}
+          <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+            Salaries come from the snapshots. Without one, a player cannot be signed.
+          </p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,21 @@
+{% comment %}
+Sortable column header. Usage:
+  {% include "nba/partials/sort_header.html" with key="salary" label="Salary" align="right" %}
+Clicking toggles direction when the column is already active, otherwise starts ascending.
+{% endcomment %}
+{% if current_sort == key %}
+  {% if current_dir == "asc" %}
+    {% querystring sort=key dir="desc" page=None as sort_url %}
+  {% else %}
+    {% querystring sort=key dir="asc" page=None as sort_url %}
+  {% endif %}
+{% else %}
+  {% querystring sort=key dir="asc" page=None as sort_url %}
+{% endif %}
+<a href="{{ sort_url }}"
+   class="group inline-flex items-center gap-1 {% if align == 'right' %}justify-end{% endif %} hover:text-primary-600 dark:hover:text-primary-400{% if current_sort == key %} text-primary-600 dark:text-primary-400{% endif %}">
+  <span>{{ label }}</span>
+  <span class="text-[10px] leading-none {% if current_sort != key %}opacity-0 group-hover:opacity-40{% endif %}">
+    {% if current_sort == key and current_dir == "desc" %}&#9660;{% else %}&#9650;{% endif %}
+  </span>
+</a>

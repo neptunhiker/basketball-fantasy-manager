@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth import views as auth_views
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
@@ -14,12 +14,15 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
-from django.views.generic import CreateView, FormView, ListView, TemplateView, View
+from django.views.generic import CreateView, FormView, ListView, UpdateView, View
+
+from apps.core.views import StaffRequiredMixin
 
 from .forms import (
     AcceptInvitationForm,
     EmailAuthenticationForm,
     InvitationForm,
+    ProfileForm,
     StyledPasswordResetForm,
     StyledSetPasswordForm,
 )
@@ -69,19 +72,35 @@ class PasswordChangeView(LoginRequiredMixin, auth_views.PasswordChangeView):
     success_url = reverse_lazy("accounts:profile")
 
     def form_valid(self, form):
-        messages.success(self.request, _("Dein Passwort wurde geändert."))
+        messages.success(self.request, _("Your password has been changed."))
         return super().form_valid(form)
 
 
-class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Only team members manage other people's accounts."""
+class ProfileView(LoginRequiredMixin, UpdateView):
+    """Your own account: shows the name and lets you change it, and the address.
 
-    def test_func(self):
-        return self.request.user.is_staff
+    An `UpdateView` with no pk in the URL. `get_object` returns the signed-in
+    user and nothing else, which is what keeps this safe without a permission
+    check: there is no identifier in the request for anyone to swap, so the
+    only account reachable here is your own.
+    """
 
-
-class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/profile.html"
+    form_class = ProfileForm
+    success_url = reverse_lazy("accounts:profile")
+    # Otherwise the object would land in the context as `user` and shadow the
+    # auth context processor's. Same object today, but the template reads
+    # `request.user` and should keep meaning the session.
+    context_object_name = "account"
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def form_valid(self, form):
+        # Changing the address does not sign you out: Django's session hash is
+        # built from the password, which this form does not touch.
+        messages.success(self.request, _("Your details have been saved."))
+        return super().form_valid(form)
 
 
 class UserListView(StaffRequiredMixin, ListView):
@@ -113,7 +132,7 @@ class InviteUserView(StaffRequiredMixin, CreateView):
         invite_user(self.object, self.request, invited_by=self.request.user)
         messages.success(
             self.request,
-            _("Einladung an %(email)s wurde verschickt.") % {"email": self.object.email},
+            _("Invitation sent to %(email)s.") % {"email": self.object.email},
         )
         return response
 
@@ -126,12 +145,12 @@ class ResendInvitationView(StaffRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         user = get_object_or_404(User, pk=kwargs["pk"])
         if user.has_accepted_invitation:
-            messages.info(request, _("Diese Person hat die Einladung bereits angenommen."))
+            messages.info(request, _("That person has already accepted their invitation."))
         else:
             invite_user(user, request, invited_by=request.user)
             messages.success(
                 request,
-                _("Einladung an %(email)s wurde erneut verschickt.") % {"email": user.email},
+                _("Invitation resent to %(email)s.") % {"email": user.email},
             )
         return redirect("accounts:user-list")
 
@@ -192,7 +211,7 @@ class AcceptInvitationView(FormView):
         user = form.save()
         self.request.session.pop(self.session_token_key, None)
         login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
-        messages.success(self.request, _("Willkommen! Dein Konto ist jetzt aktiv."))
+        messages.success(self.request, _("Welcome! Your account is now active."))
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):

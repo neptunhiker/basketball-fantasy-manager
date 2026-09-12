@@ -59,6 +59,29 @@ def test_display_name_falls_back_to_email(user, staff_user):
     assert staff_user.display_name == "Mia Berger"
 
 
+def test_abbreviated_name_shortens_the_surname(staff_user):
+    staff_user.last_name = "Berger"
+    assert staff_user.abbreviated_name == "Mia B."
+
+
+def test_abbreviated_name_keeps_a_lone_surname_whole(user):
+    """ "B." on its own identifies nobody, so there is nothing to shorten."""
+    user.first_name = ""
+    user.last_name = "Berger"
+    assert user.abbreviated_name == "Berger"
+
+
+def test_abbreviated_name_uses_the_given_name_alone(staff_user):
+    assert staff_user.last_name == ""
+    assert staff_user.abbreviated_name == "Mia"
+
+
+def test_abbreviated_name_falls_back_to_the_address(user):
+    """An invited account has no name yet, and the card must not be blank."""
+    assert user.first_name == "" and user.last_name == ""
+    assert user.abbreviated_name == "coach"
+
+
 def test_initials(user, staff_user):
     assert user.initials == "C"
     staff_user.last_name = "Berger"

@@ -1,0 +1,36 @@
+{% load money %}
+{% comment %}
+  One card of descriptive statistics, driven entirely by a `card` dict from
+  apps.nba.views._card: title, unit ("money" or "points"), rows of
+  (label, value) pairs, and an optional footnote.
+
+  Money carries the exact amount in a `title`, because the millions display is
+  rounded to two decimals and the hover is where the real figure lives.
+{% endcomment %}
+<div class="card p-5">
+  <h2 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+    {{ card.title }}
+  </h2>
+
+  {% if card.rows %}
+    <dl class="mt-4 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
+      {% for label, value in card.rows %}
+        <div class="flex items-baseline justify-between gap-4 py-2 first:pt-0 last:pb-0">
+          <dt class="text-neutral-500 dark:text-neutral-400">{{ label }}</dt>
+          <dd class="font-semibold tabular-nums"
+              {% if card.unit == "money" %}title="{{ value|exact }}"{% endif %}>
+            {% if card.unit == "money" %}{{ value|millions }}{% else %}{{ value|floatformat:"2g" }}{% endif %}
+          </dd>
+        </div>
+      {% endfor %}
+    </dl>
+    {% if card.footnote %}
+      <p class="mt-3 text-xs text-neutral-400 dark:text-neutral-500">{{ card.footnote }}</p>
+    {% endif %}
+  {% else %}
+    <p class="mt-4 text-sm text-neutral-500 dark:text-neutral-400">No values yet.</p>
+    <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+      The figures come from the newest snapshot.
+    </p>
+  {% endif %}
+</div>

@@ -1,25 +1,25 @@
 {% extends "app.html" %}
 
-{% block title %}Benutzer · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Benutzer{% endblock %}
+{% block title %}Users · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}Users{% endblock %}
 
 {% block header_actions %}
-  <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary hidden sm:inline-flex">Einladen</a>
+  <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary hidden sm:inline-flex">Invite</a>
 {% endblock %}
 
 {% block content %}
 <div class="card overflow-hidden">
   <div class="border-b border-neutral-200 p-4 dark:border-neutral-800">
-    <label for="user-search" class="sr-only">Nach E-Mail-Adresse suchen</label>
+    <label for="user-search" class="sr-only">Search by email address</label>
     <input type="search" id="user-search" name="q" value="{{ request.GET.q|default:'' }}"
-           placeholder="Nach E-Mail-Adresse suchen…"
+           placeholder="Search by email address…"
            hx-get="{% url 'accounts:user-list' %}"
            hx-trigger="input changed delay:300ms, search"
            hx-target="#user-table"
            hx-swap="outerHTML"
            hx-indicator="#search-indicator"
            class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-    <span id="search-indicator" class="htmx-indicator mt-2 block text-xs text-neutral-500">Suche läuft…</span>
+    <span id="search-indicator" class="htmx-indicator mt-2 block text-xs text-neutral-500">Searching…</span>
   </div>
 
   {% include "accounts/partials/user_table.html" %}

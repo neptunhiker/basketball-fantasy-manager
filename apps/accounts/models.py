@@ -12,23 +12,23 @@ class User(AbstractBaseUser, PermissionsMixin):
     """A staff member, coordinator or coach. Identified by email, never a username."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(_("E-Mail-Adresse"), unique=True)
-    first_name = models.CharField(_("Vorname"), max_length=150, blank=True)
-    last_name = models.CharField(_("Nachname"), max_length=150, blank=True)
+    email = models.EmailField(_("Email address"), unique=True)
+    first_name = models.CharField(_("First name"), max_length=150, blank=True)
+    last_name = models.CharField(_("Last name"), max_length=150, blank=True)
 
     is_active = models.BooleanField(
-        _("aktiv"),
+        _("Active"),
         default=True,
-        help_text=_("Deaktivieren statt löschen, um Konten zu sperren."),
+        help_text=_("Deactivate instead of deleting to lock an account out."),
     )
     is_staff = models.BooleanField(
-        _("Team-Mitglied"),
+        _("Team member"),
         default=False,
-        help_text=_("Legt fest, ob sich die Person im Admin-Bereich anmelden darf."),
+        help_text=_("Whether this person may sign in to the admin site."),
     )
 
-    date_joined = models.DateTimeField(_("beigetreten am"), default=timezone.now)
-    last_invited_at = models.DateTimeField(_("zuletzt eingeladen am"), null=True, blank=True)
+    date_joined = models.DateTimeField(_("Joined"), default=timezone.now)
+    last_invited_at = models.DateTimeField(_("Last invited"), null=True, blank=True)
 
     objects = UserManager()
 
@@ -37,8 +37,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     class Meta:
-        verbose_name = _("Benutzer")
-        verbose_name_plural = _("Benutzer")
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
         ordering = ["email"]
 
     def __str__(self):
@@ -62,6 +62,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     def display_name(self):
         """What to show in the UI: a real name if we have one, else the email."""
         return self.get_full_name()
+
+    @property
+    def abbreviated_name(self):
+        """A name for somewhere narrow, like the sidebar: `Sebastian S.`
+
+        Shortens the surname rather than the given name, because the given name
+        is the half people are addressed by. Falls back through whatever is
+        actually known: a surname alone stays whole, since "S." on its own
+        identifies nobody, and an account with no name at all shows the local
+        part of its address so the card is never blank.
+        """
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name[0].upper()}."
+        return self.first_name or self.last_name or self.email.split("@")[0]
 
     @property
     def initials(self):

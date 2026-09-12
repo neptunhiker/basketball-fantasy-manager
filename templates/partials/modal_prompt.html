@@ -1,0 +1,75 @@
+{% extends "partials/modal.html" %}
+{% comment %}
+  A modal that asks for one short piece of text -- a name, a label, a note --
+  and optionally for one choice to go with it. Driven entirely by context, so a
+  new one needs a view and no template at all. Subclass
+  apps.core.views.PromptView and set the strings.
+
+  Context: title, body, action_url, field_label, field_name, value, placeholder,
+  max_length, help_text, submit_label, cancel_label, error, and for the choice:
+  choice_name, choice_label, choice_help, choices, choice_value.
+
+  `choices` empty leaves the select out entirely, so a prompt with nothing to
+  decide stays the single field it always was.
+
+  The submit button stays disabled while the field is empty. That is a
+  courtesy, not the gate -- the view validates the value again server-side, and
+  the same goes for the choice: a rendered <option> list constrains the browser
+  and nothing else.
+{% endcomment %}
+
+{% block modal_title %}{{ title }}{% endblock %}
+
+{% block modal_content %}
+  <form hx-post="{{ action_url }}"
+        hx-target="#modal-root"
+        hx-swap="innerHTML"
+        x-data="{ typed: '{{ value|escapejs }}' }">
+    {% csrf_token %}
+
+    {% if body %}<p>{{ body }}</p>{% endif %}
+
+    <label for="modal-prompt-input" class="form-label {% if body %}mt-5 {% endif %}block">
+      {{ field_label }}
+    </label>
+    <input type="text" id="modal-prompt-input" name="{{ field_name }}"
+           value="{{ value }}" maxlength="{{ max_length }}"
+           placeholder="{{ placeholder }}"
+           x-model="typed" data-autofocus
+           autocomplete="off" spellcheck="false"
+           aria-describedby="{% if error %}modal-prompt-error{% elif help_text %}modal-prompt-help{% endif %}"
+           class="mt-1.5 block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 dark:bg-neutral-900 dark:text-neutral-100 {% if error %}border-red-400 focus:border-red-500 focus:ring-red-500/30 dark:border-red-500/50{% else %}border-neutral-300 focus:border-primary-500 focus:ring-primary-500/30 dark:border-neutral-700{% endif %}">
+
+    {% if error %}
+      <p id="modal-prompt-error" class="form-error mt-1.5" role="alert">{{ error }}</p>
+    {% elif help_text %}
+      <p id="modal-prompt-help" class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">{{ help_text }}</p>
+    {% endif %}
+
+    {% if choices %}
+      <label for="modal-prompt-choice" class="form-label mt-5 block">{{ choice_label }}</label>
+      <select id="modal-prompt-choice" name="{{ choice_name }}"
+              aria-describedby="{% if choice_help %}modal-prompt-choice-help{% endif %}"
+              class="mt-1.5 block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+        {% for option_value, option_label in choices %}
+          <option value="{{ option_value }}"
+                  {% if option_value == choice_value %}selected{% endif %}>{{ option_label }}</option>
+        {% endfor %}
+      </select>
+      {% if choice_help %}
+        <p id="modal-prompt-choice-help" class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+          {{ choice_help }}
+        </p>
+      {% endif %}
+    {% endif %}
+
+    <div class="modal-actions">
+      <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">
+        {{ cancel_label|default:"Cancel" }}
+      </button>
+      <button type="submit" class="btn btn-primary" :disabled="!typed.trim()">
+        {{ submit_label|default:"Save" }}
+      </button>
+    </div>
+  </form>
+{% endblock %}

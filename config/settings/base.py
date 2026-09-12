@@ -32,6 +32,7 @@ LOCAL_APPS = [
     "apps.accounts",
     "apps.core",
     "apps.nba",
+    "apps.fantasy",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -90,7 +91,7 @@ AUTH_PASSWORD_VALIDATORS = [
 INVITATION_TIMEOUT_DAYS = env.int("INVITATION_TIMEOUT_DAYS", default=14)
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 3  # 3 days
 
-LANGUAGE_CODE = "de"
+LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Europe/Berlin"
 USE_I18N = True
 USE_TZ = True

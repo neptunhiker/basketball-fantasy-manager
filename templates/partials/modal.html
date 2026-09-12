@@ -1,0 +1,70 @@
+{% comment %}
+  Reusable modal shell. Never rendered on its own -- extend it:
+
+      {% extends "partials/modal.html" %}
+      {% block modal_title %}Delete this roster?{% endblock %}
+      {% block modal_content %}
+        <p>…</p>
+        <div class="modal-actions">…</div>
+      {% endblock %}
+
+  Open one by loading it into the root container in app.html:
+
+      hx-get="…" hx-target="#modal-root" hx-swap="innerHTML"
+
+  Close one from the server with a response header:
+
+      response["HX-Trigger"] = "close-modal"
+
+  Actions and buttons live inside modal_content rather than a block of their
+  own, so a modal whose form has to wrap both the fields and the buttons -- a
+  confirmation input, for instance -- does not have to fight the template.
+
+  Set `panel_class` in the context for a wider panel (e.g. "modal-panel-wide").
+{% endcomment %}
+
+<div x-data="{ open: false }"
+     x-init="$nextTick(() => { open = true; $refs.panel.querySelector('[data-autofocus]')?.focus() })"
+     x-effect="document.body.classList.toggle('overflow-hidden', open)"
+     @close-modal.window="open = false"
+     @keydown.escape.window="open = false"
+     x-cloak>
+
+  <div class="modal-backdrop"
+       x-show="open"
+       x-transition.opacity.duration.150ms
+       @click.self="open = false"
+       {# Self-cleaning: after the fade-out, drop the markup so a closed modal leaves no focus trap. #}
+       @transitionend="if (!open) $root.remove()">
+
+    <div class="modal-panel {{ panel_class }}"
+         x-ref="panel"
+         x-show="open"
+         x-transition:enter="transition duration-150 ease-out"
+         x-transition:enter-start="opacity-0 translate-y-3 sm:scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+         x-transition:leave="transition duration-100 ease-in"
+         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+         x-transition:leave-end="opacity-0 translate-y-3 sm:scale-95"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="modal-title">
+
+      <button type="button" @click="open = false"
+              class="absolute right-4 top-4 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              aria-label="Close">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+
+      <h2 id="modal-title" class="pr-8 text-base font-semibold tracking-tight">
+        {% block modal_title %}{% endblock %}
+      </h2>
+
+      <div class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        {% block modal_content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</div>

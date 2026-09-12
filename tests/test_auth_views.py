@@ -26,7 +26,7 @@ def test_login_with_a_wrong_password_fails(client, user):
     response = client.post(reverse("accounts:login"), {"username": user.email, "password": "nope"})
     assert response.status_code == 200
     assert not response.wsgi_request.user.is_authenticated
-    assert "nicht korrekt" in response.content.decode()
+    assert "is not correct" in response.content.decode()
 
 
 def test_inactive_user_cannot_log_in(client, user, password):

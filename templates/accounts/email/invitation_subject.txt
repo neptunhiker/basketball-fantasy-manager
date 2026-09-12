@@ -1,1 +1,1 @@
-{{ site_name }}: Dein Zugang wartet auf dich
+{{ site_name }}: your account is waiting

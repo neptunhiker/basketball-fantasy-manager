@@ -27,7 +27,7 @@ def test_staff_can_invite_a_user(client, staff_user, password):
 
     assert len(mail.outbox) == 1
     assert invitee.email in mail.outbox[0].to
-    assert "einladen" in mail.outbox[0].body.lower() or "eingeladen" in mail.outbox[0].body.lower()
+    assert "invited you" in mail.outbox[0].body.lower()
 
 
 def test_non_staff_cannot_invite(client, user, password):
@@ -50,15 +50,15 @@ def test_invitation_link_lets_the_user_set_a_password(client, invited_user):
         {
             "first_name": "Jo",
             "last_name": "Berger",
-            "new_password1": "korrektes-pferd-9",
-            "new_password2": "korrektes-pferd-9",
+            "new_password1": "correct-horse-9",
+            "new_password2": "correct-horse-9",
         },
         follow=True,
     )
     assert response.status_code == 200
 
     invited_user.refresh_from_db()
-    assert invited_user.check_password("korrektes-pferd-9")
+    assert invited_user.check_password("correct-horse-9")
     assert invited_user.first_name == "Jo"
     assert invited_user.has_accepted_invitation
     # And they are signed in afterwards.

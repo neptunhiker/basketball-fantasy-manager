@@ -1,0 +1,246 @@
+{% load money %}
+{% comment %}
+  The whole of the trade screen except the modal shell, and it swaps itself:
+  every selection is an hx-get back to the same view with the choice in the
+  query string, so there is no client-side state to disagree with the roster.
+
+  Both columns are needed at once. The left one is what leaves, the right one is
+  what arrives, and the right one's prices are marked against the *budget* --
+  the balance plus what the outgoing player frees up -- which is why a player
+  well beyond the balance can still be within reach.
+{% endcomment %}
+<div id="trade-body">
+
+  {% if error %}
+    <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200"
+         role="alert">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <p class="text-sm text-neutral-500 dark:text-neutral-400">
+    One out, one in — in a single move. Both sides count at today's salary, and the
+    difference goes on your cash.
+  </p>
+
+  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+
+    {# --- who leaves ------------------------------------------------------- #}
+    <section class="min-w-0">
+      <div class="flex items-baseline justify-between gap-2">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          Player out
+        </h3>
+        <span class="text-xs text-neutral-400 dark:text-neutral-500">
+          {{ memberships|length }} on the roster
+        </span>
+      </div>
+
+      {% if memberships %}
+        <div class="mt-2 max-h-64 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
+          <ul class="divide-y divide-neutral-200 dark:divide-neutral-800">
+            {% for membership in memberships %}
+              <li>
+                <button type="button"
+                        hx-get="{{ trade_url }}?body=1&amp;out={{ membership.player.pk }}{{ keep_in }}"
+                        hx-include="#trade-filters"
+                        hx-target="#trade-body"
+                        hx-swap="outerHTML"
+                        aria-pressed="{% if preview.player_out.pk == membership.player.pk %}true{% else %}false{% endif %}"
+                        class="flex w-full items-center gap-2.5 border-l-2 px-3 py-2 text-left transition
+                          {% if preview.player_out.pk == membership.player.pk %}
+                            border-primary-500 bg-primary-50 dark:bg-primary-500/10
+                          {% else %}
+                            border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/60
+                          {% endif %}">
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+                    {{ membership.player.position }}
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-sm font-medium">{{ membership.player.full_name }}</span>
+                    {% if membership.player.team %}
+                      <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
+                        {{ membership.player.team.abbreviation }}
+                      </span>
+                    {% endif %}
+                  </span>
+                  <span class="shrink-0 text-xs tabular-nums text-neutral-500 dark:text-neutral-400"
+                        title="{{ membership.player.current_salary|exact }}">
+                    {{ membership.player.current_salary|millions }}
+                  </span>
+                </button>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% else %}
+        <p class="mt-2 rounded-xl border border-neutral-200 px-3 py-8 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+          Nobody on the roster yet to send out.
+        </p>
+      {% endif %}
+    </section>
+
+    {# --- who arrives ------------------------------------------------------ #}
+    <section class="min-w-0">
+      <div class="flex items-baseline justify-between gap-2">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          Player in
+        </h3>
+        {# Not the balance: the balance plus what the outgoing player brings in. #}
+        <span class="text-xs text-neutral-400 dark:text-neutral-500"
+              title="{{ preview.budget|exact }}">
+          Budget {{ preview.budget|millions }}
+        </span>
+      </div>
+
+      <form id="trade-filters" class="mt-2 grid grid-cols-[1fr_auto] gap-2"
+            hx-get="{{ trade_url }}{{ state_query }}"
+            hx-trigger="input changed delay:300ms from:input[type=search], change from:select, search"
+            hx-target="#trade-body"
+            hx-swap="outerHTML">
+        <label for="trade-search" class="sr-only">Search by name</label>
+        <input type="search" id="trade-search" name="q" value="{{ filters.q }}"
+               placeholder="Search by name…"
+               class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+        <label for="trade-position" class="sr-only">Position</label>
+        <select id="trade-position" name="position"
+                class="block rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+          <option value="">All pos.</option>
+          {% for value, label in positions %}
+            <option value="{{ value }}" {% if filters.position == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </form>
+
+      {% if available %}
+        <div class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
+          <ul class="divide-y divide-neutral-200 dark:divide-neutral-800">
+            {% for player in available %}
+              <li>
+                {# Over-budget players stay clickable: the preview below says what #}
+                {# the trade would cost, which is more use than a dead row. #}
+                <button type="button"
+                        hx-get="{{ trade_url }}?body=1&amp;in={{ player.pk }}{{ keep_out }}"
+                        hx-include="#trade-filters"
+                        hx-target="#trade-body"
+                        hx-swap="outerHTML"
+                        aria-pressed="{% if preview.player_in.pk == player.pk %}true{% else %}false{% endif %}"
+                        class="flex w-full items-center gap-2.5 border-l-2 px-3 py-2 text-left transition
+                          {% if preview.player_in.pk == player.pk %}
+                            border-primary-500 bg-primary-50 dark:bg-primary-500/10
+                          {% else %}
+                            border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/60
+                          {% endif %}
+                          {% if not player.affordable %}opacity-55{% endif %}">
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+                    {{ player.position }}
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-sm font-medium">{{ player.full_name }}</span>
+                    <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
+                      {% if player.team %}{{ player.team.abbreviation }}{% else %}Free Agent{% endif %}
+                    </span>
+                  </span>
+                  <span class="shrink-0 text-xs tabular-nums {% if player.affordable %}text-neutral-500 dark:text-neutral-400{% else %}text-neutral-400 dark:text-neutral-500{% endif %}"
+                        title="{{ player.current_salary|exact }}">
+                    {{ player.current_salary|millions }}
+                  </span>
+                </button>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% else %}
+        <p class="mt-2 rounded-xl border border-neutral-200 px-3 py-8 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+          {% if filters.q or filters.position %}
+            Nothing matches those filters.
+          {% else %}
+            No players with a salary on record.
+          {% endif %}
+        </p>
+      {% endif %}
+    </section>
+  </div>
+
+  {# --- what it would do ---------------------------------------------------- #}
+  <div class="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
+    <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+      <div class="min-w-0">
+        <dt class="text-xs text-neutral-500 dark:text-neutral-400">Player out</dt>
+        <dd class="mt-0.5 truncate text-sm font-medium">
+          {% if preview.player_out %}
+            {{ preview.player_out.full_name }}
+            <span class="block text-xs tabular-nums font-normal text-neutral-500 dark:text-neutral-400">
+              {{ preview.salary_out|millions }}
+            </span>
+          {% else %}
+            <span class="font-normal text-neutral-400 dark:text-neutral-500">not chosen</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div class="min-w-0">
+        <dt class="text-xs text-neutral-500 dark:text-neutral-400">Player in</dt>
+        <dd class="mt-0.5 truncate text-sm font-medium">
+          {% if preview.player_in %}
+            {{ preview.player_in.full_name }}
+            <span class="block text-xs tabular-nums font-normal text-neutral-500 dark:text-neutral-400">
+              {{ preview.salary_in|millions }}
+            </span>
+          {% else %}
+            <span class="font-normal text-neutral-400 dark:text-neutral-500">not chosen</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div class="min-w-0">
+        <dt class="text-xs text-neutral-500 dark:text-neutral-400">Cash flow</dt>
+        <dd class="mt-0.5 text-sm font-medium tabular-nums">
+          {% if preview.ready %}
+            {% include "nba/partials/change.html" with value=preview.delta unit="money" %}
+          {% else %}
+            <span class="font-normal text-neutral-400 dark:text-neutral-500">–</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div class="min-w-0">
+        <dt class="text-xs text-neutral-500 dark:text-neutral-400">Cash after</dt>
+        <dd class="mt-0.5 text-sm font-bold tabular-nums {% if not preview.affordable %}text-red-600 dark:text-red-400{% endif %}"
+            title="{{ preview.cash_after|exact }}">
+          {{ preview.cash_after|millions }}
+        </dd>
+      </div>
+    </dl>
+
+    {% if preview.ready and not preview.affordable %}
+      <p class="mt-3 text-xs text-red-700 dark:text-red-300">
+        Not enough cash: {{ preview.player_in.full_name }} costs more than the
+        {{ preview.budget|millions }} that your cash and the outgoing player make up together.
+      </p>
+    {% elif preview.breaks %}
+      {# Allowed on purpose: the roster may sit incomplete between two moves, #}
+      {# exactly as it does when a player is released. #}
+      <p class="mt-3 text-xs text-amber-700 dark:text-amber-300">
+        Afterwards you would be short: {{ preview.breaks|join:", " }}. The trade still goes
+        through — the roster just will not be complete any more.
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="modal-actions">
+    <button type="button" @click="open = false" class="btn btn-secondary">Cancel</button>
+    {% if preview.ready and preview.affordable %}
+      <button type="button"
+              hx-post="{{ trade_url }}?out={{ preview.player_out.pk }}&amp;in={{ preview.player_in.pk }}"
+              hx-include="#picker-filters"
+              hx-target="#roster-panel"
+              hx-swap="outerHTML"
+              class="btn btn-primary">
+        Execute trade
+      </button>
+    {% else %}
+      <button type="button" disabled class="btn btn-primary"
+              title="{% if not preview.ready %}Pick both sides first{% else %}Not enough cash{% endif %}">
+        Execute trade
+      </button>
+    {% endif %}
+  </div>
+</div>

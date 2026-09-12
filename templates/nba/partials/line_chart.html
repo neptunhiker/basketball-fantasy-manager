@@ -1,0 +1,101 @@
+{% load l10n %}
+{% comment %}
+  A small line chart, driven entirely by a `chart` dict from
+  apps.nba.charts.line_chart, plus `chart_label` for screen readers and
+  `chart_id` to keep the gradient's id unique on a page with two of these.
+
+  Every coordinate is piped through `unlocalize`, and that is not optional: the
+  site runs in German, so a plain `{{ dot.y }}` renders as `189,91` and the
+  browser silently refuses to draw. Only the axis labels and the readouts are
+  numbers a person reads, and those keep the decimal comma.
+
+  Hovering is done in CSS, with no script: each point owns a transparent band
+  spanning the height of the drawing, and hovering it reveals that point's
+  guide line, halo and value. The rules live in assets/input.css as
+  `.chart-hit` and friends, which explains why they are not Tailwind hover
+  utilities. No transition and no `<title>` on purpose: a fade is a delay, and
+  a `<title>` gets the browser's own tooltip, which waits about a second.
+
+  That leaves no per-point text for assistive technology -- but there never was
+  any, because `role="img"` on the svg already collapses the whole drawing into
+  one node and hides its children. The accessible version of this chart is the
+  table of the same figures underneath it.
+
+  The x labels arrive already formatted, so this template only places them.
+  Note that the y axis does not start at zero -- it is fitted to the data, so
+  every gridline carries its own number rather than leaving the reader to
+  assume a baseline that is not there.
+{% endcomment %}
+<svg viewBox="0 0 {{ chart.width|unlocalize }} {{ chart.height|unlocalize }}"
+     class="h-52 w-full"
+     role="img"
+     aria-label="{{ chart_label }}">
+  <defs>
+    <linearGradient id="{{ chart_id|default:'chart' }}-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="currentColor" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <g class="text-neutral-300 dark:text-neutral-700">
+    {% for tick in chart.y_ticks %}
+      <line x1="{{ chart.plot_left|unlocalize }}" y1="{{ tick.y|unlocalize }}"
+            x2="{{ chart.plot_right|unlocalize }}" y2="{{ tick.y|unlocalize }}"
+            stroke="currentColor" stroke-width="1" stroke-dasharray="3 4" />
+    {% endfor %}
+  </g>
+
+  <g class="text-neutral-400 dark:text-neutral-500" fill="currentColor" font-size="12">
+    {% for tick in chart.y_ticks %}
+      <text x="{{ chart.label_right|unlocalize }}" y="{{ tick.y|unlocalize }}"
+            text-anchor="end" dominant-baseline="middle">{{ tick.value|floatformat:"-2g" }}</text>
+    {% endfor %}
+    {% for label in chart.x_labels %}
+      <text x="{{ label.x|unlocalize }}" y="{{ chart.label_bottom|unlocalize }}"
+            text-anchor="{{ label.anchor }}">{{ label.label }}</text>
+    {% endfor %}
+  </g>
+
+  <g class="text-primary-500 dark:text-primary-400">
+    <path d="{{ chart.area }}" fill="url(#{{ chart_id|default:'chart' }}-fill)" />
+    <polyline points="{{ chart.line }}"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+
+    {% for dot in chart.dots %}
+      {# Order matters: the hit area comes first, the rules are sibling selectors on it. #}
+      <g>
+        <rect class="chart-hit"
+              x="{{ dot.band_x|unlocalize }}" y="{{ chart.plot_top|unlocalize }}"
+              width="{{ dot.band_width|unlocalize }}" height="{{ chart.plot_height|unlocalize }}" />
+
+        <line class="chart-guide"
+              x1="{{ dot.x|unlocalize }}" y1="{{ dot.y|unlocalize }}"
+              x2="{{ dot.x|unlocalize }}" y2="{{ chart.baseline|unlocalize }}"
+              stroke="currentColor" stroke-width="1" stroke-dasharray="2 3" />
+
+        <circle class="chart-halo"
+                cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="10"
+                fill="currentColor" />
+
+        <circle class="chart-dot fill-white dark:fill-neutral-900"
+                cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}"
+                r="{% if forloop.last %}5{% else %}3.5{% endif %}"
+                stroke="currentColor"
+                stroke-width="2" />
+
+        {# The readout: a thick stroke in the page colour, painted first, instead of a box behind the text. #}
+        <text class="chart-readout fill-neutral-900 stroke-white dark:fill-white dark:stroke-neutral-900"
+              x="{{ dot.x|unlocalize }}" y="{{ dot.label_y|unlocalize }}"
+              text-anchor="{{ dot.label_anchor }}"
+              font-size="13" font-weight="600"
+              paint-order="stroke"
+              stroke-width="4"
+              stroke-linejoin="round">{{ dot.value|floatformat:"2g" }}</text>
+      </g>
+    {% endfor %}
+  </g>
+</svg>

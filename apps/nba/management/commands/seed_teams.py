@@ -78,4 +78,4 @@ class Command(BaseCommand):
             else:
                 updated += 1
 
-        self.stdout.write(self.style.SUCCESS(f"{created} Teams angelegt, {updated} aktualisiert."))
+        self.stdout.write(self.style.SUCCESS(f"{created} teams created, {updated} updated."))

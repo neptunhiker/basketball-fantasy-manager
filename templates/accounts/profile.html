@@ -1,33 +1,56 @@
 {% extends "app.html" %}
 
-{% block title %}Profil · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Profil{% endblock %}
+{% block title %}Profile · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}Profile{% endblock %}
 
 {% block content %}
-<div class="card p-8">
+<div class="card max-w-2xl p-8">
   <div class="flex items-center gap-4">
-    <span class="flex h-14 w-14 items-center justify-center rounded-full bg-primary-100 text-lg font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">
+    <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-100 text-lg font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">
       {{ request.user.initials }}
     </span>
-    <div>
-      <p class="font-semibold">{{ request.user.display_name }}</p>
-      <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ request.user.email }}</p>
-    </div>
+    {# The name, and nothing else. The address used to sit under it, which #}
+    {# read as a second line of identity but was the same fact twice over #}
+    {# for an account with no name -- and it is an editable field below now, #}
+    {# so repeating it here would only be a copy of the input. #}
+    {% if request.user.full_name %}
+      <p class="text-lg font-semibold">{{ request.user.full_name }}</p>
+    {% else %}
+      {# Said out loud rather than left blank: an unnamed account is why the #}
+      {# sidebar shows the address, and this is the form that fixes it. #}
+      <p class="text-sm text-neutral-500 dark:text-neutral-400">
+        No name yet — the app falls back to your email address until you set one.
+      </p>
+    {% endif %}
   </div>
 
+  <form method="post" class="mt-8 space-y-5 border-t border-neutral-200 pt-6 dark:border-neutral-800">
+    {% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+    <div class="grid gap-4 sm:grid-cols-2">
+      {% include "partials/form_field.html" with field=form.first_name %}
+      {% include "partials/form_field.html" with field=form.last_name %}
+    </div>
+    {% include "partials/form_field.html" with field=form.email %}
+    <div class="pt-2">
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+  </form>
+
+  {# Read-only, and deliberately: neither is the account holder's to change. #}
   <dl class="mt-8 grid gap-x-8 gap-y-4 border-t border-neutral-200 pt-6 sm:grid-cols-2 dark:border-neutral-800">
     <div>
-      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">Rolle</dt>
+      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">Role</dt>
       <dd class="mt-1 text-sm">{% if request.user.is_superuser %}Administration{% elif request.user.is_staff %}Team{% else %}Coach{% endif %}</dd>
     </div>
     <div>
-      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">Dabei seit</dt>
-      <dd class="mt-1 text-sm">{{ request.user.date_joined|date:"j. F Y" }}</dd>
+      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">Member since</dt>
+      <dd class="mt-1 text-sm">{{ request.user.date_joined|date:"F j, Y" }}</dd>
     </div>
   </dl>
 
   <div class="mt-8 border-t border-neutral-200 pt-6 dark:border-neutral-800">
-    <a href="{% url 'accounts:password-change' %}" class="btn btn-secondary">Passwort ändern</a>
+    <a href="{% url 'accounts:password-change' %}" class="btn btn-secondary">Change password</a>
   </div>
 </div>
 {% endblock %}

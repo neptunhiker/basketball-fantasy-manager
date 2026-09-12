@@ -1,21 +1,21 @@
 {% extends "app.html" %}
 
-{% block title %}Übersicht · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Übersicht{% endblock %}
+{% block title %}Overview · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}Overview{% endblock %}
 
 {% block content %}
 <div class="card overflow-hidden">
   <div class="gradient-rule h-1"></div>
   <div class="p-8">
-    <h2 class="text-lg font-bold tracking-tight">Hallo {{ request.user.get_short_name }}</h2>
+    <h2 class="text-lg font-bold tracking-tight">Hi {{ request.user.get_short_name }}</h2>
     <p class="mt-2 max-w-prose text-sm text-neutral-600 dark:text-neutral-300">
-      Das Fundament steht: Anmeldung, Einladungen und das Design-System sind
-      einsatzbereit. Die Matching-Funktionen kommen als Nächstes hier hinein.
+      The foundation is in place: sign-in, invitations and the design system
+      are ready. The tools for deciding who to buy and who to trade land here next.
     </p>
     {% if request.user.is_staff %}
       <div class="mt-6 flex flex-wrap gap-3">
-        <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary">Person einladen</a>
-        <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">Team ansehen</a>
+        <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary">Invite someone</a>
+        <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">View team</a>
       </div>
     {% endif %}
   </div>

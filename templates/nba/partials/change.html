@@ -1,0 +1,23 @@
+{% load money %}
+{% comment %}
+  One week-over-week change. `value` is a signed number or None, `unit` is
+  "money", "points" or "count".
+
+  Money is deliberately not colour-coded. A rising price means the game thinks
+  more of a player, a falling one means he is cheaper to buy -- which of those
+  is good news depends entirely on whether you already own him, so this
+  template does not pretend to know.
+{% endcomment %}
+{% if value is None %}
+  <span class="text-neutral-300 dark:text-neutral-600">–</span>
+{% elif value == 0 %}
+  <span class="text-neutral-400 dark:text-neutral-500">±0</span>
+{% elif unit == "money" %}
+  <span class="text-neutral-500 dark:text-neutral-400" title="{{ value|exact }}">
+    {% if value > 0 %}+{% endif %}{{ value|millions }}
+  </span>
+{% else %}
+  <span class="{% if value > 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+    {% if value > 0 %}+{% endif %}{% if unit == "points" %}{{ value|floatformat:"2g" }}{% else %}{{ value }}{% endif %}
+  </span>
+{% endif %}

@@ -95,6 +95,48 @@
     @apply outline-2 outline-offset-2 outline-primary-500;
   }
 
+  /* Anything clickable gets the hand.
+
+     Tailwind v4's Preflight dropped the `button { cursor: pointer }` that v3
+     shipped, so every button in the app fell back to the browser's arrow --
+     the Trade and delete icons in the roster header among them, and the
+     full-row player buttons in the trade modal, which are the largest click
+     targets here. Restored in one place rather than by adding `cursor-pointer`
+     to thirty-odd buttons, so the next button someone writes is right without
+     their having to remember.
+
+     `<a href>` is absent on purpose: the browser has always given links a hand
+     and still does. Native controls are listed because they are clickable but
+     get an arrow by default, and the labels because clicking one toggles the
+     box inside it -- which makes the label part of the control, not text about
+     it. Only checkbox and radio labels: a label for a text field focuses a
+     caret, and a hand would promise a toggle that is not there.
+
+     Base layer, so a `cursor-*` utility in a template still wins where a
+     specific element needs to say something different. */
+  button,
+  [role="button"],
+  summary,
+  select,
+  label:has(input[type="checkbox"]),
+  label:has(input[type="radio"]),
+  input:where([type="checkbox"], [type="radio"], [type="submit"], [type="reset"], [type="button"], [type="file"], [type="color"]),
+  ::file-selector-button {
+    cursor: pointer;
+  }
+
+  /* The exception, and the reason the rule above is not simply `*:hover`: on a
+     control that will not respond, the hand is a lie. `not-allowed` is the
+     honest answer. (`.btn` also carries `disabled:pointer-events-none`, so its
+     own disabled buttons never reach this -- they inherit the arrow from the
+     row around them, which lands in the same place.) */
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  label:has(input:disabled) {
+    cursor: not-allowed;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -108,6 +150,50 @@
 }
 
 @layer components {
+  /* Line-chart hover readout, for templates/nba/partials/line_chart.html.
+
+     Written out here rather than with `group-hover:` utilities on the SVG,
+     because that route stakes the feature on two things it should not: Tailwind
+     wraps every hover variant in `@media (hover: hover)`, and `group-hover`
+     needs `:hover` to reach an SVG `<g>` container. This keys off the hit area
+     itself — an element is always `:hover` when the pointer is over it — and
+     reveals its own following siblings.
+
+     Everything the band reveals is `pointer-events: none`, so moving onto the
+     dot or the guide line cannot pull the hover out from under the rect that is
+     driving it. And there is no transition anywhere on purpose: a fade is a
+     delay, and the value should be on screen the instant the pointer is. */
+  .chart-hit {
+    fill: transparent;
+    pointer-events: all;
+  }
+
+  .chart-dot,
+  .chart-guide,
+  .chart-halo,
+  .chart-readout,
+  .scatter-detail {
+    pointer-events: none;
+  }
+
+  .chart-guide,
+  .chart-halo,
+  .chart-readout {
+    opacity: 0;
+  }
+
+  .chart-hit:hover ~ .chart-guide {
+    opacity: 0.6;
+  }
+
+  .chart-hit:hover ~ .chart-halo {
+    opacity: 0.15;
+  }
+
+  .chart-hit:hover ~ .chart-readout {
+    opacity: 1;
+  }
+
   /* Buttons — compose as `btn btn-primary`. Tailwind v4 cannot @apply a class
      defined in the same layer, so the variants only add colour. */
   .btn {
@@ -174,7 +260,40 @@
     @apply bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300;
   }
 
+  /* For a state that is settled and not good: a roster left short when
+     signings closed, which no longer reads as "still building". */
+  .badge-warning {
+    @apply bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300;
+  }
+
   /* The one place the brand gradient appears: thin accents, never fills. */
+  /* Modal — chrome only. The shell lives in templates/partials/modal.html and
+     every modal extends it, so these classes are the single place its look is
+     defined. Raw utilities rather than @apply card: Tailwind v4 cannot @apply a
+     class from the same layer. */
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-end justify-center overflow-y-auto
+      bg-tertiary-900/50 p-4 backdrop-blur-sm sm:items-center;
+  }
+
+  .modal-panel {
+    @apply relative w-full max-w-md rounded-2xl border border-neutral-200 bg-white
+      p-6 shadow-xl dark:border-neutral-800 dark:bg-neutral-900;
+  }
+
+  .modal-panel-wide {
+    @apply max-w-2xl;
+  }
+
+  /* Wide enough for two side-by-side player lists, as the trade screen needs. */
+  .modal-panel-xl {
+    @apply max-w-4xl;
+  }
+
+  .modal-actions {
+    @apply mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end;
+  }
+
   .gradient-rule {
     background: var(--bl-gradient);
   }

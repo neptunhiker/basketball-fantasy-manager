@@ -1,0 +1,49 @@
+{% extends "partials/modal.html" %}
+{% comment %}
+  A modal that holds a whole form. Driven entirely by context, so a new one
+  needs a view and no template: subclass apps.core.views.ModalFormView and
+  point `form_class` at a ModelForm.
+
+  Context: title, body, action_url, form, submit_label, cancel_label.
+
+  Every field goes through partials/form_field.html, which is the same partial
+  the full-page forms use -- so a label, its help text and its errors look the
+  same whether the field is on a page or in a dialog. The widget's own classes
+  come from apps.core.forms.StyledFormMixin for the same reason.
+
+  The counterpart to modal_prompt.html, which is the one-field version. Use
+  that where a single string is the whole question; this where a record has
+  several fields and they belong in one dialog rather than several.
+{% endcomment %}
+
+{% block modal_title %}{{ title }}{% endblock %}
+
+{% block modal_content %}
+  <form hx-post="{{ action_url }}"
+        hx-target="#modal-root"
+        hx-swap="innerHTML">
+    {% csrf_token %}
+
+    {% if body %}<p>{{ body }}</p>{% endif %}
+
+    {# Errors with no field of their own: a clash between two fields, or a rule #}
+    {# that only the write could discover. First, because they are about the #}
+    {# form as a whole rather than about anything below them. #}
+    {% for error in form.non_field_errors %}
+      <p class="form-error {% if body %}mt-4{% endif %}" role="alert">{{ error }}</p>
+    {% endfor %}
+
+    <div class="{% if body or form.non_field_errors %}mt-5 {% endif %}space-y-4">
+      {% for field in form %}
+        {% include "partials/form_field.html" with field=field %}
+      {% endfor %}
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">
+        {{ cancel_label|default:"Cancel" }}
+      </button>
+      <button type="submit" class="btn btn-primary">{{ submit_label|default:"Save" }}</button>
+    </div>
+  </form>
+{% endblock %}

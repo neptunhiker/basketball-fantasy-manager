@@ -1,0 +1,110 @@
+{% extends "app.html" %}
+{% load money %}
+
+{% block title %}{{ roster.name }} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{{ roster.name }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl space-y-6">
+
+  <div class="card overflow-hidden">
+    <div class="gradient-rule h-1"></div>
+    <div class="p-6 sm:p-8">
+      <p class="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
+        {{ roster.season.label }}
+      </p>
+      <h2 class="mt-1 text-xl font-bold tracking-tight">How building a roster works</h2>
+
+      <div class="mt-6 rounded-xl bg-primary-50 p-5 dark:bg-primary-500/10">
+        <p class="text-xs text-primary-700 dark:text-primary-300">Your budget</p>
+        <p class="mt-1 text-3xl font-bold tabular-nums text-tertiary-700 dark:text-neutral-50"
+           title="{{ roster.cash|exact }}">
+          {{ roster.cash|millions }}
+        </p>
+        <p class="mt-1 text-xs text-primary-700/80 dark:text-primary-300/80">
+          Every purchase comes out of this. You cannot spend more than you have.
+        </p>
+      </div>
+
+      <dl class="mt-6 space-y-4 text-sm">
+        <div class="flex gap-4">
+          <dt class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-xs font-bold tabular-nums dark:bg-neutral-800">
+            {{ roster_size }}
+          </dt>
+          <dd>
+            <span class="font-medium">Players in total</span>
+            <span class="block text-neutral-500 dark:text-neutral-400">
+              A roster is only complete at {{ roster_size }} players.
+            </span>
+          </dd>
+        </div>
+
+        {% for minimum in minimums %}
+          <div class="flex gap-4">
+            <dt class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-xs font-bold tabular-nums dark:bg-neutral-800">
+              {{ minimum.minimum }}
+            </dt>
+            <dd>
+              <span class="font-medium">{{ minimum.label }}s at least</span>
+              <span class="block text-neutral-500 dark:text-neutral-400">
+                Fewer than {{ minimum.minimum }} {{ minimum.label }}s is not allowed.
+              </span>
+            </dd>
+          </div>
+        {% endfor %}
+
+        <div class="flex gap-4">
+          <dt class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary-100 text-xs font-bold tabular-nums dark:bg-secondary-400/15">
+            {{ flex_slots }}
+          </dt>
+          <dd>
+            <span class="font-medium">Slots you choose freely</span>
+            <span class="block text-neutral-500 dark:text-neutral-400">
+              The minimums take up {{ required_slots }} slots — the remaining
+              {{ flex_slots }} you can fill with any position.
+            </span>
+          </dd>
+        </div>
+        {# Only when there is a deadline to state. A season with none has no #}
+        {# rule here, and inventing "signings stay open" as a rule would be #}
+        {# stating the absence of one. #}
+        {% if roster.season.signings_close_at %}
+          <div class="flex gap-4">
+            <dt class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-500/15">
+              <svg class="h-4 w-4 text-amber-700 dark:text-amber-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="8"/>
+                <path stroke-linecap="round" d="M12 8v4.5l3 1.8"/>
+              </svg>
+            </dt>
+            <dd>
+              <span class="font-medium">
+                {% if roster.season.signings_open %}Complete it by{% else %}Signings closed{% endif %}
+                {{ roster.season.signings_close_at|date:"j F" }} at {{ roster.season.signings_close_at|date:"H:i" }}
+              </span>
+              <span class="block text-neutral-500 dark:text-neutral-400">
+                Buying and selling stop at that moment. Trades stay open every day
+                for the rest of the season — but a trade swaps one player for
+                one player, so a roster short of {{ roster_size }} then stays short.
+              </span>
+            </dd>
+          </div>
+        {% endif %}
+      </dl>
+
+      <div class="gradient-rule mt-8 h-px"></div>
+
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <a href="{% url 'fantasy:roster-build' roster.pk %}" class="btn btn-primary">
+          Pick players
+        </a>
+        <a href="{% url 'fantasy:roster-list' %}" class="btn btn-ghost">Later</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="text-center text-xs text-neutral-400 dark:text-neutral-500">
+    Salaries are recalculated weekly in the official game, so a roster can get
+    more expensive without you touching it.
+  </p>
+</div>
+{% endblock %}

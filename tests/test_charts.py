@@ -192,3 +192,11 @@ def test_scatter_chart_carries_player_metadata():
 
     assert chart["dots"][0]["detail_url"] == "/players/measured/"
     assert chart["dots"][0]["hotness"] == "7/10"
+
+
+def test_scatter_chart_colors_by_games_played_threshold():
+    green = charts.scatter_chart([("Green", Decimal("10"), Decimal("20"), Decimal("18"), {"games_played": 6})])
+    red = charts.scatter_chart([("Red", Decimal("10"), Decimal("20"), Decimal("18"), {"games_played": 5})])
+
+    assert green["dots"][0]["color"] == charts.NEON_GREEN
+    assert red["dots"][0]["color"] == charts.NEON_RED

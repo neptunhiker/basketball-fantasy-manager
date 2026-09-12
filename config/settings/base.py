@@ -122,6 +122,15 @@ Q_CLUSTER = {
 
 SITE_NAME = "Basketball Fantasy Manager"
 
+RAPID_API_KEY = env("RAPID_API_KEY", default="")
+RAPID_API_HOST = env("RAPID_API_HOST", default="api-basketball-nba.p.rapidapi.com")
+RAPID_API_INJURIES_URL = env(
+    "RAPID_API_INJURIES_URL",
+    default="https://api-basketball-nba.p.rapidapi.com/nba-injuries",
+)
+RAPID_API_TIMEOUT = env.int("RAPID_API_TIMEOUT", default=15)
+RAPID_API_DAILY_LIMIT = env.int("RAPID_API_DAILY_LIMIT", default=20)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

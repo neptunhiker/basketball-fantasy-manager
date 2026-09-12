@@ -178,6 +178,20 @@ def line_chart(points, ticks=4):
     }
 
 
+NEON_GREEN = "#39ff14"
+NEON_RED = "#ff4d4d"
+NEON_GRAY = "#a1a1aa"
+
+
+def games_played_color(games_played):
+    """Render neon green for healthy game volume, neon red for a short sample."""
+    if games_played is None:
+        return NEON_GRAY
+    if games_played >= 6:
+        return NEON_GREEN
+    return NEON_RED
+
+
 def scatter_chart(points, x_ticks=5, y_ticks=5):
     """Plot measured `(label, x, y[, expected_salary[, metadata]])` points.
 
@@ -222,6 +236,7 @@ def scatter_chart(points, x_ticks=5, y_ticks=5):
             "x_value": x_value,
             "y_value": y_value,
             "expected_salary": expected_salary,
+            "color": games_played_color(metadata.get("games_played")),
             **metadata,
         }
         for label, x_value, y_value, expected_salary, metadata in measured

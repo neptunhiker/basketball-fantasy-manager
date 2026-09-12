@@ -34,7 +34,7 @@
           text-anchor="start" font-size="11">{{ y_axis_label }}</text>
   </g>
 
-  <g class="text-secondary-400 dark:text-secondary-300">
+  <g>
     {% for dot in chart.dots %}
       <g>
         <circle class="chart-hit"
@@ -55,10 +55,10 @@
           @focus="select($el)" />
         <circle class="chart-halo"
                 cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="10"
-                fill="currentColor" />
-        <circle class="chart-dot fill-white dark:fill-neutral-900"
+                fill="{{ dot.color|default:'#a1a1aa' }}" />
+        <circle class="chart-dot"
           cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="3"
-          stroke="currentColor" stroke-width="1.5" />
+          fill="{{ dot.color|default:'#a1a1aa' }}" stroke="#ffffff" stroke-width="1.5" />
         <text class="chart-readout fill-neutral-900 stroke-white dark:fill-white dark:stroke-neutral-900"
               x="{{ dot.x|unlocalize }}" y="{{ dot.y|unlocalize }}"
               text-anchor="middle" dy="-12" font-size="11" font-weight="600"

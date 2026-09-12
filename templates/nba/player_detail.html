@@ -28,7 +28,117 @@
           {% if not player.is_active %}<span class="badge badge-neutral ml-1">Inactive</span>{% endif %}
         </p>
       </div>
-      <a href="{% url 'nba:player-list' %}" class="btn btn-secondary shrink-0">All players</a>
+      <div class="flex shrink-0 items-center gap-2">
+        <div x-data="{ open: false }">
+          <button type="button" @click="open = true"
+                  class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition
+                    {% if is_injured %}border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/20{% else %}border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20{% endif %}"
+                  aria-label="{% if is_injured %}Injured{% else %}Healthy{% endif %}"
+                  title="{% if is_injured %}Injured{% else %}Healthy{% endif %}"
+                  aria-haspopup="dialog" aria-expanded="false"
+                  :aria-expanded="open.toString()">
+            {% if is_injured %}
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m9 15 6-6m-8.5 8.5 3 3a2.1 2.1 0 0 0 3 0l8-8a2.1 2.1 0 0 0 0-3l-3-3a2.1 2.1 0 0 0-3 0l-8 8a2.1 2.1 0 0 0 0 3Z"/>
+                <path stroke-linecap="round" d="m7.5 7.5 9 9"/>
+              </svg>
+            {% else %}
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.8 8.7c0 5.2-8.8 10.3-8.8 10.3S3.2 13.9 3.2 8.7A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.6Z"/>
+                <path stroke-linecap="round" d="M7.5 11.8h2l1.1-3.2 2.2 6.2 1.2-3h2.5"/>
+              </svg>
+            {% endif %}
+          </button>
+
+          <template x-teleport="#modal-root">
+            <div x-show="open" x-cloak @keydown.escape.window="open = false"
+                 class="fixed inset-0 z-[100] flex items-end justify-center bg-tertiary-900/40 p-4 sm:items-center"
+                 style="z-index: 100;"
+              role="button" aria-label="Close injury details"
+              @click.self="open = false">
+              <div x-show="open" x-transition
+                class="relative max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl dark:bg-neutral-900 sm:p-6"
+                role="dialog" aria-modal="true" aria-labelledby="injury-modal-title">
+              <button type="button" @click="open = false"
+                      class="absolute right-4 top-4 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                      aria-label="Close injury details">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+                </svg>
+              </button>
+              <h2 id="injury-modal-title" class="pr-8 text-base font-semibold tracking-tight">{{ player.full_name }} Injury Status</h2>
+              <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Latest injury report</p>
+              {% if latest_injury %}
+                <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt class="text-xs text-neutral-500 dark:text-neutral-400">Status</dt>
+                    <dd class="mt-0.5 font-medium">{{ latest_injury.status }}</dd>
+                  </div>
+                  {% if latest_injury.fantasy_status %}
+                    <div>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Fantasy status</dt>
+                      <dd class="mt-0.5 font-medium">{{ latest_injury.fantasy_status }}{% if latest_injury.fantasy_status_abbreviation %} ({{ latest_injury.fantasy_status_abbreviation }}){% endif %}</dd>
+                    </div>
+                  {% endif %}
+                  {% if latest_injury.injury_status_type %}
+                    <div>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Report type</dt>
+                      <dd class="mt-0.5 font-medium">{{ latest_injury.injury_status_type }}</dd>
+                    </div>
+                  {% endif %}
+                  {% if latest_injury.feed_player_position or latest_injury.feed_player_status %}
+                    <div>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Player status</dt>
+                      <dd class="mt-0.5 font-medium">{% if latest_injury.feed_player_position %}{{ latest_injury.feed_player_position }}{% endif %}{% if latest_injury.feed_player_status %} · {{ latest_injury.feed_player_status }}{% endif %}</dd>
+                    </div>
+                  {% endif %}
+                  {% if latest_injury.injury_type or latest_injury.injury_location or latest_injury.injury_detail or latest_injury.injury_side %}
+                    <div class="sm:col-span-2">
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Injury</dt>
+                      <dd class="mt-0.5 font-medium">
+                        {{ latest_injury.injury_type }}{% if latest_injury.injury_location %} · {{ latest_injury.injury_location }}{% endif %}{% if latest_injury.injury_detail %} · {{ latest_injury.injury_detail }}{% endif %}{% if latest_injury.injury_side %} · {{ latest_injury.injury_side }}{% endif %}
+                      </dd>
+                    </div>
+                  {% endif %}
+                  {% if latest_injury.return_date %}
+                    <div>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Expected return</dt>
+                      <dd class="mt-0.5 font-medium">{{ latest_injury.return_date|date:"M j, Y" }}</dd>
+                    </div>
+                  {% endif %}
+                  <div>
+                    <dt class="text-xs text-neutral-500 dark:text-neutral-400">Observed</dt>
+                    <dd class="mt-0.5 font-medium">{{ latest_injury.observed_at|date:"M j, Y, H:i" }}</dd>
+                  </div>
+                  {% if latest_injury.reported_at %}
+                    <div>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Reported</dt>
+                      <dd class="mt-0.5 font-medium">{{ latest_injury.reported_at|date:"M j, Y, H:i" }}</dd>
+                    </div>
+                  {% endif %}
+                  {% if latest_injury.provider_source_description or latest_injury.headline_source %}
+                    <div>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Source</dt>
+                      <dd class="mt-0.5 font-medium">{{ latest_injury.headline_source|default:latest_injury.provider_source_description }}</dd>
+                    </div>
+                  {% endif %}
+                </dl>
+                {% if latest_injury.headline or latest_injury.short_comment or latest_injury.long_comment %}
+                  <div class="mt-4 border-t border-neutral-200 pt-4 text-sm dark:border-neutral-800">
+                    {% if latest_injury.headline %}<p class="font-medium">{{ latest_injury.headline }}</p>{% endif %}
+                    {% if latest_injury.short_comment %}<p class="mt-1">{{ latest_injury.short_comment }}</p>{% endif %}
+                    {% if latest_injury.long_comment %}<p class="mt-2 whitespace-pre-line text-neutral-500 dark:text-neutral-400">{{ latest_injury.long_comment }}</p>{% endif %}
+                  </div>
+                {% endif %}
+              {% else %}
+                <p class="mt-4 text-sm text-neutral-500 dark:text-neutral-400">No injury report has been recorded for this player.</p>
+              {% endif %}
+              </div>
+            </div>
+          </template>
+        </div>
+        <a href="{% url 'nba:player-list' %}" class="btn btn-secondary">All players</a>
+      </div>
     </div>
 
     <div class="grid grid-cols-2 gap-px border-t border-neutral-200 bg-neutral-200 sm:grid-cols-6 dark:border-neutral-800 dark:bg-neutral-800">

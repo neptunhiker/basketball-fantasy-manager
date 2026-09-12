@@ -104,18 +104,18 @@ def test_no_screen_prints_a_raw_eight_figure_amount(signed_in, roster):
                 assert "title=" in line, (url, line.strip())
 
 
-def test_the_build_screen_shows_cash_squad_value_and_salaries_in_millions(signed_in, roster):
+def test_the_build_screen_shows_cash_roster_value_and_salaries_in_millions(signed_in, roster):
     body = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk])).content.decode()
 
     assert "$42.00M" in body  # cash left after an 18M signing
-    assert "$18.00M" in body  # the player's own salary, in the squad list
+    assert "$18.00M" in body  # the player's own salary, in the roster list
 
-    # Squad value is a labelled figure in the team card's stats band, so the
+    # Roster value is a labelled figure in the team card's stats band, so the
     # label and the number are separate elements. Checked as "the figure
     # follows its label" rather than as a substring of the page: $18.00M is
     # also this player's salary, so a bare `in body` would pass either way.
-    _, _, after_label = body.partition("Squad value")
-    assert "$18.00M" in after_label[:400], "squad value figure not next to its label"
+    _, _, after_label = body.partition("Roster value")
+    assert "$18.00M" in after_label[:400], "roster value figure not next to its label"
 
 
 def test_the_roster_card_shows_cash_in_millions(signed_in, roster):

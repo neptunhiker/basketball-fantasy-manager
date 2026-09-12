@@ -51,6 +51,7 @@
             <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="hotness" label="Hotness" align="right" %}
             </th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">Injury</th>
             <th scope="col" class="px-4 py-3 text-right font-medium">Status</th>
           </tr>
         </thead>
@@ -99,6 +100,9 @@
                 {{ player.hotness_score|default:"–" }}
               </td>
               <td class="px-4 py-3 text-right">
+                {% include "nba/partials/injury_status.html" with player=player %}
+              </td>
+              <td class="px-4 py-3 text-right">
                 {% if player.is_active %}
                   <span class="badge badge-success">Active</span>
                 {% else %}
@@ -134,7 +138,7 @@
     {% endif %}
   {% else %}
     <div class="px-4 py-16 text-center">
-      {% if request.GET.q or request.GET.position or request.GET.team or request.GET.roster or request.GET.max_salary or request.GET.min_games %}
+      {% if request.GET.q or request.GET.position or request.GET.team or request.GET.injury_status or request.GET.roster or request.GET.max_salary or request.GET.min_games %}
         <p class="text-sm text-neutral-500 dark:text-neutral-400">Nothing matches those filters.</p>
       {% else %}
         <p class="text-sm text-neutral-500 dark:text-neutral-400">No players yet.</p>

@@ -394,6 +394,30 @@ def test_a_player_without_snapshots_says_so(signed_in, teams):
     )
     body = signed_in.get(url(player)).content.decode()
     assert "No snapshots on record" in body
+
+
+def test_player_detail_shows_healthy_without_injury_history(signed_in, player):
+    body = signed_in.get(url(player)).content.decode()
+
+    assert "Healthy" in body
+    assert "No injury report has been recorded" in body
+
+
+def test_player_detail_shows_latest_injury_report(signed_in, player):
+    from apps.nba.models import PlayerInjury
+
+    PlayerInjury.objects.create(
+        player=player,
+        observed_at=timezone.now(),
+        status="Out",
+        injury_type="Knee",
+        short_comment="Soreness",
+    )
+    body = signed_in.get(url(player)).content.decode()
+
+    assert "Injured" in body
+    assert "Latest injury report" in body
+    assert "Soreness" in body
     assert "$0.00M" not in body
 
 

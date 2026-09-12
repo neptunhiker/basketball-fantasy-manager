@@ -276,19 +276,19 @@ def test_the_team_card_carries_the_figures_the_page_is_read_for(signed_in, roste
     body = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk])).content.decode()
     card = body[body.index('id="roster-panel"') : body.index('id="player-picker"')]
 
-    for label in ("Cash", "Squad value", "Players", "Your squad"):
+    for label in ("Cash", "Roster value", "Players", "Your roster"):
         assert label in card, label
 
 
 def squad_of(body):
-    """Just the grouped squad from the team card.
+    """Just the grouped roster from the team card.
 
-    Sliced from the "Your squad" heading rather than from the top of the card,
+    Sliced from the "Your roster" heading rather than from the top of the card,
     because the summary strip above it names positions too -- "Still needed:
     4 more Guards" -- and a search for "Guards" would find that sentence first.
     """
     card = body[body.index('id="roster-panel"') : body.index('id="player-picker"')]
-    return card[card.index("Your squad") :]
+    return card[card.index("Your roster") :]
 
 
 def test_the_squad_is_grouped_by_position(signed_in, roster, pool):

@@ -103,6 +103,27 @@ def test_filter_by_team(signed_in, roster):
     assert names(response) == {"Jayson Tatum"}
 
 
+def test_filter_by_injury_status(signed_in, roster):
+    from django.utils import timezone
+
+    from apps.nba.models import Player, PlayerInjury
+
+    player = Player.objects.get(last_name="James")
+    PlayerInjury.objects.create(
+        player=player,
+        observed_at=timezone.now(),
+        status="Out",
+        injury_type="Foot",
+        short_comment="Test injury",
+    )
+
+    injured_response = signed_in.get(reverse("nba:player-list"), {"injury_status": "injured"})
+    healthy_response = signed_in.get(reverse("nba:player-list"), {"injury_status": "healthy"})
+
+    assert names(injured_response) == {"LeBron James"}
+    assert names(healthy_response) == {"Jayson Tatum", "Luka Dončić"}
+
+
 def test_filter_by_max_salary_in_millions(signed_in, roster):
     from apps.nba.models import Player
 
@@ -312,7 +333,29 @@ def test_player_table_uses_team_abbreviations_and_right_aligns_non_name_columns(
 
     assert "LAL" in body
     assert 'class="ml-1.5"' not in body
+    assert '<th scope="col" class="px-4 py-3 text-right font-medium">Injury</th>' in body
     assert '<th scope="col" class="px-4 py-3 text-right font-medium">Status</th>' in body
+
+
+def test_player_list_shows_latest_injury_in_clickable_column(signed_in, roster):
+    from django.utils import timezone
+
+    from apps.nba.models import Player, PlayerInjury
+
+    player = Player.objects.get(last_name="James")
+    PlayerInjury.objects.create(
+        player=player,
+        observed_at=timezone.now(),
+        status="Out",
+        injury_type="Foot",
+        short_comment="Test injury",
+    )
+
+    body = signed_in.get(reverse("nba:player-list")).content.decode()
+
+    assert "Injured" in body
+    assert "Latest injury report" in body
+    assert "Test injury" in body
 
 
 def test_empty_state_mentions_the_missing_import(signed_in, teams):

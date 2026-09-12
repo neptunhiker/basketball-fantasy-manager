@@ -173,6 +173,22 @@ class Player(TimeStampedModel):
             return None
         return predict_salary(self.current_fp_per_game)
 
+    @property
+    def latest_injury(self):
+        injuries = getattr(self, "injury_history", None)
+        if injuries is None:
+            return self.injuries.order_by("-observed_at", "-created_at").first()
+        return injuries[0] if injuries else None
+
+    @property
+    def is_injured(self):
+        latest = self.latest_injury
+        return bool(
+            latest
+            and latest.status.casefold()
+            not in {"healthy", "available", "returned", "cleared"}
+        )
+
     def hotness_score(self):
         """Return how often the player's FP/game has improved recently.
 
@@ -230,3 +246,87 @@ class Player(TimeStampedModel):
             slug = f"{base}-{suffix}"
             suffix += 1
         return slug
+
+
+class PlayerInjury(TimeStampedModel):
+    """An injury observation received from an external NBA data provider."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    player = models.ForeignKey(
+        Player,
+        verbose_name="Player",
+        on_delete=models.CASCADE,
+        related_name="injuries",
+    )
+    provider = models.CharField("Provider", max_length=64, default="api-basketball-nba")
+    provider_injury_id = models.CharField("Provider injury ID", max_length=64, blank=True)
+    provider_source_id = models.CharField("Provider source ID", max_length=64, blank=True)
+    provider_source_state = models.CharField("Provider source state", max_length=32, blank=True)
+    provider_source_description = models.CharField(
+        "Provider source description", max_length=128, blank=True
+    )
+    observed_at = models.DateTimeField("Observed at")
+    reported_at = models.DateTimeField("Reported at", null=True, blank=True)
+    status = models.CharField("Status", max_length=64)
+    injury_status_type = models.CharField("Injury status type", max_length=128, blank=True)
+    fantasy_status = models.CharField("Fantasy status", max_length=64, blank=True)
+    fantasy_status_abbreviation = models.CharField(
+        "Fantasy status abbreviation", max_length=16, blank=True
+    )
+    return_date = models.DateField("Expected return date", null=True, blank=True)
+    injury_type = models.CharField("Injury type", max_length=128, blank=True)
+    injury_location = models.CharField("Injury location", max_length=128, blank=True)
+    injury_detail = models.CharField("Injury detail", max_length=128, blank=True)
+    injury_side = models.CharField("Injury side", max_length=64, blank=True)
+    short_comment = models.TextField("Short comment", blank=True)
+    long_comment = models.TextField("Long comment", blank=True)
+    headline = models.TextField("Headline", blank=True)
+    headline_source = models.CharField("Headline source", max_length=128, blank=True)
+    feed_player_name = models.CharField("Feed player name", max_length=160, blank=True)
+    feed_athlete_id = models.CharField("Feed athlete ID", max_length=64, blank=True)
+    feed_player_position = models.CharField("Feed player position", max_length=64, blank=True)
+    feed_player_position_abbreviation = models.CharField(
+        "Feed player position abbreviation", max_length=8, blank=True
+    )
+    feed_player_status = models.CharField("Feed player status", max_length=64, blank=True)
+    feed_team_id = models.CharField("Feed team ID", max_length=64, blank=True)
+    feed_team_abbreviation = models.CharField("Feed team abbreviation", max_length=8, blank=True)
+    feed_team_name = models.CharField("Feed team name", max_length=128, blank=True)
+    raw_payload = models.JSONField("Raw provider payload", default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-observed_at", "-created_at"]
+        verbose_name = "Player injury"
+        verbose_name_plural = "Player injuries"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "provider_injury_id", "observed_at"],
+                condition=~models.Q(provider_injury_id=""),
+                name="unique_provider_injury_observation",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["player", "-observed_at"]),
+            models.Index(fields=["status"]),
+        ]
+
+    def __str__(self):
+        return f"{self.player} - {self.status}"
+
+
+class NbaApiUsage(TimeStampedModel):
+    """Daily outbound-request counter for the NBA provider."""
+
+    provider = models.CharField("Provider", max_length=64)
+    usage_date = models.DateField("Usage date")
+    request_count = models.PositiveSmallIntegerField("Request count", default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "usage_date"], name="one_api_usage_row_per_day"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.provider} - {self.usage_date}: {self.request_count}"

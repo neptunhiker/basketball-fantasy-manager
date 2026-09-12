@@ -13,7 +13,7 @@
         hx-push-url="true"
         hx-indicator="#player-indicator">
 
-    <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto]">
+    <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto_auto]">
       <div>
         <label for="player-search" class="sr-only">Search by name</label>
         <input type="search" id="player-search" name="q" value="{{ request.GET.q|default:'' }}"
@@ -40,6 +40,16 @@
           {% for team in teams %}
             <option value="{{ team.abbreviation }}" {% if request.GET.team == team.abbreviation %}selected{% endif %}>{{ team.name }}</option>
           {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="player-injury-status" class="sr-only">Injury status</label>
+        <select id="player-injury-status" name="injury_status"
+                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+          <option value="">All injury status</option>
+          <option value="healthy" {% if request.GET.injury_status == 'healthy' %}selected{% endif %}>Healthy</option>
+          <option value="injured" {% if request.GET.injury_status == 'injured' %}selected{% endif %}>Injured</option>
         </select>
       </div>
 

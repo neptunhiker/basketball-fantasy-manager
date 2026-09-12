@@ -27,6 +27,8 @@ services:
     build: .
     command: ["python", "manage.py", "qcluster"]
     env_file: .env
+    healthcheck:
+      disable: true
     depends_on:
       db:
         condition: service_healthy

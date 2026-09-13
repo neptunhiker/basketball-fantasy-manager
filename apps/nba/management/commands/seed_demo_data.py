@@ -303,7 +303,7 @@ def fabricate_history(rng, final_salary, weeks):
 
 
 class Command(BaseCommand):
-    help = "Create a fabricated player pool with a weekly history. Development only."
+    help = "Create a fabricated player pool with a weekly history."
 
     def add_arguments(self, parser):
         parser.add_argument("--seed", type=int, default=20262027, help="RNG seed.")
@@ -321,8 +321,10 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        if not settings.DEBUG:
-            raise CommandError("Nur mit DEBUG=True -- das sind erfundene Daten.")
+        if not settings.ALLOW_DEMO_DATA:
+            raise CommandError(
+                "Demo data is disabled in this environment. Set ALLOW_DEMO_DATA=true explicitly."
+            )
 
         season = Season.objects.filter(is_current=True).first()
         if season is None:

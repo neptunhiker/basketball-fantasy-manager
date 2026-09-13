@@ -11,6 +11,8 @@ primary_region = "fra"
 
 [env]
   DJANGO_SETTINGS_MODULE = "config.settings.prod"
+  ENVIRONMENT = "production"
+  ALLOW_DEMO_DATA = "false"
   PORT = "8080"
 
 [processes]

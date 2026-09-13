@@ -12,6 +12,8 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = False
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
+ENVIRONMENT = env("ENVIRONMENT", default="production").strip().lower()
+ALLOW_DEMO_DATA = env.bool("ALLOW_DEMO_DATA", default=False)
 
 DJANGO_APPS = [
     "django.contrib.admin",

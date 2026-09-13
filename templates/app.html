@@ -9,7 +9,15 @@
          :class="navOpen && 'translate-x-0'">
     <div class="flex h-16 items-center gap-2.5 px-6">
       <span class="gradient-rule h-7 w-7 shrink-0 rounded-lg" aria-hidden="true"></span>
-      <span class="text-sm font-bold tracking-tight">{{ SITE_NAME }}</span>
+      <div class="min-w-0">
+        <span class="block truncate text-sm font-bold tracking-tight">{{ SITE_NAME }}</span>
+        {% if ENVIRONMENT != "production" %}
+          <span class="mt-0.5 inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider
+            {% if ENVIRONMENT == 'staging' %}bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300{% else %}bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300{% endif %}">
+            {{ ENVIRONMENT }}
+          </span>
+        {% endif %}
+      </div>
     </div>
     <div class="gradient-rule mx-6 h-px"></div>
 

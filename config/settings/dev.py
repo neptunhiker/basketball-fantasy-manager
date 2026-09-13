@@ -4,6 +4,8 @@ from .base import *  # noqa: F403
 from .base import BASE_DIR, env
 
 DEBUG = True
+ENVIRONMENT = env("ENVIRONMENT", default="development").strip().lower()
+ALLOW_DEMO_DATA = env.bool("ALLOW_DEMO_DATA", default=True)
 SECRET_KEY = env("SECRET_KEY", default="dev-only-insecure-key-do-not-use-in-production")
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]"]
 

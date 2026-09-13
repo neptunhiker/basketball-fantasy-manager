@@ -28,19 +28,6 @@
     {# dropped on a small screen, and no breakpoint has to be guessed at. #}
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs sm:gap-x-4">
 
-      <p class="flex items-baseline gap-1.5">
-        <span class="text-neutral-500 dark:text-neutral-400">Cash</span>
-        {# A step up in size from its label and from everything beside it: #}
-        {# this is the one figure the strip exists for. #}
-        <span class="text-sm font-bold tabular-nums {% if roster.cash == 0 %}text-neutral-400 dark:text-neutral-500{% endif %}"
-              title="{{ roster.cash|exact }}">{{ roster.cash|millions }}</span>
-      </p>
-
-      <p class="flex items-baseline gap-1.5">
-        <span class="text-neutral-500 dark:text-neutral-400">Players</span>
-        <span class="font-semibold tabular-nums">{{ roster.player_count }} / {{ roster_size }}</span>
-      </p>
-
       {# The positions are what earns this strip its height: cash says what #}
       {# is affordable, these say what to look for. Same order and the same #}
       {# codes as the sections in the team card, so the two read as one #}
@@ -70,7 +57,7 @@
 
   <div class="card overflow-hidden">
 
-    {% if not signings_open %}
+    {% if not transactions_allowed and not trading_allowed %}
       {# Said at the top of the thing that changed, rather than as a page-wide #}
       {# banner: the list below is still useful, it just does something else now. #}
       <p class="border-b border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
@@ -86,7 +73,7 @@
           </span>
         {% endif %}
       </p>
-    {% elif signings_close_at %}
+    {% elif transactions_allowed and signings_close_at %}
       <p class="border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
         Signings close on {{ signings_close_at|date:"j F" }} at {{ signings_close_at|date:"H:i" }}.
         Every roster has to be complete by then: after it, trades can change who
@@ -159,7 +146,23 @@
               {{ player.current_salary|millions }}
             </span>
 
-            {% if not signings_open %}
+            {% if transactions_allowed and roster.is_complete %}
+              <button type="button" disabled class="btn btn-secondary !px-2.5 !py-1 text-xs opacity-50"
+                      title="The roster is full">Full</button>
+            {% elif transactions_allowed and player.affordable %}
+              <button type="button"
+                      hx-post="{% url 'fantasy:roster-buy' roster.pk player.pk %}"
+                      hx-target="#roster-panel"
+                      hx-swap="outerHTML"
+                      hx-include="#picker-filters"
+                      class="btn btn-primary !px-2.5 !py-1 text-xs"
+                      aria-label="Sign {{ player.full_name }}">
+                Sign
+              </button>
+            {% elif transactions_allowed %}
+              <button type="button" disabled class="btn btn-secondary !px-2.5 !py-1 text-xs opacity-50"
+                      title="Not enough cash">Too dear</button>
+            {% elif trading_allowed %}
               {# The picker's whole purpose after the cutoff: this is how you #}
               {# find an incoming player. `?in=` is the same query parameter the #}
               {# squad panel's trade icon uses for the outgoing side. #}
@@ -171,22 +174,9 @@
                       aria-label="Trade for {{ player.full_name }}">
                 Trade for
               </button>
-            {% elif roster.is_complete %}
-              <button type="button" disabled class="btn btn-secondary !px-2.5 !py-1 text-xs opacity-50"
-                      title="The roster is full">Full</button>
-            {% elif player.affordable %}
-              <button type="button"
-                      hx-post="{% url 'fantasy:roster-buy' roster.pk player.pk %}"
-                      hx-target="#roster-panel"
-                      hx-swap="outerHTML"
-                      hx-include="#picker-filters"
-                      class="btn btn-primary !px-2.5 !py-1 text-xs"
-                      aria-label="Sign {{ player.full_name }}">
-                Sign
-              </button>
             {% else %}
               <button type="button" disabled class="btn btn-secondary !px-2.5 !py-1 text-xs opacity-50"
-                      title="Not enough cash">Too dear</button>
+                      title="{% if not transactions_allowed %}Transactions are not currently allowed{% else %}Not enough cash{% endif %}">{% if not transactions_allowed %}Closed{% else %}Too dear{% endif %}</button>
             {% endif %}
           </li>
         {% endfor %}

@@ -23,6 +23,9 @@ class SeasonAdmin(admin.ModelAdmin):
         A timestamp alone does not say whether it has passed, and that is the
         only thing anyone reads this column for.
         """
+        if obj.signings_open_at and not obj.signings_open:
+            opened = timezone.localtime(obj.signings_open_at)
+            return f"Opens {opened.strftime('%-d %b %Y, %H:%M')}"
         if obj.signings_close_at is None:
             return "Open all season"
         closed = timezone.localtime(obj.signings_close_at)

@@ -46,6 +46,16 @@
         Players
       </a>
 
+      {% url 'nba:watchlist' as watchlist_url %}
+      <a href="{{ watchlist_url }}"
+         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+           {% if watchlist_url in request.path %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
+        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m12 3.8 2.5 5.1 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8L12 3.8Z"/>
+        </svg>
+        Watchlist
+      </a>
+
       {% url 'fantasy:roster-list' as rosters_url %}
       <a href="{{ rosters_url }}"
          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
@@ -67,16 +77,18 @@
         Managers
       </a>
 
-      {% url 'fantasy:season-list' as seasons_url %}
-      <a href="{{ seasons_url }}"
-         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
-           {% if seasons_url in request.path %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
-        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="3" y="5" width="18" height="16" rx="2"/>
-          <path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/>
-        </svg>
-        Seasons
-      </a>
+      {% if request.user.is_staff and request.user.is_superuser %}
+        {% url 'fantasy:season-list' as seasons_url %}
+        <a href="{{ seasons_url }}"
+           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
+             {% if seasons_url in request.path %}bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300{% else %}text-neutral-600 hover:bg-neutral-100 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100{% endif %}">
+          <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2"/>
+            <path stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4"/>
+          </svg>
+          Seasons
+        </a>
+      {% endif %}
 
       {% if request.user.is_staff %}
         {% url 'accounts:user-list' as users_url %}

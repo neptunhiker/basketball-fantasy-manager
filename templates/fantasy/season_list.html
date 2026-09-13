@@ -4,7 +4,7 @@
 {% block page_title %}Seasons{% endblock %}
 
 {% block header_actions %}
-  {# Staff only. `SeasonCreateView` checks again -- this decides whether to #}
+  {# Admin only. `SeasonCreateView` checks again -- this decides whether to #}
   {# offer a door, not whether it opens. #}
   {% if can_manage %}
     <button type="button"

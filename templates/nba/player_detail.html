@@ -15,7 +15,12 @@
         {{ player.position }}
       </span>
       <div class="min-w-0 flex-1">
-        <h2 class="text-xl font-bold tracking-tight">{{ player.full_name }}</h2>
+        <div class="flex items-center gap-2">
+          <h2 class="text-xl font-bold tracking-tight">{{ player.full_name }}</h2>
+          <span id="watchlist-button">
+            {% include "nba/partials/watchlist_button.html" %}
+          </span>
+        </div>
         <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
           {{ player.get_position_display }}
           {% if player.team %}

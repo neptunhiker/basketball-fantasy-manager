@@ -297,4 +297,25 @@
   .gradient-rule {
     background: var(--bl-gradient);
   }
+
+  @keyframes season-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-season-rise {
+    animation: season-rise 700ms var(--ease-gentle) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-season-rise {
+      animation: none;
+    }
+  }
 }

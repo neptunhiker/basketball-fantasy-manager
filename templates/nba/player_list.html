@@ -1,7 +1,7 @@
 {% extends "app.html" %}
 
-{% block title %}Players · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Players{% endblock %}
+{% block title %}{% if watchlist_page %}Watchlist{% else %}Players{% endif %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% if watchlist_page %}Watchlist{% else %}Players{% endif %}{% endblock %}
 
 {% block content %}
 <div class="card overflow-hidden">
@@ -85,6 +85,13 @@
                  class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
           At least 6 games
         </label>
+        {% if not watchlist_page %}
+          <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <input type="checkbox" name="watchlist" value="1" {% if watchlist_only %}checked{% endif %}
+                   class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
+            Watched only
+          </label>
+        {% endif %}
       </div>
       <span id="player-indicator" class="htmx-indicator text-xs text-neutral-500">Searching…</span>
     </div>

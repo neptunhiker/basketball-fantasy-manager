@@ -1,14 +1,96 @@
+import datetime as dt
+
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
+
+from apps.fantasy.models import ROSTER_SIZE, Roster, Season
+
+
+def _countdown_for_season(season):
+    """Return the next meaningful deadline in the season lifecycle."""
+    if season is None:
+        return None, ""
+
+    now = timezone.now()
+    current_zone = timezone.get_current_timezone()
+    season_start = timezone.make_aware(dt.datetime.combine(season.starts_on, dt.time.min), current_zone)
+    season_end = timezone.make_aware(dt.datetime.combine(season.ends_on, dt.time.max), current_zone)
+    signings_open = season.signings_open_at
+    signings_close = season.signings_close_at
+
+    if signings_open and now < signings_open:
+        return signings_open, "Signings open in"
+    if signings_close and now < signings_close:
+        return signings_close, "Signings close in"
+    if now < season_start:
+        return season_start, "Season starts in"
+    if now <= season_end:
+        return season_end, "Season ends in"
+    return None, ""
+
+
+COUNTDOWN_COPY = {
+    "Signings open in": (
+        "The draft room opens soon.",
+        "Get your shortlist ready, then start building when signings open.",
+    ),
+    "Signings close in": (
+        "Complete your roster before signings close.",
+        "Make your final additions before the signing window shuts.",
+    ),
+    "Season starts in": (
+        "Set your lineup before tip-off.",
+        "Signings are closed. Make sure your roster is ready for the season.",
+    ),
+    "Season ends in": (
+        "Make every move count.",
+        "The season is live. Keep an eye on your roster until the final day.",
+    ),
+}
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "core/dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        season = Season.objects.filter(is_current=True).first()
+        context["current_season"] = season
+        context["days_to_season_start"] = (
+            (season.starts_on - timezone.localdate()).days
+            if season and season.timing == Season.Timing.UPCOMING
+            else None
+        )
+        context["transactions_allowed"] = season.transactions_allowed if season else False
+        context["trading_allowed"] = season.trading_allowed if season else False
+        context["trading_window_open"] = context["trading_allowed"]
+        countdown_target, countdown_label = _countdown_for_season(season)
+        context["countdown_target_at"] = (
+            timezone.localtime(countdown_target) if countdown_target else None
+        )
+        context["countdown_label"] = countdown_label
+        context["countdown_heading"], context["countdown_description"] = COUNTDOWN_COPY.get(
+            countdown_label, ("The season is underway.", "Keep your roster moving.")
+        )
+        dashboard_rosters = (
+            list(
+                Roster.objects.filter(manager__user=self.request.user, season=season)
+                .with_squad()
+                .order_by("name")
+            )
+            if season
+            else []
+        )
+        context["dashboard_roster"] = dashboard_rosters[0] if dashboard_rosters else None
+        context["dashboard_roster_count"] = len(dashboard_rosters)
+        context["roster_size"] = ROSTER_SIZE
+        return context
 
 
 def healthz(request):
@@ -32,6 +114,13 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
     def test_func(self):
         return self.request.user.is_staff
+
+
+class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """Only staff superusers may administer global configuration."""
+
+    def test_func(self):
+        return self.request.user.is_staff and self.request.user.is_superuser
 
 
 class TypedConfirmView(LoginRequiredMixin, View):

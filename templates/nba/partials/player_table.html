@@ -21,6 +21,9 @@
       <table class="w-full text-left text-sm">
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
           <tr>
+            <th scope="col" class="w-12 px-4 py-3 text-center font-medium">
+              <span class="sr-only">Watchlist</span>
+            </th>
             <th scope="col" class="px-4 py-3 font-medium">
               {% include "nba/partials/sort_header.html" with key="name" label="Player" %}
             </th>
@@ -58,6 +61,9 @@
         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
           {% for player in players %}
             <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+              <td class="px-4 py-3 text-center">
+                {% include "nba/partials/watchlist_button.html" with is_watched=player.is_watched remove_row=watchlist_only %}
+              </td>
               <td class="px-4 py-3 font-medium">
                 <a href="{% url 'nba:player-detail' player.slug %}"
                    class="hover:text-primary-600 hover:underline dark:hover:text-primary-400">{{ player.full_name }}</a>
@@ -138,7 +144,10 @@
     {% endif %}
   {% else %}
     <div class="px-4 py-16 text-center">
-      {% if request.GET.q or request.GET.position or request.GET.team or request.GET.injury_status or request.GET.roster or request.GET.max_salary or request.GET.min_games %}
+      {% if watchlist_page %}
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">Your watchlist is empty.</p>
+        <a href="{% url 'nba:player-list' %}" class="btn btn-primary mt-6">Browse players</a>
+      {% elif request.GET.q or request.GET.position or request.GET.team or request.GET.injury_status or request.GET.roster or request.GET.max_salary or request.GET.min_games or request.GET.watchlist %}
         <p class="text-sm text-neutral-500 dark:text-neutral-400">Nothing matches those filters.</p>
       {% else %}
         <p class="text-sm text-neutral-500 dark:text-neutral-400">No players yet.</p>

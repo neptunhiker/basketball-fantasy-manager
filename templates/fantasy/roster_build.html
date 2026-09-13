@@ -30,17 +30,19 @@
   {# Without this the bar's seven children left the roster name 38px at #}
   {# 390px and nothing at all at 320px: a page about one team that could #}
   {# not say which team. `aria-label` on both, at every width. #}
-  <button type="button"
-          hx-get="{% url 'fantasy:roster-trade' roster.pk %}"
-          hx-target="#modal-root"
-          hx-swap="innerHTML"
-          aria-label="Trade"
-          class="btn btn-secondary h-9 w-9 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3">
+  {% if trading_allowed %}
+    <button type="button"
+            hx-get="{% url 'fantasy:roster-trade' roster.pk %}"
+            hx-target="#modal-root"
+            hx-swap="innerHTML"
+            aria-label="Trade"
+            class="btn btn-secondary h-9 w-9 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3">
     <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
     </svg>
     <span class="hidden sm:inline">Trade</span>
-  </button>
+    </button>
+  {% endif %}
   <a href="{% url 'fantasy:roster-history' roster.pk %}"
      aria-label="History"
      class="btn btn-ghost h-9 w-9 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3">

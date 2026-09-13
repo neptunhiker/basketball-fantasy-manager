@@ -39,11 +39,11 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
 
     # Meta.fields first, then the declared ones, so this is what puts the
     # checkbox back between the dates and the cutoff.
-    field_order = ["label", "starts_on", "ends_on", "is_current", "signings_close_at"]
+    field_order = ["label", "starts_on", "ends_on", "is_current", "signings_open_at", "signings_close_at"]
 
     class Meta:
         model = Season
-        fields = ["label", "starts_on", "ends_on", "signings_close_at"]
+        fields = ["label", "starts_on", "ends_on", "signings_open_at", "signings_close_at"]
         widgets = {
             # Native pickers. Without an explicit format the browser gets a
             # plain text box and the value it posts back is anyone's guess.
@@ -53,6 +53,9 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
             # Django reads and writes it in the active timezone, so an admin
             # types the wall-clock time the deadline actually falls at.
             "signings_close_at": forms.DateTimeInput(
+                attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
+            ),
+            "signings_open_at": forms.DateTimeInput(
                 attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
             ),
         }
@@ -77,6 +80,9 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
         starts_on, ends_on = cleaned.get("starts_on"), cleaned.get("ends_on")
         if starts_on and ends_on and ends_on <= starts_on:
             self.add_error("ends_on", "A season has to end after it starts.")
+        open_at, close_at = cleaned.get("signings_open_at"), cleaned.get("signings_close_at")
+        if open_at and close_at and open_at >= close_at:
+            self.add_error("signings_close_at", "Signings must close after they open.")
         return cleaned
 
     @transaction.atomic

@@ -13,9 +13,9 @@ from apps.nba.models import Player
 @pytest.fixture
 def season(db):
     return Season.objects.create(
-        label="2025-26",
-        starts_on=dt.date(2025, 10, 21),
-        ends_on=dt.date(2026, 4, 12),
+        label="2026-27",
+        starts_on=dt.date(2026, 9, 1),
+        ends_on=dt.date(2027, 4, 12),
         is_current=True,
     )
 

@@ -1,6 +1,10 @@
 import pytest
+import datetime as dt
 from django.core import mail
 from django.urls import reverse
+from django.utils import timezone
+
+from apps.fantasy.models import Roster, Season
 
 pytestmark = pytest.mark.django_db
 
@@ -42,6 +46,91 @@ def test_dashboard_requires_login(client):
     response = client.get(reverse("core:dashboard"))
     assert response.status_code == 302
     assert reverse("accounts:login") in response["Location"]
+
+
+def test_dashboard_shows_days_until_current_season(user, password, client, db):
+    client.login(username=user.email, password=password)
+    season = Season.objects.create(
+        label="2026-27",
+        starts_on=dt.date.today() + dt.timedelta(days=10),
+        ends_on=dt.date.today() + dt.timedelta(days=200),
+        is_current=True,
+        signings_open_at=timezone.now() - dt.timedelta(days=1),
+        signings_close_at=timezone.now() + dt.timedelta(days=5),
+    )
+
+    response = client.get(reverse("core:dashboard"))
+
+    assert response.context["current_season"] == season
+    assert response.context["days_to_season_start"] == 10
+    assert response.context["countdown_label"] == "Signings close in"
+    assert response.context["countdown_heading"] == "Complete your roster before signings close."
+    assert "Complete your roster before signings close." in response.content.decode()
+    assert 'id="trading-countdown"' in response.content.decode()
+    assert "The foundation is in place" not in response.content.decode()
+
+
+def test_dashboard_has_a_started_season_state(user, password, client, db):
+    client.login(username=user.email, password=password)
+    Season.objects.create(
+        label="2025-26",
+        starts_on=dt.date.today() - dt.timedelta(days=10),
+        ends_on=dt.date.today() + dt.timedelta(days=100),
+        is_current=True,
+    )
+
+    response = client.get(reverse("core:dashboard"))
+
+    assert response.context["days_to_season_start"] is None
+    assert response.context["countdown_label"] == "Season ends in"
+    assert 'id="trading-countdown"' in response.content.decode()
+
+
+def test_dashboard_shows_the_users_current_season_roster(user, password, client, manager):
+    client.login(username=user.email, password=password)
+    season = Season.objects.create(
+        label="2026-27",
+        starts_on=dt.date.today() + dt.timedelta(days=10),
+        ends_on=dt.date.today() + dt.timedelta(days=200),
+        is_current=True,
+    )
+    Roster.objects.create(manager=manager, season=season, name="Bulla Ballers")
+
+    response = client.get(reverse("core:dashboard"))
+
+    assert response.context["dashboard_roster"].name == "Bulla Ballers"
+    assert "My roster" in response.content.decode()
+
+
+@pytest.mark.parametrize(
+    ("starts_offset", "ends_offset", "open_offset", "close_offset", "expected"),
+    [
+        (30, 130, 5, 20, "Signings open in"),
+        (30, 130, -5, 5, "Signings close in"),
+        (5, 105, -20, -5, "Season starts in"),
+        (-20, 80, -30, 5, "Signings close in"),
+        (-20, 80, -30, -5, "Season ends in"),
+        (-40, -1, -50, -45, ""),
+    ],
+)
+def test_dashboard_chooses_the_next_season_deadline(
+    user, password, client, starts_offset, ends_offset, open_offset, close_offset, expected
+):
+    client.login(username=user.email, password=password)
+    today = timezone.localdate()
+    Season.objects.create(
+        label="2026-27",
+        starts_on=today + dt.timedelta(days=starts_offset),
+        ends_on=today + dt.timedelta(days=ends_offset),
+        is_current=True,
+        signings_open_at=timezone.now() + dt.timedelta(days=open_offset),
+        signings_close_at=timezone.now() + dt.timedelta(days=close_offset),
+    )
+
+    response = client.get(reverse("core:dashboard"))
+
+    assert response.context["countdown_label"] == expected
+    assert ("id=\"trading-countdown\"" in response.content.decode()) is bool(expected)
 
 
 def test_logout_requires_post(client, user, password):

@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import (
     Case,
     DecimalField,
+    Exists,
     ExpressionWrapper,
     F,
     OuterRef,
@@ -14,12 +15,15 @@ from django.db.models import (
     When,
 )
 from django.db.models.functions import Greatest
-from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import formats, timezone
+from django.views import View
 from django.views.generic import DetailView, ListView
 
-from apps.fantasy.models import PlayerSnapshot, Roster
+from apps.fantasy import services
+from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
 
 from . import charts, stats
 from .models import Player, PlayerInjury, Team
@@ -74,6 +78,17 @@ class PlayerListView(LoginRequiredMixin, ListView):
             ),
         )
 
+        watched = WatchlistEntry.objects.filter(
+            user=self.request.user,
+            player_id=OuterRef("pk"),
+        )
+        qs = qs.annotate(is_watched=Exists(watched))
+        watchlist_only = self.request.GET.get("watchlist") == "1" or getattr(
+            self, "watchlist_page", False
+        )
+        if watchlist_only:
+            qs = qs.filter(is_watched=True)
+
         roster_id = self.request.GET.get("roster", "").strip()
         if roster_id and Roster.objects.filter(
             id=roster_id, manager__user=self.request.user
@@ -85,7 +100,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
 
         # Retired and released players stay in the table so their history keeps
         # resolving, but they are noise on a roster screen unless asked for.
-        if not self.request.GET.get("inactive"):
+        if not self.request.GET.get("inactive") and not getattr(self, "watchlist_page", False):
             qs = qs.filter(is_active=True)
 
         # Each term has to match somewhere, so "james l" finds LeBron James
@@ -196,6 +211,10 @@ class PlayerListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["watchlist_only"] = self.request.GET.get("watchlist") == "1" or getattr(
+            self, "watchlist_page", False
+        )
+        context["watchlist_page"] = getattr(self, "watchlist_page", False)
         context["positions"] = Player.Position.choices
         context["teams"] = Team.objects.order_by("name")
         context["rosters"] = Roster.objects.filter(
@@ -231,6 +250,33 @@ class PlayerListView(LoginRequiredMixin, ListView):
         if self.request.htmx:
             return ["nba/partials/player_table.html"]
         return super().get_template_names()
+
+
+class WatchlistView(PlayerListView):
+    watchlist_page = True
+    template_name = "nba/player_list.html"
+
+
+class WatchlistToggleView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        player = get_object_or_404(Player, slug=slug)
+        entry = WatchlistEntry.objects.filter(user=request.user, player=player).first()
+        if entry is None:
+            services.add_to_watchlist(request.user, player)
+        else:
+            services.remove_from_watchlist(request.user, player)
+
+        if entry is not None and request.GET.get("remove_row") == "1":
+            return HttpResponse("")
+
+        return render(
+            request,
+            "nba/partials/watchlist_button.html",
+            {
+                "player": player,
+                "is_watched": entry is None,
+            },
+        )
 
 
 def _card(title, unit, rows, footnote=""):
@@ -464,6 +510,9 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
             rows.append({"snapshot": snapshot, **changes})
 
         context["rows"] = rows
+        context["is_watched"] = WatchlistEntry.objects.filter(
+            user=self.request.user, player=self.object
+        ).exists()
         latest_injury = self.object.injuries.order_by("-observed_at", "-created_at").first()
         context["latest_injury"] = latest_injury
         context["is_injured"] = bool(

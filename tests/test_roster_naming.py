@@ -40,7 +40,7 @@ def create_url():
 # --- the prompt --------------------------------------------------------------
 
 
-def test_the_list_page_opens_the_prompt_rather_than_creating_at_once(signed_in, season):
+def test_the_list_page_offers_profile_creation_before_a_roster(signed_in, season):
     body = signed_in.get(reverse("fantasy:roster-list")).content.decode()
 
     assert f'hx-get="{create_url()}"' in body
@@ -48,7 +48,7 @@ def test_the_list_page_opens_the_prompt_rather_than_creating_at_once(signed_in, 
     assert not Roster.objects.exists()
 
 
-def test_the_prompt_asks_for_a_name(signed_in, season):
+def test_the_prompt_asks_for_a_name(signed_in, season, manager):
     body = signed_in.get(create_url()).content.decode()
 
     assert 'role="dialog"' in body
@@ -59,7 +59,7 @@ def test_the_prompt_asks_for_a_name(signed_in, season):
     assert not Roster.objects.exists()
 
 
-def test_the_prompt_suggests_a_name_so_enter_is_enough(signed_in, season):
+def test_the_prompt_suggests_a_name_so_enter_is_enough(signed_in, season, manager):
     body = signed_in.get(create_url()).content.decode()
     assert 'value="Roster 1"' in body
 
@@ -70,7 +70,7 @@ def test_the_suggestion_skips_names_already_taken(signed_in, season, manager):
     assert 'value="Roster 2"' in body
 
 
-def test_the_prompt_posts_back_to_its_own_url(signed_in, season):
+def test_the_prompt_posts_back_to_its_own_url(signed_in, season, manager):
     body = signed_in.get(create_url()).content.decode()
     assert f'hx-post="{create_url()}"' in body
 
@@ -78,17 +78,17 @@ def test_the_prompt_posts_back_to_its_own_url(signed_in, season):
 # --- what gets accepted ------------------------------------------------------
 
 
-def test_the_typed_name_wins_over_the_suggestion(signed_in, season):
+def test_the_typed_name_wins_over_the_suggestion(signed_in, season, manager):
     signed_in.post(create_url(), {"name": "Bulla Ballers"})
     assert Roster.objects.get().name == "Bulla Ballers"
 
 
-def test_surrounding_whitespace_is_trimmed(signed_in, season):
+def test_surrounding_whitespace_is_trimmed(signed_in, season, manager):
     signed_in.post(create_url(), {"name": "  Bulla Ballers  "})
     assert Roster.objects.get().name == "Bulla Ballers"
 
 
-def test_an_empty_name_creates_nothing(signed_in, season):
+def test_an_empty_name_creates_nothing(signed_in, season, manager):
     response = signed_in.post(create_url(), {"name": "   "})
 
     assert response.status_code == 200
@@ -96,12 +96,12 @@ def test_an_empty_name_creates_nothing(signed_in, season):
     assert "Please enter a name." in response.content.decode()
 
 
-def test_a_missing_name_creates_nothing(signed_in, season):
+def test_a_missing_name_creates_nothing(signed_in, season, manager):
     signed_in.post(create_url(), {})
     assert not Roster.objects.exists()
 
 
-def test_the_error_response_is_swappable_by_htmx(signed_in, season):
+def test_the_error_response_is_swappable_by_htmx(signed_in, season, manager):
     """HTMX ignores non-2xx by default, so the corrected form must be a 200."""
     response = signed_in.post(create_url(), {"name": ""})
 
@@ -126,7 +126,7 @@ def test_a_name_used_twice_in_a_season_is_refused_with_a_sentence(signed_in, sea
     assert Roster.objects.count() == 1
 
 
-def test_someone_elses_name_is_not_in_the_way(signed_in, season, other_manager):
+def test_someone_elses_name_is_not_in_the_way(signed_in, season, manager, other_manager):
     Roster.objects.create(manager=other_manager, season=season, name="Bulla Ballers")
 
     signed_in.post(create_url(), {"name": "Bulla Ballers"})
@@ -134,7 +134,7 @@ def test_someone_elses_name_is_not_in_the_way(signed_in, season, other_manager):
     assert Roster.objects.filter(name="Bulla Ballers").count() == 2
 
 
-def test_an_overlong_name_is_cut_to_the_column_width(signed_in, season):
+def test_an_overlong_name_is_cut_to_the_column_width(signed_in, season, manager):
     signed_in.post(create_url(), {"name": "B" * 200})
     assert len(Roster.objects.get().name) == 80
 
@@ -142,7 +142,7 @@ def test_an_overlong_name_is_cut_to_the_column_width(signed_in, season):
 # --- the success handoff -----------------------------------------------------
 
 
-def test_an_htmx_post_redirects_via_the_header(signed_in, season):
+def test_an_htmx_post_redirects_via_the_header(signed_in, season, manager):
     response = signed_in.post(create_url(), {"name": "Bulla Ballers"}, HTTP_HX_REQUEST="true")
     roster = Roster.objects.get()
 
@@ -150,7 +150,7 @@ def test_an_htmx_post_redirects_via_the_header(signed_in, season):
     assert response["HX-Redirect"] == reverse("fantasy:roster-rules", args=[roster.pk])
 
 
-def test_a_plain_post_still_redirects(signed_in, season):
+def test_a_plain_post_still_redirects(signed_in, season, manager):
     """The prompt is enhancement: without HTMX the form must still work."""
     response = signed_in.post(create_url(), {"name": "Bulla Ballers"})
     roster = Roster.objects.get()

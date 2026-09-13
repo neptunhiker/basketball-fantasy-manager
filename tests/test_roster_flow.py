@@ -66,7 +66,7 @@ def sell_url(roster, player):
 # --- creation ----------------------------------------------------------------
 
 
-def test_creating_a_roster_uses_the_name_the_user_gave(signed_in, season):
+def test_creating_a_roster_uses_the_name_the_user_gave(signed_in, season, manager):
     response = signed_in.post(reverse("fantasy:roster-create"), {"name": "Bulla Ballers"})
     roster = Roster.objects.get()
 
@@ -280,6 +280,17 @@ def test_the_team_card_carries_the_figures_the_page_is_read_for(signed_in, roste
         assert label in card, label
 
 
+def test_the_summary_shows_players_by_position(signed_in, roster, pool):
+    services.buy(roster, pool["G"][0], pool["G"][0].current_salary)
+    services.buy(roster, pool["F"][0], pool["F"][0].current_salary)
+
+    response = signed_in.get(build_url(roster))
+    counts = {position["code"]: position["count"] for position in response.context["progress"]}
+
+    assert counts == {"G": 1, "F": 1, "C": 0}
+    assert 'aria-label="Players by position"' in response.content.decode()
+
+
 def squad_of(body):
     """Just the grouped roster from the team card.
 
@@ -291,68 +302,67 @@ def squad_of(body):
     return card[card.index("Your roster") :]
 
 
-def test_the_squad_is_grouped_by_position(signed_in, roster, pool):
-    """Guards, Forwards, Centers -- each player under their own heading.
+def test_the_roster_uses_a_players_style_table_with_trade_actions(signed_in, roster, pool):
+    player = pool["G"][0]
+    services.buy(roster, player, player.current_salary)
 
-    Checked by slicing the card at the headings and asserting each name falls
-    inside its own slice, rather than merely that names and headings both
-    appear: a flat list under one heading would pass the weaker assertion.
-    """
-    guard, center = pool["G"][0], pool["C"][0]
-    for player in (guard, center):
+    body = signed_in.get(build_url(roster)).content.decode()
+    squad = squad_of(body)
+
+    assert "<table" in squad
+    assert all(
+        label in squad
+        for label in (
+            "Player",
+            "Position",
+            "Team",
+            "Actual salary",
+            "Expected salary",
+            "Difference",
+            "Points",
+            "Avg/game",
+            "Games",
+            "Hotness",
+            "Injury",
+            "Status",
+            "Actions",
+        )
+    )
+    assert player.full_name in squad
+    assert f'aria-label="Trade {player.full_name}"' in squad
+    assert f'hx-get="{reverse("fantasy:roster-trade", args=[roster.pk])}?out={player.pk}"' in squad
+
+
+def test_roster_columns_sort_rows_and_toggle_direction(signed_in, roster, pool):
+    low, high = pool["G"][:2]
+    Player.objects.filter(pk=low.pk).update(current_total_fp=10)
+    Player.objects.filter(pk=high.pk).update(current_total_fp=20)
+    for player in (low, high):
         services.buy(roster, player, player.current_salary)
 
-    squad = squad_of(signed_in.get(build_url(roster)).content.decode())
+    body = signed_in.get(build_url(roster), {"sort": "points", "dir": "desc"}).content.decode()
+    squad = squad_of(body)
 
-    # Declaration order, which is the order the minimums are written in.
-    assert squad.index("Guards") < squad.index("Forwards") < squad.index("Centers")
-
-    guards = squad[squad.index("Guards") : squad.index("Forwards")]
-    centers = squad[squad.index("Centers") :]
-    assert guard.full_name in guards
-    assert guard.full_name not in centers
-    assert center.full_name in centers
-    assert center.full_name not in guards
+    assert squad.index(high.full_name) < squad.index(low.full_name)
+    assert "sort=points&amp;dir=asc" in squad
 
 
-def test_each_group_states_its_own_minimum(signed_in, roster, pool):
-    for player in pool["G"][:2]:
-        services.buy(roster, player, player.current_salary)
+def test_the_roster_table_keeps_release_action_when_signings_are_open(signed_in, roster, pool):
+    player = pool["C"][0]
+    services.buy(roster, player, player.current_salary)
 
-    squad = squad_of(signed_in.get(build_url(roster)).content.decode())
-    guards = " ".join(squad[squad.index("Guards") : squad.index("Forwards")].split())
+    body = signed_in.get(build_url(roster)).content.decode()
 
-    assert f"2 / {MINIMUM_BY_POSITION['G']}" in guards
-    assert "3 short" in guards
+    assert f'aria-label="Release {player.full_name}"' in body
 
 
-def test_a_position_with_nobody_in_it_is_still_shown(signed_in, roster, pool):
-    """The empty section is the point: "0 / 2" is where the gap is visible."""
-    guard = pool["G"][0]
-    services.buy(roster, guard, guard.current_salary)
-
-    squad = squad_of(signed_in.get(build_url(roster)).content.decode())
-    centers = " ".join(squad[squad.index("Centers") :].split())
-
-    assert "0 / 2" in centers
-    assert "None yet." in centers
-
-
-def test_a_position_the_app_does_not_know_still_lists_its_players(signed_in, roster, db):
-    """No player may vanish from their own roster.
-
-    `position` is a one-character CharField and `choices` is not enforced by
-    the database, so a row can carry a code the app has no group for. It gets
-    its own section under the raw code rather than being silently dropped.
-    """
+def test_the_roster_table_keeps_unknown_positions(signed_in, roster):
     stray = make_player("X", "Stray", 1_000_000)
     services.buy(roster, stray, stray.current_salary)
 
-    squad = squad_of(signed_in.get(build_url(roster)).content.decode())
+    body = signed_in.get(build_url(roster)).content.decode()
 
-    assert stray.full_name in squad
-    # Under its own heading, after the three it does know about.
-    assert squad.index("Centers") < squad.index(stray.full_name)
+    assert stray.full_name in squad_of(body)
 
 
 # --- the strip that stays in view --------------------------------------------
@@ -383,21 +393,20 @@ def test_the_market_keeps_the_budget_in_view(signed_in, roster, pool):
     strip = " ".join(strip_of(signed_in.get(build_url(roster)).content.decode()).split())
 
     assert "sticky" in strip, "the strip is not pinned"
-    assert "Cash" in strip
-    assert f"2 / {ROSTER_SIZE}" in strip
+    assert "Cash" not in strip
+    assert f"2 / {ROSTER_SIZE}" not in strip
 
 
-def test_the_strip_names_every_position_and_its_minimum(signed_in, roster, pool):
-    """What to look for in the list below, which cash alone does not say."""
+def test_the_team_panel_names_missing_positions(signed_in, roster, pool):
+    """The summary still explains roster gaps above the player table."""
     for player in pool["G"][:2]:
         services.buy(roster, player, player.current_salary)
 
-    strip = " ".join(strip_of(signed_in.get(build_url(roster)).content.decode()).split())
+    body = signed_in.get(build_url(roster)).content.decode()
 
-    for position in MINIMUM_BY_POSITION:
-        assert position in strip, position
-    assert f"2/{MINIMUM_BY_POSITION['G']}" in strip
-    assert f"0/{MINIMUM_BY_POSITION['C']}" in strip
+    assert "Still needed" in body
+    assert "3 more Guards" in body
+    assert "5 more Forwards" in body
 
 
 def test_a_signing_brings_the_strip_with_it(signed_in, roster, pool):
@@ -416,9 +425,8 @@ def test_a_signing_brings_the_strip_with_it(signed_in, roster, pool):
     strip = " ".join(strip_of(body).split())
 
     assert "hx-swap-oob" in strip, "the picker fragment is not marked out of band"
-    assert f"1 / {ROSTER_SIZE}" in strip
-    # The balance after the signing, not before it.
-    assert "$59.00M" in strip
+    assert f"1 / {ROSTER_SIZE}" not in strip
+    assert "$59.00M" not in strip
 
 
 def test_filtering_the_market_does_not_drop_the_strip(signed_in, roster, pool):
@@ -431,8 +439,8 @@ def test_filtering_the_market_does_not_drop_the_strip(signed_in, roster, pool):
 
     strip = " ".join(strip_of(body).split())
 
-    assert "Cash" in strip
-    assert f"0 / {ROSTER_SIZE}" in strip
+    assert "Cash" not in strip
+    assert f"0 / {ROSTER_SIZE}" not in strip
 
 
 # --- reaching the player behind the name -------------------------------------

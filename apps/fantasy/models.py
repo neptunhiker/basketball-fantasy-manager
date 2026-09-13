@@ -19,6 +19,7 @@ rather than in `accounts`: a manager exists because rosters do, and `accounts`
 is an auth app that knows nothing about basketball.
 """
 
+import datetime as dt
 import uuid
 from decimal import Decimal
 
@@ -31,7 +32,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 
 from apps.core.models import TimeStampedModel
-from apps.nba.models import Player, Team
+from apps.nba.models import Player, PlayerInjury, Team
 
 # The official game's rules. Kept together so the day they change, they change
 # in one place.
@@ -74,6 +75,12 @@ class Season(TimeStampedModel):
     # Salaries recalculate weekly and stats accrue per season, so almost every
     # future query needs to know which season it is looking at.
     is_current = models.BooleanField("Current", default=False)
+    signings_open_at = models.DateTimeField(
+        "Signings open",
+        null=True,
+        blank=True,
+        help_text="Before this moment rosters cannot be created and players cannot be signed. Leave empty to open immediately.",
+    )
     signings_close_at = models.DateTimeField(
         "Signings close",
         null=True,
@@ -104,36 +111,59 @@ class Season(TimeStampedModel):
     def __str__(self):
         return self.label
 
-    def clean(self):
-        """The cutoff has to fall inside the season it belongs to.
-
-        Only the upper bound is checked. A cutoff before `starts_on` is legal
-        and occasionally what you want -- a preseason window that shuts before
-        tip-off -- but one after the last day would never be reached, so the
-        season would silently never close.
-        """
-        super().clean()
-        if self.signings_close_at and self.signings_close_at.date() > self.ends_on:
-            raise ValidationError(
-                {"signings_close_at": "Signings cannot close after the season ends."}
-            )
-
     @property
     def signings_open(self):
-        """Whether players may still be bought and sold in this season.
+        """Backward-compatible alias for the transaction permission."""
+        return self.transactions_allowed
 
-        Computed rather than stored, for the same reason `timing` is: the
-        cutoff is a moment on the calendar, so an administrator sets it once --
-        in advance, if they like -- instead of having to be present to flip a
-        flag at the moment it passes. It also means the log can be audited
-        against the rule afterwards, which a boolean could not answer.
+    @property
+    def season_open_at(self):
+        return timezone.make_aware(dt.datetime.combine(self.starts_on, dt.time.min))
 
-        Null means open, which is what every season is until somebody decides
-        otherwise. The cutoff instant itself counts as closed.
-        """
-        if self.signings_close_at is None:
+    @property
+    def season_close_at(self):
+        return timezone.make_aware(dt.datetime.combine(self.ends_on, dt.time.max))
+
+    @property
+    def transactions_allowed(self):
+        """Whether buying and releasing are allowed right now."""
+        now = timezone.now()
+        if now > self.season_close_at:
+            return False
+        if self.signings_open_at is None and self.signings_close_at is None:
             return True
-        return timezone.now() < self.signings_close_at
+        if self.signings_open_at and now < self.signings_open_at:
+            return False
+        if self.signings_close_at and now >= self.signings_close_at:
+            return False
+        return True
+
+    @property
+    def trading_allowed(self):
+        """Whether swapping one roster player for another is allowed."""
+        if self.signings_open_at is None and self.signings_close_at is None:
+            return True
+        now = timezone.now()
+        return self.season_open_at <= now <= self.season_close_at
+
+    def clean(self):
+        """Validate the lifecycle dates and their required ordering."""
+        super().clean()
+        if self.starts_on and self.ends_on and self.ends_on <= self.starts_on:
+            raise ValidationError({"ends_on": "A season has to end after it starts."})
+        if not self.starts_on or not self.ends_on:
+            return
+        season_open = timezone.make_aware(dt.datetime.combine(self.starts_on, dt.time.min))
+        season_close = timezone.make_aware(dt.datetime.combine(self.ends_on, dt.time.max))
+        if self.signings_open_at and self.signings_close_at:
+            if self.signings_open_at >= self.signings_close_at:
+                raise ValidationError({"signings_close_at": "Signings must close after they open."})
+            if self.signings_close_at >= season_open:
+                raise ValidationError({"signings_close_at": "Signings must close before the season starts."})
+        if self.signings_open_at and self.signings_open_at >= season_open:
+            raise ValidationError({"signings_open_at": "Signings must open before the season starts."})
+        if self.signings_close_at and self.signings_close_at > season_close:
+            raise ValidationError({"signings_close_at": "Signings cannot close after the season ends."})
 
     @property
     def timing(self):
@@ -184,9 +214,6 @@ class Manager(TimeStampedModel):
         verbose_name = "Manager"
         verbose_name_plural = "Managers"
         constraints = [
-            # Per user, not global: two people picking "Bulla" is not a clash,
-            # but one account holding two profiles by that name is -- there
-            # would be no way to tell them apart on screen.
             models.UniqueConstraint(fields=["user", "nick_name"], name="unique_nickname_per_user"),
         ]
 
@@ -195,25 +222,42 @@ class Manager(TimeStampedModel):
 
     @property
     def display_name(self):
-        """What to show in the UI, falling back to the account behind it."""
         return self.nick_name or self.user.display_name
+
+
+class WatchlistEntry(TimeStampedModel):
+    """A private, persistent player watch entry owned by one account."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="User",
+        on_delete=models.CASCADE,
+        related_name="watchlist_entries",
+    )
+    player = models.ForeignKey(
+        Player,
+        verbose_name="Player",
+        on_delete=models.PROTECT,
+        related_name="watchlist_entries",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Watchlist entry"
+        verbose_name_plural = "Watchlist entries"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "player"],
+                name="one_watchlist_entry_per_user_player",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.user} · {self.player}"
 
 
 class RosterQuerySet(models.QuerySet):
     def with_squad(self):
-        """Load every roster's current squad up front, in one extra query.
-
-        For the screens that show more than one roster. Everything a roster
-        derives -- its size, its value, which positions it is short of -- is
-        counted from the squad, so without this a list of twenty rosters asks
-        the database twenty times over, once per figure per row.
-
-        The spells come back in the order the screens read them, and with the
-        player and team attached, because the same prefetch feeds the build
-        page's squad list as feeds the list page's counters. `to_attr` rather
-        than a plain prefetch of `memberships`, so a caller who wants the full
-        history of a roster still gets it from `memberships` unfiltered.
-        """
         return self.prefetch_related(
             Prefetch(
                 "memberships",
@@ -406,6 +450,14 @@ class RosterPlayerQuerySet(models.QuerySet):
         return (
             self.open()
             .select_related("player", "player__team")
+            .prefetch_related(
+                Prefetch("player__snapshots", queryset=PlayerSnapshot.objects.order_by("-as_of")),
+                Prefetch(
+                    "player__injuries",
+                    queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
+                    to_attr="injury_history",
+                ),
+            )
             .order_by("player__position", "-player__current_salary")
         )
 

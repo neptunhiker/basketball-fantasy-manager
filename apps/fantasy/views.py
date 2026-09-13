@@ -1,4 +1,5 @@
-from collections import Counter, defaultdict
+from collections import Counter
+from decimal import Decimal
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
@@ -20,9 +21,9 @@ from django.views import View
 from django.views.generic import ListView, TemplateView
 
 from apps.core.views import (
+    AdminRequiredMixin,
     ModalFormView,
     PromptView,
-    StaffRequiredMixin,
     TypedConfirmView,
 )
 from apps.nba.models import Player, Team
@@ -61,8 +62,8 @@ def _count_per_season(model):
     )
 
 
-class SeasonListView(LoginRequiredMixin, ListView):
-    """Every season, readable by anyone signed in and editable by staff.
+class SeasonListView(AdminRequiredMixin, ListView):
+    """The season administration page is limited to staff superusers.
 
     The counts are the point of the table rather than decoration: they are what
     makes a season deletable or not, so a row shows why before anyone tries.
@@ -82,13 +83,13 @@ class SeasonListView(LoginRequiredMixin, ListView):
         # Whether to render the edit controls at all. Not the check that
         # matters -- each of those views has its own -- just whether to offer
         # a door that would be shut.
-        return {**super().get_context_data(**kwargs), "can_manage": self.request.user.is_staff}
+        return {**super().get_context_data(**kwargs), "can_manage": True}
 
 
-class SeasonFormView(StaffRequiredMixin, ModalFormView):
+class SeasonFormView(AdminRequiredMixin, ModalFormView):
     """The half the create and edit dialogs share: the form, and where to go.
 
-    Staff only, and that is the whole authorisation story for seasons: a season
+    Staff superusers only, and that is the whole authorisation story for seasons: a season
     is not owned by anybody, so there is no per-object rule to write. Unlike
     the roster and manager views, which scope to the account behind them.
     """
@@ -118,7 +119,7 @@ class SeasonUpdateView(SeasonFormView):
         return self._season
 
 
-class SeasonDeleteView(StaffRequiredMixin, TypedConfirmView):
+class SeasonDeleteView(AdminRequiredMixin, TypedConfirmView):
     """Deletes a season -- with three different answers, set by the model.
 
     `Roster.season` is PROTECT and `PlayerSnapshot.season` is CASCADE, and that
@@ -420,19 +421,10 @@ class RosterListView(LoginRequiredMixin, ListView):
     context_object_name = "rosters"
 
     def get_queryset(self):
-        # Every roster the account owns, across all its profiles. Read through
-        # the manager rather than from a `User.rosters` shortcut, which would
-        # need `accounts` to import from `fantasy` and break the boundary the
-        # apps are arranged around.
-        # `with_squad` because every card on this page states how full its
-        # roster is and whether it is complete, and both are counted from the
-        # squad: without it a page of ten rosters asked the database twenty
-        # times, once per figure per card.
-        return (
-            Roster.objects.filter(manager__user=self.request.user)
-            .select_related("season", "manager")
-            .with_squad()
-        )
+        queryset = Roster.objects.select_related("season", "manager").with_squad()
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            queryset = queryset.filter(manager__user=self.request.user)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -464,6 +456,8 @@ class RosterCreateView(PromptView):
         self.season = Season.objects.filter(is_current=True).first()
         if self.season is None and request.user.is_authenticated:
             return render(request, "fantasy/no_season.html", status=409)
+        if request.user.is_authenticated and not request.user.manager_profiles.exists():
+            return render(request, "fantasy/partials/roster_no_profile.html")
         return super().dispatch(request, *args, **kwargs)
 
     def initial_value(self, obj):
@@ -666,58 +660,38 @@ def _available_players(roster, filters, budget=None):
     return qs
 
 
-def _squad_groups(memberships):
-    """The squad split into Guards, Forwards and Centers, for the team card.
+ROSTER_SORT_FIELDS = {
+    "name": lambda player: (player.last_name, player.first_name),
+    "position": lambda player: player.position,
+    "team": lambda player: player.team.name if player.team else None,
+    "salary": lambda player: player.current_salary,
+    "expected": lambda player: player.predicted_salary,
+    "difference": lambda player: player.salary_difference_amount,
+    "points": lambda player: player.current_total_fp,
+    "avg": lambda player: player.current_fp_per_game,
+    "games": lambda player: player.current_games_played,
+    "hotness": lambda player: _hotness_value(player.hotness_score()),
+}
 
-    Ordered by `Player.Position`, not by the database's ordering of the codes:
-    that is alphabetical -- C, F, G -- which would put Centers first for no
-    reason a reader could see. This is the order the minimums are declared in,
-    so the card reads the same way throughout.
 
-    Each group carries its own minimum, because that is where the number is
-    worth knowing: "Guards 4 / 5" next to the four guards says what a single
-    combined list of fifteen cannot.
+def _hotness_value(score):
+    if not score:
+        return None
+    increases, comparisons = (int(value) for value in score.split("/"))
+    return (Decimal(increases) / Decimal(comparisons), comparisons)
 
-    A position with no declared minimum still gets a group, and a position that
-    is not a `Player.Position` at all is appended rather than dropped. Choices
-    are not enforced by the database -- `position` is a one-character
-    CharField -- so a row can carry anything, and a player missing from their
-    own roster would be the worst possible way to discover it.
-    """
-    grouped = defaultdict(list)
-    for membership in memberships:
-        grouped[membership.player.position].append(membership)
 
-    groups = []
-    for position in Player.Position:
-        members = grouped.pop(position.value, [])
-        minimum = MINIMUM_BY_POSITION.get(position.value, 0)
-        groups.append(
-            {
-                "code": position.value,
-                # Plural: these head a list, not a single slot.
-                "label": f"{position.label}s",
-                "members": members,
-                "count": len(members),
-                "minimum": minimum,
-                "short": max(0, minimum - len(members)),
-            }
-        )
-
-    # Anything still here is a position the app does not know about. Shown
-    # under its own raw code, which is the honest label for it.
-    for position, members in sorted(grouped.items()):
-        groups.append(
-            {
-                "code": position,
-                "label": position,
-                "members": members,
-                "count": len(members),
-                "minimum": 0,
-                "short": 0,
-            }
-        )
-    return groups
+def _sort_roster_memberships(request, memberships):
+    sort = request.GET.get("sort", "name")
+    if sort not in ROSTER_SORT_FIELDS:
+        sort = "name"
+    direction = request.GET.get("dir")
+    descending = sort in {"avg", "points", "hotness"} if direction is None else direction == "desc"
+    key = ROSTER_SORT_FIELDS[sort]
+    present = [membership for membership in memberships if key(membership.player) is not None]
+    missing = [membership for membership in memberships if key(membership.player) is None]
+    present.sort(key=lambda membership: key(membership.player), reverse=descending)
+    return sort, ("desc" if descending else "asc"), present + missing
 
 
 def _build_context(request, roster, error=None):
@@ -727,22 +701,31 @@ def _build_context(request, roster, error=None):
     # `is_complete` once per row of the market below -- all come from the one
     # load. See `Roster.current_memberships`.
     memberships = roster.current_memberships
+    for membership in memberships:
+        player = membership.player
+        if player.predicted_salary is not None and player.current_salary is not None:
+            player.salary_difference_amount = (
+                player.predicted_salary * Decimal("1000000") - player.current_salary
+            )
+        else:
+            player.salary_difference_amount = None
+    current_sort, current_dir, memberships = _sort_roster_memberships(request, memberships)
     return {
         "roster": roster,
         "filters": filters,
         "available": _available_players(roster, filters)[:100],
         "memberships": memberships,
-        # The same rows, grouped for the team card. `memberships` stays for the
-        # "is there anything at all" question and for the trade screen, which
-        # wants one flat list.
-        "squad": _squad_groups(memberships),
+        "current_sort": current_sort,
+        "current_dir": current_dir,
         "positions": Player.Position.choices,
         "teams": Team.objects.order_by("name"),
         "roster_size": ROSTER_SIZE,
         "progress": roster.position_progress(),
         # What the picker and the squad panel branch on. `roster.season` is
         # select_related by `OwnRosterMixin`, so this costs nothing.
-        "signings_open": roster.season.signings_open,
+        "signings_open": roster.season.transactions_allowed,
+        "transactions_allowed": roster.season.transactions_allowed,
+        "trading_allowed": roster.season.trading_allowed,
         "signings_close_at": roster.season.signings_close_at,
         "error": error,
     }

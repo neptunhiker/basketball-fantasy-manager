@@ -19,12 +19,15 @@ import datetime as dt
 from decimal import Decimal
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from apps.fantasy.models import Roster, Season
 from apps.nba.models import Player
 
 pytestmark = pytest.mark.django_db
+
+User = get_user_model()
 
 LIST = reverse("fantasy:season-list")
 CREATE = reverse("fantasy:season-create")
@@ -40,6 +43,14 @@ def delete_url(season):
 
 @pytest.fixture
 def staff(client, staff_user, password):
+    staff_user.is_superuser = True
+    staff_user.save(update_fields=["is_superuser"])
+    client.login(email=staff_user.email, password=password)
+    return client
+
+
+@pytest.fixture
+def staff_only(client, staff_user, password):
     client.login(email=staff_user.email, password=password)
     return client
 
@@ -76,13 +87,12 @@ def test_the_page_needs_a_login(client):
     assert client.get(LIST).status_code == 302
 
 
-def test_a_player_sees_the_seasons_but_no_controls(player, season):
-    body = player.get(LIST).content.decode()
+def test_a_player_cannot_open_the_seasons_page(player, season):
+    assert player.get(LIST).status_code == 403
 
-    assert season.label in body
-    assert CREATE not in body
-    assert update_url(season) not in body
-    assert delete_url(season) not in body
+
+def test_a_staff_user_cannot_open_the_seasons_page(staff_only, season):
+    assert staff_only.get(LIST).status_code == 403
 
 
 def test_a_player_cannot_reach_the_editor(player, season):
@@ -94,7 +104,15 @@ def test_a_player_cannot_reach_the_editor(player, season):
     assert Season.objects.count() == 1
 
 
-def test_staff_get_the_controls(staff, season):
+def test_a_staff_user_cannot_reach_the_editor(staff_only, season):
+    assert staff_only.get(CREATE).status_code == 403
+    assert staff_only.get(update_url(season)).status_code == 403
+    assert staff_only.get(delete_url(season)).status_code == 403
+    assert staff_only.post(CREATE, form_values()).status_code == 403
+    assert Season.objects.count() == 1
+
+
+def test_admin_get_the_controls(staff, season):
     body = staff.get(LIST).content.decode()
 
     assert CREATE in body

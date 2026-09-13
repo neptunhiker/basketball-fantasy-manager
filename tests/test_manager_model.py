@@ -30,9 +30,9 @@ pytestmark = pytest.mark.django_db
 @pytest.fixture
 def season(db):
     return Season.objects.create(
-        label="2025-26",
-        starts_on="2025-10-01",
-        ends_on="2026-04-30",
+        label="2026-27",
+        starts_on="2026-09-01",
+        ends_on="2027-04-30",
         is_current=True,
     )
 
@@ -159,15 +159,16 @@ def test_opening_the_dialog_creates_no_profile(signed_in, season):
     assert Manager.objects.count() == 0
 
 
-def test_the_first_roster_brings_a_profile_with_it(signed_in, user, season):
-    signed_in.post(create_url(), {"name": "Bulla Ballers"})
+def test_the_first_roster_requires_a_profile(signed_in, season):
+    response = signed_in.get(create_url())
 
-    manager = Manager.objects.get()
-    assert manager.user == user
-    assert list(manager.rosters.values_list("name", flat=True)) == ["Bulla Ballers"]
+    assert response.status_code == 200
+    assert "Create a profile first" in response.content.decode()
+    assert "Create manager profile" in response.content.decode()
+    assert Manager.objects.count() == 0
 
 
-def test_a_second_roster_reuses_the_same_profile(signed_in, season):
+def test_a_second_roster_reuses_the_same_profile(signed_in, season, manager):
     signed_in.post(create_url(), {"name": "First"})
     signed_in.post(create_url(), {"name": "Second"})
 
@@ -175,11 +176,10 @@ def test_a_second_roster_reuses_the_same_profile(signed_in, season):
     assert Manager.objects.get().rosters.count() == 2
 
 
-def test_the_suggestion_starts_at_one_before_any_profile_exists(signed_in, season):
-    """`default_roster_name(None, ...)`: no profile means no rosters, so all free."""
+def test_the_create_flow_explains_the_profile_prerequisite(signed_in, season):
     body = signed_in.get(create_url()).content.decode()
 
-    assert 'value="Roster 1"' in body
+    assert "You need a manager profile before you can create a roster." in body
 
 
 # --- what the scoping rule actually scopes to --------------------------------

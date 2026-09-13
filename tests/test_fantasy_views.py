@@ -11,6 +11,9 @@ from apps.nba.models import Player
 
 @pytest.fixture
 def signed_in(client, user, password, db):
+    user.is_staff = True
+    user.is_superuser = True
+    user.save(update_fields=["is_staff", "is_superuser"])
     client.login(email=user.email, password=password)
     return client
 

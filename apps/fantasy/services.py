@@ -23,6 +23,7 @@ from .models import (
     Roster,
     RosterPlayer,
     Transaction,
+    WatchlistEntry,
     position_shortfalls,
 )
 
@@ -37,8 +38,8 @@ def _open_membership(roster, player):
     return RosterPlayer.objects.open().filter(roster=roster, player=player).first()
 
 
-def _require_open_signings(season):
-    """Refuse a buy or a sell once the season's signings have closed.
+def _require_transactions(season):
+    """Refuse a buy or a sell outside the season's transaction window.
 
     Checked here rather than in the views so the rule holds for every writer --
     the screens, the shell, a management command, a future importer. There is
@@ -47,8 +48,15 @@ def _require_open_signings(season):
     Trades are deliberately not covered. They are the move that stays available
     all season: after the cutoff a roster is frozen in size, not in shape.
     """
-    if season.signings_open:
+    if season.transactions_allowed:
         return
+    if season.signings_open_at and timezone.now() < season.signings_open_at:
+        opened = timezone.localtime(season.signings_open_at)
+        raise ValidationError(
+            f"Signings open on {opened.strftime('%-d %B at %H:%M')}."
+        )
+    if season.signings_close_at is None:
+        raise ValidationError("Buying and releasing are not currently allowed.")
     closed = timezone.localtime(season.signings_close_at)
     raise ValidationError(
         f"Signings closed on {closed.strftime('%-d %B at %H:%M')}. Trades only from here."
@@ -64,7 +72,7 @@ def buy(roster, player, price, occurred_at=None, note=""):
 
     # Inside the transaction and after the lock, so a cutoff that passes
     # mid-request cannot let one last purchase through behind it.
-    _require_open_signings(locked.season)
+    _require_transactions(locked.season)
 
     if price < 0:
         raise ValidationError("A purchase price cannot be negative.")
@@ -99,7 +107,7 @@ def sell(roster, player, price, occurred_at=None, note=""):
     price = Decimal(price)
     locked = _lock(roster)
 
-    _require_open_signings(locked.season)
+    _require_transactions(locked.season)
 
     if price < 0:
         raise ValidationError("A sale price cannot be negative.")
@@ -136,6 +144,9 @@ def trade(roster, player_out, player_in, price_out, price_in, occurred_at=None, 
     occurred_at = occurred_at or timezone.now()
     price_out, price_in = Decimal(price_out), Decimal(price_in)
     locked = _lock(roster)
+
+    if not locked.season.trading_allowed:
+        raise ValidationError("Trades are only allowed while the season is running.")
 
     if player_out == player_in:
         raise ValidationError("The player in and the player out cannot be the same.")
@@ -321,12 +332,11 @@ def create_roster(manager, season, name):
     and no transaction of its own. The rule is the only reason the function
     exists.
     """
-    if not season.signings_open:
-        closed = timezone.localtime(season.signings_close_at)
-        raise ValidationError(
-            f"Signings closed on {closed.strftime('%-d %B at %H:%M')}, so a new roster "
-            f"could never be filled. Trade within the rosters you have."
-        )
+    if not season.transactions_allowed:
+        if season.signings_open_at and timezone.now() < season.signings_open_at:
+            opened = timezone.localtime(season.signings_open_at)
+            raise ValidationError(f"Signings open on {opened.strftime('%-d %B at %H:%M')}.")
+        raise ValidationError("A new roster cannot be created outside the signing window.")
     return Roster.objects.create(manager=manager, season=season, name=name)
 
 
@@ -398,3 +408,13 @@ def amount_paid_for(roster, player):
     if arrival is not None and arrival.price_in is not None:
         return arrival.price_in
     return player.current_salary or Decimal("0")
+
+
+def add_to_watchlist(user, player):
+    """Add one player to this account's private watchlist idempotently."""
+    return WatchlistEntry.objects.get_or_create(user=user, player=player)
+
+
+def remove_from_watchlist(user, player):
+    """Remove only this account's entry for the player."""
+    return WatchlistEntry.objects.filter(user=user, player=player).delete()

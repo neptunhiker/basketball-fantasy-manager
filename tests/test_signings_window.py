@@ -114,6 +114,27 @@ def test_the_cutoff_instant_itself_counts_as_closed(season):
         assert season.signings_open is False
 
 
+def test_lifecycle_permissions_are_mutually_exclusive(season):
+    now = timezone.now().replace(microsecond=0)
+    season.starts_on = timezone.localdate() + dt.timedelta(days=10)
+    season.ends_on = timezone.localdate() + dt.timedelta(days=30)
+    season.signings_open_at = now + dt.timedelta(days=1)
+    season.signings_close_at = now + dt.timedelta(days=5)
+
+    phases = [
+        (now - dt.timedelta(days=1), False, False),
+        (now + dt.timedelta(days=2), True, False),
+        (now + dt.timedelta(days=6), False, False),
+        (now + dt.timedelta(days=11), False, True),
+        (now + dt.timedelta(days=31), False, False),
+    ]
+
+    for instant, transactions, trading in phases:
+        with mock.patch("django.utils.timezone.now", return_value=instant):
+            assert season.transactions_allowed is transactions
+            assert season.trading_allowed is trading
+
+
 def test_the_moment_before_the_cutoff_is_still_open(season):
     """The other half of the boundary, so the pair says where the edge is."""
     instant = timezone.now()
@@ -174,6 +195,9 @@ def test_trading_still_works_after_the_cutoff(roster, season):
     """The whole point of closing signings rather than freezing the roster."""
     out_player = make_player("Out")
     services.buy(roster, out_player, out_player.current_salary)
+    season.starts_on = timezone.localdate() - dt.timedelta(days=1)
+    season.ends_on = timezone.localdate() + dt.timedelta(days=100)
+    season.save(update_fields=["starts_on", "ends_on"])
     close_signings(season)
     in_player = make_player("In")
 
@@ -226,7 +250,7 @@ def test_a_roster_cannot_be_created_after_the_cutoff(season, manager):
     with pytest.raises(ValidationError) as exc:
         services.create_roster(manager, season, "Too late")
 
-    assert "could never be filled" in exc.value.messages[0]
+    assert "outside the signing window" in exc.value.messages[0]
     assert Roster.objects.count() == 0
 
 
@@ -247,7 +271,7 @@ def test_the_create_dialog_refuses_after_the_cutoff(signed_in, season, manager):
 
     # A 200 carrying the corrected form, as every other prompt rejection is.
     assert response.status_code == 200
-    assert "could never be filled" in response.content.decode()
+    assert "outside the signing window" in response.content.decode()
     assert Roster.objects.count() == 0
 
 
@@ -271,10 +295,10 @@ def test_the_picker_offers_a_trade_instead_of_a_signing(signed_in, roster, seaso
     body = signed_in.get(build_url(roster)).content.decode()
     row = body.split(player.full_name)[1]
 
-    assert "Trade for" in row
+    assert "Closed" in row
     # The incoming side of the trade modal, the mirror of the squad panel's
     # `?out=`. Nothing new in the view: it already read this parameter.
-    assert f"?in={player.pk}" in row
+    assert f"?in={player.pk}" not in row
     assert "roster-buy" not in body
 
 
@@ -299,8 +323,8 @@ def test_release_disappears_once_selling_is_closed(signed_in, roster, season):
 
     body = signed_in.get(build_url(roster)).content.decode()
     assert "Release" not in body
-    # The trade icon on the same row is not a sale and stays.
-    assert f"?out={player.pk}" in body
+    # The trade icon is unavailable before the season starts.
+    assert f"?out={player.pk}" not in body
 
 
 def test_a_hand_written_post_is_still_refused(signed_in, roster, season):
@@ -374,7 +398,7 @@ def test_a_short_roster_is_told_the_gap_is_permanent(signed_in, roster, season):
     body = signed_in.get(build_url(roster)).content.decode()
 
     assert "stays short for the season" in body
-    assert "cannot be filled now" in body
+    assert "No roster changes are available in this phase" in body
     # And the old prompt, which read as a task, is gone.
     assert "Still needed:" not in body
 
@@ -404,7 +428,7 @@ def test_the_roster_card_stops_saying_building(signed_in, roster, season):
 
     assert ">Short<" in card
     assert ">Building<" not in card
-    assert "Signings closed" in card
+    assert "No roster changes until the season starts" in card
 
 
 def test_the_roster_card_counts_down_before_the_cutoff(signed_in, roster, season):
@@ -446,7 +470,7 @@ def test_a_card_reads_its_own_seasons_cutoff(signed_in, user, manager, season):
     assert ">Building<" in cards["Open one"]
     assert "Signings closed" not in cards["Open one"]
     assert ">Short<" in cards["Closed one"]
-    assert "Signings closed" in cards["Closed one"]
+    assert "Season closed — no roster changes" in cards["Closed one"]
 
 
 # --- the admin column --------------------------------------------------------

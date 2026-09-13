@@ -74,3 +74,21 @@ def test_the_card_says_one_thing(signed_in, user):
 
     assert "Sebastian S." in card
     assert card.count("<span") == 2
+
+
+def test_seasons_is_hidden_from_regular_users(signed_in):
+    assert "Seasons" not in sidebar(signed_in)
+
+
+def test_seasons_is_hidden_from_staff_who_are_not_superusers(client, staff_user, password):
+    client.login(email=staff_user.email, password=password)
+
+    assert "Seasons" not in sidebar(client)
+
+
+def test_seasons_is_visible_to_staff_superusers(client, staff_user, password):
+    staff_user.is_superuser = True
+    staff_user.save(update_fields=["is_superuser"])
+    client.login(email=staff_user.email, password=password)
+
+    assert f'href="{reverse("fantasy:season-list")}"' in sidebar(client)

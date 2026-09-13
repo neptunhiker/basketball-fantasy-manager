@@ -4,20 +4,124 @@
 {% block page_title %}Overview{% endblock %}
 
 {% block content %}
-<div class="card overflow-hidden">
-  <div class="gradient-rule h-1"></div>
-  <div class="p-8">
-    <h2 class="text-lg font-bold tracking-tight">Hi {{ request.user.get_short_name }}</h2>
-    <p class="mt-2 max-w-prose text-sm text-neutral-600 dark:text-neutral-300">
-      The foundation is in place: sign-in, invitations and the design system
-      are ready. The tools for deciding who to buy and who to trade land here next.
-    </p>
-    {% if request.user.is_staff %}
-      <div class="mt-6 flex flex-wrap gap-3">
-        <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary">Invite someone</a>
-        <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">View team</a>
+{% if current_season %}
+  <section class="relative isolate overflow-hidden rounded-xl border border-black/10 bg-[#17111f] text-white shadow-xl shadow-tertiary-700/10 animate-season-rise motion-reduce:animate-none">
+    <div class="pointer-events-none absolute inset-0 opacity-[.16]"
+         style="background-image: linear-gradient(rgba(255,255,255,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.14) 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+    <div class="relative p-6 sm:p-9 lg:p-10">
+      <div class="flex flex-wrap items-center justify-between gap-4 font-mono text-[0.65rem] font-bold uppercase">
+        <div class="flex items-center gap-2.5 tracking-[.22em] text-secondary-300">
+          <span class="h-[7px] w-[7px] rounded-full bg-secondary-300 shadow-[0_0_0_4px_rgba(255,172,228,.18)] animate-pulse motion-reduce:animate-none"></span>
+          Season {{ current_season.label }}
+        </div>
+        <div class="font-medium tracking-[.16em] text-white/45">
+          Tip-off · {{ current_season.starts_on|date:"M j, Y" }}
+        </div>
       </div>
-    {% endif %}
+
+      {% if countdown_target_at %}
+        <p class="mt-8 font-mono text-xs font-bold uppercase tracking-[.2em] text-white/50">Counting down to <span class="text-secondary-300">{{ countdown_label }}</span> · {{ countdown_target_at|date:"F j, Y · H:i" }}</p>
+        <div class="mt-3 grid gap-2.5 sm:grid-cols-4" id="trading-countdown" data-target="{{ countdown_target_at|date:'c' }}">
+          <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
+            <div id="countdown-days" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums sm:text-[9rem] lg:text-[10rem]">0</div>
+            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-secondary-300">Days</div>
+          </div>
+          <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
+            <div id="countdown-hours" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums sm:text-[9rem] lg:text-[10rem]">00</div>
+            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-white/50">Hours</div>
+          </div>
+          <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
+            <div id="countdown-minutes" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums sm:text-[9rem] lg:text-[10rem]">00</div>
+            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-white/50">Minutes</div>
+          </div>
+          <div class="rounded-xl border border-secondary-300/40 bg-secondary-300/10 px-4 pb-4 pt-5 sm:px-[18px]">
+            <div id="countdown-seconds" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] text-secondary-300 tabular-nums sm:text-[9rem] lg:text-[10rem]">00</div>
+            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-secondary-300">Seconds</div>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-wrap items-end justify-between gap-6">
+          <div class="min-w-0">
+            <h2 class="text-3xl font-extrabold leading-[1.1] tracking-[-.02em]">{{ countdown_heading }}</h2>
+            <p class="mt-2 max-w-[42ch] text-sm leading-6 text-white/60">{{ countdown_description }}</p>
+          </div>
+          <div class="flex shrink-0 gap-2.5">
+            <a href="{% url 'fantasy:roster-list' %}" class="btn bg-secondary-400 font-bold text-[#17111f] hover:bg-secondary-300">{% if dashboard_roster_count %}{% if dashboard_roster_count > 1 %}My rosters{% else %}My roster{% endif %}{% else %}Build a roster{% endif %}</a>
+            <a href="{% url 'nba:player-list' %}" class="btn border border-white/25 bg-white/10 text-white hover:bg-white/20">Explore players</a>
+          </div>
+        </div>
+      {% else %}
+        <div class="mt-10 flex flex-wrap items-end justify-between gap-6">
+          <div class="min-w-0">
+            <p class="font-mono text-[0.65rem] font-bold uppercase tracking-[.22em] text-secondary-300">{% if current_season.timing == "FINISHED" %}Season complete{% elif trading_window_open %}Trading window open{% else %}Season desk{% endif %}</p>
+            <h2 class="mt-4 text-4xl font-extrabold leading-[1.05] tracking-[-.02em] sm:text-6xl">{% if current_season.timing == "FINISHED" %}The season has ended.{% else %}The season is underway.{% endif %}</h2>
+            <p class="mt-4 max-w-[44ch] text-sm leading-6 text-white/60">{{ current_season.label }} runs through {{ current_season.ends_on|date:"F j, Y" }}. Keep your roster moving.</p>
+          </div>
+          <div class="flex shrink-0 gap-2.5">
+            <a href="{% url 'fantasy:roster-list' %}" class="btn bg-secondary-400 font-bold text-[#17111f] hover:bg-secondary-300">{% if dashboard_roster_count %}{% if dashboard_roster_count > 1 %}My rosters{% else %}My roster{% endif %}{% else %}Build a roster{% endif %}</a>
+            <a href="{% url 'nba:player-list' %}" class="btn border border-white/25 bg-white/10 text-white hover:bg-white/20">Explore players</a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="grid gap-px overflow-hidden rounded-xl border border-neutral-200 bg-neutral-200 sm:grid-cols-4 dark:border-neutral-800 dark:bg-neutral-800">
+    <div class="bg-white p-5 dark:bg-neutral-900">
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Signings open</p>
+      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_open_at %}{{ current_season.signings_open_at|date:"M j, Y · H:i" }}{% else %}Open now{% endif %}</p>
+    </div>
+    <div class="bg-white p-5 dark:bg-neutral-900">
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Signings close</p>
+      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_close_at %}{{ current_season.signings_close_at|date:"M j, Y · H:i" }}{% else %}No cutoff{% endif %}</p>
+    </div>
+    <div class="bg-white p-5 dark:bg-neutral-900">
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Season open</p>
+      <p class="mt-2 text-[17px] font-bold">{{ current_season.starts_on|date:"M j, Y" }}</p>
+    </div>
+    <div class="bg-white p-5 dark:bg-neutral-900">
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Season close</p>
+      <p class="mt-2 text-[17px] font-bold">{{ current_season.ends_on|date:"M j, Y" }}</p>
+    </div>
+  </section>
+{% else %}
+  <section class="card overflow-hidden animate-season-rise motion-reduce:animate-none">
+    <div class="gradient-rule h-1"></div>
+    <div class="p-6 sm:p-8">
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Season desk</p>
+      <h2 class="mt-5 text-3xl font-extrabold tracking-[-.02em]">Your season starts here.</h2>
+      <p class="mt-2 max-w-prose text-sm text-neutral-600 dark:text-neutral-300">There is no current season scheduled yet.</p>
+    </div>
+  </section>
+{% endif %}
+
+{% if request.user.is_staff %}
+  <div class="flex flex-wrap gap-3">
+    <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary">Invite someone</a>
+    <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">View team</a>
   </div>
-</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {% if countdown_target_at %}
+    <script>
+      (function () {
+        var countdown = document.getElementById("trading-countdown");
+        if (!countdown) return;
+        var target = new Date(countdown.dataset.target).getTime();
+        var pad = function (value) { return String(value).padStart(2, "0"); };
+        function tick() {
+          var seconds = Math.max(0, Math.floor((target - Date.now()) / 1000));
+          document.getElementById("countdown-days").textContent = Math.floor(seconds / 86400);
+          document.getElementById("countdown-hours").textContent = pad(Math.floor((seconds % 86400) / 3600));
+          document.getElementById("countdown-minutes").textContent = pad(Math.floor((seconds % 3600) / 60));
+          document.getElementById("countdown-seconds").textContent = pad(seconds % 60);
+        }
+        tick();
+        setInterval(tick, 1000);
+      })();
+    </script>
+  {% endif %}
 {% endblock %}

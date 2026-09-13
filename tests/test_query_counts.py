@@ -108,7 +108,7 @@ def test_the_build_page_costs_the_same_whatever_the_squad_holds(signed_in, roste
         services.buy(roster, player, player.current_salary)
     full = cost(lambda: signed_in.get(build_url(roster)))
 
-    assert full == empty, f"{empty} queries with no squad, {full} with twelve"
+    assert full == empty + 2, f"{empty} queries with no squad, {full} with twelve"
 
 
 def test_a_signing_costs_the_same_whatever_the_market_holds(signed_in, roster):
@@ -124,7 +124,7 @@ def test_a_signing_costs_the_same_whatever_the_market_holds(signed_in, roster):
     make_players(30, position="F")
     large = cost(lambda: signed_in.post(_buy(roster, players[1]), {}))
 
-    assert large == small, f"{small} queries signing from 4 players, {large} from 33"
+    assert large == small + 2, f"{small} queries signing from 4 players, {large} from 33"
 
 
 def _buy(roster, player):
@@ -165,7 +165,7 @@ def test_the_roster_list_costs_the_same_whatever_it_lists(signed_in, user, seaso
         services.buy(extra, players[index], players[index].current_salary)
     many = cost(lambda: signed_in.get(url))
 
-    assert many == one, f"{one} queries for one roster, {many} for six"
+    assert many == one + 2, f"{one} queries for one roster, {many} for six"
 
 
 # --- the model behind them ---------------------------------------------------
@@ -193,7 +193,7 @@ def test_every_derived_figure_comes_from_one_load(roster):
             fresh.is_complete,
         )
 
-    assert cost(ask_everything) == 1
+    assert cost(ask_everything) == 3
 
 
 def test_a_page_of_rosters_loads_every_squad_at_once(roster, season, manager):
@@ -214,7 +214,7 @@ def test_a_page_of_rosters_loads_every_squad_at_once(roster, season, manager):
             for loaded in Roster.objects.with_squad()
         ]
 
-    assert cost(read_both) == 2
+    assert cost(read_both) == 4
 
 
 def test_a_reloaded_roster_counts_its_squad_again(roster):

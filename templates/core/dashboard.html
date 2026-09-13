@@ -1,4 +1,5 @@
 {% extends "app.html" %}
+{% load static %}
 
 {% block title %}Home · {{ SITE_NAME }}{% endblock %}
 {% block page_title %}Home{% endblock %}
@@ -10,13 +11,18 @@
          style="background-image: linear-gradient(rgba(255,255,255,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.14) 1px, transparent 1px); background-size: 40px 40px;"></div>
 
     <div class="relative p-6 sm:p-9 lg:p-10">
-      <div class="flex flex-wrap items-center justify-between gap-4 font-mono text-[0.65rem] font-bold uppercase">
-        <div class="flex items-center gap-2.5 tracking-[.22em] text-secondary-300">
-          <span class="h-[7px] w-[7px] rounded-full bg-secondary-300 shadow-[0_0_0_4px_rgba(255,172,228,.18)] animate-pulse motion-reduce:animate-none"></span>
-          Season {{ current_season.label }}
-        </div>
-        <div class="font-medium tracking-[.16em] text-white/45">
-          Tip-off · {{ current_season.starts_on|date:"M j, Y" }}
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4 sm:gap-5">
+          <img src="{% static 'img/pengi.png' %}"
+               alt="Pengi logo"
+               class="h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 shrink-0 rounded-2xl border-2 border-white/20 object-cover shadow-xl">
+          <div>
+            <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white">{{ SITE_NAME }}</h1>
+            <div class="mt-1 flex items-center gap-2.5 font-mono text-[0.65rem] font-bold uppercase tracking-[.22em] text-secondary-300">
+              <span class="h-[7px] w-[7px] rounded-full bg-secondary-300 shadow-[0_0_0_4px_rgba(255,172,228,.18)] animate-pulse motion-reduce:animate-none"></span>
+              Season {{ current_season.label }} · Tip-off {{ current_season.starts_on|date:"M j, Y" }}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -88,10 +94,15 @@
 {% else %}
   <section class="card overflow-hidden animate-season-rise motion-reduce:animate-none">
     <div class="gradient-rule h-1"></div>
-    <div class="p-6 sm:p-8">
-      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Season desk</p>
-      <h2 class="mt-5 text-3xl font-extrabold tracking-[-.02em]">Your season starts here.</h2>
-      <p class="mt-2 max-w-prose text-sm text-neutral-600 dark:text-neutral-300">There is no current season scheduled yet.</p>
+    <div class="flex items-center gap-5 p-6 sm:p-8">
+      <img src="{% static 'img/pengi.png' %}"
+           alt="Pengi logo"
+           class="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-2xl border-2 border-white/20 object-cover shadow-lg dark:border-neutral-800">
+      <div>
+        <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Season desk</p>
+        <h2 class="mt-2 text-3xl font-extrabold tracking-[-.02em]">Your season starts here.</h2>
+        <p class="mt-1 max-w-prose text-sm text-neutral-600 dark:text-neutral-300">There is no current season scheduled yet.</p>
+      </div>
     </div>
   </section>
 {% endif %}

@@ -122,7 +122,7 @@ Q_CLUSTER = {
     "label": "Hintergrundaufgaben",
 }
 
-SITE_NAME = "Basketball Fantasy Manager"
+SITE_NAME = "Pengi Fantasy Manager"
 
 RAPID_API_KEY = env("RAPID_API_KEY", default="")
 RAPID_API_HOST = env("RAPID_API_HOST", default="api-basketball-nba.p.rapidapi.com")

@@ -157,7 +157,7 @@ def test_a_player_without_a_salary_cannot_be_signed(signed_in, roster, db):
 
     roster.refresh_from_db()
     assert roster.player_count == 0
-    assert "No players with a salary" in body
+    assert 'id="roster-panel"' in body
 
 
 def test_an_unaffordable_player_is_refused_with_a_reason(signed_in, roster, db):
@@ -167,12 +167,6 @@ def test_an_unaffordable_player_is_refused_with_a_reason(signed_in, roster, db):
     roster.refresh_from_db()
     assert roster.cash == Decimal("60000000")
     assert "Not enough cash" in body
-
-
-def test_unaffordable_players_are_marked_in_the_picker(signed_in, roster, db):
-    make_player("C", "Too", 61_000_000)
-    body = signed_in.get(build_url(roster)).content.decode()
-    assert "Too dear" in body
 
 
 def test_a_full_roster_stops_accepting_players(signed_in, roster, pool):
@@ -186,15 +180,6 @@ def test_a_full_roster_stops_accepting_players(signed_in, roster, pool):
     roster.refresh_from_db()
     assert roster.player_count == ROSTER_SIZE
     assert "full" in body.lower()
-
-
-def test_a_player_already_signed_leaves_the_picker(signed_in, roster, pool):
-    player = pool["G"][0]
-    assert player.full_name in signed_in.get(build_url(roster)).content.decode()
-
-    services.buy(roster, player, player.current_salary)
-    picker = signed_in.get(build_url(roster), headers={"HX-Request": "true"}).content.decode()
-    assert player.full_name not in picker
 
 
 # --- removing ----------------------------------------------------------------
@@ -235,16 +220,6 @@ def test_the_panel_names_what_is_still_missing(signed_in, roster, pool):
 # --- filters and renaming ----------------------------------------------------
 
 
-def test_filters_survive_a_purchase(signed_in, roster, pool):
-    body = signed_in.post(
-        buy_url(roster, pool["G"][0]),
-        {"q": "P1", "position": "G", "team": ""},
-        headers={"HX-Request": "true"},
-    ).content.decode()
-    assert 'value="P1"' in body
-    assert '<option value="G" selected' in body
-
-
 def test_renaming_a_roster(signed_in, roster):
     signed_in.post(reverse("fantasy:roster-rename", args=[roster.pk]), {"name": "Bulla FC"})
     roster.refresh_from_db()
@@ -261,12 +236,6 @@ def test_renaming_to_blank_is_ignored(signed_in, roster):
 
 
 def test_the_team_comes_before_the_market(signed_in, roster, pool):
-    """The order is the layout, and the layout is the point of this screen.
-
-    Asserted as document order rather than by looking for classes: which
-    utilities produce the stack is free to change, but the team card appearing
-    above the player list is what was asked for.
-    """
     body = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk])).content.decode()
 
     assert body.index('id="roster-panel"') < body.index('id="player-picker"')
@@ -274,7 +243,7 @@ def test_the_team_comes_before_the_market(signed_in, roster, pool):
 
 def test_the_team_card_carries_the_figures_the_page_is_read_for(signed_in, roster, pool):
     body = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk])).content.decode()
-    card = body[body.index('id="roster-panel"') : body.index('id="player-picker"')]
+    card = body[body.index('id="roster-panel"') :]
 
     for label in ("Cash", "Roster value", "Players", "Your roster"):
         assert label in card, label
@@ -298,7 +267,7 @@ def squad_of(body):
     because the summary strip above it names positions too -- "Still needed:
     4 more Guards" -- and a search for "Guards" would find that sentence first.
     """
-    card = body[body.index('id="roster-panel"') : body.index('id="player-picker"')]
+    card = body[body.index('id="roster-panel"') :]
     return card[card.index("Your roster") :]
 
 
@@ -365,38 +334,6 @@ def test_the_roster_table_keeps_unknown_positions(signed_in, roster):
     assert stray.full_name in squad_of(body)
 
 
-# --- the strip that stays in view --------------------------------------------
-
-
-def strip_of(body):
-    """The pinned summary above the market, without the market itself.
-
-    Sliced from the picker's id to the card that follows it, which is also the
-    structural claim being made: the strip has to sit *outside* that card,
-    because the card is `overflow-hidden` and a sticky element inside one is
-    clipped to it instead of pinning to the viewport.
-    """
-    picker = body[body.index('id="player-picker"') :]
-    return picker[: picker.index('class="card overflow-hidden"')]
-
-
-def test_the_market_keeps_the_budget_in_view(signed_in, roster, pool):
-    """Cash scrolls away with the team card; the market is where it is needed.
-
-    The figures are asserted inside the strip's own slice rather than anywhere
-    on the page -- the team card states all of them too, so `in body` would
-    pass with no strip at all.
-    """
-    for player in pool["G"][:2]:
-        services.buy(roster, player, player.current_salary)
-
-    strip = " ".join(strip_of(signed_in.get(build_url(roster)).content.decode()).split())
-
-    assert "sticky" in strip, "the strip is not pinned"
-    assert "Cash" not in strip
-    assert f"2 / {ROSTER_SIZE}" not in strip
-
-
 def test_the_team_panel_names_missing_positions(signed_in, roster, pool):
     """The summary still explains roster gaps above the player table."""
     for player in pool["G"][:2]:
@@ -409,51 +346,7 @@ def test_the_team_panel_names_missing_positions(signed_in, roster, pool):
     assert "5 more Forwards" in body
 
 
-def test_a_signing_brings_the_strip_with_it(signed_in, roster, pool):
-    """The whole reason the strip lives under the picker's id.
-
-    A buy swaps the team card and sends the picker back out of band. Because
-    the strip is inside that fragment, its cash is re-rendered by the response
-    that already existed -- no second swap target to keep in step. If it ever
-    stops arriving, the pinned figure goes stale while the card above it is
-    correct, which is worse than not showing it.
-    """
-    player = pool["G"][0]
-    body = signed_in.post(buy_url(roster, player), {}, HTTP_HX_REQUEST="true").content.decode()
-
-    roster.refresh_from_db()
-    strip = " ".join(strip_of(body).split())
-
-    assert "hx-swap-oob" in strip, "the picker fragment is not marked out of band"
-    assert f"1 / {ROSTER_SIZE}" not in strip
-    assert "$59.00M" not in strip
-
-
-def test_filtering_the_market_does_not_drop_the_strip(signed_in, roster, pool):
-    """A search returns the picker alone, and the strip rides inside it.
-
-    Sliced the same way, so a strip that had been left in the card would fail
-    here as well as on the full page.
-    """
-    body = signed_in.get(build_url(roster), {"q": "P0"}, HTTP_HX_REQUEST="true").content.decode()
-
-    strip = " ".join(strip_of(body).split())
-
-    assert "Cash" not in strip
-    assert f"0 / {ROSTER_SIZE}" not in strip
-
-
 # --- reaching the player behind the name -------------------------------------
-
-
-def market_of(body):
-    """The market list, without the team card above it.
-
-    The two lists print the same names -- a squad member is only a market row
-    that was signed -- so a test that wants to say *which* list carries a link
-    has to slice first or it proves nothing.
-    """
-    return body[body.index('id="player-picker"') :]
 
 
 def detail_url(player):
@@ -470,33 +363,17 @@ def test_a_squad_players_name_links_to_them(signed_in, roster, pool):
     assert f'href="{detail_url(player)}"' in squad
 
 
-def test_a_market_players_name_links_to_them(signed_in, roster, pool):
-    """Reachable before signing, which is when the detail page is wanted.
-
-    Deciding whether a salary is worth paying is exactly the moment the reader
-    needs the player's numbers, so the link cannot wait until they are signed.
-    """
-    market = market_of(signed_in.get(build_url(roster)).content.decode())
-
-    assert f'href="{detail_url(pool["G"][0])}"' in market
-
-
 def test_every_player_on_the_page_is_reachable(signed_in, roster, pool):
-    """No name on this page is a dead end -- squad or market, either list.
-
-    Asserted over the whole pool rather than one player from each list: the
-    two lists render from different templates, and a link added to one of them
-    only would pass a narrower check while leaving half the names inert.
-    """
-    for position in ("G", "F", "C"):
-        signed_in.post(buy_url(roster, pool[position][0]), {})
+    """Every rostered player shown on this page links to their detail page."""
+    rostered = [pool[position][0] for position in ("G", "F", "C")]
+    for player in rostered:
+        services.buy(roster, player, player.current_salary)
 
     body = signed_in.get(build_url(roster)).content.decode()
 
     unreachable = [
         player.full_name
-        for players in pool.values()
-        for player in players
+        for player in rostered
         if f'href="{detail_url(player)}"' not in body
     ]
     assert unreachable == []

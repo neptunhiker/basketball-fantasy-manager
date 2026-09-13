@@ -57,30 +57,6 @@
 
   <div class="card overflow-hidden">
 
-    {% if not transactions_allowed and not trading_allowed %}
-      {# Said at the top of the thing that changed, rather than as a page-wide #}
-      {# banner: the list below is still useful, it just does something else now. #}
-      <p class="border-b border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-        Signings closed on {{ signings_close_at|date:"j F" }} at {{ signings_close_at|date:"H:i" }}.
-        A roster can still change shape through trades, but not size — so these
-        rows offer a swap rather than a signing.
-        {% if not roster.is_complete %}
-          {# The consequence, named plainly. `missing` will keep listing these #}
-          {# positions for the rest of the season and nothing can now fill them. #}
-          <span class="mt-1 block font-medium">
-            This roster is short at {{ roster.player_count }} of {{ roster_size }},
-            and a trade cannot add a player — so it stays short for the season.
-          </span>
-        {% endif %}
-      </p>
-    {% elif transactions_allowed and signings_close_at %}
-      <p class="border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-        Signings close on {{ signings_close_at|date:"j F" }} at {{ signings_close_at|date:"H:i" }}.
-        Every roster has to be complete by then: after it, trades can change who
-        is on a roster but not how many.
-      </p>
-    {% endif %}
-
     <form id="picker-filters" class="border-b border-neutral-200 p-4 dark:border-neutral-800"
           hx-get="{% url 'fantasy:roster-build' roster.pk %}"
           hx-trigger="input changed delay:300ms from:input[type=search], change from:select, search"

@@ -33,10 +33,12 @@ from .forms import SeasonForm
 from .models import (
     MINIMUM_BY_POSITION,
     ROSTER_SIZE,
+    ROSTER_ICON_CHOICES,
     STARTING_CASH,
     Manager,
     PlayerSnapshot,
     Roster,
+    RosterPlayer,
     Season,
 )
 
@@ -249,7 +251,17 @@ class ManagerListView(LoginRequiredMixin, ListView):
             # each roster and the order is the one the roster list uses.
             Prefetch(
                 "rosters",
-                queryset=Roster.objects.select_related("season").order_by("name"),
+                queryset=Roster.objects.select_related("season")
+                .prefetch_related(
+                    Prefetch(
+                        "memberships",
+                        queryset=RosterPlayer.objects.open()
+                        .select_related("player", "player__team")
+                        .order_by("player__last_name", "player__first_name"),
+                        to_attr="open_memberships",
+                    )
+                )
+                .order_by("-season__starts_on", "name"),
             )
         )
 
@@ -269,7 +281,7 @@ class ManagerNamePromptView(PromptView):
     # `Manager.nick_name` is 40, and a longer value would be truncated by the
     # database rather than by anyone's intention.
     max_length = 40
-    help_text = "Shown beside the rosters played under it. Change it any time."
+    help_text = ""
 
     def clean(self, value, obj, choice=None):
         value = super().clean(value, obj, choice)
@@ -291,10 +303,7 @@ class ManagerNamePromptView(PromptView):
 
 class ManagerCreateView(ManagerNamePromptView):
     title = "New manager profile"
-    body = (
-        "A profile is a handle to play under. Rosters belong to one, and the "
-        "nickname is what shows beside them."
-    )
+    body = ""
     submit_label = "Create profile"
 
     def initial_value(self, obj):
@@ -449,6 +458,7 @@ class RosterCreateView(PromptView):
     choice_name = "manager"
     choice_label = "Manager"
     choice_help = "Which of your profiles plays this roster."
+    template_name = "fantasy/partials/roster_create.html"
 
     def dispatch(self, request, *args, **kwargs):
         # A roster always belongs to a season, so there is nothing to ask for
@@ -488,6 +498,14 @@ class RosterCreateView(PromptView):
         if len(profiles) < 2:
             return []
         return [(str(manager.pk), manager.nick_name) for manager in profiles]
+
+    def get_context(self, value, error=None, choice_value=None):
+        context = super().get_context(value, error=error, choice_value=choice_value)
+        context["icon_choices"] = ROSTER_ICON_CHOICES
+        context["icon_value"] = (
+            self.request.POST.get("icon", "koala") if self.request.method == "POST" else "koala"
+        )
+        return context
 
     def default_choice(self):
         """The same profile a roster would have landed under before the picker.
@@ -546,7 +564,18 @@ class RosterCreateView(PromptView):
         # Through the service, not `Roster.objects.create`, so the signings
         # cutoff refuses here too. The Rosters page hides its button once the
         # season has closed; this is what answers a hand-written request.
-        return services.create_roster(manager, self.season, value)
+        icon = self.clean_icon(self.request.POST.get("icon", ""))
+        return services.create_roster(manager, self.season, value, icon)
+
+    def clean_icon(self, raw):
+        choices = dict(ROSTER_ICON_CHOICES)
+        # Older clients and direct POSTs may omit the new field; the modal
+        # always submits its default selection, and legacy callers keep the
+        # first available icon rather than breaking roster creation.
+        raw = raw or "koala"
+        if raw not in choices:
+            raise ValidationError("Pick one of the available roster icons.")
+        return raw
 
     def get_success_url(self, result):
         return reverse("fantasy:roster-rules", args=[result.pk])
@@ -733,7 +762,7 @@ def _build_context(request, roster, error=None):
 
 class RosterBuildView(OwnRosterMixin, TemplateView):
     def get_template_names(self):
-        # A filter change only needs the picker back, not the team card above it.
+        # A filter change only needs the picker back, not the team card above.
         if self.request.htmx:
             return ["fantasy/partials/player_picker.html"]
         return ["fantasy/roster_build.html"]

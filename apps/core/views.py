@@ -37,7 +37,7 @@ def _countdown_for_season(season):
 
 COUNTDOWN_COPY = {
     "Signings open in": (
-        "The draft room opens soon.",
+        "The signing phase opens soon.",
         "Get your shortlist ready, then start building when signings open.",
     ),
     "Signings close in": (
@@ -46,7 +46,7 @@ COUNTDOWN_COPY = {
     ),
     "Season starts in": (
         "Set your lineup before tip-off.",
-        "Signings are closed. Make sure your roster is ready for the season.",
+        "Signings are closed. Waiting for season tip-off.",
     ),
     "Season ends in": (
         "Make every move count.",

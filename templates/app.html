@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% comment %}Shell for signed-in pages: sidebar navigation plus content area.{% endcomment %}
 
 {% block body %}
@@ -8,7 +9,7 @@
   <aside class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full border-r border-neutral-200 bg-white transition-transform duration-200 lg:translate-x-0 dark:border-neutral-800 dark:bg-neutral-900"
          :class="navOpen && 'translate-x-0'">
     <div class="flex h-16 items-center gap-2.5 px-6">
-      <span class="gradient-rule h-7 w-7 shrink-0 rounded-lg" aria-hidden="true"></span>
+      <img src="{% static 'img/pengi.png' %}" alt="" class="h-7 w-7 shrink-0 rounded-lg object-cover">
       <div class="min-w-0">
         <span class="block truncate text-sm font-bold tracking-tight">{{ SITE_NAME }}</span>
         {% if ENVIRONMENT != "production" %}
@@ -30,7 +31,7 @@
           <rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>
           <rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>
         </svg>
-        Overview
+        Home
       </a>
 
       {% url 'nba:team-list' as teams_url %}
@@ -82,7 +83,7 @@
           <rect x="3" y="5" width="18" height="14" rx="2"/>
           <path stroke-linecap="round" stroke-linejoin="round" d="M7 15a2.5 2.5 0 0 1 5 0M9.5 10.5a1 1 0 1 0 0-.01M15 10h3M15 13.5h3"/>
         </svg>
-        Managers
+        Manager profiles
       </a>
 
       {% if request.user.is_staff and request.user.is_superuser %}
@@ -137,7 +138,10 @@
     {# screen: `Sign out` fell off the right edge and took the whole page #}
     {# into a sideways scroll with it. The title already truncates to #}
     {# nothing, so it was the spacing, not the content, that did not fit. #}
-    <header class="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-neutral-200 bg-neutral-50/80 px-3 backdrop-blur sm:gap-3 sm:px-4 lg:px-6 dark:border-neutral-800 dark:bg-neutral-950/80">
+    <header class="sticky top-0 z-20 flex h-16 items-center gap-2 border-b px-3 backdrop-blur sm:gap-3 sm:px-4 lg:px-6
+      {% if ENVIRONMENT == 'staging' %}border-orange-300 bg-orange-50/90 dark:border-orange-500/40 dark:bg-orange-950/70
+      {% elif ENVIRONMENT != 'production' %}border-amber-300 bg-amber-50/90 dark:border-amber-500/40 dark:bg-amber-950/70
+      {% else %}border-neutral-200 bg-neutral-50/80 dark:border-neutral-800 dark:bg-neutral-950/80{% endif %}">
       <button type="button" @click="navOpen = !navOpen" class="btn btn-ghost h-9 w-9 !px-0 lg:hidden"
               aria-label="Toggle navigation">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">

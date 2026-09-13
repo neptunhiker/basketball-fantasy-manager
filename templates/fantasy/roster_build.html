@@ -7,7 +7,11 @@
   {# starts at the content. `min-w-0` on the wrapper and `flex-1` on the #}
   {# rename form are what let the name truncate instead of pushing the #}
   {# handle out of the bar. #}
-  <span class="flex min-w-0 items-baseline gap-2.5">
+  <span class="flex min-w-0 items-center gap-3">
+    {% load static %}
+    <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
+         alt="{{ roster.get_icon_display }} roster icon"
+         class="h-10 w-10 shrink-0 rounded-xl border-2 border-white object-cover shadow-md sm:h-12 sm:w-12 dark:border-neutral-800">
     {% include "fantasy/partials/roster_name.html" %}
     {# Below `md` the bar is already full -- Trade, History, Rules, delete, #}
     {# theme and Sign out -- so this steps aside there and the copy in the #}
@@ -84,10 +88,7 @@
 </p>
 
 {# Stacked, not columns, and the order is the argument: this page is about a #}
-{# team, so the team comes first at full width, and the market you change it #}
-{# in follows. The two used to sit side by side, which cost the squad two #}
-{# thirds of the page and left the roster reading as a sidebar to a search #}
-{# result. Spacing comes from the wrapper's `space-y-6` in app.html. #}
+{# team, so the team comes first, and the market you change it in follows. #}
 {% include "fantasy/partials/roster_panel.html" %}
 {% include "fantasy/partials/player_picker.html" %}
 {% endblock %}

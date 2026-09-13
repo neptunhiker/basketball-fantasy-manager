@@ -1,10 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 {% comment %}Centred single-card shell for signed-out pages.{% endcomment %}
 
 {% block body %}
 <div class="flex min-h-full flex-col items-center justify-center px-4 py-12">
   <div class="w-full max-w-md">
     <div class="mb-8 flex flex-col items-center gap-3">
+      <img src="{% static 'img/pengi.png' %}" alt="" class="h-20 w-20 rounded-2xl object-cover shadow-sm">
       <span class="text-lg font-bold tracking-tight">{{ SITE_NAME }}</span>
       <div class="gradient-rule h-0.5 w-12 rounded-full"></div>
     </div>

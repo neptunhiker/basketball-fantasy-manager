@@ -1,4 +1,4 @@
-# Basketball Fantasy Manager
+# Pengi Fantasy Manager
 
 A companion tool for the [US-Manager](https://basketball.de/fantasy-basketball/)
 fantasy basketball game on basketball.de.
@@ -257,7 +257,7 @@ fly secrets set \
   SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')" \
   RESEND_API_KEY="re_..." \
   ALLOWED_HOSTS="fantasy.example.com" \
-  DEFAULT_FROM_EMAIL="Basketball Fantasy Manager <noreply@example.com>"
+  DEFAULT_FROM_EMAIL="Pengi Fantasy Manager <noreply@example.com>"
 ```
 
 Then:

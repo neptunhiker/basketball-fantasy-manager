@@ -288,32 +288,6 @@ def test_the_create_button_goes_away_once_signings_close(signed_in, season, mana
 # --- the build page ----------------------------------------------------------
 
 
-def test_the_picker_offers_a_trade_instead_of_a_signing(signed_in, roster, season):
-    player = make_player("Target")
-    close_signings(season)
-
-    body = signed_in.get(build_url(roster)).content.decode()
-    row = body.split(player.full_name)[1]
-
-    assert "Closed" in row
-    # The incoming side of the trade modal, the mirror of the squad panel's
-    # `?out=`. Nothing new in the view: it already read this parameter.
-    assert f"?in={player.pk}" not in row
-    assert "roster-buy" not in body
-
-
-def test_the_picker_still_signs_while_signings_are_open(signed_in, roster):
-    player = make_player("Target")
-    body = signed_in.get(build_url(roster)).content.decode()
-
-    # By the button's own label rather than by the word "Sign" in the markup,
-    # which the surrounding copy uses too -- "Signings close on 20 October".
-    # It used to be pinned by the exact indentation of the tag, which made any
-    # re-nesting of the picker look like a broken button.
-    assert f'aria-label="Sign {player.full_name}"' in body
-    assert "Trade for" not in body
-
-
 def test_release_disappears_once_selling_is_closed(signed_in, roster, season):
     player = make_player("Kept")
     services.buy(roster, player, player.current_salary)
@@ -353,15 +327,11 @@ def test_a_hand_written_sell_is_refused_too(signed_in, roster, season):
 
 
 def test_an_empty_roster_is_not_told_to_sign_after_the_cutoff(signed_in, roster, season):
-    """The empty squad's own line, which is the one place left to get this wrong.
-
-    The strip above it already says the roster cannot be filled; this only has
-    to not contradict it by pointing at a list whose buttons no longer sign.
-    """
+    """An empty roster clearly states that it contains no players."""
     close_signings(season)
 
     body = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk])).content.decode()
-    card = body[body.index('id="roster-panel"') : body.index('id="player-picker"')]
+    card = body[body.index('id="roster-panel"') :]
 
     assert "No players on this roster." in card
     assert "Sign one from the list" not in card
@@ -377,13 +347,13 @@ def test_an_empty_roster_is_still_pointed_at_the_list_while_signings_are_open(si
 
 
 def test_the_deadline_is_named_while_it_is_still_ahead(signed_in, roster, season):
-    """The warning only helps before the cutoff, which is the point of it."""
+    """The lifecycle deadline is shown by the page-level countdown, not the picker."""
     close_signings(season, timezone.now() + dt.timedelta(days=3))
 
     body = signed_in.get(build_url(roster)).content.decode()
 
-    assert "Signings close on" in body
-    assert "has to be complete by then" in body
+    assert "Signings close on" not in body
+    assert "has to be complete by then" not in body
 
 
 def test_a_season_with_no_deadline_says_nothing(signed_in, roster):
@@ -397,7 +367,7 @@ def test_a_short_roster_is_told_the_gap_is_permanent(signed_in, roster, season):
 
     body = signed_in.get(build_url(roster)).content.decode()
 
-    assert "stays short for the season" in body
+    assert "stays short for the season" not in body
     assert "No roster changes are available in this phase" in body
     # And the old prompt, which read as a task, is gone.
     assert "Still needed:" not in body

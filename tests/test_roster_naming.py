@@ -8,7 +8,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from apps.fantasy.models import Roster, Season
+from apps.fantasy.models import ROSTER_ICON_CHOICES, Roster, Season
 
 User = get_user_model()
 
@@ -75,12 +75,27 @@ def test_the_prompt_posts_back_to_its_own_url(signed_in, season, manager):
     assert f'hx-post="{create_url()}"' in body
 
 
+def test_the_prompt_shows_every_roster_icon(signed_in, season, manager):
+    body = signed_in.get(create_url()).content.decode()
+
+    for icon, label in ROSTER_ICON_CHOICES:
+        assert f'name="icon" value="{icon}"' in body
+        assert f'alt="{label}"' in body
+        assert f"img/roster_icons/{icon}.png" in body
+
+
 # --- what gets accepted ------------------------------------------------------
 
 
 def test_the_typed_name_wins_over_the_suggestion(signed_in, season, manager):
     signed_in.post(create_url(), {"name": "Bulla Ballers"})
     assert Roster.objects.get().name == "Bulla Ballers"
+
+
+def test_the_selected_icon_is_saved(signed_in, season, manager):
+    signed_in.post(create_url(), {"name": "Bulla Ballers", "icon": "sonic"})
+
+    assert Roster.objects.get().icon == "sonic"
 
 
 def test_surrounding_whitespace_is_trimmed(signed_in, season, manager):

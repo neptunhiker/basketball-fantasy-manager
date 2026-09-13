@@ -11,10 +11,14 @@ page is the first thing to enforce:
     `Roster.manager` cascades and would take the transaction history with it.
 """
 
+from decimal import Decimal
+
 import pytest
 from django.urls import reverse
 
+from apps.fantasy import services
 from apps.fantasy.models import Manager, Roster, Season
+from apps.nba.models import Player
 
 pytestmark = pytest.mark.django_db
 
@@ -78,6 +82,61 @@ def test_each_profile_shows_its_rosters(signed_in, manager, season):
 
     assert "Bulla Ballers" in body
     assert reverse("fantasy:roster-build", args=[manager.rosters.get().pk]) in body
+
+
+def test_rosters_are_grouped_under_their_season_labels(signed_in, manager):
+    current = Season.objects.create(
+        label="2026-27",
+        starts_on="2026-10-01",
+        ends_on="2027-04-30",
+        is_current=True,
+    )
+    earlier = Season.objects.create(
+        label="2025-26",
+        starts_on="2025-10-01",
+        ends_on="2026-04-30",
+        is_current=False,
+    )
+    Roster.objects.create(manager=manager, season=current, name="Prime Team")
+    Roster.objects.create(manager=manager, season=earlier, name="Legacy Team")
+
+    body = signed_in.get(LIST).content.decode()
+
+    assert "2026-27" in body
+    assert "2025-26" in body
+    assert "Prime Team" in body
+    assert "Legacy Team" in body
+
+
+def test_each_roster_card_shows_icon_cash_team_value_and_player_count(signed_in, manager):
+    open_signings = Season.objects.create(
+        label="2027-28",
+        starts_on="2027-10-01",
+        ends_on="2028-04-30",
+        is_current=False,
+    )
+    roster = Roster.objects.create(
+        manager=manager,
+        season=open_signings,
+        name="Bulla Ballers",
+        icon="lion",
+    )
+    player = Player.objects.create(
+        first_name="Jalen",
+        last_name="Brunson",
+        position="G",
+        current_salary=Decimal("9600000"),
+    )
+    services.buy(roster, player, player.current_salary)
+
+    body = signed_in.get(LIST).content.decode()
+
+    assert "img/roster_icons/lion.png" in body
+    assert "$50.40M" in body  # cash after a 9.60M signing
+    assert "$9.60M" in body  # squad value from one signed player
+    assert "Players" in body
+    assert "1 / 15" in body
+    assert "Jalen Brunson" not in body  # individual players are no longer listed
 
 
 def test_a_profile_with_no_rosters_says_so(signed_in, manager):

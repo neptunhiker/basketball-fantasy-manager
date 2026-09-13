@@ -1,4 +1,5 @@
 {% load money %}
+{% load static %}
 {# The team, stated wide and first. Everything true of this roster is in #}
 {# this one card; the market below it is only the tool for changing it. One #}
 {# root element carrying the id, because a buy, a sell and a trade all swap #}
@@ -15,6 +16,32 @@
   {% endif %}
 
   <div class="card overflow-hidden">
+
+    {# Desktop hero header: prominent large icon & team header #}
+    <div class="hidden items-center gap-5 border-b border-neutral-200 bg-neutral-50/50 p-5 md:flex dark:border-neutral-800 dark:bg-neutral-900/50">
+      <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
+           alt="{{ roster.get_icon_display }} roster icon"
+           class="h-16 w-16 shrink-0 rounded-2xl border-2 border-white object-cover shadow-lg lg:h-20 lg:w-20 dark:border-neutral-800">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-3">
+          <h2 class="truncate text-2xl font-bold tracking-tight text-tertiary-700 lg:text-3xl dark:text-neutral-100">
+            {{ roster.name }}
+          </h2>
+          {% if roster.is_complete %}
+            <span class="badge badge-success">Complete</span>
+          {% elif roster.season.transactions_allowed %}
+            <span class="badge badge-pending">Building</span>
+          {% else %}
+            <span class="badge badge-warning">Short</span>
+          {% endif %}
+        </div>
+        <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          {{ roster.season.label }} · Manager:
+          <a href="{% url 'fantasy:manager-list' %}"
+             class="font-medium text-tertiary-700 underline decoration-neutral-300 underline-offset-2 transition hover:text-primary-600 dark:text-neutral-200 dark:hover:text-primary-300">{{ roster.manager.nick_name }}</a>
+        </p>
+      </div>
+    </div>
 
     {# The figures, across the full width. `gap-px` over the parent's border #}
     {# colour is what draws the hairlines between cells, rather than a border #}

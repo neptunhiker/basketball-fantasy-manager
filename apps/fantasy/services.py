@@ -22,6 +22,7 @@ from .models import (
     PlayerSnapshot,
     Roster,
     RosterPlayer,
+    ROSTER_ICON_CHOICES,
     Transaction,
     WatchlistEntry,
     position_shortfalls,
@@ -320,7 +321,7 @@ def default_roster_name(manager, season):
     return f"Roster {index}"
 
 
-def create_roster(manager, season, name):
+def create_roster(manager, season, name, icon="koala"):
     """Start a roster, if the season will still let one be filled.
 
     Here rather than in the view purely so the cutoff has one home. A roster
@@ -332,12 +333,14 @@ def create_roster(manager, season, name):
     and no transaction of its own. The rule is the only reason the function
     exists.
     """
+    if icon not in dict(ROSTER_ICON_CHOICES):
+        raise ValidationError("Pick one of the available roster icons.")
     if not season.transactions_allowed:
         if season.signings_open_at and timezone.now() < season.signings_open_at:
             opened = timezone.localtime(season.signings_open_at)
             raise ValidationError(f"Signings open on {opened.strftime('%-d %B at %H:%M')}.")
         raise ValidationError("A new roster cannot be created outside the signing window.")
-    return Roster.objects.create(manager=manager, season=season, name=name)
+    return Roster.objects.create(manager=manager, season=season, name=name, icon=icon)
 
 
 def trade_preview(roster, player_out, player_in):

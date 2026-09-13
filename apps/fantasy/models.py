@@ -43,6 +43,28 @@ MINIMUM_BY_POSITION = {
     Player.Position.CENTER: 2,
 }
 STARTING_CASH = Decimal("60000000")
+ROSTER_ICON_CHOICES = [
+    ("bear", "Bear"),
+    ("bunny", "Bunny"),
+    ("croc", "Crocodile"),
+    ("deer", "Deer"),
+    ("elephant", "Elephant"),
+    ("fox", "Fox"),
+    ("fox_2", "Fox 2"),
+    ("giraffe", "Giraffe"),
+    ("koala", "Koala"),
+    ("lion", "Lion"),
+    ("monkey", "Monkey"),
+    ("owl", "Owl"),
+    ("panda", "Panda"),
+    ("racoon", "Racoon"),
+    ("seal", "Seal"),
+    ("sonic", "Sonic"),
+    ("squirrel", "Squirrel"),
+    ("tiger", "Tiger"),
+    ("wolf", "Wolf"),
+    ("zebra", "Zebra"),
+]
 
 
 def position_shortfalls(counts):
@@ -281,6 +303,12 @@ class Roster(TimeStampedModel):
         Season, verbose_name="Season", on_delete=models.PROTECT, related_name="rosters"
     )
     name = models.CharField("Name", max_length=80)
+    icon = models.CharField(
+        "Icon",
+        max_length=32,
+        choices=ROSTER_ICON_CHOICES,
+        default="koala",
+    )
     # A balance, not a derivation. Weekly price changes must not retroactively
     # alter what a past purchase cost, and the salary cap enforces itself here:
     # you cannot buy what you cannot afford.

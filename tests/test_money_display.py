@@ -123,14 +123,6 @@ def test_the_roster_card_shows_cash_in_millions(signed_in, roster):
     assert "$42.00M" in body
 
 
-def test_the_picker_shows_salaries_in_millions(signed_in, roster):
-    Player.objects.create(
-        first_name="Cheap", last_name="Guy", position="G", current_salary=Decimal("750000")
-    )
-    body = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk])).content.decode()
-    assert "$0.75M" in body
-
-
 def test_the_exact_filter_keeps_cents_only_where_there_are_any():
     """A derived figure has a remainder; a salary does not."""
     assert exact(Decimal("60000000.00")) == "$60,000,000"

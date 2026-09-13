@@ -14,7 +14,15 @@
 {% endcomment %}
 
 {% block title %}History · {{ roster.name }} · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}{{ roster.name }}{% endblock %}
+{% block page_title %}
+  {% load static %}
+  <span class="flex min-w-0 items-center gap-3">
+    <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
+         alt="{{ roster.get_icon_display }} roster icon"
+         class="h-10 w-10 shrink-0 rounded-xl border-2 border-white object-cover shadow-md sm:h-12 sm:w-12 dark:border-neutral-800">
+    <span class="truncate">{{ roster.name }}</span>
+  </span>
+{% endblock %}
 
 {% block header_actions %}
   <a href="{% url 'fantasy:roster-build' roster.pk %}" class="btn btn-secondary text-xs">

@@ -1,4 +1,5 @@
 {% extends "app.html" %}
+{% load static %}
 {% load money %}
 
 {% block title %}Rosters · {{ SITE_NAME }}{% endblock %}
@@ -26,7 +27,11 @@
       <div class="card p-5 transition hover:border-primary-300 hover:shadow-md dark:hover:border-primary-500/40">
         <div class="flex items-start justify-between gap-3">
           <a href="{% url 'fantasy:roster-build' roster.pk %}" class="min-w-0 flex-1">
-            <span class="block truncate font-semibold">{{ roster.name }}</span>
+            <span class="flex items-center gap-2 truncate font-semibold">
+              <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
+                   alt="" class="h-8 w-8 shrink-0 rounded-lg object-cover">
+              {{ roster.name }}
+            </span>
             {# The season and the handle share the subtitle rather than taking a #}
             {# row each: a card is a summary, and the roster's own name is the #}
             {# only line on it that earns full weight. Not a link -- the card is #}

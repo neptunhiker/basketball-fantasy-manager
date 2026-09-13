@@ -8,6 +8,25 @@
 {% endblock %}
 
 {% block content %}
+{% if invitation_success %}
+  <div x-data="{ copied: false }" class="mb-6 rounded-xl border border-primary-200 bg-primary-50 p-4 text-sm text-primary-900 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-200">
+    <div class="flex items-center justify-between gap-2 font-medium">
+      <span>Invitation link created for <strong>{{ invitation_success.email }}</strong>:</span>
+    </div>
+    <div class="mt-2 flex items-center gap-2">
+      <input type="text" readonly value="{{ invitation_success.url }}" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-mono text-neutral-800 shadow-sm focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100" @click="$el.select()" />
+      <button type="button"
+              @click="navigator.clipboard.writeText('{{ invitation_success.url|escapejs }}'); copied = true; setTimeout(() => copied = false, 2000)"
+              class="btn btn-primary text-xs shrink-0">
+        <span x-text="copied ? 'Copied!' : 'Copy Link'">Copy Link</span>
+      </button>
+    </div>
+    <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+      Send this link to the person. It is valid for {{ INVITATION_TIMEOUT_DAYS }} days and will expire once used.
+    </p>
+  </div>
+{% endif %}
+
 <div class="card overflow-hidden">
   <div class="border-b border-neutral-200 p-4 dark:border-neutral-800">
     <label for="user-search" class="sr-only">Search by email address</label>

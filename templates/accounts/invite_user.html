@@ -6,8 +6,7 @@
 {% block content %}
 <div class="card max-w-lg p-8">
   <p class="mb-6 text-sm text-neutral-600 dark:text-neutral-300">
-    They get an email with a link and choose their own password. The link is
-    valid for {{ INVITATION_TIMEOUT_DAYS }} days.
+    Generates an invitation link valid for {{ INVITATION_TIMEOUT_DAYS }} days that you can copy and send manually.
   </p>
   <form method="post" class="space-y-5">
     {% csrf_token %}
@@ -18,7 +17,7 @@
     {% include "partials/form_field.html" with field=form.email %}
     {% include "partials/form_field.html" with field=form.is_staff %}
     <div class="flex gap-3 pt-2">
-      <button type="submit" class="btn btn-primary">Send invitation</button>
+      <button type="submit" class="btn btn-primary">Create invitation link</button>
       <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">Cancel</a>
     </div>
   </form>

@@ -25,9 +25,10 @@ def test_staff_can_invite_a_user(client, staff_user, password):
     assert not invitee.has_usable_password()
     assert invitee.last_invited_at is not None
 
-    assert len(mail.outbox) == 1
-    assert invitee.email in mail.outbox[0].to
-    assert "invited you" in mail.outbox[0].body.lower()
+    # Email sending is disabled in favor of copyable invitation links
+    assert len(mail.outbox) == 0
+    assert response.context["invitation_success"]["email"] == "neu@example.com"
+    assert "/invitation/" in response.context["invitation_success"]["url"]
 
 
 def test_non_staff_cannot_invite(client, user, password):
@@ -119,10 +120,15 @@ def test_resend_invitation(client, staff_user, invited_user, password):
         reverse("accounts:resend-invitation", kwargs={"pk": invited_user.pk}), follow=True
     )
     assert response.status_code == 200
-    assert len(mail.outbox) == 1
+    assert len(mail.outbox) == 0
+    assert response.context["invitation_success"]["email"] == invited_user.email
+    assert "/invitation/" in response.context["invitation_success"]["url"]
 
 
 def test_resend_does_nothing_for_an_active_user(client, staff_user, user, password):
     client.login(username=staff_user.email, password=password)
-    client.post(reverse("accounts:resend-invitation", kwargs={"pk": user.pk}), follow=True)
+    response = client.post(
+        reverse("accounts:resend-invitation", kwargs={"pk": user.pk}), follow=True
+    )
     assert len(mail.outbox) == 0
+    assert "invitation_success" not in response.context

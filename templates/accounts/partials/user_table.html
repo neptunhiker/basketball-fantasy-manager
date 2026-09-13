@@ -1,3 +1,4 @@
+{% load account_tags %}
 <div id="user-table">
   {% if users %}
     <div class="overflow-x-auto">
@@ -40,10 +41,18 @@
               </td>
               <td class="px-4 py-3 text-right">
                 {% if not user.has_accepted_invitation and user.is_active %}
-                  <form method="post" action="{% url 'accounts:resend-invitation' user.pk %}" class="inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-ghost !px-2 !py-1 text-xs">Invite again</button>
-                  </form>
+                  {% invitation_url user as inv_url %}
+                  <div x-data="{ copied: false }" class="inline-flex items-center gap-2">
+                    <button type="button"
+                            @click="navigator.clipboard.writeText('{{ inv_url|escapejs }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                            class="btn btn-ghost !px-2 !py-1 text-xs">
+                      <span x-text="copied ? 'Copied!' : 'Copy link'">Copy link</span>
+                    </button>
+                    <form method="post" action="{% url 'accounts:resend-invitation' user.pk %}" class="inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-ghost !px-2 !py-1 text-xs text-neutral-500" title="Generate a fresh link">New link</button>
+                    </form>
+                  </div>
                 {% endif %}
               </td>
             </tr>

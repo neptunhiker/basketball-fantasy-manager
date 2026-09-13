@@ -115,6 +115,12 @@ class UserListView(StaffRequiredMixin, ListView):
             qs = qs.filter(email__icontains=query)
         return qs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if invitation_success := self.request.session.pop("invitation_success", None):
+            context["invitation_success"] = invitation_success
+        return context
+
     def get_template_names(self):
         # HTMX search requests only need the table body swapped in.
         if self.request.htmx:
@@ -129,16 +135,20 @@ class InviteUserView(StaffRequiredMixin, CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        invite_user(self.object, self.request, invited_by=self.request.user)
+        invitation_url = invite_user(self.object, self.request, invited_by=self.request.user)
+        self.request.session["invitation_success"] = {
+            "email": self.object.email,
+            "url": invitation_url,
+        }
         messages.success(
             self.request,
-            _("Invitation sent to %(email)s.") % {"email": self.object.email},
+            _("Invitation link created for %(email)s.") % {"email": self.object.email},
         )
         return response
 
 
 class ResendInvitationView(StaffRequiredMixin, View):
-    """POST-only: sends a fresh invitation link to someone who hasn't accepted."""
+    """POST-only: generates a fresh invitation link for someone who hasn't accepted."""
 
     http_method_names = ["post"]
 
@@ -147,10 +157,14 @@ class ResendInvitationView(StaffRequiredMixin, View):
         if user.has_accepted_invitation:
             messages.info(request, _("That person has already accepted their invitation."))
         else:
-            invite_user(user, request, invited_by=request.user)
+            invitation_url = invite_user(user, request, invited_by=request.user)
+            request.session["invitation_success"] = {
+                "email": user.email,
+                "url": invitation_url,
+            }
             messages.success(
                 request,
-                _("Invitation resent to %(email)s.") % {"email": user.email},
+                _("New invitation link created for %(email)s.") % {"email": user.email},
             )
         return redirect("accounts:user-list")
 

@@ -346,3 +346,31 @@ def test_a_profile_made_here_can_be_picked_in_the_roster_dialog(signed_in, manag
     assert "<select" in body
     assert "Buzz" in body
     assert manager.nick_name in body
+
+
+# --- the staff-only detail page -----------------------------------------------
+
+
+def detail_url(profile):
+    return reverse("fantasy:manager-detail", args=[profile.pk])
+
+
+def test_the_detail_page_is_staff_only(client, user, staff_user, password, manager):
+    client.login(email=user.email, password=password)
+    assert client.get(detail_url(manager)).status_code == 403
+
+    client.logout()
+    client.login(email=staff_user.email, password=password)
+    assert client.get(detail_url(manager)).status_code == 200
+
+
+def test_the_detail_page_shows_someone_elses_rosters(
+    client, staff_user, password, manager, season
+):
+    Roster.objects.create(manager=manager, season=season, name="Bulla Ballers")
+    client.login(email=staff_user.email, password=password)
+
+    body = client.get(detail_url(manager)).content.decode()
+
+    assert "Bulla Ballers" in body
+    assert manager.user.display_name in body

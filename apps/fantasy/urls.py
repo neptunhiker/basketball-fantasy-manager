@@ -11,6 +11,7 @@ urlpatterns = [
     path("seasons/<uuid:pk>/delete/", views.SeasonDeleteView.as_view(), name="season-delete"),
     path("managers/", views.ManagerListView.as_view(), name="manager-list"),
     path("managers/new/", views.ManagerCreateView.as_view(), name="manager-create"),
+    path("managers/<uuid:pk>/", views.ManagerDetailView.as_view(), name="manager-detail"),
     path("managers/<uuid:pk>/rename/", views.ManagerRenameView.as_view(), name="manager-rename"),
     path("managers/<uuid:pk>/delete/", views.ManagerDeleteView.as_view(), name="manager-delete"),
     path("rosters/", views.RosterListView.as_view(), name="roster-list"),

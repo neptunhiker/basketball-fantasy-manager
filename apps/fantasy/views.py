@@ -18,13 +18,14 @@ from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import View
-from django.views.generic import ListView, TemplateView
+from django.views.generic import DetailView, ListView, TemplateView
 
 from apps.core.views import (
     AdminRequiredMixin,
     ConfirmView,
     ModalFormView,
     PromptView,
+    StaffRequiredMixin,
     TypedConfirmView,
 )
 from apps.nba.models import Player, Team
@@ -250,6 +251,38 @@ class ManagerListView(LoginRequiredMixin, ListView):
         return self.request.user.manager_profiles.prefetch_related(
             # A Prefetch rather than a plain string, so the season comes with
             # each roster and the order is the one the roster list uses.
+            Prefetch(
+                "rosters",
+                queryset=Roster.objects.select_related("season")
+                .prefetch_related(
+                    Prefetch(
+                        "memberships",
+                        queryset=RosterPlayer.objects.open()
+                        .select_related("player", "player__team")
+                        .order_by("player__last_name", "player__first_name"),
+                        to_attr="open_memberships",
+                    )
+                )
+                .order_by("-season__starts_on", "name"),
+            )
+        )
+
+
+class ManagerDetailView(StaffRequiredMixin, DetailView):
+    """A staff-only look at somebody else's profile: what it plays, read-only.
+
+    Not `OwnManagerMixin` -- the point here is precisely to look at a profile
+    that is not yours. Rosters are prefetched the same way `ManagerListView`
+    prefetches its own, open memberships included, so the season groups render
+    the same summary either page shows.
+    """
+
+    model = Manager
+    template_name = "fantasy/manager_detail.html"
+    context_object_name = "profile"
+
+    def get_queryset(self):
+        return Manager.objects.select_related("user").prefetch_related(
             Prefetch(
                 "rosters",
                 queryset=Roster.objects.select_related("season")

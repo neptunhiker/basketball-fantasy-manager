@@ -173,6 +173,26 @@ def test_user_list_search_returns_only_the_table_for_htmx(client, staff_user, us
     assert staff_user.email not in body
 
 
+def test_user_detail_is_staff_only(client, user, staff_user, password, manager):
+    url = reverse("accounts:user-detail", args=[user.pk])
+
+    client.login(username=user.email, password=password)
+    assert client.get(url).status_code == 403
+
+    client.logout()
+    client.login(username=staff_user.email, password=password)
+    response = client.get(url)
+    assert response.status_code == 200
+    assert manager.nick_name in response.content.decode()
+
+
+def test_user_detail_links_to_its_manager_profiles(client, staff_user, user, password, manager):
+    client.login(username=staff_user.email, password=password)
+    body = client.get(reverse("accounts:user-detail", args=[user.pk])).content.decode()
+
+    assert reverse("fantasy:manager-detail", args=[manager.pk]) in body
+
+
 def test_healthz(client):
     response = client.get("/healthz")
     assert response.status_code == 200

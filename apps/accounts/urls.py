@@ -27,6 +27,7 @@ urlpatterns = [
     ),
     path("team/", views.UserListView.as_view(), name="user-list"),
     path("team/invite/", views.InviteUserView.as_view(), name="invite-user"),
+    path("team/<uuid:pk>/", views.UserDetailView.as_view(), name="user-detail"),
     path(
         "team/<uuid:pk>/resend-invitation/",
         views.ResendInvitationView.as_view(),

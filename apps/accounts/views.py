@@ -5,6 +5,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -14,9 +15,10 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
-from django.views.generic import CreateView, FormView, ListView, UpdateView, View
+from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView, View
 
 from apps.core.views import StaffRequiredMixin
+from apps.fantasy.models import Manager
 
 from .forms import (
     AcceptInvitationForm,
@@ -126,6 +128,28 @@ class UserListView(StaffRequiredMixin, ListView):
         if self.request.htmx:
             return ["accounts/partials/user_table.html"]
         return super().get_template_names()
+
+
+class UserDetailView(StaffRequiredMixin, DetailView):
+    """A staff-only look at one account: who it is, and what they play under.
+
+    Manager profiles come with a roster count each, because a name alone does
+    not say whether the account behind it has anything riding on it.
+    """
+
+    model = User
+    template_name = "accounts/user_detail.html"
+    context_object_name = "person"
+
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related(
+            Prefetch(
+                "manager_profiles",
+                queryset=Manager.objects.annotate(roster_count=Count("rosters")).order_by(
+                    "nick_name"
+                ),
+            )
+        )
 
 
 class InviteUserView(StaffRequiredMixin, CreateView):

@@ -80,10 +80,21 @@ def test_seasons_is_hidden_from_regular_users(signed_in):
     assert "Seasons" not in sidebar(signed_in)
 
 
+def test_staff_area_is_hidden_from_regular_users(signed_in):
+    assert "Staff area" not in sidebar(signed_in)
+
+
 def test_seasons_is_hidden_from_staff_who_are_not_superusers(client, staff_user, password):
     client.login(email=staff_user.email, password=password)
 
     assert "Seasons" not in sidebar(client)
+
+
+def test_staff_area_is_visible_to_staff_users(client, staff_user, password):
+    client.login(email=staff_user.email, password=password)
+
+    assert "Staff area" in sidebar(client)
+    assert f'href="{reverse("accounts:user-list")}"' in sidebar(client)
 
 
 def test_seasons_is_visible_to_staff_superusers(client, staff_user, password):

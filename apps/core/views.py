@@ -123,7 +123,111 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_staff and self.request.user.is_superuser
 
 
-class TypedConfirmView(LoginRequiredMixin, View):
+class ConfirmView(LoginRequiredMixin, View):
+    """A confirmation modal view component for simple confirm/cancel actions.
+
+    Subclass it, set the strings and tone, implement `get_object`, `get_body`, and `perform`.
+    Rendered via `partials/modal_confirm.html` (which extends `partials/modal.html`).
+
+        class TradeBuyConfirmView(ConfirmView):
+            title = "Buy an available trade?"
+            confirm_label = "Buy Trade ($1.5M)"
+            tone = "primary"
+
+            def get_object(self):
+                return self.get_roster()
+
+            def get_body(self, obj):
+                return "Do you really want to buy 1 extra trade for $1.50M cash?"
+
+            def perform(self, obj):
+                services.buy_trade(obj)
+
+    GET renders the modal dialog.
+    POST executes `perform(obj)`. If `perform` returns an `HttpResponse`, that
+    response is returned directly (e.g. for HTMX target updates with `HX-Trigger: close-modal`).
+    Otherwise, if `get_success_url(obj)` returns a string URL, a 204 with `HX-Redirect` is sent.
+    """
+
+    template_name = "partials/modal_confirm.html"
+    confirm_word = ""
+    title = ""
+    confirm_label = "Confirm"
+    cancel_label = "Cancel"
+    tone = "primary"
+
+    def get_object(self):
+        raise NotImplementedError
+
+    def get_title(self, obj):
+        return self.title
+
+    def get_body(self, obj):
+        return ""
+
+    def get_confirm_label(self, obj):
+        return self.confirm_label
+
+    def get_cancel_label(self, obj):
+        return self.cancel_label
+
+    def get_tone(self, obj):
+        return self.tone
+
+    def perform(self, obj):
+        raise NotImplementedError
+
+    def get_success_url(self, obj):
+        return None
+
+    def get_context(self, obj, error=None):
+        return {
+            "title": self.get_title(obj),
+            "body": self.get_body(obj),
+            "action_url": self.request.path,
+            "confirm_word": self.confirm_word,
+            "confirm_label": self.get_confirm_label(obj),
+            "cancel_label": self.get_cancel_label(obj),
+            "tone": self.get_tone(obj),
+            "error": error,
+        }
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context(self.get_object()))
+
+    def post(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        if self.confirm_word and request.POST.get("confirm", "").strip() != self.confirm_word:
+            return render(
+                request,
+                self.template_name,
+                self.get_context(obj, error=f'Type "{self.confirm_word}" exactly to confirm.'),
+            )
+
+        success_url = self.get_success_url(obj)
+        try:
+            result = self.perform(obj)
+        except ValidationError as exc:
+            return render(
+                request, self.template_name, self.get_context(obj, error=exc.messages[0])
+            )
+
+        if isinstance(result, HttpResponse):
+            result["HX-Trigger"] = "close-modal"
+            return result
+
+        if success_url:
+            response = HttpResponse(status=204)
+            response["HX-Redirect"] = success_url
+            return response
+
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "close-modal"
+        return response
+
+
+class TypedConfirmView(ConfirmView):
     """A modal that only proceeds once the user has typed a word out.
 
     Subclass it, set the strings, implement three methods. No template needed --
@@ -145,72 +249,11 @@ class TypedConfirmView(LoginRequiredMixin, View):
             def get_success_url(self, obj):
                 return reverse("fantasy:roster-list")
 
-    GET renders the modal, POST checks the typed word and acts. The check is
-    repeated here rather than trusted from the disabled button, because a
-    disabled button stops nobody holding a terminal.
+    GET renders the modal, POST checks the typed word and acts.
     """
 
-    template_name = "partials/modal_confirm.html"
     confirm_word = "DELETE"
-    title = ""
-    confirm_label = "Confirm"
-    cancel_label = "Cancel"
     tone = "danger"
-
-    def get_object(self):
-        raise NotImplementedError
-
-    def get_body(self, obj):
-        return ""
-
-    def perform(self, obj):
-        raise NotImplementedError
-
-    def get_success_url(self, obj):
-        raise NotImplementedError
-
-    def get_context(self, obj, error=None):
-        return {
-            "title": self.title,
-            "body": self.get_body(obj),
-            "action_url": self.request.path,
-            "confirm_word": self.confirm_word,
-            "confirm_label": self.confirm_label,
-            "cancel_label": self.cancel_label,
-            "tone": self.tone,
-            "error": error,
-        }
-
-    def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, self.get_context(self.get_object()))
-
-    def post(self, request, *args, **kwargs):
-        obj = self.get_object()
-
-        if request.POST.get("confirm", "").strip() != self.confirm_word:
-            # Deliberately a 200: HTMX only swaps successful responses by
-            # default, and this response *is* the corrected form.
-            return render(
-                request,
-                self.template_name,
-                self.get_context(obj, error=f'Type "{self.confirm_word}" exactly to confirm.'),
-            )
-
-        # Read the URL before acting -- afterwards the object may be gone.
-        success_url = self.get_success_url(obj)
-        try:
-            self.perform(obj)
-        except ValidationError as exc:
-            # A refusal the confirm step could not have known about: state that
-            # changed between the modal opening and this POST, or a database
-            # constraint that is the real authority. Re-rendered with the
-            # message, as PromptView and ModalFormView both do -- a 500 would
-            # be the only honest alternative, and it explains nothing.
-            return render(request, self.template_name, self.get_context(obj, error=exc.messages[0]))
-
-        response = HttpResponse(status=204)
-        response["HX-Redirect"] = success_url
-        return response
 
 
 class PromptView(LoginRequiredMixin, View):

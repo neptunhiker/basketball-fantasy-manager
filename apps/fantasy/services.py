@@ -18,6 +18,9 @@ from django.utils import timezone
 
 from .models import (
     ROSTER_SIZE,
+    STARTING_TRADES,
+    TRADE_BUY_PRICE,
+    TRADE_SELL_PRICE,
     Manager,
     PlayerSnapshot,
     Roster,
@@ -149,6 +152,9 @@ def trade(roster, player_out, player_in, price_out, price_in, occurred_at=None, 
     if not locked.season.trading_allowed:
         raise ValidationError("Trades are only allowed while the season is running.")
 
+    if locked.trades_available <= 0:
+        raise ValidationError("No trades available for this roster.")
+
     if player_out == player_in:
         raise ValidationError("The player in and the player out cannot be the same.")
     membership = _open_membership(locked, player_out)
@@ -167,7 +173,8 @@ def trade(roster, player_out, player_in, price_out, price_in, occurred_at=None, 
     membership.save(update_fields=["removed_at", "updated_at"])
     RosterPlayer.objects.create(roster=locked, player=player_in, added_at=occurred_at)
     locked.cash += delta
-    locked.save(update_fields=["cash", "updated_at"])
+    locked.trades_available -= 1
+    locked.save(update_fields=["cash", "trades_available", "updated_at"])
     roster.refresh_from_db()
 
     return Transaction.objects.create(
@@ -180,7 +187,62 @@ def trade(roster, player_out, player_in, price_out, price_in, occurred_at=None, 
         price_in=price_in,
         price_out=price_out,
         cash_delta=delta,
+        kind=Transaction.Kind.TRADE,
         note=note,
+    )
+
+
+@transaction.atomic
+def buy_trade(roster, occurred_at=None, note=""):
+    """Buy an extra trade for $1.5M."""
+    occurred_at = occurred_at or timezone.now()
+    locked = _lock(roster)
+
+    if not locked.season.trading_allowed:
+        raise ValidationError("Trades are only allowed while the season is live.")
+
+    if locked.cash < TRADE_BUY_PRICE:
+        raise ValidationError(
+            f"Not enough cash: {locked.cash:,.0f} available, {TRADE_BUY_PRICE:,.0f} needed to buy a trade."
+        )
+
+    locked.cash -= TRADE_BUY_PRICE
+    locked.trades_available += 1
+    locked.save(update_fields=["cash", "trades_available", "updated_at"])
+    roster.refresh_from_db()
+
+    return Transaction.objects.create(
+        roster=locked,
+        occurred_at=occurred_at,
+        cash_delta=-TRADE_BUY_PRICE,
+        kind=Transaction.Kind.BUY_TRADE,
+        note=note or "Bought 1 trade",
+    )
+
+
+@transaction.atomic
+def sell_trade(roster, occurred_at=None, note=""):
+    """Sell an available trade for $1.0M cash."""
+    occurred_at = occurred_at or timezone.now()
+    locked = _lock(roster)
+
+    if not locked.season.trading_allowed:
+        raise ValidationError("Trades are only allowed while the season is live.")
+
+    if locked.trades_available <= 0:
+        raise ValidationError("No trades available to sell.")
+
+    locked.cash += TRADE_SELL_PRICE
+    locked.trades_available -= 1
+    locked.save(update_fields=["cash", "trades_available", "updated_at"])
+    roster.refresh_from_db()
+
+    return Transaction.objects.create(
+        roster=locked,
+        occurred_at=occurred_at,
+        cash_delta=TRADE_SELL_PRICE,
+        kind=Transaction.Kind.SELL_TRADE,
+        note=note or "Sold 1 trade",
     )
 
 
@@ -382,6 +444,8 @@ def trade_preview(roster, player_out, player_in):
         "delta": delta,
         "cash_after": cash_after,
         "affordable": cash_after >= 0,
+        "trades_available": roster.trades_available,
+        "has_trades": roster.trades_available > 0,
         # What the incoming side is chosen against: the balance plus whatever
         # the outgoing player frees up.
         "budget": roster.cash + salary_out,

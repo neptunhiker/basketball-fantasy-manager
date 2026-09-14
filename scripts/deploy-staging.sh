@@ -28,6 +28,13 @@ if [[ ! "$APP_PORT" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
+for variable in POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD; do
+    if ! grep -qE "^${variable}=.+$" .env; then
+        echo "$variable is missing from $ROOT/.env" >&2
+        exit 1
+    fi
+done
+
 echo "Validating Compose configuration..."
 "${COMPOSE[@]}" config --quiet
 

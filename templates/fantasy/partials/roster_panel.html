@@ -53,7 +53,7 @@
     {# cells in a two-column grid would leave an empty fourth, and an empty #}
     {# cell in this hairline trick is not a gap but a block of the border #}
     {# colour -- so the third cell spans both tracks instead. #}
-    <div class="grid grid-cols-2 gap-px bg-neutral-200 sm:grid-cols-4 dark:bg-neutral-800">
+    <div class="grid grid-cols-2 gap-px bg-neutral-200 sm:grid-cols-5 dark:bg-neutral-800">
 
       {# Cash is the largest thing on the page on purpose: it is the number #}
       {# every decision on this screen is measured against. #}
@@ -101,6 +101,43 @@
               </span>
             </span>
           {% endfor %}
+        </div>
+      </div>
+
+      <div class="col-span-2 bg-white p-4 sm:col-span-1 sm:p-5 dark:bg-neutral-900">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">Available Trades</p>
+        <div class="mt-0.5 flex flex-wrap items-center justify-between gap-2">
+          <p class="text-2xl font-bold tabular-nums sm:text-3xl {% if roster.trades_available == 0 %}text-amber-600 dark:text-amber-400{% endif %}">
+            {{ roster.trades_available }}
+          </p>
+          <div class="flex items-center gap-1.5">
+            <button type="button"
+                    {% if can_buy_trade %}
+                      hx-get="{% url 'fantasy:roster-buy-trade' roster.pk %}"
+                      hx-target="#modal-root"
+                      hx-swap="innerHTML"
+                      title="Buy 1 trade for $1.50M"
+                    {% else %}
+                      disabled
+                      title="{{ buy_trade_disabled_reason }}"
+                    {% endif %}
+                    class="btn btn-secondary !px-2 !py-1 text-xs {% if not can_buy_trade %}opacity-50 cursor-not-allowed{% endif %}">
+              Buy ($1.5M)
+            </button>
+            <button type="button"
+                    {% if can_sell_trade %}
+                      hx-get="{% url 'fantasy:roster-sell-trade' roster.pk %}"
+                      hx-target="#modal-root"
+                      hx-swap="innerHTML"
+                      title="Sell 1 trade for $1.00M cash"
+                    {% else %}
+                      disabled
+                      title="{{ sell_trade_disabled_reason }}"
+                    {% endif %}
+                    class="btn btn-ghost !px-2 !py-1 text-xs {% if not can_sell_trade %}opacity-50 cursor-not-allowed{% endif %}">
+              Sell (+$1.0M)
+            </button>
+          </div>
         </div>
       </div>
 
@@ -231,13 +268,35 @@
                 <td class="px-4 py-3 text-right">
                   <div class="flex justify-end gap-1">
                     {% if trading_allowed %}
+                      {% if roster.trades_available > 0 %}
+                        <button type="button"
+                                hx-get="{% url 'fantasy:roster-trade' roster.pk %}?out={{ membership.player.pk }}"
+                                hx-target="#modal-root"
+                                hx-swap="innerHTML"
+                                class="btn btn-ghost !px-1.5 !py-1"
+                                title="Trade"
+                                aria-label="Trade {{ membership.player.full_name }}">
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
+                          </svg>
+                        </button>
+                      {% else %}
+                        <button type="button"
+                                disabled
+                                class="btn btn-ghost !px-1.5 !py-1 opacity-40 cursor-not-allowed text-neutral-400"
+                                title="No trades available"
+                                aria-label="Trade {{ membership.player.full_name }} (No trades available)">
+                          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
+                          </svg>
+                        </button>
+                      {% endif %}
+                    {% else %}
                       <button type="button"
-                              hx-get="{% url 'fantasy:roster-trade' roster.pk %}?out={{ membership.player.pk }}"
-                              hx-target="#modal-root"
-                              hx-swap="innerHTML"
-                              class="btn btn-ghost !px-1.5 !py-1"
-                              title="Trade"
-                              aria-label="Trade {{ membership.player.full_name }}">
+                              disabled
+                              class="btn btn-ghost !px-1.5 !py-1 opacity-40 cursor-not-allowed text-neutral-400"
+                              title="{{ trade_unavailable_reason }}"
+                              aria-label="Trade {{ membership.player.full_name }} ({{ trade_unavailable_reason }})">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
                         </svg>

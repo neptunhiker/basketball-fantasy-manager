@@ -210,7 +210,11 @@
       </div>
     </dl>
 
-    {% if preview.ready and not preview.affordable %}
+    {% if not preview.has_trades %}
+      <p class="mt-3 text-xs text-red-700 dark:text-red-300">
+        No trades available for this roster. You can buy trades on the roster page.
+      </p>
+    {% elif preview.ready and not preview.affordable %}
       <p class="mt-3 text-xs text-red-700 dark:text-red-300">
         Not enough cash: {{ preview.player_in.full_name }} costs more than the
         {{ preview.budget|millions }} that your cash and the outgoing player make up together.
@@ -227,7 +231,7 @@
 
   <div class="modal-actions">
     <button type="button" @click="open = false" class="btn btn-secondary">Cancel</button>
-    {% if preview.ready and preview.affordable %}
+    {% if preview.ready and preview.affordable and preview.has_trades %}
       <button type="button"
               hx-post="{{ trade_url }}?out={{ preview.player_out.pk }}&amp;in={{ preview.player_in.pk }}"
               hx-include="#picker-filters"
@@ -238,7 +242,7 @@
       </button>
     {% else %}
       <button type="button" disabled class="btn btn-primary"
-              title="{% if not preview.ready %}Pick both sides first{% else %}Not enough cash{% endif %}">
+              title="{% if not preview.has_trades %}No trades available{% elif not preview.ready %}Pick both sides first{% else %}Not enough cash{% endif %}">
         Execute trade
       </button>
     {% endif %}

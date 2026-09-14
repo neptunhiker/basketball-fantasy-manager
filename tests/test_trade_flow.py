@@ -10,6 +10,7 @@ from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from apps.fantasy import services
@@ -258,6 +259,152 @@ def test_a_stale_outgoing_player_is_simply_not_chosen(signed_in, squad, pool):
     """A player sold in another tab leaves the screen rather than breaking it."""
     body = signed_in.get(trade_url(squad, out=pool["G"][5].pk)).content.decode()
     assert body.count("not chosen") == 2
+
+
+# --- available trades and buy/sell trade market ------------------------------
+
+
+def test_roster_starts_with_default_available_trades(roster):
+    assert roster.trades_available == 2
+
+
+def test_trading_decrements_available_trades(roster, pool):
+    out_player, in_player = pool["G"][0], pool["F"][0]
+    services.buy(roster, out_player, Decimal("1000000"))
+    assert roster.trades_available == 2
+
+    services.trade(
+        roster, out_player, in_player, price_out=Decimal("1000000"), price_in=Decimal("1000000")
+    )
+    roster.refresh_from_db()
+    assert roster.trades_available == 1
+
+
+def test_trading_fails_when_no_trades_available(roster, pool):
+    out_player, in_player = pool["G"][0], pool["F"][0]
+    services.buy(roster, out_player, Decimal("1000000"))
+    roster.trades_available = 0
+    roster.save(update_fields=["trades_available"])
+
+    with pytest.raises(ValidationError, match="No trades available"):
+        services.trade(
+            roster, out_player, in_player, price_out=Decimal("1000000"), price_in=Decimal("1000000")
+        )
+
+
+def test_buying_a_trade_costs_one_point_five_million(roster):
+    initial_cash = roster.cash
+    initial_trades = roster.trades_available
+
+    move = services.buy_trade(roster)
+    roster.refresh_from_db()
+
+    assert roster.cash == initial_cash - Decimal("1500000")
+    assert roster.trades_available == initial_trades + 1
+    assert move.kind == Transaction.Kind.BUY_TRADE
+    assert move.cash_delta == Decimal("-1500000")
+
+
+def test_buying_a_trade_fails_if_insufficient_cash(roster):
+    roster.cash = Decimal("1000000")
+    roster.save(update_fields=["cash"])
+
+    with pytest.raises(ValidationError, match="Not enough cash"):
+        services.buy_trade(roster)
+
+
+def test_selling_a_trade_gives_one_million_cash(roster):
+    initial_cash = roster.cash
+    initial_trades = roster.trades_available
+
+    move = services.sell_trade(roster)
+    roster.refresh_from_db()
+
+    assert roster.cash == initial_cash + Decimal("1000000")
+    assert roster.trades_available == initial_trades - 1
+    assert move.kind == Transaction.Kind.SELL_TRADE
+    assert move.cash_delta == Decimal("1000000")
+
+
+def test_selling_a_trade_fails_when_zero_trades_available(roster):
+    roster.trades_available = 0
+    roster.save(update_fields=["trades_available"])
+
+    with pytest.raises(ValidationError, match="No trades available to sell"):
+        services.sell_trade(roster)
+
+
+def test_build_page_displays_available_trades_and_buy_sell_buttons(signed_in, roster):
+    url = reverse("fantasy:roster-build", args=[roster.pk])
+    response = signed_in.get(url)
+    body = response.content.decode()
+
+    assert "Available Trades" in body
+    assert "Buy ($1.5M)" in body
+    assert "Sell (+$1.0M)" in body
+
+
+def test_trade_buttons_are_disabled_when_zero_trades_available(signed_in, roster, pool):
+    out_player = pool["G"][0]
+    services.buy(roster, out_player, Decimal("1000000"))
+    roster.trades_available = 0
+    roster.save(update_fields=["trades_available"])
+
+    url = reverse("fantasy:roster-build", args=[roster.pk])
+    body = signed_in.get(url).content.decode()
+
+    # Both header trade button and row trade button disabled when trades_available == 0
+    assert 'title="No trades available"' in body
+    assert "disabled" in body
+
+
+def test_buying_and_selling_trades_via_views(signed_in, roster):
+    buy_url = reverse("fantasy:roster-buy-trade", args=[roster.pk])
+    sell_url = reverse("fantasy:roster-sell-trade", args=[roster.pk])
+
+    # GET buy trade confirmation modal
+    get_buy_res = signed_in.get(buy_url)
+    assert get_buy_res.status_code == 200
+    assert "Buy an available trade?" in get_buy_res.content.decode()
+    assert "Buy Trade ($1.5M)" in get_buy_res.content.decode()
+
+    # POST buy a trade
+    post_buy_res = signed_in.post(buy_url, headers={"HX-Request": "true"})
+    roster.refresh_from_db()
+    assert roster.trades_available == 3
+    assert roster.cash == Decimal("58500000")
+    assert post_buy_res["HX-Trigger"] == "close-modal"
+    assert post_buy_res["HX-Retarget"] == "#roster-panel"
+
+    # GET sell trade confirmation modal
+    get_sell_res = signed_in.get(sell_url)
+    assert get_sell_res.status_code == 200
+    assert "Sell an available trade?" in get_sell_res.content.decode()
+    assert "Sell Trade (+$1.0M)" in get_sell_res.content.decode()
+
+    # POST sell a trade
+    post_sell_res = signed_in.post(sell_url, headers={"HX-Request": "true"})
+    roster.refresh_from_db()
+    assert roster.trades_available == 2
+    assert roster.cash == Decimal("59500000")
+    assert post_sell_res["HX-Trigger"] == "close-modal"
+    assert post_sell_res["HX-Retarget"] == "#roster-panel"
+
+
+def test_trade_buttons_disabled_when_season_not_live(signed_in, roster, season):
+    # Set signing dates so transactions_allowed is True but trading_allowed is False (season hasn't started)
+    season.starts_on = dt.date(2026, 10, 20)
+    season.ends_on = dt.date(2027, 4, 11)
+    season.signings_open_at = dt.datetime(2026, 9, 1, 0, 0, tzinfo=dt.UTC)
+    season.signings_close_at = dt.datetime(2026, 9, 20, 0, 0, tzinfo=dt.UTC)
+    season.save()
+
+    url = reverse("fantasy:roster-build", args=[roster.pk])
+    body = signed_in.get(url).content.decode()
+
+    # Check tooltip on disabled buttons
+    assert "Trades become available when the season starts on 20 October 2026." in body
+    assert "disabled" in body
 
 
 def test_an_incoming_player_already_on_the_roster_is_not_chosen(signed_in, squad, pool):

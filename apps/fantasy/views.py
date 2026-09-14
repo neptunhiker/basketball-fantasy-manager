@@ -22,6 +22,7 @@ from django.views.generic import ListView, TemplateView
 
 from apps.core.views import (
     AdminRequiredMixin,
+    ConfirmView,
     ModalFormView,
     PromptView,
     TypedConfirmView,
@@ -739,6 +740,36 @@ def _build_context(request, roster, error=None):
         else:
             player.salary_difference_amount = None
     current_sort, current_dir, memberships = _sort_roster_memberships(request, memberships)
+    trading_allowed = roster.season.trading_allowed
+    if not trading_allowed:
+        from django.utils import timezone
+        now = timezone.now()
+        if now < roster.season.season_open_at:
+            opened = timezone.localtime(roster.season.season_open_at)
+            trade_unavailable_reason = (
+                f"Trades become available when the season starts on {opened.strftime('%-d %B %Y')}."
+            )
+        else:
+            trade_unavailable_reason = "The season has ended. Trading is closed."
+    else:
+        trade_unavailable_reason = ""
+
+    can_buy_trade = trading_allowed and roster.cash >= Decimal("1500000")
+    if not trading_allowed:
+        buy_trade_disabled_reason = trade_unavailable_reason
+    elif roster.cash < Decimal("1500000"):
+        buy_trade_disabled_reason = "Not enough cash ($1.5M needed)"
+    else:
+        buy_trade_disabled_reason = ""
+
+    can_sell_trade = trading_allowed and roster.trades_available > 0
+    if not trading_allowed:
+        sell_trade_disabled_reason = trade_unavailable_reason
+    elif roster.trades_available <= 0:
+        sell_trade_disabled_reason = "No trades available to sell"
+    else:
+        sell_trade_disabled_reason = ""
+
     return {
         "roster": roster,
         "filters": filters,
@@ -754,7 +785,14 @@ def _build_context(request, roster, error=None):
         # select_related by `OwnRosterMixin`, so this costs nothing.
         "signings_open": roster.season.transactions_allowed,
         "transactions_allowed": roster.season.transactions_allowed,
-        "trading_allowed": roster.season.trading_allowed,
+        "trading_allowed": trading_allowed,
+        "trades_available": roster.trades_available,
+        "has_trades": roster.trades_available > 0,
+        "can_buy_trade": can_buy_trade,
+        "can_sell_trade": can_sell_trade,
+        "buy_trade_disabled_reason": buy_trade_disabled_reason,
+        "sell_trade_disabled_reason": sell_trade_disabled_reason,
+        "trade_unavailable_reason": trade_unavailable_reason,
         "signings_close_at": roster.season.signings_close_at,
         "error": error,
     }
@@ -810,6 +848,67 @@ class RosterBuyView(RosterChangeView):
 class RosterSellView(RosterChangeView):
     def apply(self, roster, player):
         services.sell(roster, player, services.amount_paid_for(roster, player))
+
+
+class RosterBuyTradeView(OwnRosterMixin, ConfirmView):
+    title = "Buy an available trade?"
+    confirm_label = "Buy Trade ($1.5M)"
+    tone = "primary"
+
+    def get_object(self):
+        return self.get_roster()
+
+    def get_body(self, roster):
+        cost_m = Decimal("1.5")
+        current_m = roster.cash / Decimal("1000000")
+        after_m = (roster.cash - Decimal("1500000")) / Decimal("1000000")
+        return (
+            f"Do you really want to buy 1 extra trade for ${cost_m:.2f}M cash? "
+            f"Your cash balance will decrease from ${current_m:.2f}M to ${after_m:.2f}M."
+        )
+
+    def perform(self, roster):
+        services.buy_trade(roster)
+        roster.refresh_from_db()
+        response = render(
+            self.request,
+            "fantasy/partials/build_update.html",
+            _build_context(self.request, roster),
+        )
+        response["HX-Retarget"] = "#roster-panel"
+        response["HX-Reswap"] = "outerHTML"
+        return response
+
+
+class RosterSellTradeView(OwnRosterMixin, ConfirmView):
+    title = "Sell an available trade?"
+    confirm_label = "Sell Trade (+$1.0M)"
+    tone = "primary"
+
+    def get_object(self):
+        return self.get_roster()
+
+    def get_body(self, roster):
+        gain_m = Decimal("1.0")
+        current_m = roster.cash / Decimal("1000000")
+        after_m = (roster.cash + Decimal("1000000")) / Decimal("1000000")
+        return (
+            f"Do you really want to sell 1 trade for ${gain_m:.2f}M cash? "
+            f"Your available trades will decrease from {roster.trades_available} to {roster.trades_available - 1}, "
+            f"and your cash balance will increase from ${current_m:.2f}M to ${after_m:.2f}M."
+        )
+
+    def perform(self, roster):
+        services.sell_trade(roster)
+        roster.refresh_from_db()
+        response = render(
+            self.request,
+            "fantasy/partials/build_update.html",
+            _build_context(self.request, roster),
+        )
+        response["HX-Retarget"] = "#roster-panel"
+        response["HX-Reswap"] = "outerHTML"
+        return response
 
 
 def _chosen_player(request, key):
@@ -895,7 +994,9 @@ class RosterTradeView(OwnRosterMixin, View):
         preview = self.get_context()["preview"]
 
         error = None
-        if not preview["ready"]:
+        if not preview["has_trades"]:
+            error = "No trades available for this roster."
+        elif not preview["ready"]:
             error = "Pick a player to send out and one to bring in."
         else:
             try:

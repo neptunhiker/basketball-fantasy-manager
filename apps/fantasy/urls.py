@@ -29,6 +29,16 @@ urlpatterns = [
         views.RosterSellView.as_view(),
         name="roster-sell",
     ),
+    path(
+        "rosters/<uuid:pk>/trades/buy/",
+        views.RosterBuyTradeView.as_view(),
+        name="roster-buy-trade",
+    ),
+    path(
+        "rosters/<uuid:pk>/trades/sell/",
+        views.RosterSellTradeView.as_view(),
+        name="roster-sell-trade",
+    ),
     path("rosters/<uuid:pk>/trade/", views.RosterTradeView.as_view(), name="roster-trade"),
     path("rosters/<uuid:pk>/history/", views.RosterHistoryView.as_view(), name="roster-history"),
 ]

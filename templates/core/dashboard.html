@@ -29,8 +29,8 @@
       {% if countdown_target_at %}
         <p class="mt-8 font-mono text-xs font-bold uppercase tracking-[.2em] text-white/50">Counting down to <span class="text-secondary-300">{{ countdown_label }}</span> · {{ countdown_target_at|date:"F j, Y · H:i" }}</p>
         <div class="mt-3 grid gap-2.5 sm:grid-cols-4" id="trading-countdown" data-target="{{ countdown_target_at|date:'c' }}">
-          <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
-            <div id="countdown-days" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums sm:text-[9rem] lg:text-[10rem]">0</div>
+          <div class="min-w-0 rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
+            <div id="countdown-days" data-digits="1" class="truncate text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums transition-[font-size] duration-200 sm:text-[9rem] lg:text-[10rem] data-[digits=3]:text-5xl data-[digits=3]:sm:text-[6rem] data-[digits=3]:lg:text-[6.5rem] data-[digits=4]:text-4xl data-[digits=4]:sm:text-[4.5rem] data-[digits=4]:lg:text-[5rem]">0</div>
             <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-secondary-300">Days</div>
           </div>
           <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
@@ -123,9 +123,12 @@
         if (!countdown) return;
         var target = new Date(countdown.dataset.target).getTime();
         var pad = function (value) { return String(value).padStart(2, "0"); };
+        var daysEl = document.getElementById("countdown-days");
         function tick() {
           var seconds = Math.max(0, Math.floor((target - Date.now()) / 1000));
-          document.getElementById("countdown-days").textContent = Math.floor(seconds / 86400);
+          var days = Math.floor(seconds / 86400);
+          daysEl.textContent = days;
+          daysEl.dataset.digits = Math.min(String(days).length, 4);
           document.getElementById("countdown-hours").textContent = pad(Math.floor((seconds % 86400) / 3600));
           document.getElementById("countdown-minutes").textContent = pad(Math.floor((seconds % 3600) / 60));
           document.getElementById("countdown-seconds").textContent = pad(seconds % 60);

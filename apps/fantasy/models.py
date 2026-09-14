@@ -43,6 +43,9 @@ MINIMUM_BY_POSITION = {
     Player.Position.CENTER: 2,
 }
 STARTING_CASH = Decimal("60000000")
+STARTING_TRADES = 2
+TRADE_BUY_PRICE = Decimal("1500000")
+TRADE_SELL_PRICE = Decimal("1000000")
 ROSTER_ICON_CHOICES = [
     ("bear", "Bear"),
     ("bunny", "Bunny"),
@@ -313,6 +316,9 @@ class Roster(TimeStampedModel):
     # alter what a past purchase cost, and the salary cap enforces itself here:
     # you cannot buy what you cannot afford.
     cash = models.DecimalField("Cash", max_digits=12, decimal_places=2, default=STARTING_CASH)
+    trades_available = models.PositiveIntegerField(
+        "Available trades", default=STARTING_TRADES
+    )
 
     class Meta:
         ordering = ["name"]
@@ -324,6 +330,9 @@ class Roster(TimeStampedModel):
                 name="unique_roster_name_per_manager_and_season",
             ),
             models.CheckConstraint(condition=Q(cash__gte=0), name="cash_is_never_negative"),
+            models.CheckConstraint(
+                condition=Q(trades_available__gte=0), name="trades_available_is_never_negative"
+            ),
         ]
 
     objects = RosterQuerySet.as_manager()
@@ -535,23 +544,23 @@ class RosterPlayer(TimeStampedModel):
 
 
 class Transaction(TimeStampedModel):
-    """A single move: buying, selling, or swapping one player for another.
-
-    `kind` is derived rather than stored. A stored copy could disagree with the
-    players actually attached, and there is no version of that disagreement
-    that is not a bug.
-    """
+    """A single move: buying, selling, swapping players, or buying/selling trades."""
 
     class Kind(models.TextChoices):
         BUY = "BUY", "Buy"
         SELL = "SELL", "Sell"
         TRADE = "TRADE", "Trade"
+        BUY_TRADE = "BUY_TRADE", "Buy Trade"
+        SELL_TRADE = "SELL_TRADE", "Sell Trade"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     roster = models.ForeignKey(
         Roster, verbose_name="Roster", on_delete=models.CASCADE, related_name="transactions"
     )
     occurred_at = models.DateTimeField("Occurred at")
+    kind = models.CharField(
+        "Kind", max_length=20, choices=Kind.choices, blank=True
+    )
     player_in = models.ForeignKey(
         Player,
         verbose_name="Player in",
@@ -596,8 +605,10 @@ class Transaction(TimeStampedModel):
         verbose_name_plural = "Transactions"
         constraints = [
             models.CheckConstraint(
-                condition=Q(player_in__isnull=False) | Q(player_out__isnull=False),
-                name="a_transaction_moves_at_least_one_player",
+                condition=Q(player_in__isnull=False)
+                | Q(player_out__isnull=False)
+                | Q(kind__in=["BUY_TRADE", "SELL_TRADE"]),
+                name="a_transaction_moves_at_least_one_player_or_trade",
             ),
             # NULL passes a CHECK in Postgres, which is exactly right here: an
             # unrecorded price is unknown, not negative.
@@ -620,18 +631,11 @@ class Transaction(TimeStampedModel):
         return f"{self.get_kind_display()}: {self.description}"
 
     @property
-    def kind(self):
-        if self.player_in_id and self.player_out_id:
-            return self.Kind.TRADE
-        return self.Kind.BUY if self.player_in_id else self.Kind.SELL
-
-    def get_kind_display(self):
-        return self.Kind(self.kind).label
-
-    @property
     def description(self):
         if self.kind == self.Kind.TRADE:
             return f"{self.player_out} → {self.player_in}"
+        if self.kind in (self.Kind.BUY_TRADE, self.Kind.SELL_TRADE):
+            return self.get_kind_display()
         return str(self.player_in or self.player_out)
 
     @property
@@ -650,18 +654,40 @@ class Transaction(TimeStampedModel):
         """The money this move should have taken, read from the prices alone."""
         return (self.price_out or Decimal("0")) - (self.price_in or Decimal("0"))
 
+    def save(self, *args, **kwargs):
+        if not self.kind:
+            if self.player_in_id and self.player_out_id:
+                self.kind = self.Kind.TRADE
+            elif self.player_in_id:
+                self.kind = self.Kind.BUY
+            elif self.player_out_id:
+                self.kind = self.Kind.SELL
+        super().save(*args, **kwargs)
+
     def clean(self):
-        if not (self.player_in_id or self.player_out_id):
-            raise ValidationError("A transaction has to move at least one player.")
-        if self.player_in_id and self.player_in_id == self.player_out_id:
-            raise ValidationError("The player in and the player out cannot be the same.")
-        # Two records of the same money, so they are worth comparing. Only when
-        # both prices are known: an old row has nothing to disagree with.
-        if self.is_priced and self.implied_cash_delta != self.cash_delta:
-            raise ValidationError(
-                f"The cash flow does not match the prices: {self.implied_cash_delta:,.0f} "
-                f"from the two sides, {self.cash_delta:,.0f} recorded."
-            )
+        if not self.kind:
+            if self.player_in_id and self.player_out_id:
+                self.kind = self.Kind.TRADE
+            elif self.player_in_id:
+                self.kind = self.Kind.BUY
+            elif self.player_out_id:
+                self.kind = self.Kind.SELL
+
+        if self.kind in (self.Kind.BUY, self.Kind.SELL, self.Kind.TRADE):
+            if not (self.player_in_id or self.player_out_id):
+                raise ValidationError("A transaction has to move at least one player.")
+            if self.player_in_id and self.player_in_id == self.player_out_id:
+                raise ValidationError("The player in and the player out cannot be the same.")
+            # Two records of the same money, so they are worth comparing. Only when
+            # both prices are known: an old row has nothing to disagree with.
+            if self.is_priced and self.implied_cash_delta != self.cash_delta:
+                out_str = f"{self.price_out:,.0f}" if self.price_out is not None else "0"
+                in_str = f"{self.price_in:,.0f}" if self.price_in is not None else "0"
+                raise ValidationError(
+                    f"Cash flow {self.cash_delta:,.0f} does not match the prices: "
+                    f"out ({out_str}) minus in ({in_str}) "
+                    f"is {self.implied_cash_delta:,.0f}."
+                )
 
 
 class PlayerSnapshotQuerySet(models.QuerySet):

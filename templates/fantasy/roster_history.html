@@ -140,6 +140,8 @@
                       bg-primary-100 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300
                     {% elif row.move.kind == 'SELL' %}
                       bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300
+                    {% elif row.move.kind == 'BUY_TRADE' or row.move.kind == 'SELL_TRADE' %}
+                      bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300
                     {% else %}
                       bg-secondary-100 text-secondary-700 dark:bg-secondary-400/15 dark:text-secondary-300
                     {% endif %}">

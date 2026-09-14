@@ -2,13 +2,13 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set for deployment}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set for deployment}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set for deployment}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER must be set for deployment} -d ${POSTGRES_DB:?POSTGRES_DB must be set for deployment}"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -17,7 +17,7 @@ services:
     build: .
     env_file: .env
     ports:
-      - "127.0.0.1:${APP_PORT}:8080"
+      - "127.0.0.1:${APP_PORT:?APP_PORT must be set for deployment}:8080"
     depends_on:
       db:
         condition: service_healthy

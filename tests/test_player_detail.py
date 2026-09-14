@@ -74,6 +74,33 @@ def url(player):
     return reverse("nba:player-detail", args=[player.slug])
 
 
+def test_logged_in_user_can_add_private_note_on_player_detail(signed_in, user, player):
+    response = signed_in.post(
+        url(player),
+        {"content": "This player is a strong buy if his minutes stay above 35."},
+    )
+
+    assert response.status_code == 302
+    note = player.notes.get(user=user)
+    assert note.content == "This player is a strong buy if his minutes stay above 35."
+
+    body = signed_in.get(url(player)).content.decode()
+    assert "This player is a strong buy if his minutes stay above 35." in body
+
+
+def test_private_notes_are_only_visible_to_their_owner(client, user, player, db):
+    other_user = user.__class__.objects.create_user(
+        email="other-note-user@example.com",
+        password="correct-horse-battery",
+    )
+    player.notes.create(user=user, content="Keep an eye on his late-clock usage.")
+
+    client.login(email=other_user.email, password="correct-horse-battery")
+    body = client.get(url(player)).content.decode()
+
+    assert "Keep an eye on his late-clock usage." not in body
+
+
 def chart_svg(body):
     """Just the chart. Not the first <svg> on the page -- that one is the
     favicon -- and not the table below it, which repeats the same figures."""

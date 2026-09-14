@@ -15,7 +15,7 @@ from django.db.models import (
     When,
 )
 from django.db.models.functions import Greatest
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import formats, timezone
@@ -26,7 +26,8 @@ from apps.fantasy import services
 from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
 
 from . import charts, stats
-from .models import Player, PlayerInjury, Team
+from .forms import PlayerNoteForm
+from .models import Player, PlayerInjury, PlayerNote, Team
 
 
 class TeamListView(LoginRequiredMixin, ListView):
@@ -490,6 +491,24 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "player"
     queryset = Player.objects.select_related("team")
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = PlayerNoteForm(request.POST)
+        if form.is_valid():
+            note, created = PlayerNote.objects.get_or_create(
+                user=request.user,
+                player=self.object,
+                defaults={"content": form.cleaned_data["content"]},
+            )
+            if not created:
+                note.content = form.cleaned_data["content"]
+                note.save(update_fields=["content", "updated_at"])
+            return self.get_success_url()
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def get_success_url(self):
+        return HttpResponseRedirect(reverse("nba:player-detail", args=[self.object.slug]))
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -521,6 +540,9 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
             not in {"healthy", "available", "returned", "cleared"}
         )
         context["hotness_score"] = self.object.hotness_score()
+        context["notes"] = self.object.notes.filter(user=self.request.user).order_by("-created_at")
+        context["note_form"] = kwargs.get("form") or PlayerNoteForm()
+        context["note"] = kwargs.get("note")
         # Oldest on the left, which is the opposite of the table below it: a
         # line is read forwards through the season, a table newest-first.
         # `fp_per_game` is already an average -- points over games played to

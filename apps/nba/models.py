@@ -248,6 +248,39 @@ class Player(TimeStampedModel):
         return slug
 
 
+class PlayerNote(TimeStampedModel):
+    """A private note attached to a player by one account."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        "accounts.User",
+        verbose_name="User",
+        on_delete=models.CASCADE,
+        related_name="player_notes",
+    )
+    player = models.ForeignKey(
+        Player,
+        verbose_name="Player",
+        on_delete=models.CASCADE,
+        related_name="notes",
+    )
+    content = models.TextField("Note", max_length=2000)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Player note"
+        verbose_name_plural = "Player notes"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "player"],
+                name="one_note_per_user_per_player",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} · {self.player}: {self.content[:40]}"
+
+
 class PlayerInjury(TimeStampedModel):
     """An injury observation received from an external NBA data provider."""
 

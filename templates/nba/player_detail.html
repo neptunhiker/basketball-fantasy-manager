@@ -195,6 +195,55 @@
 
   <div class="card overflow-hidden">
     <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-semibold">Private notes</h2>
+          <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+            Only you can see these notes. They are for your own player context.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-4 p-4 sm:p-5">
+      {% if note_form.errors %}
+        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+          Please fix the note and try again.
+        </div>
+      {% endif %}
+
+      <form method="post" class="space-y-3">
+        {% csrf_token %}
+        {{ note_form.content.errors }}
+        {{ note_form.content }}
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ note_form.content.help_text }}</p>
+          <button type="submit" class="btn btn-primary">Save note</button>
+        </div>
+      </form>
+
+      {% if notes %}
+        <div class="space-y-3">
+          {% for note in notes %}
+            <article class="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-800/60">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Your note</p>
+                <time class="text-xs text-neutral-400 dark:text-neutral-500" datetime="{{ note.created_at|date:'c' }}">
+                  {{ note.created_at|date:"M j, Y · H:i" }}
+                </time>
+              </div>
+              <p class="mt-2 whitespace-pre-line text-sm text-neutral-700 dark:text-neutral-200">{{ note.content }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">No private notes yet. Save one to remember your take on this player.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card overflow-hidden">
+    <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
       <h2 class="text-sm font-semibold">Snapshots</h2>
       <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
         One row per read, the newest on top, each with the change from the read below it.

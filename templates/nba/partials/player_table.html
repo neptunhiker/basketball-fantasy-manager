@@ -102,7 +102,7 @@
               <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_games_played|default_if_none:"–" }}
               </td>
-              <td class="px-4 py-3 text-right tabular-nums">
+              <td class="px-4 py-3 text-right tabular-nums" title="Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)">
                 {{ player.hotness_score|default:"–" }}
               </td>
               <td class="px-4 py-3 text-right">

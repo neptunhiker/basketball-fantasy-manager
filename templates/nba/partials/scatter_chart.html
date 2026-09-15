@@ -107,8 +107,10 @@
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white" x-text="selected?.gamesPlayed || '–'"></dd>
         </div>
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400">Hotness</dt>
-          <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white" x-text="selected?.hotness || '–'"></dd>
+          <dt class="text-neutral-500 dark:text-neutral-400" title="Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)">Hotness</dt>
+          <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white"
+              title="Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)"
+              x-text="selected?.hotness || '–'"></dd>
         </div>
       </dl>
     </div>

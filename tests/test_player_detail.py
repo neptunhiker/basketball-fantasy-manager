@@ -75,17 +75,21 @@ def url(player):
 
 
 def test_logged_in_user_can_add_private_note_on_player_detail(signed_in, user, player):
-    response = signed_in.post(
-        url(player),
-        {"content": "This player is a strong buy if his minutes stay above 35."},
-    )
+    first = "This player is a strong buy if his minutes stay above 35."
+    second = "He also gives us a good late-clock usage profile against switchable defenders."
 
+    response = signed_in.post(url(player), {"content": first})
     assert response.status_code == 302
-    note = player.notes.get(user=user)
-    assert note.content == "This player is a strong buy if his minutes stay above 35."
+
+    response = signed_in.post(url(player), {"content": second})
+    assert response.status_code == 302
+
+    notes = list(player.notes.filter(user=user).order_by("created_at"))
+    assert [note.content for note in notes] == [first, second]
 
     body = signed_in.get(url(player)).content.decode()
-    assert "This player is a strong buy if his minutes stay above 35." in body
+    assert first in body
+    assert second in body
 
 
 def test_private_notes_are_only_visible_to_their_owner(client, user, player, db):
@@ -94,11 +98,13 @@ def test_private_notes_are_only_visible_to_their_owner(client, user, player, db)
         password="correct-horse-battery",
     )
     player.notes.create(user=user, content="Keep an eye on his late-clock usage.")
+    player.notes.create(user=user, content="He tends to be safer in a smaller role.")
 
     client.login(email=other_user.email, password="correct-horse-battery")
     body = client.get(url(player)).content.decode()
 
     assert "Keep an eye on his late-clock usage." not in body
+    assert "He tends to be safer in a smaller role." not in body
 
 
 def chart_svg(body):

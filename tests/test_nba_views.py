@@ -5,6 +5,8 @@ from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.nba.models import Player
+
 
 @pytest.fixture
 def teams(db):
@@ -134,6 +136,100 @@ def test_filter_by_max_salary_in_millions(signed_in, roster):
     response = signed_in.get(reverse("nba:player-list"), {"max_salary": "10"})
 
     assert names(response) == {"Jayson Tatum", "LeBron James"}
+
+
+def test_compare_page_allows_up_to_five_selected_players(signed_in, roster):
+    james = Player.objects.get(last_name="James")
+    luka = Player.objects.get(last_name="Dončić")
+    tatum = Player.objects.get(last_name="Tatum")
+
+    response = signed_in.get(
+        reverse("nba:player-compare"),
+        {
+            "player": [james.slug, luka.slug, tatum.slug],
+            "q": "james",
+        },
+    )
+
+    assert response.status_code == 200
+    assert [player.slug for player in response.context["selected_players"]] == [
+        james.slug,
+        luka.slug,
+        tatum.slug,
+    ]
+    assert response.context["search_query"] == "james"
+    assert response.context["max_compare_players"] == 5
+
+
+def test_compare_page_shows_salary_in_millions(signed_in, roster):
+    james = Player.objects.get(last_name="James")
+    james.current_salary = 10_000_000
+    james.save(update_fields=["current_salary"])
+
+    response = signed_in.get(reverse("nba:player-compare"), {"player": [james.slug]})
+
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "$10.00M" in body
+    assert 'title="$10,000,000"' in body
+
+
+def test_compare_page_empty_state_and_modal_trigger(signed_in, roster):
+    response = signed_in.get(reverse("nba:player-compare"))
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "No players selected yet" in body
+    assert reverse("nba:player-compare-modal") in body
+    assert "hx-target=\"#modal-root\"" in body
+
+
+def test_compare_page_selected_players_removal_link(signed_in, roster):
+    james = Player.objects.get(last_name="James")
+    luka = Player.objects.get(last_name="Dončić")
+
+    response = signed_in.get(
+        reverse("nba:player-compare"),
+        {"player": [james.slug, luka.slug]},
+    )
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert james.full_name in body
+    assert luka.full_name in body
+    # Table headers match players page
+    assert "Actual salary" in body
+    assert "Expected salary" in body
+    assert "Difference" in body
+    assert "Points" in body
+    assert "Avg/game" in body
+    assert "Games" in body
+    assert "Hotness" in body
+    assert "Injury" in body
+    assert "Status" in body
+    # Removal link for James leaves Luka
+    assert f"player={luka.slug}" in body
+
+
+def test_compare_modal_search_and_exclusions(signed_in, roster):
+    james = Player.objects.get(last_name="James")
+    luka = Player.objects.get(last_name="Dončić")
+
+    # Initial modal load excluding James
+    modal_response = signed_in.get(
+        reverse("nba:player-compare-modal"),
+        {"player": [james.slug], "q": "Dončić"},
+    )
+    assert modal_response.status_code == 200
+    body = modal_response.content.decode()
+    assert luka.full_name in body
+    assert f"player={james.slug}&amp;player={luka.slug}" in body
+
+    # HTMX body request
+    body_response = signed_in.get(
+        reverse("nba:player-compare-modal"),
+        {"player": [james.slug], "q": "Dončić", "body": "1"},
+    )
+    assert body_response.status_code == 200
+    assert "compare-modal-results" in body_response.content.decode()
 
 
 def test_expected_salary_and_difference_are_sortable(signed_in, roster):

@@ -1,0 +1,50 @@
+{% load money %}
+<div id="compare-modal-results">
+  {% if matching_players %}
+    <ul class="divide-y divide-neutral-200 overflow-y-auto rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800" style="max-height: 22rem;">
+      {% for item in matching_players %}
+        {% with player=item.player %}
+          <li>
+            <a href="{% url 'nba:player-compare' %}?{{ item.add_query }}"
+               class="flex items-center justify-between gap-3 p-3 transition hover:bg-primary-50/60 dark:hover:bg-primary-500/10">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+                  {{ player.position }}
+                </span>
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium text-neutral-800 dark:text-neutral-100">
+                    {{ player.full_name }}
+                  </p>
+                  <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                    {% if player.team %}{{ player.team.name }} ({{ player.team.abbreviation }}){% else %}Free agent{% endif %}
+                  </p>
+                </div>
+              </div>
+              <div class="flex shrink-0 items-center gap-3">
+                <div class="text-right">
+                  <p class="text-xs font-medium tabular-nums text-neutral-700 dark:text-neutral-200" title="{{ player.current_salary|exact }}">
+                    {% if player.current_salary %}{{ player.current_salary|millions }}{% else %}–{% endif %}
+                  </p>
+                  <p class="text-[11px] tabular-nums text-neutral-500 dark:text-neutral-400">
+                    {% if player.current_fp_per_game %}{{ player.current_fp_per_game|floatformat:"2g" }} FP/G{% else %}–{% endif %}
+                  </p>
+                </div>
+                <span class="btn btn-secondary !px-2.5 !py-1 text-xs">
+                  + Add
+                </span>
+              </div>
+            </a>
+          </li>
+        {% endwith %}
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
+      {% if search_query %}
+        No active players match "<span class="font-medium text-neutral-700 dark:text-neutral-200">{{ search_query }}</span>".
+      {% else %}
+        No players available to add.
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

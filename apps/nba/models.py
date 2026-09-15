@@ -270,12 +270,6 @@ class PlayerNote(TimeStampedModel):
         ordering = ["-created_at"]
         verbose_name = "Player note"
         verbose_name_plural = "Player notes"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["user", "player"],
-                name="one_note_per_user_per_player",
-            )
-        ]
 
     def __str__(self):
         return f"{self.user} · {self.player}: {self.content[:40]}"

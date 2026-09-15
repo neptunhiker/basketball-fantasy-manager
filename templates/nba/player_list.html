@@ -5,6 +5,12 @@
 
 {% block content %}
 <div class="card overflow-hidden">
+  <div class="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+    <div>
+      <h2 class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Player search</h2>
+    </div>
+    <a href="{% url 'nba:player-compare' %}" class="btn btn-secondary !px-3 !py-1.5 text-xs">Compare players</a>
+  </div>
   <form class="border-b border-neutral-200 p-4 dark:border-neutral-800"
         hx-get="{% url 'nba:player-list' %}"
         hx-trigger="input changed delay:300ms from:input[type=search], input changed delay:300ms from:input[type=number], change from:select, change from:input[type=checkbox], search"

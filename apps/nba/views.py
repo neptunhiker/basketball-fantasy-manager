@@ -1,4 +1,5 @@
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlencode
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import (
@@ -258,6 +259,203 @@ class WatchlistView(PlayerListView):
     template_name = "nba/player_list.html"
 
 
+class PlayerCompareView(LoginRequiredMixin, ListView):
+    model = Player
+    template_name = "nba/player_compare.html"
+    context_object_name = "players"
+
+    def get_queryset(self):
+        qs = Player.objects.filter(is_active=True).select_related("team").order_by("last_name", "first_name")
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            for term in query.split():
+                qs = qs.filter(Q(first_name__icontains=term) | Q(last_name__icontains=term))
+        return qs[:50]
+
+    def _selected_slugs(self):
+        selected = []
+        seen = set()
+        for slug in self.request.GET.getlist("player"):
+            value = (slug or "").strip()
+            if value and value not in seen:
+                selected.append(value)
+                seen.add(value)
+        return selected[:5]
+
+    def _compare_metric(self, player):
+        hotness = player.hotness_score()
+        salary_gap = None
+        if player.current_salary is not None and player.predicted_salary is not None:
+            salary_gap = player.predicted_salary - (player.current_salary / Decimal("1000000"))
+
+        if player.is_injured:
+            roster_fit = "Injury risk"
+        elif salary_gap is not None and salary_gap > 0:
+            roster_fit = "Value buy"
+        elif player.current_fp_per_game is not None and player.current_fp_per_game >= 18:
+            roster_fit = "High upside"
+        elif player.current_fp_per_game is not None and player.current_fp_per_game >= 12:
+            roster_fit = "Balanced"
+        else:
+            roster_fit = "Depth"
+
+        return {
+            "player": player,
+            "salary_gap": salary_gap,
+            "value_label": "Value buy" if salary_gap is not None and salary_gap > 0 else "Premium",
+            "trend_label": hotness or "No recent trend",
+            "roster_fit": roster_fit,
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        selected_slugs = self._selected_slugs()
+
+        qs = (
+            Player.objects.filter(slug__in=selected_slugs)
+            .select_related("team")
+            .prefetch_related(
+                Prefetch(
+                    "injuries",
+                    queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
+                    to_attr="injury_history",
+                ),
+                Prefetch("snapshots", queryset=PlayerSnapshot.objects.order_by("-as_of")),
+            )
+        )
+        if self.request.user.is_authenticated:
+            qs = qs.annotate(
+                is_watched=Exists(
+                    WatchlistEntry.objects.filter(
+                        user=self.request.user, player=OuterRef("pk")
+                    )
+                )
+            )
+
+        fantasy_points = F("current_fp_per_game")
+        expected_salary_millions = (
+            Value(Decimal("8.753479e-6"))
+            * fantasy_points
+            * fantasy_points
+            * fantasy_points
+            * fantasy_points
+            + Value(Decimal("-8.583448e-4")) * fantasy_points * fantasy_points * fantasy_points
+            + Value(Decimal("3.058140e-2")) * fantasy_points * fantasy_points
+            + Value(Decimal("-5.762906e-2")) * fantasy_points
+            + Value(Decimal("4.668975"))
+        )
+        expected_salary = ExpressionWrapper(
+            expected_salary_millions * Value(Decimal("1000000")),
+            output_field=DecimalField(max_digits=20, decimal_places=2),
+        )
+        qs = qs.annotate(
+            predicted_salary_amount=Case(
+                When(
+                    current_fp_per_game__isnull=False,
+                    then=Greatest(Value(Decimal("0.00")), expected_salary),
+                ),
+                output_field=DecimalField(max_digits=20, decimal_places=2),
+            )
+        ).annotate(
+            salary_difference_amount=ExpressionWrapper(
+                F("predicted_salary_amount") - F("current_salary"),
+                output_field=DecimalField(max_digits=20, decimal_places=2),
+            )
+        )
+
+        selected_players = list(qs)
+        selected_by_slug = {player.slug: player for player in selected_players}
+        ordered_selected = [selected_by_slug[slug] for slug in selected_slugs if slug in selected_by_slug]
+
+        selected_player_items = []
+        for player in ordered_selected:
+            other_slugs = [s for s in selected_slugs if s != player.slug]
+            remove_query = urlencode([("player", s) for s in other_slugs])
+            selected_player_items.append(
+                {
+                    "player": player,
+                    "remove_query": remove_query,
+                    "metric": self._compare_metric(player),
+                }
+            )
+
+        modal_query = urlencode([("player", s) for s in selected_slugs])
+
+        context["selected_players"] = ordered_selected
+        context["selected_player_items"] = selected_player_items
+        context["selected_slug_set"] = set(selected_slugs)
+        context["selected_slugs"] = selected_slugs
+        context["modal_query"] = modal_query
+        context["search_query"] = self.request.GET.get("q", "").strip()
+        context["max_compare_players"] = 5
+        context["can_add_more"] = len(selected_slugs) < 5
+        context["search_results"] = list(self.get_queryset())
+        if selected_slugs:
+            context["search_results"] = [
+                player for player in context["search_results"] if player.slug not in selected_slugs
+            ]
+        context["compare_metrics"] = [item["metric"] for item in selected_player_items]
+        return context
+
+
+class PlayerCompareModalView(LoginRequiredMixin, View):
+    template_name = "nba/player_compare_modal.html"
+    results_template = "nba/partials/compare_search_results.html"
+
+    def _selected_slugs(self):
+        selected = []
+        seen = set()
+        for slug in self.request.GET.getlist("player"):
+            value = (slug or "").strip()
+            if value and value not in seen:
+                selected.append(value)
+                seen.add(value)
+        return selected[:5]
+
+    def get(self, request, *args, **kwargs):
+        selected_slugs = self._selected_slugs()
+        search_query = request.GET.get("q", "").strip()
+
+        qs = Player.objects.filter(is_active=True).select_related("team")
+        if selected_slugs:
+            qs = qs.exclude(slug__in=selected_slugs)
+
+        if search_query:
+            for term in search_query.split():
+                qs = qs.filter(
+                    Q(first_name__icontains=term)
+                    | Q(last_name__icontains=term)
+                    | Q(team__name__icontains=term)
+                    | Q(team__abbreviation__icontains=term)
+                )
+
+        players_list = list(qs.order_by("last_name", "first_name")[:30])
+
+        matching_players = []
+        for player in players_list:
+            add_query = urlencode([("player", s) for s in selected_slugs + [player.slug]])
+            matching_players.append(
+                {
+                    "player": player,
+                    "add_query": add_query,
+                }
+            )
+
+        context = {
+            "search_query": search_query,
+            "matching_players": matching_players,
+            "selected_slugs": selected_slugs,
+            "selected_count": len(selected_slugs),
+            "max_compare_players": 5,
+            "can_add_more": len(selected_slugs) < 5,
+            "panel_class": "modal-panel-wide",
+        }
+
+        if request.GET.get("body") or request.headers.get("HX-Target") == "compare-modal-results":
+            return render(request, self.results_template, context)
+        return render(request, self.template_name, context)
+
+
 class WatchlistToggleView(LoginRequiredMixin, View):
     def post(self, request, slug):
         player = get_object_or_404(Player, slug=slug)
@@ -495,14 +693,11 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
         self.object = self.get_object()
         form = PlayerNoteForm(request.POST)
         if form.is_valid():
-            note, created = PlayerNote.objects.get_or_create(
+            PlayerNote.objects.create(
                 user=request.user,
                 player=self.object,
-                defaults={"content": form.cleaned_data["content"]},
+                content=form.cleaned_data["content"],
             )
-            if not created:
-                note.content = form.cleaned_data["content"]
-                note.save(update_fields=["content", "updated_at"])
             return self.get_success_url()
         return self.render_to_response(self.get_context_data(form=form))
 

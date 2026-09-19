@@ -166,6 +166,19 @@
       </p>
     {% endif %}
 
+    {# The disabled row buttons below say the same thing on hover, but a #}
+    {# `title` never reaches a touch screen -- this is the one copy of the #}
+    {# reason and the next step every player of this roster actually sees. #}
+    {% if trading_allowed and roster.trades_available == 0 %}
+      <p class="border-t border-neutral-200 bg-primary-50 px-4 py-2.5 text-xs text-primary-900 sm:px-5 dark:border-neutral-800 dark:bg-primary-500/10 dark:text-primary-200">
+        {% if can_buy_trade %}
+          No trades available — buy one for $1.5M.
+        {% else %}
+          No trades available.
+        {% endif %}
+      </p>
+    {% endif %}
+
     <div class="flex items-center justify-between border-t border-neutral-200 px-4 py-3 dark:border-neutral-800 sm:px-5">
       <p class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Your roster</p>
       <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ memberships|length }} players</p>

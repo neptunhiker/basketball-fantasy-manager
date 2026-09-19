@@ -2,7 +2,6 @@ from decimal import Decimal
 
 import pytest
 from django.core.management import call_command
-from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -151,8 +150,6 @@ def test_player_list_allows_an_injury_refresh_before_todays_call(signed_in, rost
     assert response.context["injury_refresh_available"] is True
 
 
-@pytest.mark.django_db
-@override_settings(RAPID_API_ENFORCE_DAILY_LIMIT=True)
 def test_player_list_disables_injury_refresh_after_todays_call(signed_in, roster):
     NbaApiUsage.objects.create(
         provider=PROVIDER,

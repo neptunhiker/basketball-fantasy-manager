@@ -12,7 +12,7 @@ def site(request):
         .order_by("-usage_date", "-updated_at")
         .first()
     )
-    injury_refresh_available = not settings.RAPID_API_ENFORCE_DAILY_LIMIT or not (
+    injury_refresh_available = not (
         latest_injury_api_usage
         and latest_injury_api_usage.usage_date == timezone.localdate()
         and latest_injury_api_usage.request_count > 0

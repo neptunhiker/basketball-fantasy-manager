@@ -1,4 +1,3 @@
-import time
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 
@@ -268,8 +267,6 @@ class InjuryRefreshView(LoginRequiredMixin, View):
 
     def post(self, request):
         try:
-            # Temporary visual-test delay; remove once the loading overlay is approved.
-            time.sleep(2)
             summary = sync_injuries()
         except DailyApiLimitExceeded:
             context = {

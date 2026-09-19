@@ -39,6 +39,16 @@ def test_there_are_templates_to_check():
     assert len(_templates()) > 20
 
 
+def test_global_loading_overlay_has_responsive_size_constraints():
+    source = (TEMPLATES / "app.html").read_text()
+    css = (ROOT / "assets" / "input.css").read_text()
+
+    assert "global-loading-spinner" in source
+    assert "width: min(" in css
+    assert "env(safe-area-inset-top)" in css
+    assert "env(safe-area-inset-left)" in css
+
+
 # --- an icon that replaces a word has to say the word ---
 
 

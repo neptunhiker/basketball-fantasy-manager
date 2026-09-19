@@ -1,3 +1,4 @@
+import time
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 
@@ -29,6 +30,7 @@ from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
 from . import charts, stats
 from .forms import PlayerNoteForm
 from .models import Player, PlayerInjury, PlayerNote, Team
+from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
 
 
 class TeamListView(LoginRequiredMixin, ListView):
@@ -257,6 +259,35 @@ class PlayerListView(LoginRequiredMixin, ListView):
 class WatchlistView(PlayerListView):
     watchlist_page = True
     template_name = "nba/player_list.html"
+
+
+class InjuryRefreshView(LoginRequiredMixin, View):
+    """Synchronize injuries once per day and return the action state for HTMX."""
+
+    template_name = "nba/partials/injury_refresh.html"
+
+    def post(self, request):
+        try:
+            # Temporary visual-test delay; remove once the loading overlay is approved.
+            time.sleep(2)
+            summary = sync_injuries()
+        except DailyApiLimitExceeded:
+            context = {
+                "injury_refresh_error": "The injury report was already updated today. The next update can be invoked tomorrow."
+            }
+        except NbaApiError:
+            context = {
+                "injury_refresh_error": "The injury report could not be updated. Please try again tomorrow."
+            }
+        else:
+            context = {
+                "injury_refresh_success": (
+                    "Injury report updated: "
+                    f"{summary['created']} created, {summary['updated']} updated, "
+                    f"{summary['unmatched']} unmatched."
+                )
+            }
+        return render(request, self.template_name, context)
 
 
 class PlayerCompareView(LoginRequiredMixin, ListView):

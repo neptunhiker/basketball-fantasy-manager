@@ -131,7 +131,9 @@ RAPID_API_INJURIES_URL = env(
     default="https://api-basketball-nba.p.rapidapi.com/nba-injuries",
 )
 RAPID_API_TIMEOUT = env.int("RAPID_API_TIMEOUT", default=15)
-RAPID_API_DAILY_LIMIT = env.int("RAPID_API_DAILY_LIMIT", default=20)
+RAPID_API_DAILY_LIMIT = 1
+# Temporary loader-test override. Restore to True before using the live API normally.
+RAPID_API_ENFORCE_DAILY_LIMIT = False
 
 LOGGING = {
     "version": 1,

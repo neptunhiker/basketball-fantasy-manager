@@ -99,7 +99,7 @@ def test_sync_injuries_matches_name_and_team_and_keeps_history(db, injury_payloa
     assert PlayerInjury.objects.filter(player=player).count() == 2
 
 
-@override_settings(RAPID_API_DAILY_LIMIT=1)
+@override_settings(RAPID_API_DAILY_LIMIT=1, RAPID_API_ENFORCE_DAILY_LIMIT=True)
 def test_api_usage_enforces_the_configured_daily_limit(db):
     now = timezone.make_aware(datetime(2026, 9, 12, 9))
 
@@ -109,3 +109,12 @@ def test_api_usage_enforces_the_configured_daily_limit(db):
 
     usage = NbaApiUsage.objects.get(usage_date=now.date())
     assert usage.request_count == 1
+
+
+@override_settings(RAPID_API_DAILY_LIMIT=2, RAPID_API_ENFORCE_DAILY_LIMIT=True)
+def test_api_usage_never_allows_more_than_one_daily_request(db):
+    now = timezone.make_aware(datetime(2026, 9, 12, 9))
+
+    _reserve_api_call(now)
+    with pytest.raises(DailyApiLimitExceeded):
+        _reserve_api_call(now)

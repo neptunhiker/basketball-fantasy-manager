@@ -1,0 +1,22 @@
+<div class="injury-refresh">
+  {% if injury_refresh_available %}
+    <form hx-post="{% url 'nba:injury-refresh' %}" hx-target="closest .injury-refresh" hx-swap="outerHTML" data-global-loading>
+      {% csrf_token %}
+      <button type="submit" class="btn btn-secondary !px-3 !py-1.5 text-xs">
+        Update injuries
+      </button>
+    </form>
+  {% else %}
+    <span class="inline-block" title="The next update can be invoked tomorrow.">
+      <button type="button" disabled aria-describedby="injury-refresh-limit" class="cursor-not-allowed rounded-lg border border-neutral-200 bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-500">
+        Update injuries
+      </button>
+    </span>
+    <span id="injury-refresh-limit" class="sr-only">The next update can be invoked tomorrow.</span>
+  {% endif %}
+  {% if injury_refresh_success %}
+    <p class="mt-1 text-xs text-emerald-700 dark:text-emerald-300" role="status">{{ injury_refresh_success }}</p>
+  {% elif injury_refresh_error %}
+    <p class="mt-1 text-xs text-red-700 dark:text-red-300" role="alert">{{ injury_refresh_error }}</p>
+  {% endif %}
+</div>

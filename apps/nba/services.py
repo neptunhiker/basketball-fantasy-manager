@@ -99,9 +99,10 @@ def _reserve_api_call(now=None):
         defaults={"request_count": 0},
     )
     usage = NbaApiUsage.objects.select_for_update().get(pk=usage.pk)
-    if usage.request_count >= settings.RAPID_API_DAILY_LIMIT:
+    daily_limit = min(settings.RAPID_API_DAILY_LIMIT, 1)
+    if settings.RAPID_API_ENFORCE_DAILY_LIMIT and usage.request_count >= daily_limit:
         raise DailyApiLimitExceeded(
-            f"The {PROVIDER} daily limit of {settings.RAPID_API_DAILY_LIMIT} "
+            f"The {PROVIDER} daily limit of {daily_limit} "
             "requests has been reached."
         )
     usage.request_count += 1

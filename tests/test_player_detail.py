@@ -18,7 +18,8 @@ from apps.nba.management.commands.seed_demo_data import (
     snapshot_schedule,
     snapshot_sundays,
 )
-from apps.nba.models import Player, Team
+from apps.nba.models import NbaApiUsage, Player, Team
+from apps.nba.services import PROVIDER
 
 
 @pytest.fixture
@@ -439,6 +440,11 @@ def test_player_detail_shows_healthy_without_injury_history(signed_in, player):
 def test_player_detail_shows_latest_injury_report(signed_in, player):
     from apps.nba.models import PlayerInjury
 
+    usage = NbaApiUsage.objects.create(
+        provider=PROVIDER,
+        usage_date=timezone.localdate(),
+        request_count=1,
+    )
     PlayerInjury.objects.create(
         player=player,
         observed_at=timezone.now(),
@@ -450,6 +456,8 @@ def test_player_detail_shows_latest_injury_report(signed_in, player):
 
     assert "Injured" in body
     assert "Latest injury report" in body
+    assert "Update injuries" in body
+    assert "Last API request:" in body
     assert "Soreness" in body
     assert "$0.00M" not in body
 

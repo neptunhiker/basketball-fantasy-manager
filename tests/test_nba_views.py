@@ -2,10 +2,12 @@ from decimal import Decimal
 
 import pytest
 from django.core.management import call_command
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.nba.models import Player
+from apps.nba.models import NbaApiUsage, Player
+from apps.nba.services import DailyApiLimitExceeded, PROVIDER
 
 
 @pytest.fixture
@@ -124,6 +126,74 @@ def test_filter_by_injury_status(signed_in, roster):
 
     assert names(injured_response) == {"LeBron James"}
     assert names(healthy_response) == {"Jayson Tatum", "Luka Dončić"}
+
+
+def test_player_list_injury_status_shows_the_latest_api_request(signed_in, roster):
+    usage = NbaApiUsage.objects.create(
+        provider=PROVIDER,
+        usage_date=timezone.localdate(),
+        request_count=1,
+    )
+
+    response = signed_in.get(reverse("nba:player-list"))
+
+    assert response.context["last_injury_api_call"] == usage.updated_at
+    assert "Last API request:" in response.content.decode()
+
+
+def test_player_list_allows_an_injury_refresh_before_todays_call(signed_in, roster):
+    response = signed_in.get(reverse("nba:player-list"))
+
+    body = response.content.decode()
+    assert "Update injuries" in body
+    assert 'hx-target="closest .injury-refresh"' in body
+    assert "data-global-loading" in body
+    assert response.context["injury_refresh_available"] is True
+
+
+@pytest.mark.django_db
+@override_settings(RAPID_API_ENFORCE_DAILY_LIMIT=True)
+def test_player_list_disables_injury_refresh_after_todays_call(signed_in, roster):
+    NbaApiUsage.objects.create(
+        provider=PROVIDER,
+        usage_date=timezone.localdate(),
+        request_count=1,
+    )
+
+    body = signed_in.get(reverse("nba:player-list")).content.decode()
+
+    assert 'disabled aria-describedby="injury-refresh-limit"' in body
+    assert "The next update can be invoked tomorrow." in body
+
+
+def test_injury_refresh_runs_the_sync_and_returns_an_inline_confirmation(
+    signed_in, roster, monkeypatch
+):
+    monkeypatch.setattr(
+        "apps.nba.views.sync_injuries",
+        lambda: {"created": 2, "updated": 1, "unmatched": 0, "ambiguous": 0},
+    )
+
+    response = signed_in.post(
+        reverse("nba:injury-refresh"), HTTP_HX_REQUEST="true"
+    )
+
+    assert response.status_code == 200
+    assert "Injury report updated: 2 created, 1 updated, 0 unmatched." in response.content.decode()
+
+
+def test_injury_refresh_shows_the_daily_limit_message(signed_in, roster, monkeypatch):
+    def raise_limit():
+        raise DailyApiLimitExceeded("limit reached")
+
+    monkeypatch.setattr("apps.nba.views.sync_injuries", raise_limit)
+
+    response = signed_in.post(
+        reverse("nba:injury-refresh"), HTTP_HX_REQUEST="true"
+    )
+
+    assert response.status_code == 200
+    assert "The next update can be invoked tomorrow." in response.content.decode()
 
 
 def test_filter_by_max_salary_in_millions(signed_in, roster):

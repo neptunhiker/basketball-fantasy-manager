@@ -1,7 +1,8 @@
 {% extends "app.html" %}
+{% load i18n %}
 
-{% block title %}Profile · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Profile{% endblock %}
+{% block title %}{% translate "Profile" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Profile" %}{% endblock %}
 
 {% block content %}
 <div class="card max-w-2xl p-8">
@@ -19,7 +20,7 @@
       {# Said out loud rather than left blank: an unnamed account is why the #}
       {# sidebar shows the address, and this is the form that fixes it. #}
       <p class="text-sm text-neutral-500 dark:text-neutral-400">
-        No name yet — the app falls back to your email address until you set one.
+        {% translate "No name yet — the app falls back to your email address until you set one." %}
       </p>
     {% endif %}
   </div>
@@ -34,24 +35,24 @@
     {% include "partials/form_field.html" with field=form.email %}
     {% include "partials/form_field.html" with field=form.language %}
     <div class="pt-2">
-      <button type="submit" class="btn btn-primary">Save changes</button>
+      <button type="submit" class="btn btn-primary">{% translate "Save changes" %}</button>
     </div>
   </form>
 
   {# Read-only, and deliberately: neither is the account holder's to change. #}
   <dl class="mt-8 grid gap-x-8 gap-y-4 border-t border-neutral-200 pt-6 sm:grid-cols-2 dark:border-neutral-800">
     <div>
-      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">Role</dt>
-      <dd class="mt-1 text-sm">{% if request.user.is_superuser %}Administration{% elif request.user.is_staff %}Team{% else %}Coach{% endif %}</dd>
+      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">{% translate "Role" %}</dt>
+      <dd class="mt-1 text-sm">{% if request.user.is_superuser %}{% translate "Administration" %}{% elif request.user.is_staff %}{% translate "Team" %}{% else %}{% translate "Coach" %}{% endif %}</dd>
     </div>
     <div>
-      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">Member since</dt>
+      <dt class="text-xs font-medium uppercase tracking-wide text-neutral-500">{% translate "Member since" %}</dt>
       <dd class="mt-1 text-sm">{{ request.user.date_joined|date:"F j, Y" }}</dd>
     </div>
   </dl>
 
   <div class="mt-8 border-t border-neutral-200 pt-6 dark:border-neutral-800">
-    <a href="{% url 'accounts:password-change' %}" class="btn btn-secondary">Change password</a>
+    <a href="{% url 'accounts:password-change' %}" class="btn btn-secondary">{% translate "Change password" %}</a>
   </div>
 </div>
 {% endblock %}

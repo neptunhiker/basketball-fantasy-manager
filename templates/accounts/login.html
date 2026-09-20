@@ -1,10 +1,11 @@
 {% extends "auth_base.html" %}
+{% load i18n %}
 
-{% block title %}Sign in · {{ SITE_NAME }}{% endblock %}
-{% block heading %}Welcome back{% endblock %}
+{% block title %}{% translate "Sign in" %} · {{ SITE_NAME }}{% endblock %}
+{% block heading %}{% translate "Welcome back" %}{% endblock %}
 {% block subheading %}
   <p class="mt-1.5 text-sm text-neutral-500 dark:text-neutral-400">
-    Sign in with your email address.
+    {% translate "Sign in with your email address." %}
   </p>
 {% endblock %}
 
@@ -22,18 +23,17 @@
   {% include "partials/form_field.html" with field=form.password %}
 
   <input type="hidden" name="next" value="{{ next }}">
-  <button type="submit" class="btn btn-primary w-full">Sign in</button>
+  <button type="submit" class="btn btn-primary w-full">{% translate "Sign in" %}</button>
 </form>
 
 <p class="text-center text-sm">
   <a href="{% url 'accounts:password-reset' %}"
      class="font-medium text-primary-600 transition hover:text-primary-700 dark:text-primary-400">
-    Forgot your password?
+    {% translate "Forgot your password?" %}
   </a>
 </p>
 
 <p class="border-t border-neutral-200 pt-5 text-center text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-  Accounts are created by the team. Ask a coordinator if you do not have access
-  yet.
+  {% translate "Accounts are created by the team. Ask a coordinator if you do not have access yet." %}
 </p>
 {% endblock %}

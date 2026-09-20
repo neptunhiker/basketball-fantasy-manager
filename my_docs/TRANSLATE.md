@@ -67,15 +67,15 @@ language preference foundation above is part of the same translation rollout.
 The current repository uses `en` and `de` consistently. The Phase 1 catalog commands
 require the gettext executables to be available in the local shell or build image.
 
-## Phase 1: Create the Translation Catalog Workflow (Next)
+## Phase 1: Create the Translation Catalog Workflow (Completed)
 
 ### Work
 
-1. Add `{% load i18n %}` to every template that contains translation tags. Begin with the shared shell and account templates, then extend the same pattern to feature templates.
+1. Add `{% load i18n %}` to templates that contain translation tags. The first tagged slice covers the shared shell, common status controls, login, and profile templates; feature templates continue in later phases.
 2. Mark static template text with `{% translate %}`.
 3. Mark text containing variables, conditionals, or HTML structure with `{% blocktranslate %}` where appropriate.
 4. Mark Python strings with `gettext`, `gettext_lazy`, or `_` according to when the string is evaluated.
-5. Generate the German catalog after the first tagged slice:
+5. Generate the German catalog after each tagged slice. The first catalog contains the shared shell, account templates, and existing account-side Python messages:
 
    ```bash
    uv run python manage.py makemessages -l de
@@ -93,7 +93,7 @@ require the gettext executables to be available in the local shell or build imag
    uv run python manage.py compilemessages
    ```
 
-8. Add a smoke test around one shared-shell string and one account string so the
+8. Add smoke tests around one shared-shell string and one account string so the
    catalog workflow is proven before the remaining feature areas are translated.
 
 ### Translation rules
@@ -112,11 +112,11 @@ require the gettext executables to be available in the local shell or build imag
 - The German catalog compiles successfully.
 - A small smoke test renders one English and one German translated string.
 
-## Phase 2: Translate the Shared Application Shell
+## Phase 2: Complete the Shared Application Shell
 
 ### Scope
 
-Start with the highest-leverage templates and shared components:
+Complete the remaining shared components after the Phase 1 foundation:
 
 - `templates/base.html`
 - `templates/app.html`
@@ -146,11 +146,10 @@ Start with the highest-leverage templates and shared components:
 - Mobile and HTMX-rendered partials use the active language.
 - Accessibility labels and status messages are translated as well as visible text.
 
-## Phase 3: Translate Accounts and Authentication
+## Phase 3: Complete Accounts and Authentication
 
 ### Scope
 
-- `templates/accounts/login.html`
 - `templates/accounts/profile.html`
 - Password change and reset templates
 - Invitation and invitation acceptance templates
@@ -161,7 +160,7 @@ Start with the highest-leverage templates and shared components:
 
 ### Work
 
-- Translate form labels, help text, validation errors, and authentication messages.
+- Translate the remaining account templates, form labels, help text, validation errors, and authentication messages. Login and profile have initial coverage from Phase 1 and should be used as the pattern for the remaining workflows.
 - Add the language selector to the profile form using translated language names only where appropriate; keep `English` and `Deutsch` recognizable in both locales.
 - Decide whether unauthenticated pages should follow the browser language or remain English by default. The recommended behavior is browser/session locale for anonymous users and saved preference for authenticated users.
 - Verify invitation and password-reset emails use the recipient or request language consistently. If that is deferred, document the temporary English-only behavior.

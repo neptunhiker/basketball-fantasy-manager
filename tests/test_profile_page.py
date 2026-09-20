@@ -97,6 +97,17 @@ def test_the_language_can_be_changed_and_is_used_for_later_requests(signed_in, u
     assert response.wsgi_request.LANGUAGE_CODE == "de"
 
 
+def test_german_catalog_is_used_for_the_profile_page(signed_in, user):
+    user.language = "de"
+    user.save(update_fields=["language"])
+
+    body = signed_in.get(URL).content.decode()
+
+    assert "Profil" in body
+    assert "Änderungen speichern" in body
+    assert "Hauptnavigation" in body
+
+
 def test_the_name_can_be_cleared(signed_in, user):
     """Both name fields are optional on the model, so emptying them is allowed."""
     user.first_name = "Sebastian"

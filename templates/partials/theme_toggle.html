@@ -1,3 +1,6 @@
+{% load i18n %}
+{% translate "Switch to light theme" as light_theme_label %}
+{% translate "Switch to dark theme" as dark_theme_label %}
 <button type="button"
         x-data="{
           dark: document.documentElement.classList.contains('dark'),
@@ -9,7 +12,7 @@
         }"
         @click="toggle()"
         class="btn btn-ghost h-9 w-9 !px-0"
-        :aria-label="dark ? 'Zu hellem Design wechseln' : 'Zu dunklem Design wechseln'">
+        :aria-label="dark ? '{{ light_theme_label }}' : '{{ dark_theme_label }}'">
   <svg x-show="!dark" x-cloak class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
     <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 15.5A9.25 9.25 0 1 1 8.5 2.25a7.75 7.75 0 0 0 13.25 13.25Z"/>
   </svg>

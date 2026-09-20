@@ -1,0 +1,242 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: crossover-manager 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-20 07:21+0200\n"
+"PO-Revision-Date: 2026-09-20 00:00+0200\n"
+"Last-Translator: \n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: apps/accounts/admin.py:22
+msgid "Personal details"
+msgstr "Persönliche Daten"
+
+#: apps/accounts/admin.py:24
+msgid "Permissions"
+msgstr "Berechtigungen"
+
+#: apps/accounts/admin.py:27
+msgid "Timestamps"
+msgstr "Zeitstempel"
+
+#: apps/accounts/forms.py:21 apps/accounts/models.py:16
+msgid "Email address"
+msgstr "E-Mail-Adresse"
+
+#: apps/accounts/forms.py:27
+msgid "That email address or password is not correct."
+msgstr "Diese E-Mail-Adresse oder dieses Passwort ist nicht korrekt."
+
+#: apps/accounts/forms.py:28
+msgid "This account is deactivated."
+msgstr "Dieses Konto ist deaktiviert."
+
+#: apps/accounts/forms.py:42
+msgid "Access to the admin site"
+msgstr "Zugang zum Administrationsbereich"
+
+#: apps/accounts/forms.py:48 apps/accounts/forms.py:91
+msgid "An account with that address already exists."
+msgstr "Mit dieser Adresse existiert bereits ein Konto."
+
+#: apps/accounts/forms.py:78
+msgid "You sign in with this address."
+msgstr "Mit dieser Adresse meldest du dich an."
+
+#: apps/accounts/forms.py:98 apps/accounts/models.py:17
+msgid "First name"
+msgstr "Vorname"
+
+#: apps/accounts/forms.py:99 apps/accounts/models.py:18
+msgid "Last name"
+msgstr "Nachname"
+
+#: apps/accounts/models.py:21
+msgid "Active"
+msgstr "Aktiv"
+
+#: apps/accounts/models.py:23
+msgid "Deactivate instead of deleting to lock an account out."
+msgstr "Deaktiviere ein Konto, statt es zu löschen, um den Zugang zu sperren."
+
+#: apps/accounts/models.py:26
+msgid "Team member"
+msgstr "Teammitglied"
+
+#: apps/accounts/models.py:28
+msgid "Whether this person may sign in to the admin site."
+msgstr "Ob diese Person sich im Administrationsbereich anmelden darf."
+
+#: apps/accounts/models.py:31
+msgid "Joined"
+msgstr "Beigetreten"
+
+#: apps/accounts/models.py:32
+msgid "Last invited"
+msgstr "Zuletzt eingeladen"
+
+#: apps/accounts/models.py:34
+msgid "Language"
+msgstr "Sprache"
+
+#: apps/accounts/models.py:47
+msgid "User"
+msgstr "Benutzer"
+
+#: apps/accounts/models.py:48 templates/app.html:117
+msgid "Users"
+msgstr "Benutzer"
+
+#: apps/accounts/views.py:77
+msgid "Your password has been changed."
+msgstr "Dein Passwort wurde geändert."
+
+#: apps/accounts/views.py:104
+msgid "Your details have been saved."
+msgstr "Deine Daten wurden gespeichert."
+
+#: apps/accounts/views.py:169
+#, python-format
+msgid "Invitation link created for %(email)s."
+msgstr "Einladungslink für %(email)s wurde erstellt."
+
+#: apps/accounts/views.py:182
+msgid "That person has already accepted their invitation."
+msgstr "Diese Person hat ihre Einladung bereits angenommen."
+
+#: apps/accounts/views.py:191
+#, python-format
+msgid "New invitation link created for %(email)s."
+msgstr "Ein neuer Einladungslink für %(email)s wurde erstellt."
+
+#: apps/accounts/views.py:252
+msgid "Welcome! Your account is now active."
+msgstr "Willkommen! Dein Konto ist jetzt aktiv."
+
+#: templates/accounts/login.html:4 templates/accounts/login.html:26
+msgid "Sign in"
+msgstr "Anmelden"
+
+#: templates/accounts/login.html:5
+msgid "Welcome back"
+msgstr "Willkommen zurück"
+
+#: templates/accounts/login.html:8
+msgid "Sign in with your email address."
+msgstr "Melde dich mit deiner E-Mail-Adresse an."
+
+#: templates/accounts/login.html:32
+msgid "Forgot your password?"
+msgstr "Passwort vergessen?"
+
+#: templates/accounts/login.html:37
+msgid ""
+"Accounts are created by the team. Ask a coordinator if you do not have "
+"access yet."
+msgstr "Konten werden vom Team erstellt. Bitte frage eine koordinierende Person, wenn du noch keinen Zugang hast."
+
+#: templates/accounts/profile.html:4 templates/accounts/profile.html:5
+msgid "Profile"
+msgstr "Profil"
+
+#: templates/accounts/profile.html:23
+msgid ""
+"No name yet — the app falls back to your email address until you set one."
+msgstr "Noch kein Name — bis du einen Namen festlegst, verwendet die App deine E-Mail-Adresse."
+
+#: templates/accounts/profile.html:38
+msgid "Save changes"
+msgstr "Änderungen speichern"
+
+#: templates/accounts/profile.html:45
+msgid "Role"
+msgstr "Rolle"
+
+#: templates/accounts/profile.html:46
+msgid "Administration"
+msgstr "Administration"
+
+#: templates/accounts/profile.html:46
+msgid "Team"
+msgstr "Team"
+
+#: templates/accounts/profile.html:46
+msgid "Coach"
+msgstr "Coach"
+
+#: templates/accounts/profile.html:49
+msgid "Member since"
+msgstr "Mitglied seit"
+
+#: templates/accounts/profile.html:55
+msgid "Change password"
+msgstr "Passwort ändern"
+
+#: templates/app.html:26
+msgid "Main navigation"
+msgstr "Hauptnavigation"
+
+#: templates/app.html:35
+msgid "Home"
+msgstr "Startseite"
+
+#: templates/app.html:46
+msgid "Teams"
+msgstr "Teams"
+
+#: templates/app.html:56
+msgid "Players"
+msgstr "Spieler"
+
+#: templates/app.html:66
+msgid "Watchlist"
+msgstr "Beobachtungsliste"
+
+#: templates/app.html:76
+msgid "Rosters"
+msgstr "Kader"
+
+#: templates/app.html:87
+msgid "Manager profiles"
+msgstr "Managerprofile"
+
+#: templates/app.html:92
+msgid "Staff area"
+msgstr "Team-Bereich"
+
+#: templates/app.html:105
+msgid "Seasons"
+msgstr "Saisons"
+
+#: templates/app.html:153
+msgid "Toggle navigation"
+msgstr "Navigation umschalten"
+
+#: templates/app.html:169 templates/app.html:174
+msgid "Sign out"
+msgstr "Abmelden"
+
+#: templates/app.html:192
+msgid "Loading"
+msgstr "Wird geladen"
+
+#: templates/partials/messages.html:14
+msgid "Dismiss message"
+msgstr "Nachricht schließen"
+
+#: templates/partials/theme_toggle.html:2
+msgid "Switch to light theme"
+msgstr "Zum hellen Design wechseln"
+
+#: templates/partials/theme_toggle.html:3
+msgid "Switch to dark theme"
+msgstr "Zum dunklen Design wechseln"

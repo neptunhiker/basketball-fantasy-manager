@@ -43,9 +43,11 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.accounts.middleware.UserLanguageMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
@@ -93,7 +95,12 @@ AUTH_PASSWORD_VALIDATORS = [
 INVITATION_TIMEOUT_DAYS = env.int("INVITATION_TIMEOUT_DAYS", default=14)
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 3  # 3 days
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"
+LANGUAGES = (
+    ("en", "English"),
+    ("de", "German"),
+)
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "Europe/Berlin"
 USE_I18N = True
 USE_TZ = True

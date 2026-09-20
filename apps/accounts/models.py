@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
@@ -29,6 +30,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     date_joined = models.DateTimeField(_("Joined"), default=timezone.now)
     last_invited_at = models.DateTimeField(_("Last invited"), null=True, blank=True)
+    language = models.CharField(
+        _("Language"),
+        max_length=10,
+        choices=settings.LANGUAGES,
+        default="en",
+    )
 
     objects = UserManager()
 

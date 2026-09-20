@@ -72,7 +72,7 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email"]
+        fields = ["first_name", "last_name", "email", "language"]
         # On this screen only. The invitation form edits somebody else's
         # address, where "you" would be the wrong person.
         help_texts = {"email": _("You sign in with this address.")}

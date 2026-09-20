@@ -22,9 +22,12 @@ def signed_in(client, user, password):
 
 def form_values(**overrides):
     """A complete POST. Omitting a field is a different test, so spell it out."""
-    return {"first_name": "Sebastian", "last_name": "Schmitz", "email": "coach@example.com"} | (
-        overrides
-    )
+    return {
+        "first_name": "Sebastian",
+        "last_name": "Schmitz",
+        "email": "coach@example.com",
+        "language": "en",
+    } | overrides
 
 
 # --- what the page shows -----------------------------------------------------
@@ -82,6 +85,16 @@ def test_the_name_can_be_changed(signed_in, user):
     assert response.status_code == 302
     user.refresh_from_db()
     assert (user.first_name, user.last_name) == ("Sebastian", "Schmitz")
+
+
+def test_the_language_can_be_changed_and_is_used_for_later_requests(signed_in, user):
+    signed_in.post(URL, form_values(language="de"))
+
+    user.refresh_from_db()
+    assert user.language == "de"
+    response = signed_in.get(URL)
+
+    assert response.wsgi_request.LANGUAGE_CODE == "de"
 
 
 def test_the_name_can_be_cleared(signed_in, user):

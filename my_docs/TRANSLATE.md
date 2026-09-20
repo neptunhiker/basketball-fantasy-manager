@@ -316,15 +316,19 @@ migration quality gates pass. A repository-wide Ruff run still reports pre-exist
 style findings outside the localization work; no new unused-import error remains in
 the Phase 6 source changes.
 
-## Phase 8: Deployment and Maintenance
+## Phase 8: Deployment and Maintenance (Completed)
 
 ### Deployment
 
-1. Commit the `.po` source catalogs and generated `.mo` files if the deployment process expects compiled catalogs in the repository.
-2. Run the user-language migration in every environment.
-3. Ensure the release image has gettext runtime support if catalogs are compiled during deployment.
-4. Verify the production build includes `locale/` and compiled message files.
+1. Commit the `.po` source catalogs and generated `.mo` files. Both are tracked in this repository.
+2. Run the user-language migration in every environment. Fly's `release_command` and both Compose deployment scripts already run `migrate --noinput`.
+3. Keep gettext in the development/build environment for catalog regeneration; the runtime image uses the committed `.mo` file and does not need gettext.
+4. The Dockerfile copies the repository into the runtime image, so `locale/` and the compiled catalog are included in production.
 5. Smoke-test English and German after deployment using a real account for each preference.
+
+The deployment and maintenance workflow is documented in the repository README,
+including catalog commands, runtime behavior, migration handling, and release
+quality gates.
 
 ### Ongoing workflow
 

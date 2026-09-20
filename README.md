@@ -61,6 +61,32 @@ run once.
 Emails are printed to the console locally rather than sent, so the invitation
 link shows up in the development server's log.
 
+## Languages and localization
+
+The application supports English and German. Signed-in users choose their
+language on their profile page; the preference is stored on the account and
+applied on later requests. Anonymous pages follow Django's locale negotiation,
+including the browser's `Accept-Language` header.
+
+Translation sources live in `locale/de/LC_MESSAGES/django.po`, with the compiled
+runtime catalog in `django.mo`. When adding user-facing text:
+
+```bash
+uv run python manage.py makemessages -l de
+# review and update locale/de/LC_MESSAGES/django.po
+uv run python manage.py compilemessages
+```
+
+Commit both catalog files. Production and staging deployments already run the
+database migrations, and the Docker image copies the tracked `locale/` directory
+into the runtime image. The image does not need gettext at runtime because the
+compiled `.mo` catalog is committed; gettext is required in the development or
+build environment when catalogs are regenerated.
+
+Before releasing localization changes, run `uv run python manage.py check`,
+`uv run python manage.py makemigrations --check --dry-run`,
+`uv run python manage.py compilemessages`, and `uv run pytest -q`.
+
 ## Tests and linting
 
 ```bash

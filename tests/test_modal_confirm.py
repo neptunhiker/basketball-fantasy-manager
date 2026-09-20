@@ -60,6 +60,17 @@ def test_get_renders_the_shell_with_the_confirmation_word(signed_in, roster):
     assert ":disabled=\"typed !== 'DELETE'\"" in body
 
 
+def test_modal_shell_uses_the_saved_language(signed_in, roster, user):
+    user.language = "de"
+    user.save(update_fields=["language"])
+
+    body = signed_in.get(delete_url(roster)).content.decode()
+
+    assert "Schließen" in body
+    assert "Abbrechen" in body
+    assert "Gib" in body
+
+
 def test_the_shell_names_what_will_be_lost(signed_in, roster):
     body = signed_in.get(delete_url(roster)).content.decode()
     assert "its 1 players" in body

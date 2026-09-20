@@ -6,6 +6,7 @@ from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -152,8 +153,8 @@ class ConfirmView(LoginRequiredMixin, View):
     template_name = "partials/modal_confirm.html"
     confirm_word = ""
     title = ""
-    confirm_label = "Confirm"
-    cancel_label = "Cancel"
+    confirm_label = _("Confirm")
+    cancel_label = _("Cancel")
     tone = "primary"
 
     def get_object(self):
@@ -202,7 +203,12 @@ class ConfirmView(LoginRequiredMixin, View):
             return render(
                 request,
                 self.template_name,
-                self.get_context(obj, error=f'Type "{self.confirm_word}" exactly to confirm.'),
+                self.get_context(
+                    obj,
+                    error=_("Type \"%(word)s\" exactly to confirm.") % {
+                        "word": self.confirm_word,
+                    },
+                ),
             )
 
         success_url = self.get_success_url(obj)
@@ -294,13 +300,13 @@ class PromptView(LoginRequiredMixin, View):
     template_name = "partials/modal_prompt.html"
     title = ""
     body = ""
-    field_label = "Name"
+    field_label = _("Name")
     field_name = "value"
     placeholder = ""
     max_length = 80
     help_text = ""
-    submit_label = "Save"
-    cancel_label = "Cancel"
+    submit_label = _("Save")
+    cancel_label = _("Cancel")
 
     # Optional second field. Falsy `choice_name` means there is no select.
     choice_name = ""
@@ -335,7 +341,7 @@ class PromptView(LoginRequiredMixin, View):
         """Return the value to use, or raise ValidationError with a message."""
         value = value.strip()
         if not value:
-            raise ValidationError("Please enter a name.")
+            raise ValidationError(_("Please enter a name."))
         return value[: self.max_length]
 
     def perform(self, obj, value, choice=None):
@@ -434,8 +440,8 @@ class ModalFormView(LoginRequiredMixin, View):
     form_class = None
     title = ""
     body = ""
-    submit_label = "Save"
-    cancel_label = "Cancel"
+    submit_label = _("Save")
+    cancel_label = _("Cancel")
 
     def get_object(self):
         """The record being edited, or None when the form creates one."""

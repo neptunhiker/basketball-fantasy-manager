@@ -112,11 +112,13 @@ require the gettext executables to be available in the local shell or build imag
 - The German catalog compiles successfully.
 - A small smoke test renders one English and one German translated string.
 
-## Phase 2: Complete the Shared Application Shell
+## Phase 2: Complete the Shared Application Shell (Completed)
 
 ### Scope
 
-Complete the remaining shared components after the Phase 1 foundation:
+Complete the remaining shared components after the Phase 1 foundation. This phase
+also covers reusable modal defaults in `apps/core/views.py`, because those values
+are supplied as context rather than written directly in the partials:
 
 - `templates/base.html`
 - `templates/app.html`
@@ -145,6 +147,10 @@ Complete the remaining shared components after the Phase 1 foundation:
 - No English-only navigation or shared action remains in the shell.
 - Mobile and HTMX-rendered partials use the active language.
 - Accessibility labels and status messages are translated as well as visible text.
+
+The shared shell, common modal partials, and reusable modal defaults are now tagged,
+translated, compiled, and covered by focused tests. Feature-specific modal titles,
+bodies, and action labels remain part of their owning feature phase.
 
 ## Phase 3: Complete Accounts and Authentication
 

@@ -1,4 +1,5 @@
 {% extends "partials/modal.html" %}
+{% load i18n %}
 {% comment %}
   A modal that asks for one short piece of text -- a name, a label, a note --
   and optionally for one choice to go with it. Driven entirely by context, so a
@@ -65,10 +66,12 @@
 
     <div class="modal-actions">
       <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">
-        {{ cancel_label|default:"Cancel" }}
+        {% translate "Cancel" as default_cancel_label %}
+        {{ cancel_label|default:default_cancel_label }}
       </button>
+      {% translate "Save" as default_submit_label %}
       <button type="submit" class="btn btn-primary" :disabled="!typed.trim()">
-        {{ submit_label|default:"Save" }}
+        {{ submit_label|default:default_submit_label }}
       </button>
     </div>
   </form>

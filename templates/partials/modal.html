@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
   Reusable modal shell. Never rendered on its own -- extend it:
 
@@ -52,7 +53,7 @@
 
       <button type="button" @click="open = false"
               class="absolute right-4 top-4 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-              aria-label="Close">
+              aria-label="{% translate 'Close' %}">
         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
         </svg>

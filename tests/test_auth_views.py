@@ -1,8 +1,10 @@
-import pytest
 import datetime as dt
+
+import pytest
 from django.core import mail
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext, override
 
 from apps.fantasy.models import Roster, Season
 
@@ -175,6 +177,15 @@ def test_password_reset_follows_the_browser_language(client):
     body = response.content.decode()
     assert "Passwort zurücksetzen" in body
     assert "Link senden" in body
+
+
+def test_translation_override_renders_german_auth_copy(client):
+    with override("de"):
+        sign_in = gettext("Sign in")
+        welcome = gettext("Welcome back")
+
+    assert sign_in == "Anmelden"
+    assert welcome == "Willkommen zurück"
 
 
 def test_password_reset_for_an_unknown_address_reveals_nothing(client, db):

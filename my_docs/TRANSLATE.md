@@ -266,7 +266,7 @@ Fantasy regression suite includes German staff-page coverage.
 - Business-rule errors are translated at the source where they are created.
 - No translated string causes an action to become ambiguous or unusable.
 
-## Phase 7: Tests and Quality Gates
+## Phase 7: Tests and Quality Gates (Completed)
 
 ### Automated tests
 
@@ -308,6 +308,13 @@ uv run pytest -q
 ```
 
 The translation work should not be considered complete while catalog compilation, full tests, or a feature-area language review is failing.
+
+Phase 7 is complete: the full project suite passes, direct German override coverage
+exists for anonymous authentication rendering, persisted-language coverage spans
+accounts, dashboard, NBA, Fantasy, modals, and HTMX responses, and the catalog and
+migration quality gates pass. A repository-wide Ruff run still reports pre-existing
+style findings outside the localization work; no new unused-import error remains in
+the Phase 6 source changes.
 
 ## Phase 8: Deployment and Maintenance
 

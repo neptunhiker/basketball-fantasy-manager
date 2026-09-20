@@ -803,7 +803,7 @@ msgstr "Spieler"
 #: templates/nba/player_compare.html:92 templates/nba/player_list.html:4
 #: templates/nba/player_list.html:5
 msgid "Watchlist"
-msgstr "Beobachtungsliste"
+msgstr "Watchlist"
 
 #: templates/app.html:76 templates/fantasy/roster_list.html:4
 #: templates/fantasy/roster_list.html:5 templates/fantasy/season_list.html:30
@@ -947,7 +947,7 @@ msgstr "Gespielt von"
 #: templates/fantasy/partials/roster_panel.html:61
 #: templates/fantasy/roster_list.html:72
 msgid "Cash"
-msgstr "Bargeld"
+msgstr "Cash"
 
 #: templates/fantasy/manager_detail.html:49
 #: templates/fantasy/manager_list.html:89
@@ -1034,7 +1034,7 @@ msgstr "Alle Teams"
 #: templates/nba/partials/player_table.html:98
 #: templates/nba/player_compare.html:135 templates/nba/player_detail.html:32
 msgid "Free Agent"
-msgstr "Vereinslos"
+msgstr "Free Agent"
 
 #: templates/fantasy/partials/player_picker.html:127
 msgid "The roster is full"
@@ -1562,7 +1562,7 @@ msgstr "Erste Saison erstellen"
 
 #: templates/nba/partials/compare_search_results.html:19
 msgid "Free agent"
-msgstr "Vereinslos"
+msgstr "Free agent"
 
 #: templates/nba/partials/compare_search_results.html:33
 msgid "Add"
@@ -1689,7 +1689,7 @@ msgstr "Spiele"
 #: templates/nba/partials/scatter_chart.html:110
 #: templates/nba/player_compare.html:103 templates/nba/player_detail.html:197
 msgid "Hotness"
-msgstr "Form"
+msgstr "Hotness"
 
 #: templates/nba/partials/player_table.html:13
 msgid "Salary compared with points per game"

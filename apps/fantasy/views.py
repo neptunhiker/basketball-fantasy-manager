@@ -17,7 +17,7 @@ from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.utils.translation import gettext as _, gettext_lazy as _lazy
+from django.utils.translation import gettext_lazy as _lazy
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 

@@ -179,7 +179,7 @@ bodies, and action labels remain part of their owning feature phase.
 
 The remaining account templates, staff user list/detail views, email templates, pluralized roster counts, and account-language smoke tests are now covered.
 
-## Phase 4: Translate Core and Dashboard Pages
+## Phase 4: Translate Core and Dashboard Pages (Completed)
 
 ### Scope
 
@@ -194,6 +194,11 @@ The remaining account templates, staff user list/detail views, email templates, 
 - Use pluralization for counts.
 - Keep dates and numbers locale-aware where Django formatting is appropriate.
 - Verify that translated text does not change layout or cause overflow in the existing responsive shell.
+
+The dashboard template, no-season state, staff actions, countdown units and labels,
+season status copy, and `DashboardView` countdown messages are now translated and
+covered by dashboard regression and German rendering tests. Date values continue to
+use Django's locale-aware date formatting at render time.
 
 ### Exit criteria
 

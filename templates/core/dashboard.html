@@ -1,8 +1,8 @@
 {% extends "app.html" %}
-{% load static %}
+{% load i18n static %}
 
-{% block title %}Home · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Home{% endblock %}
+{% block title %}{% translate "Home" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Home" %}{% endblock %}
 
 {% block content %}
 {% if current_season %}
@@ -14,36 +14,36 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-4 sm:gap-5">
           <img src="{% static 'img/pengi.png' %}"
-               alt="Pengi logo"
+               alt="{% translate 'Pengi logo' %}"
                class="h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 shrink-0 rounded-2xl border-2 border-white/20 object-cover shadow-xl">
           <div>
             <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white">{{ SITE_NAME }}</h1>
             <div class="mt-1 flex items-center gap-2.5 font-mono text-[0.65rem] font-bold uppercase tracking-[.22em] text-secondary-300">
               <span class="h-[7px] w-[7px] rounded-full bg-secondary-300 shadow-[0_0_0_4px_rgba(255,172,228,.18)] animate-pulse motion-reduce:animate-none"></span>
-              Season {{ current_season.label }} · Tip-off {{ current_season.starts_on|date:"M j, Y" }}
+              {% blocktranslate with season_label=current_season.label tipoff=current_season.starts_on|date:"M j, Y" %}Season {{ season_label }} · Tip-off {{ tipoff }}{% endblocktranslate %}
             </div>
           </div>
         </div>
       </div>
 
       {% if countdown_target_at %}
-        <p class="mt-8 font-mono text-xs font-bold uppercase tracking-[.2em] text-white/50">Counting down to <span class="text-secondary-300">{{ countdown_label }}</span> · {{ countdown_target_at|date:"F j, Y · H:i" }}</p>
+        <p class="mt-8 font-mono text-xs font-bold uppercase tracking-[.2em] text-white/50">{% translate "Counting down to" %} <span class="text-secondary-300">{{ countdown_label }}</span> · {{ countdown_target_at|date:"F j, Y · H:i" }}</p>
         <div class="mt-3 grid gap-2.5 sm:grid-cols-4" id="trading-countdown" data-target="{{ countdown_target_at|date:'c' }}">
           <div class="min-w-0 rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
             <div id="countdown-days" data-digits="1" class="truncate text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums transition-[font-size] duration-200 sm:text-[9rem] lg:text-[10rem] data-[digits=3]:text-5xl data-[digits=3]:sm:text-[6rem] data-[digits=3]:lg:text-[6.5rem] data-[digits=4]:text-4xl data-[digits=4]:sm:text-[4.5rem] data-[digits=4]:lg:text-[5rem]">0</div>
-            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-secondary-300">Days</div>
+            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-secondary-300">{% translate "Days" %}</div>
           </div>
           <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
             <div id="countdown-hours" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums sm:text-[9rem] lg:text-[10rem]">00</div>
-            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-white/50">Hours</div>
+            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-white/50">{% translate "Hours" %}</div>
           </div>
           <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
             <div id="countdown-minutes" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums sm:text-[9rem] lg:text-[10rem]">00</div>
-            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-white/50">Minutes</div>
+            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-white/50">{% translate "Minutes" %}</div>
           </div>
           <div class="rounded-xl border border-secondary-300/40 bg-secondary-300/10 px-4 pb-4 pt-5 sm:px-[18px]">
             <div id="countdown-seconds" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] text-secondary-300 tabular-nums sm:text-[9rem] lg:text-[10rem]">00</div>
-            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-secondary-300">Seconds</div>
+            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-secondary-300">{% translate "Seconds" %}</div>
           </div>
         </div>
 
@@ -53,20 +53,20 @@
             <p class="mt-2 max-w-[42ch] text-sm leading-6 text-white/60">{{ countdown_description }}</p>
           </div>
           <div class="flex shrink-0 gap-2.5">
-            <a href="{% url 'fantasy:roster-list' %}" class="btn bg-secondary-400 font-bold text-[#17111f] hover:bg-secondary-300">{% if dashboard_roster_count %}{% if dashboard_roster_count > 1 %}My rosters{% else %}My roster{% endif %}{% else %}Build a roster{% endif %}</a>
-            <a href="{% url 'nba:player-list' %}" class="btn border border-white/25 bg-white/10 text-white hover:bg-white/20">Explore players</a>
+            <a href="{% url 'fantasy:roster-list' %}" class="btn bg-secondary-400 font-bold text-[#17111f] hover:bg-secondary-300">{% if dashboard_roster_count %}{% if dashboard_roster_count > 1 %}{% translate "My rosters" %}{% else %}{% translate "My roster" %}{% endif %}{% else %}{% translate "Build a roster" %}{% endif %}</a>
+            <a href="{% url 'nba:player-list' %}" class="btn border border-white/25 bg-white/10 text-white hover:bg-white/20">{% translate "Explore players" %}</a>
           </div>
         </div>
       {% else %}
         <div class="mt-10 flex flex-wrap items-end justify-between gap-6">
           <div class="min-w-0">
-            <p class="font-mono text-[0.65rem] font-bold uppercase tracking-[.22em] text-secondary-300">{% if current_season.timing == "FINISHED" %}Season complete{% elif trading_window_open %}Trading window open{% else %}Season desk{% endif %}</p>
-            <h2 class="mt-4 text-4xl font-extrabold leading-[1.05] tracking-[-.02em] sm:text-6xl">{% if current_season.timing == "FINISHED" %}The season has ended.{% else %}The season is underway.{% endif %}</h2>
-            <p class="mt-4 max-w-[44ch] text-sm leading-6 text-white/60">{{ current_season.label }} runs through {{ current_season.ends_on|date:"F j, Y" }}. Keep your roster moving.</p>
+            <p class="font-mono text-[0.65rem] font-bold uppercase tracking-[.22em] text-secondary-300">{% if current_season.timing == "FINISHED" %}{% translate "Season complete" %}{% elif trading_window_open %}{% translate "Trading window open" %}{% else %}{% translate "Season desk" %}{% endif %}</p>
+            <h2 class="mt-4 text-4xl font-extrabold leading-[1.05] tracking-[-.02em] sm:text-6xl">{% if current_season.timing == "FINISHED" %}{% translate "The season has ended." %}{% else %}{% translate "The season is underway." %}{% endif %}</h2>
+            <p class="mt-4 max-w-[44ch] text-sm leading-6 text-white/60">{% blocktranslate with season_label=current_season.label end_date=current_season.ends_on|date:"F j, Y" %}{{ season_label }} runs through {{ end_date }}. Keep your roster moving.{% endblocktranslate %}</p>
           </div>
           <div class="flex shrink-0 gap-2.5">
-            <a href="{% url 'fantasy:roster-list' %}" class="btn bg-secondary-400 font-bold text-[#17111f] hover:bg-secondary-300">{% if dashboard_roster_count %}{% if dashboard_roster_count > 1 %}My rosters{% else %}My roster{% endif %}{% else %}Build a roster{% endif %}</a>
-            <a href="{% url 'nba:player-list' %}" class="btn border border-white/25 bg-white/10 text-white hover:bg-white/20">Explore players</a>
+            <a href="{% url 'fantasy:roster-list' %}" class="btn bg-secondary-400 font-bold text-[#17111f] hover:bg-secondary-300">{% if dashboard_roster_count %}{% if dashboard_roster_count > 1 %}{% translate "My rosters" %}{% else %}{% translate "My roster" %}{% endif %}{% else %}{% translate "Build a roster" %}{% endif %}</a>
+            <a href="{% url 'nba:player-list' %}" class="btn border border-white/25 bg-white/10 text-white hover:bg-white/20">{% translate "Explore players" %}</a>
           </div>
         </div>
       {% endif %}
@@ -75,19 +75,19 @@
 
   <section class="grid gap-px overflow-hidden rounded-xl border border-neutral-200 bg-neutral-200 sm:grid-cols-4 dark:border-neutral-800 dark:bg-neutral-800">
     <div class="bg-white p-5 dark:bg-neutral-900">
-      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Signings open</p>
-      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_open_at %}{{ current_season.signings_open_at|date:"M j, Y · H:i" }}{% else %}Open now{% endif %}</p>
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Signings open" %}</p>
+      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_open_at %}{{ current_season.signings_open_at|date:"M j, Y · H:i" }}{% else %}{% translate "Open now" %}{% endif %}</p>
     </div>
     <div class="bg-white p-5 dark:bg-neutral-900">
-      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Signings close</p>
-      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_close_at %}{{ current_season.signings_close_at|date:"M j, Y · H:i" }}{% else %}No cutoff{% endif %}</p>
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Signings close" %}</p>
+      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_close_at %}{{ current_season.signings_close_at|date:"M j, Y · H:i" }}{% else %}{% translate "No cutoff" %}{% endif %}</p>
     </div>
     <div class="bg-white p-5 dark:bg-neutral-900">
-      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Season open</p>
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Season open" %}</p>
       <p class="mt-2 text-[17px] font-bold">{{ current_season.starts_on|date:"M j, Y" }}</p>
     </div>
     <div class="bg-white p-5 dark:bg-neutral-900">
-      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Season close</p>
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Season close" %}</p>
       <p class="mt-2 text-[17px] font-bold">{{ current_season.ends_on|date:"M j, Y" }}</p>
     </div>
   </section>
@@ -96,12 +96,12 @@
     <div class="gradient-rule h-1"></div>
     <div class="flex items-center gap-5 p-6 sm:p-8">
       <img src="{% static 'img/pengi.png' %}"
-           alt="Pengi logo"
+           alt="{% translate 'Pengi logo' %}"
            class="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-2xl border-2 border-white/20 object-cover shadow-lg dark:border-neutral-800">
       <div>
-        <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">Season desk</p>
-        <h2 class="mt-2 text-3xl font-extrabold tracking-[-.02em]">Your season starts here.</h2>
-        <p class="mt-1 max-w-prose text-sm text-neutral-600 dark:text-neutral-300">There is no current season scheduled yet.</p>
+        <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Season desk" %}</p>
+        <h2 class="mt-2 text-3xl font-extrabold tracking-[-.02em]">{% translate "Your season starts here." %}</h2>
+        <p class="mt-1 max-w-prose text-sm text-neutral-600 dark:text-neutral-300">{% translate "There is no current season scheduled yet." %}</p>
       </div>
     </div>
   </section>
@@ -109,8 +109,8 @@
 
 {% if request.user.is_staff %}
   <div class="flex flex-wrap gap-3">
-    <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary">Invite someone</a>
-    <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">View team</a>
+    <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary">{% translate "Invite someone" %}</a>
+    <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">{% translate "View team" %}</a>
   </div>
 {% endif %}
 {% endblock %}

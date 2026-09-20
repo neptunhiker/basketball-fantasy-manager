@@ -70,6 +70,27 @@ def test_dashboard_shows_days_until_current_season(user, password, client, db):
     assert "The foundation is in place" not in response.content.decode()
 
 
+def test_dashboard_uses_the_saved_language_for_countdown_copy(user, password, client, db):
+    user.language = "de"
+    user.save(update_fields=["language"])
+    client.login(username=user.email, password=password)
+    Season.objects.create(
+        label="2026-27",
+        starts_on=dt.date.today() + dt.timedelta(days=10),
+        ends_on=dt.date.today() + dt.timedelta(days=200),
+        is_current=True,
+        signings_open_at=timezone.now() - dt.timedelta(days=1),
+        signings_close_at=timezone.now() + dt.timedelta(days=5),
+    )
+
+    body = client.get(reverse("core:dashboard")).content.decode()
+
+    assert "Transferphase endet in" in body
+    assert "Vervollständige deinen Kader" in body
+    assert "Tage" in body
+    assert "Kader aufstellen" in body
+
+
 def test_dashboard_has_a_started_season_state(user, password, client, db):
     client.login(username=user.email, password=password)
     Season.objects.create(

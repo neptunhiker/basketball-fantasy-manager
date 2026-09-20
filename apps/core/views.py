@@ -38,21 +38,28 @@ def _countdown_for_season(season):
 
 COUNTDOWN_COPY = {
     "Signings open in": (
-        "The signing phase opens soon.",
-        "Get your shortlist ready, then start building when signings open.",
+        _("The signing phase opens soon."),
+        _("Get your shortlist ready, then start building when signings open."),
     ),
     "Signings close in": (
-        "Complete your roster before signings close.",
-        "Make your final additions before the signing window shuts.",
+        _("Complete your roster before signings close."),
+        _("Make your final additions before the signing window shuts."),
     ),
     "Season starts in": (
-        "Set your lineup before tip-off.",
-        "Signings are closed. Waiting for season tip-off.",
+        _("Set your lineup before tip-off."),
+        _("Signings are closed. Waiting for season tip-off."),
     ),
     "Season ends in": (
-        "Make every move count.",
-        "The season is live. Keep an eye on your roster until the final day.",
+        _("Make every move count."),
+        _("The season is live. Keep an eye on your roster until the final day."),
     ),
+}
+
+COUNTDOWN_LABELS = {
+    "Signings open in": _("Signings open in"),
+    "Signings close in": _("Signings close in"),
+    "Season starts in": _("Season starts in"),
+    "Season ends in": _("Season ends in"),
 }
 
 
@@ -75,9 +82,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context["countdown_target_at"] = (
             timezone.localtime(countdown_target) if countdown_target else None
         )
-        context["countdown_label"] = countdown_label
+        context["countdown_label"] = COUNTDOWN_LABELS.get(countdown_label, countdown_label)
         context["countdown_heading"], context["countdown_description"] = COUNTDOWN_COPY.get(
-            countdown_label, ("The season is underway.", "Keep your roster moving.")
+            countdown_label,
+            (_("The season is underway."), _("Keep your roster moving.")),
         )
         dashboard_rosters = (
             list(

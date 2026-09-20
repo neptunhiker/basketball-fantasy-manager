@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-20 07:38+0200\n"
+"POT-Creation-Date: 2026-09-20 07:49+0200\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -125,11 +125,67 @@ msgstr "Ein neuer Einladungslink für %(email)s wurde erstellt."
 msgid "Welcome! Your account is now active."
 msgstr "Willkommen! Dein Konto ist jetzt aktiv."
 
-#: apps/core/views.py:156
+#: apps/core/views.py:41
+msgid "The signing phase opens soon."
+msgstr "Die Transferphase beginnt bald."
+
+#: apps/core/views.py:42
+msgid "Get your shortlist ready, then start building when signings open."
+msgstr "Bereite deine Auswahlliste vor und beginne mit dem Aufbau, sobald die Transferphase beginnt."
+
+#: apps/core/views.py:45
+msgid "Complete your roster before signings close."
+msgstr "Vervollständige deinen Kader, bevor die Transferphase endet."
+
+#: apps/core/views.py:46
+msgid "Make your final additions before the signing window shuts."
+msgstr "Nimm deine letzten Ergänzungen vor, bevor sich das Transferfenster schließt."
+
+#: apps/core/views.py:49
+msgid "Set your lineup before tip-off."
+msgstr "Stelle deine Aufstellung vor dem Tip-off zusammen."
+
+#: apps/core/views.py:50
+msgid "Signings are closed. Waiting for season tip-off."
+msgstr "Die Transferphase ist geschlossen. Wir warten auf den Saisonstart."
+
+#: apps/core/views.py:53
+msgid "Make every move count."
+msgstr "Jeder Schritt zählt."
+
+#: apps/core/views.py:54
+msgid "The season is live. Keep an eye on your roster until the final day."
+msgstr "Die Saison läuft. Behalte deinen Kader bis zum letzten Tag im Blick."
+
+#: apps/core/views.py:59
+msgid "Signings open in"
+msgstr "Transferphase beginnt in"
+
+#: apps/core/views.py:60
+msgid "Signings close in"
+msgstr "Transferphase endet in"
+
+#: apps/core/views.py:61
+msgid "Season starts in"
+msgstr "Saison beginnt in"
+
+#: apps/core/views.py:62
+msgid "Season ends in"
+msgstr "Saison endet in"
+
+#: apps/core/views.py:88 templates/core/dashboard.html:64
+msgid "The season is underway."
+msgstr "Die Saison läuft."
+
+#: apps/core/views.py:88
+msgid "Keep your roster moving."
+msgstr "Halte deinen Kader in Bewegung."
+
+#: apps/core/views.py:164
 msgid "Confirm"
 msgstr "Bestätigen"
 
-#: apps/core/views.py:157 apps/core/views.py:309 apps/core/views.py:444
+#: apps/core/views.py:165 apps/core/views.py:317 apps/core/views.py:452
 #: templates/accounts/invite_user.html:22
 #: templates/accounts/password_change.html:16
 #: templates/partials/modal_confirm.html:59
@@ -138,23 +194,23 @@ msgstr "Bestätigen"
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: apps/core/views.py:208
+#: apps/core/views.py:216
 #, python-format
 msgid "Type \"%(word)s\" exactly to confirm."
 msgstr "Gib \"%(word)s\" genau zur Bestätigung ein."
 
-#: apps/core/views.py:303
+#: apps/core/views.py:311
 msgid "Name"
 msgstr "Name"
 
-#: apps/core/views.py:308 apps/core/views.py:443
+#: apps/core/views.py:316 apps/core/views.py:451
 #: templates/accounts/password_change.html:15
 #: templates/partials/modal_form.html:48
 #: templates/partials/modal_prompt.html:72
 msgid "Save"
 msgstr "Speichern"
 
-#: apps/core/views.py:344
+#: apps/core/views.py:352
 msgid "Please enter a name."
 msgstr "Bitte gib einen Namen ein."
 
@@ -183,7 +239,9 @@ msgstr "Einladung ungültig"
 msgid ""
 "This invitation link has expired or has already been used. Ask your team to "
 "send you a new one."
-msgstr "Dieser Einladungslink ist abgelaufen oder wurde bereits verwendet. Bitte dein Team, dir einen neuen zu senden."
+msgstr ""
+"Dieser Einladungslink ist abgelaufen oder wurde bereits verwendet. Bitte "
+"dein Team, dir einen neuen zu senden."
 
 #: templates/accounts/accept_invitation_invalid.html:11
 #: templates/accounts/password_reset_complete.html:11
@@ -205,12 +263,14 @@ msgstr "Wir haben dich eingeladen zu"
 
 #: templates/accounts/email/invitation_body.txt:5
 msgid "Use this link to set up your account and choose a password:"
-msgstr "Verwende diesen Link, um dein Konto einzurichten und ein Passwort zu wählen:"
+msgstr ""
+"Verwende diesen Link, um dein Konto einzurichten und ein Passwort zu wählen:"
 
 #: templates/accounts/email/invitation_body.txt:9
 #, python-format
 msgid "The link is valid for %(days)s days and can only be used once."
-msgstr "Der Link ist %(days)s Tage gültig und kann nur einmal verwendet werden."
+msgstr ""
+"Der Link ist %(days)s Tage gültig und kann nur einmal verwendet werden."
 
 #: templates/accounts/email/invitation_subject.txt:1
 msgid "your account is waiting"
@@ -218,13 +278,17 @@ msgstr "dein Konto wartet auf dich"
 
 #: templates/accounts/email/password_reset_body.txt:3
 msgid "You asked to reset your password. Use this link to set a new one:"
-msgstr "Du hast darum gebeten, dein Passwort zurückzusetzen. Verwende diesen Link, um ein neues festzulegen:"
+msgstr ""
+"Du hast darum gebeten, dein Passwort zurückzusetzen. Verwende diesen Link, "
+"um ein neues festzulegen:"
 
 #: templates/accounts/email/password_reset_body.txt:7
 msgid ""
 "The link is valid for three days. If this was not you, you can ignore this "
 "email -- your password stays as it is."
-msgstr "Der Link ist drei Tage gültig. Wenn du das nicht warst, kannst du diese E-Mail ignorieren -- dein Passwort bleibt unverändert."
+msgstr ""
+"Der Link ist drei Tage gültig. Wenn du das nicht warst, kannst du diese E-"
+"Mail ignorieren -- dein Passwort bleibt unverändert."
 
 #: templates/accounts/email/password_reset_body.txt:9
 msgid "Best,"
@@ -236,6 +300,7 @@ msgid "Reset your password"
 msgstr "Passwort zurücksetzen"
 
 #: templates/accounts/invite_user.html:4 templates/accounts/invite_user.html:5
+#: templates/core/dashboard.html:112
 msgid "Invite someone"
 msgstr "Jemanden einladen"
 
@@ -244,7 +309,9 @@ msgstr "Jemanden einladen"
 msgid ""
 "Generates an invitation link valid for %(days)s days that you can copy and "
 "send manually."
-msgstr "Erstellt einen %(days)s Tage gültigen Einladungslink, den du kopieren und manuell versenden kannst."
+msgstr ""
+"Erstellt einen %(days)s Tage gültigen Einladungslink, den du kopieren und "
+"manuell versenden kannst."
 
 #: templates/accounts/invite_user.html:21
 msgid "Create invitation link"
@@ -367,7 +434,8 @@ msgstr "Passwort zurücksetzen"
 
 #: templates/accounts/password_reset.html:8
 msgid "We will send you a link for setting a new password."
-msgstr "Wir senden dir einen Link, mit dem du ein neues Passwort festlegen kannst."
+msgstr ""
+"Wir senden dir einen Link, mit dem du ein neues Passwort festlegen kannst."
 
 #: templates/accounts/password_reset.html:16
 msgid "Send the link"
@@ -408,7 +476,9 @@ msgstr "Passwort speichern"
 
 #: templates/accounts/password_reset_confirm.html:17
 msgid "This link has already been used or has expired. Request a new one."
-msgstr "Dieser Link wurde bereits verwendet oder ist abgelaufen. Fordere einen neuen an."
+msgstr ""
+"Dieser Link wurde bereits verwendet oder ist abgelaufen. Fordere einen neuen "
+"an."
 
 #: templates/accounts/password_reset_confirm.html:19
 msgid "Request a new link"
@@ -426,7 +496,9 @@ msgstr "Prüfe deinen Posteingang"
 msgid ""
 "If an account exists for that address, the reset link is on its way. It is "
 "valid for three days."
-msgstr "Wenn für diese Adresse ein Konto existiert, ist der Link zum Zurücksetzen unterwegs. Er ist drei Tage gültig."
+msgstr ""
+"Wenn für diese Adresse ein Konto existiert, ist der Link zum Zurücksetzen "
+"unterwegs. Er ist drei Tage gültig."
 
 #: templates/accounts/profile.html:4 templates/accounts/profile.html:5
 msgid "Profile"
@@ -484,7 +556,9 @@ msgstr "Link kopieren"
 msgid ""
 "Send this link to the person. It is valid for %(days)s days and will expire "
 "once used."
-msgstr "Sende diesen Link an die Person. Er ist %(days)s Tage gültig und läuft nach der Verwendung ab."
+msgstr ""
+"Sende diesen Link an die Person. Er ist %(days)s Tage gültig und läuft nach "
+"der Verwendung ab."
 
 #: templates/accounts/user_list.html:35 templates/accounts/user_list.html:37
 msgid "Search by email address"
@@ -498,7 +572,8 @@ msgstr "Suche läuft"
 msgid "Main navigation"
 msgstr "Hauptnavigation"
 
-#: templates/app.html:35
+#: templates/app.html:35 templates/core/dashboard.html:4
+#: templates/core/dashboard.html:5
 msgid "Home"
 msgstr "Startseite"
 
@@ -537,6 +612,108 @@ msgstr "Abmelden"
 #: templates/app.html:192
 msgid "Loading"
 msgstr "Wird geladen"
+
+#: templates/core/dashboard.html:17 templates/core/dashboard.html:99
+msgid "Pengi logo"
+msgstr "Pengi-Logo"
+
+#: templates/core/dashboard.html:23
+#, python-format
+msgid "Season %(season_label)s · Tip-off %(tipoff)s"
+msgstr "Saison %(season_label)s · Tip-off %(tipoff)s"
+
+#: templates/core/dashboard.html:30
+msgid "Counting down to"
+msgstr "Countdown bis"
+
+#: templates/core/dashboard.html:34
+msgid "Days"
+msgstr "Tage"
+
+#: templates/core/dashboard.html:38
+msgid "Hours"
+msgstr "Stunden"
+
+#: templates/core/dashboard.html:42
+msgid "Minutes"
+msgstr "Minuten"
+
+#: templates/core/dashboard.html:46
+msgid "Seconds"
+msgstr "Sekunden"
+
+#: templates/core/dashboard.html:56 templates/core/dashboard.html:68
+msgid "My rosters"
+msgstr "Meine Kader"
+
+#: templates/core/dashboard.html:56 templates/core/dashboard.html:68
+msgid "My roster"
+msgstr "Mein Kader"
+
+#: templates/core/dashboard.html:56 templates/core/dashboard.html:68
+msgid "Build a roster"
+msgstr "Kader aufstellen"
+
+#: templates/core/dashboard.html:57 templates/core/dashboard.html:69
+msgid "Explore players"
+msgstr "Spieler entdecken"
+
+#: templates/core/dashboard.html:63
+msgid "Season complete"
+msgstr "Saison abgeschlossen"
+
+#: templates/core/dashboard.html:63
+msgid "Trading window open"
+msgstr "Transferfenster geöffnet"
+
+#: templates/core/dashboard.html:63 templates/core/dashboard.html:102
+msgid "Season desk"
+msgstr "Saisonsschaltzentrale"
+
+#: templates/core/dashboard.html:64
+msgid "The season has ended."
+msgstr "Die Saison ist beendet."
+
+#: templates/core/dashboard.html:65
+#, python-format
+msgid "%(season_label)s runs through %(end_date)s. Keep your roster moving."
+msgstr "%(season_label)s läuft bis zum %(end_date)s. Halte deinen Kader in Bewegung."
+
+#: templates/core/dashboard.html:78
+msgid "Signings open"
+msgstr "Transferphase öffnet"
+
+#: templates/core/dashboard.html:79
+msgid "Open now"
+msgstr "Jetzt geöffnet"
+
+#: templates/core/dashboard.html:82
+msgid "Signings close"
+msgstr "Transferphase schließt"
+
+#: templates/core/dashboard.html:83
+msgid "No cutoff"
+msgstr "Kein Fristende"
+
+#: templates/core/dashboard.html:86
+msgid "Season open"
+msgstr "Saison beginnt"
+
+#: templates/core/dashboard.html:90
+msgid "Season close"
+msgstr "Saison endet"
+
+#: templates/core/dashboard.html:103
+msgid "Your season starts here."
+msgstr "Deine Saison beginnt hier."
+
+#: templates/core/dashboard.html:104
+msgid "There is no current season scheduled yet."
+msgstr "Derzeit ist noch keine Saison geplant."
+
+#: templates/core/dashboard.html:113
+msgid "View team"
+msgstr "Team ansehen"
 
 #: templates/partials/messages.html:14
 msgid "Dismiss message"

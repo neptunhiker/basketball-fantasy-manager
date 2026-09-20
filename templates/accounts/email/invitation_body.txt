@@ -1,9 +1,9 @@
-Hi{% if user.first_name %} {{ user.first_name }}{% endif %},
+{% load i18n %}{% translate "Hi" %}{% if user.first_name %} {{ user.first_name }}{% endif %},
 
-{% if invited_by_name %}{{ invited_by_name }} has{% else %}We have{% endif %} invited you to {{ site_name }}.
+{% if invited_by_name %}{{ invited_by_name }} {% translate "has invited you to" %}{% else %}{% translate "We have invited you to" %}{% endif %} {{ site_name }}.
 
-Use this link to set up your account and choose a password:
+{% translate "Use this link to set up your account and choose a password:" %}
 
 {{ invitation_url }}
 
-The link is valid for {{ expiry_days }} days and can only be used once.
+{% blocktranslate with days=expiry_days %}The link is valid for {{ days }} days and can only be used once.{% endblocktranslate %}

@@ -1,1 +1,1 @@
-{{ site_name }}: your account is waiting
+{% load i18n %}{{ site_name }}: {% translate "your account is waiting" %}

@@ -1,44 +1,47 @@
 {% extends "app.html" %}
+{% load i18n %}
 
-{% block title %}Users · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Users{% endblock %}
+{% block title %}{% translate "Users" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Users" %}{% endblock %}
 
 {% block header_actions %}
-  <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary hidden sm:inline-flex">Invite</a>
+  <a href="{% url 'accounts:invite-user' %}" class="btn btn-primary hidden sm:inline-flex">{% translate "Invite" %}</a>
 {% endblock %}
 
 {% block content %}
 {% if invitation_success %}
   <div x-data="{ copied: false }" class="mb-6 rounded-xl border border-primary-200 bg-primary-50 p-4 text-sm text-primary-900 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-200">
     <div class="flex items-center justify-between gap-2 font-medium">
-      <span>Invitation link created for <strong>{{ invitation_success.email }}</strong>:</span>
+      <span>{% translate "Invitation link created for" %} <strong>{{ invitation_success.email }}</strong>:</span>
     </div>
     <div class="mt-2 flex items-center gap-2">
       <input type="text" readonly value="{{ invitation_success.url }}" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-mono text-neutral-800 shadow-sm focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100" @click="$el.select()" />
       <button type="button"
               @click="navigator.clipboard.writeText('{{ invitation_success.url|escapejs }}'); copied = true; setTimeout(() => copied = false, 2000)"
               class="btn btn-primary text-xs shrink-0">
-        <span x-text="copied ? 'Copied!' : 'Copy Link'">Copy Link</span>
+        {% translate "Copied!" as copied_label %}
+        {% translate "Copy Link" as copy_link_label %}
+        <span x-text="copied ? '{{ copied_label }}' : '{{ copy_link_label }}'">{{ copy_link_label }}</span>
       </button>
     </div>
     <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-      Send this link to the person. It is valid for {{ INVITATION_TIMEOUT_DAYS }} days and will expire once used.
+      {% blocktranslate with days=INVITATION_TIMEOUT_DAYS %}Send this link to the person. It is valid for {{ days }} days and will expire once used.{% endblocktranslate %}
     </p>
   </div>
 {% endif %}
 
 <div class="card overflow-hidden">
   <div class="border-b border-neutral-200 p-4 dark:border-neutral-800">
-    <label for="user-search" class="sr-only">Search by email address</label>
+    <label for="user-search" class="sr-only">{% translate "Search by email address" %}</label>
     <input type="search" id="user-search" name="q" value="{{ request.GET.q|default:'' }}"
-           placeholder="Search by email address…"
+           placeholder="{% translate 'Search by email address' %}…"
            hx-get="{% url 'accounts:user-list' %}"
            hx-trigger="input changed delay:300ms, search"
            hx-target="#user-table"
            hx-swap="outerHTML"
            hx-indicator="#search-indicator"
            class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-    <span id="search-indicator" class="htmx-indicator mt-2 block text-xs text-neutral-500">Searching…</span>
+    <span id="search-indicator" class="htmx-indicator mt-2 block text-xs text-neutral-500">{% translate "Searching" %}…</span>
   </div>
 
   {% include "accounts/partials/user_table.html" %}

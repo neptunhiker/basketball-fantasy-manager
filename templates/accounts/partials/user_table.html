@@ -1,14 +1,14 @@
-{% load account_tags %}
+{% load account_tags i18n %}
 <div id="user-table">
   {% if users %}
     <div class="overflow-x-auto">
       <table class="w-full text-left text-sm">
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
           <tr>
-            <th scope="col" class="px-4 py-3 font-medium">Person</th>
-            <th scope="col" class="px-4 py-3 font-medium">Status</th>
-            <th scope="col" class="px-4 py-3 font-medium">Role</th>
-            <th scope="col" class="px-4 py-3 text-right font-medium">Action</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "Person" %}</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "Status" %}</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "Role" %}</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Action" %}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -29,15 +29,15 @@
               </td>
               <td class="px-4 py-3">
                 {% if not user.is_active %}
-                  <span class="badge badge-neutral">Deactivated</span>
+                  <span class="badge badge-neutral">{% translate "Deactivated" %}</span>
                 {% elif user.has_accepted_invitation %}
-                  <span class="badge badge-success">Active</span>
+                  <span class="badge badge-success">{% translate "Active" %}</span>
                 {% else %}
-                  <span class="badge badge-pending">Invited</span>
+                  <span class="badge badge-pending">{% translate "Invited" %}</span>
                 {% endif %}
               </td>
               <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
-                {% if user.is_superuser %}Administration{% elif user.is_staff %}Team{% else %}Coach{% endif %}
+                {% if user.is_superuser %}{% translate "Administration" %}{% elif user.is_staff %}{% translate "Team" %}{% else %}{% translate "Coach" %}{% endif %}
               </td>
               <td class="px-4 py-3 text-right">
                 {% if not user.has_accepted_invitation and user.is_active %}
@@ -46,11 +46,13 @@
                     <button type="button"
                             @click="navigator.clipboard.writeText('{{ inv_url|escapejs }}'); copied = true; setTimeout(() => copied = false, 2000)"
                             class="btn btn-ghost !px-2 !py-1 text-xs">
-                      <span x-text="copied ? 'Copied!' : 'Copy link'">Copy link</span>
+                      {% translate "Copied!" as copied_label %}
+                      {% translate "Copy link" as copy_link_label %}
+                      <span x-text="copied ? '{{ copied_label }}' : '{{ copy_link_label }}'">{{ copy_link_label }}</span>
                     </button>
                     <form method="post" action="{% url 'accounts:resend-invitation' user.pk %}" class="inline">
                       {% csrf_token %}
-                      <button type="submit" class="btn btn-ghost !px-2 !py-1 text-xs text-neutral-500" title="Generate a fresh link">New link</button>
+                      <button type="submit" class="btn btn-ghost !px-2 !py-1 text-xs text-neutral-500" title="{% translate 'Generate a fresh link' %}">{% translate "New link" %}</button>
                     </form>
                   </div>
                 {% endif %}
@@ -64,16 +66,16 @@
     {% if is_paginated %}
       <div class="flex items-center justify-between border-t border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">
         <span class="text-neutral-500 dark:text-neutral-400">
-          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          {% blocktranslate with page=page_obj.number pages=page_obj.paginator.num_pages %}Page {{ page }} of {{ pages }}{% endblocktranslate %}
         </span>
         <div class="flex gap-2">
           {% if page_obj.has_previous %}
             <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
-               class="btn btn-secondary !px-3 !py-1.5 text-xs">Previous</a>
+               class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Previous" %}</a>
           {% endif %}
           {% if page_obj.has_next %}
             <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
-               class="btn btn-secondary !px-3 !py-1.5 text-xs">Next</a>
+               class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Next" %}</a>
           {% endif %}
         </div>
       </div>
@@ -81,7 +83,7 @@
   {% else %}
     <div class="px-4 py-16 text-center">
       <p class="text-sm text-neutral-500 dark:text-neutral-400">
-        {% if request.GET.q %}Nothing matches “{{ request.GET.q }}”.{% else %}Nobody on the team yet.{% endif %}
+        {% if request.GET.q %}{% blocktranslate with query=request.GET.q %}Nothing matches “{{ query }}”.{% endblocktranslate %}{% else %}{% translate "Nobody on the team yet." %}{% endif %}
       </p>
     </div>
   {% endif %}

@@ -146,6 +146,16 @@ def test_password_reset_sends_an_email(client, user):
     assert reverse("accounts:password-reset").split("reset")[0] in mail.outbox[0].body
 
 
+def test_password_reset_follows_the_browser_language(client):
+    response = client.get(
+        reverse("accounts:password-reset"), headers={"accept-language": "de"}
+    )
+
+    body = response.content.decode()
+    assert "Passwort zurücksetzen" in body
+    assert "Link senden" in body
+
+
 def test_password_reset_for_an_unknown_address_reveals_nothing(client, db):
     response = client.post(reverse("accounts:password-reset"), {"email": "nobody@example.com"})
     assert response.status_code == 302
@@ -159,6 +169,18 @@ def test_user_list_is_staff_only(client, user, staff_user, password):
     client.logout()
     client.login(username=staff_user.email, password=password)
     assert client.get(reverse("accounts:user-list")).status_code == 200
+
+
+def test_user_list_uses_the_staff_members_saved_language(client, staff_user, password):
+    staff_user.language = "de"
+    staff_user.save(update_fields=["language"])
+    client.login(username=staff_user.email, password=password)
+
+    body = client.get(reverse("accounts:user-list")).content.decode()
+
+    assert "Einladen" in body
+    assert "Person" in body
+    assert "Status" in body
 
 
 def test_user_list_search_returns_only_the_table_for_htmx(client, staff_user, user, password):

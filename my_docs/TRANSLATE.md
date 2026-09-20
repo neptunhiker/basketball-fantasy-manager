@@ -152,7 +152,7 @@ The shared shell, common modal partials, and reusable modal defaults are now tag
 translated, compiled, and covered by focused tests. Feature-specific modal titles,
 bodies, and action labels remain part of their owning feature phase.
 
-## Phase 3: Complete Accounts and Authentication
+## Phase 3: Complete Accounts and Authentication (Completed)
 
 ### Scope
 
@@ -169,7 +169,7 @@ bodies, and action labels remain part of their owning feature phase.
 - Translate the remaining account templates, form labels, help text, validation errors, and authentication messages. Login and profile have initial coverage from Phase 1 and should be used as the pattern for the remaining workflows.
 - Add the language selector to the profile form using translated language names only where appropriate; keep `English` and `Deutsch` recognizable in both locales.
 - Decide whether unauthenticated pages should follow the browser language or remain English by default. The recommended behavior is browser/session locale for anonymous users and saved preference for authenticated users.
-- Verify invitation and password-reset emails use the recipient or request language consistently. If that is deferred, document the temporary English-only behavior.
+- Password-reset templates now follow the active request language, including browser language for the anonymous reset flow. Invitation email templates are translated, but the current invitation workflow generates a link for staff to copy manually rather than sending an email; recipient-specific invitation email language remains deferred until email delivery is wired into that flow.
 
 ### Exit criteria
 
@@ -177,11 +177,14 @@ bodies, and action labels remain part of their owning feature phase.
 - All account workflows have translated labels, errors, confirmations, and empty states.
 - Password-reset and invitation flows have an explicit language behavior.
 
+The remaining account templates, staff user list/detail views, email templates, pluralized roster counts, and account-language smoke tests are now covered.
+
 ## Phase 4: Translate Core and Dashboard Pages
 
 ### Scope
 
 - `templates/core/dashboard.html`
+- `apps/core/views.py` dashboard countdown copy and other view-generated messages
 - Core view-generated messages and page titles
 - Empty states, summary labels, and dashboard actions
 

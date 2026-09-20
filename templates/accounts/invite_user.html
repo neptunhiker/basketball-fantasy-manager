@@ -1,12 +1,13 @@
 {% extends "app.html" %}
+{% load i18n %}
 
-{% block title %}Invite someone · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Invite someone{% endblock %}
+{% block title %}{% translate "Invite someone" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Invite someone" %}{% endblock %}
 
 {% block content %}
 <div class="card max-w-lg p-8">
   <p class="mb-6 text-sm text-neutral-600 dark:text-neutral-300">
-    Generates an invitation link valid for {{ INVITATION_TIMEOUT_DAYS }} days that you can copy and send manually.
+    {% blocktranslate with days=INVITATION_TIMEOUT_DAYS %}Generates an invitation link valid for {{ days }} days that you can copy and send manually.{% endblocktranslate %}
   </p>
   <form method="post" class="space-y-5">
     {% csrf_token %}
@@ -17,8 +18,8 @@
     {% include "partials/form_field.html" with field=form.email %}
     {% include "partials/form_field.html" with field=form.is_staff %}
     <div class="flex gap-3 pt-2">
-      <button type="submit" class="btn btn-primary">Create invitation link</button>
-      <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary">{% translate "Create invitation link" %}</button>
+      <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">{% translate "Cancel" %}</a>
     </div>
   </form>
 </div>

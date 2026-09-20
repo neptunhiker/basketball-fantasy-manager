@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-20 07:31+0200\n"
+"POT-Creation-Date: 2026-09-20 07:38+0200\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -61,7 +61,8 @@ msgstr "Vorname"
 msgid "Last name"
 msgstr "Nachname"
 
-#: apps/accounts/models.py:21
+#: apps/accounts/models.py:21 templates/accounts/partials/user_table.html:34
+#: templates/accounts/user_detail.html:30
 msgid "Active"
 msgstr "Aktiv"
 
@@ -93,7 +94,8 @@ msgstr "Sprache"
 msgid "User"
 msgstr "Benutzer"
 
-#: apps/accounts/models.py:48 templates/app.html:117
+#: apps/accounts/models.py:48 templates/accounts/user_list.html:4
+#: templates/accounts/user_list.html:5 templates/app.html:117
 msgid "Users"
 msgstr "Benutzer"
 
@@ -128,6 +130,8 @@ msgid "Confirm"
 msgstr "Bestätigen"
 
 #: apps/core/views.py:157 apps/core/views.py:309 apps/core/views.py:444
+#: templates/accounts/invite_user.html:22
+#: templates/accounts/password_change.html:16
 #: templates/partials/modal_confirm.html:59
 #: templates/partials/modal_form.html:45
 #: templates/partials/modal_prompt.html:69
@@ -144,6 +148,7 @@ msgid "Name"
 msgstr "Name"
 
 #: apps/core/views.py:308 apps/core/views.py:443
+#: templates/accounts/password_change.html:15
 #: templates/partials/modal_form.html:48
 #: templates/partials/modal_prompt.html:72
 msgid "Save"
@@ -152,6 +157,98 @@ msgstr "Speichern"
 #: apps/core/views.py:344
 msgid "Please enter a name."
 msgstr "Bitte gib einen Namen ein."
+
+#: templates/accounts/accept_invitation.html:4
+msgid "Accept invitation"
+msgstr "Einladung annehmen"
+
+#: templates/accounts/accept_invitation.html:5
+msgid "Set up your account"
+msgstr "Dein Konto einrichten"
+
+#: templates/accounts/accept_invitation.html:8
+msgid "Glad to have you. Choose a password for"
+msgstr "Schön, dass du da bist. Wähle ein Passwort für"
+
+#: templates/accounts/accept_invitation.html:22
+msgid "Activate account"
+msgstr "Konto aktivieren"
+
+#: templates/accounts/accept_invitation_invalid.html:4
+#: templates/accounts/accept_invitation_invalid.html:5
+msgid "Invitation not valid"
+msgstr "Einladung ungültig"
+
+#: templates/accounts/accept_invitation_invalid.html:9
+msgid ""
+"This invitation link has expired or has already been used. Ask your team to "
+"send you a new one."
+msgstr "Dieser Einladungslink ist abgelaufen oder wurde bereits verwendet. Bitte dein Team, dir einen neuen zu senden."
+
+#: templates/accounts/accept_invitation_invalid.html:11
+#: templates/accounts/password_reset_complete.html:11
+msgid "Go to sign in"
+msgstr "Zur Anmeldung"
+
+#: templates/accounts/email/invitation_body.txt:1
+#: templates/accounts/email/password_reset_body.txt:1
+msgid "Hi"
+msgstr "Hallo"
+
+#: templates/accounts/email/invitation_body.txt:3
+msgid "has invited you to"
+msgstr "hat dich eingeladen zu"
+
+#: templates/accounts/email/invitation_body.txt:3
+msgid "We have invited you to"
+msgstr "Wir haben dich eingeladen zu"
+
+#: templates/accounts/email/invitation_body.txt:5
+msgid "Use this link to set up your account and choose a password:"
+msgstr "Verwende diesen Link, um dein Konto einzurichten und ein Passwort zu wählen:"
+
+#: templates/accounts/email/invitation_body.txt:9
+#, python-format
+msgid "The link is valid for %(days)s days and can only be used once."
+msgstr "Der Link ist %(days)s Tage gültig und kann nur einmal verwendet werden."
+
+#: templates/accounts/email/invitation_subject.txt:1
+msgid "your account is waiting"
+msgstr "dein Konto wartet auf dich"
+
+#: templates/accounts/email/password_reset_body.txt:3
+msgid "You asked to reset your password. Use this link to set a new one:"
+msgstr "Du hast darum gebeten, dein Passwort zurückzusetzen. Verwende diesen Link, um ein neues festzulegen:"
+
+#: templates/accounts/email/password_reset_body.txt:7
+msgid ""
+"The link is valid for three days. If this was not you, you can ignore this "
+"email -- your password stays as it is."
+msgstr "Der Link ist drei Tage gültig. Wenn du das nicht warst, kannst du diese E-Mail ignorieren -- dein Passwort bleibt unverändert."
+
+#: templates/accounts/email/password_reset_body.txt:9
+msgid "Best,"
+msgstr "Viele Grüße,"
+
+#: templates/accounts/email/password_reset_subject.txt:1
+#: templates/accounts/password_reset.html:5
+msgid "Reset your password"
+msgstr "Passwort zurücksetzen"
+
+#: templates/accounts/invite_user.html:4 templates/accounts/invite_user.html:5
+msgid "Invite someone"
+msgstr "Jemanden einladen"
+
+#: templates/accounts/invite_user.html:10
+#, python-format
+msgid ""
+"Generates an invitation link valid for %(days)s days that you can copy and "
+"send manually."
+msgstr "Erstellt einen %(days)s Tage gültigen Einladungslink, den du kopieren und manuell versenden kannst."
+
+#: templates/accounts/invite_user.html:21
+msgid "Create invitation link"
+msgstr "Einladungslink erstellen"
 
 #: templates/accounts/login.html:4 templates/accounts/login.html:26
 msgid "Sign in"
@@ -177,6 +274,160 @@ msgstr ""
 "Konten werden vom Team erstellt. Bitte frage eine koordinierende Person, "
 "wenn du noch keinen Zugang hast."
 
+#: templates/accounts/partials/user_table.html:8
+msgid "Person"
+msgstr "Person"
+
+#: templates/accounts/partials/user_table.html:9
+#: templates/accounts/user_detail.html:25
+msgid "Status"
+msgstr "Status"
+
+#: templates/accounts/partials/user_table.html:10
+#: templates/accounts/profile.html:45 templates/accounts/user_detail.html:37
+msgid "Role"
+msgstr "Rolle"
+
+#: templates/accounts/partials/user_table.html:11
+msgid "Action"
+msgstr "Aktion"
+
+#: templates/accounts/partials/user_table.html:32
+#: templates/accounts/user_detail.html:28
+msgid "Deactivated"
+msgstr "Deaktiviert"
+
+#: templates/accounts/partials/user_table.html:36
+#: templates/accounts/user_detail.html:32
+msgid "Invited"
+msgstr "Eingeladen"
+
+#: templates/accounts/partials/user_table.html:40
+#: templates/accounts/profile.html:46 templates/accounts/user_detail.html:38
+msgid "Administration"
+msgstr "Administration"
+
+#: templates/accounts/partials/user_table.html:40
+#: templates/accounts/profile.html:46 templates/accounts/user_detail.html:38
+msgid "Team"
+msgstr "Team"
+
+#: templates/accounts/partials/user_table.html:40
+#: templates/accounts/profile.html:46 templates/accounts/user_detail.html:38
+msgid "Coach"
+msgstr "Coach"
+
+#: templates/accounts/partials/user_table.html:49
+#: templates/accounts/user_list.html:22
+msgid "Copied!"
+msgstr "Kopiert!"
+
+#: templates/accounts/partials/user_table.html:50
+msgid "Copy link"
+msgstr "Link kopieren"
+
+#: templates/accounts/partials/user_table.html:55
+msgid "Generate a fresh link"
+msgstr "Neuen Link erstellen"
+
+#: templates/accounts/partials/user_table.html:55
+msgid "New link"
+msgstr "Neuer Link"
+
+#: templates/accounts/partials/user_table.html:69
+#, python-format
+msgid "Page %(page)s of %(pages)s"
+msgstr "Seite %(page)s von %(pages)s"
+
+#: templates/accounts/partials/user_table.html:74
+msgid "Previous"
+msgstr "Zurück"
+
+#: templates/accounts/partials/user_table.html:78
+msgid "Next"
+msgstr "Weiter"
+
+#: templates/accounts/partials/user_table.html:86
+#, python-format
+msgid "Nothing matches “%(query)s”."
+msgstr "Keine Ergebnisse für „%(query)s“."
+
+#: templates/accounts/partials/user_table.html:86
+msgid "Nobody on the team yet."
+msgstr "Noch niemand im Team."
+
+#: templates/accounts/password_change.html:4
+#: templates/accounts/password_change.html:5 templates/accounts/profile.html:55
+msgid "Change password"
+msgstr "Passwort ändern"
+
+#: templates/accounts/password_reset.html:4
+msgid "Reset password"
+msgstr "Passwort zurücksetzen"
+
+#: templates/accounts/password_reset.html:8
+msgid "We will send you a link for setting a new password."
+msgstr "Wir senden dir einen Link, mit dem du ein neues Passwort festlegen kannst."
+
+#: templates/accounts/password_reset.html:16
+msgid "Send the link"
+msgstr "Link senden"
+
+#: templates/accounts/password_reset.html:20
+#: templates/accounts/password_reset_done.html:11
+msgid "Back to sign in"
+msgstr "Zurück zur Anmeldung"
+
+#: templates/accounts/password_reset_complete.html:4
+msgid "Done"
+msgstr "Fertig"
+
+#: templates/accounts/password_reset_complete.html:5
+msgid "Password changed"
+msgstr "Passwort geändert"
+
+#: templates/accounts/password_reset_complete.html:9
+msgid "Your new password is active. You can sign in now."
+msgstr "Dein neues Passwort ist aktiv. Du kannst dich jetzt anmelden."
+
+#: templates/accounts/password_reset_confirm.html:4
+msgid "New password"
+msgstr "Neues Passwort"
+
+#: templates/accounts/password_reset_confirm.html:5
+msgid "Set a new password"
+msgstr "Neues Passwort festlegen"
+
+#: templates/accounts/password_reset_confirm.html:5
+msgid "Link not valid"
+msgstr "Link ungültig"
+
+#: templates/accounts/password_reset_confirm.html:13
+msgid "Save password"
+msgstr "Passwort speichern"
+
+#: templates/accounts/password_reset_confirm.html:17
+msgid "This link has already been used or has expired. Request a new one."
+msgstr "Dieser Link wurde bereits verwendet oder ist abgelaufen. Fordere einen neuen an."
+
+#: templates/accounts/password_reset_confirm.html:19
+msgid "Request a new link"
+msgstr "Neuen Link anfordern"
+
+#: templates/accounts/password_reset_done.html:4
+msgid "Email on its way"
+msgstr "E-Mail unterwegs"
+
+#: templates/accounts/password_reset_done.html:5
+msgid "Check your inbox"
+msgstr "Prüfe deinen Posteingang"
+
+#: templates/accounts/password_reset_done.html:9
+msgid ""
+"If an account exists for that address, the reset link is on its way. It is "
+"valid for three days."
+msgstr "Wenn für diese Adresse ein Konto existiert, ist der Link zum Zurücksetzen unterwegs. Er ist drei Tage gültig."
+
 #: templates/accounts/profile.html:4 templates/accounts/profile.html:5
 msgid "Profile"
 msgstr "Profil"
@@ -192,29 +443,56 @@ msgstr ""
 msgid "Save changes"
 msgstr "Änderungen speichern"
 
-#: templates/accounts/profile.html:45
-msgid "Role"
-msgstr "Rolle"
-
-#: templates/accounts/profile.html:46
-msgid "Administration"
-msgstr "Administration"
-
-#: templates/accounts/profile.html:46
-msgid "Team"
-msgstr "Team"
-
-#: templates/accounts/profile.html:46
-msgid "Coach"
-msgstr "Coach"
-
 #: templates/accounts/profile.html:49
 msgid "Member since"
 msgstr "Mitglied seit"
 
-#: templates/accounts/profile.html:55
-msgid "Change password"
-msgstr "Passwort ändern"
+#: templates/accounts/user_detail.html:8
+msgid "Back to team"
+msgstr "Zurück zum Team"
+
+#: templates/accounts/user_detail.html:41
+#: templates/accounts/user_detail.html:48 templates/app.html:87
+msgid "Manager profiles"
+msgstr "Managerprofile"
+
+#: templates/accounts/user_detail.html:57
+#, python-format
+msgid "%(roster_count)s roster"
+msgid_plural "%(roster_count)s rosters"
+msgstr[0] "%(roster_count)s Kader"
+msgstr[1] "%(roster_count)s Kader"
+
+#: templates/accounts/user_detail.html:63
+msgid "No manager profiles yet."
+msgstr "Noch keine Managerprofile."
+
+#: templates/accounts/user_list.html:8
+msgid "Invite"
+msgstr "Einladen"
+
+#: templates/accounts/user_list.html:15
+msgid "Invitation link created for"
+msgstr "Einladungslink erstellt für"
+
+#: templates/accounts/user_list.html:23
+msgid "Copy Link"
+msgstr "Link kopieren"
+
+#: templates/accounts/user_list.html:28
+#, python-format
+msgid ""
+"Send this link to the person. It is valid for %(days)s days and will expire "
+"once used."
+msgstr "Sende diesen Link an die Person. Er ist %(days)s Tage gültig und läuft nach der Verwendung ab."
+
+#: templates/accounts/user_list.html:35 templates/accounts/user_list.html:37
+msgid "Search by email address"
+msgstr "Nach E-Mail-Adresse suchen"
+
+#: templates/accounts/user_list.html:44
+msgid "Searching"
+msgstr "Suche läuft"
 
 #: templates/app.html:26
 msgid "Main navigation"
@@ -239,10 +517,6 @@ msgstr "Beobachtungsliste"
 #: templates/app.html:76
 msgid "Rosters"
 msgstr "Kader"
-
-#: templates/app.html:87
-msgid "Manager profiles"
-msgstr "Managerprofile"
 
 #: templates/app.html:92
 msgid "Staff area"

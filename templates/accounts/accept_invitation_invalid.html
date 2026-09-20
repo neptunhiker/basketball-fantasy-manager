@@ -1,12 +1,12 @@
 {% extends "auth_base.html" %}
+{% load i18n %}
 
-{% block title %}Invitation not valid · {{ SITE_NAME }}{% endblock %}
-{% block heading %}Invitation not valid{% endblock %}
+{% block title %}{% translate "Invitation not valid" %} · {{ SITE_NAME }}{% endblock %}
+{% block heading %}{% translate "Invitation not valid" %}{% endblock %}
 
 {% block content %}
 <p class="text-sm text-neutral-600 dark:text-neutral-300">
-  This invitation link has expired or has already been used. Ask your team to
-  send you a new one.
+  {% translate "This invitation link has expired or has already been used. Ask your team to send you a new one." %}
 </p>
-<a href="{% url 'accounts:login' %}" class="btn btn-secondary w-full">Go to sign in</a>
+<a href="{% url 'accounts:login' %}" class="btn btn-secondary w-full">{% translate "Go to sign in" %}</a>
 {% endblock %}

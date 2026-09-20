@@ -1,6 +1,5 @@
 {% extends "app.html" %}
-{% load static %}
-{% load money %}
+{% load i18n static money %}
 
 {% comment %}
   The roster's ledger. Read top to bottom it is the newest move first, which is
@@ -26,7 +25,7 @@
 
 {% block header_actions %}
   <a href="{% url 'fantasy:roster-build' roster.pk %}" class="btn btn-secondary text-xs">
-    Back to roster
+    {% translate "Back to roster" %}
   </a>
 {% endblock %}
 
@@ -50,12 +49,12 @@
               {{ roster.name }}
             </h2>
             <p class="mt-0.5 text-xs text-neutral-500 sm:text-sm dark:text-neutral-400">
-              Every buy, sell and trade, exactly as it was recorded.
+              {% translate "Every buy, sell and trade, exactly as it was recorded." %}
             </p>
           </div>
         </div>
         <div class="shrink-0 text-left sm:text-right">
-          <p class="text-xs text-neutral-500 dark:text-neutral-400">Cash balance</p>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Cash balance" %}</p>
           <p class="text-2xl font-bold tabular-nums sm:text-3xl" title="{{ roster.cash|exact }}">
             {{ roster.cash|millions }}
           </p>
@@ -64,21 +63,21 @@
 
       <dl class="mt-6 grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-4">
         <div>
-          <dt class="text-xs text-neutral-500 dark:text-neutral-400">Starting cash</dt>
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Starting cash" %}</dt>
           <dd class="mt-0.5 font-medium tabular-nums" title="{{ starting_cash|exact }}">
             {{ starting_cash|millions }}
           </dd>
         </div>
         <div>
-          <dt class="text-xs text-neutral-500 dark:text-neutral-400">Buys</dt>
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Buys" %}</dt>
           <dd class="mt-0.5 font-medium tabular-nums">{{ counts.BUY|default:0 }}</dd>
         </div>
         <div>
-          <dt class="text-xs text-neutral-500 dark:text-neutral-400">Sells</dt>
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Sells" %}</dt>
           <dd class="mt-0.5 font-medium tabular-nums">{{ counts.SELL|default:0 }}</dd>
         </div>
         <div>
-          <dt class="text-xs text-neutral-500 dark:text-neutral-400">Trades</dt>
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Trades" %}</dt>
           <dd class="mt-0.5 font-medium tabular-nums">{{ counts.TRADE|default:0 }}</dd>
         </div>
       </dl>
@@ -86,8 +85,7 @@
       {% if rows %}
         {% if reconciles %}
           <p class="mt-6 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-800 dark:bg-green-500/10 dark:text-green-300">
-            Starting cash plus all {{ rows|length }} moves comes to exactly the
-            {{ roster.cash|millions }} the roster holds.
+            {% translate "Starting cash plus all" %} {{ rows|length }} {% translate "moves comes to exactly the" %} {{ roster.cash|millions }} {% translate "the roster holds." %}
           </p>
         {% else %}
           {# Unreachable through the service layer, which writes membership, #}
@@ -95,8 +93,7 @@
           {# something wrote around it -- so it says so rather than hiding. #}
           <p class="mt-6 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800 dark:bg-red-500/10 dark:text-red-200"
              role="alert">
-            The history comes to {{ ledger_balance|millions }} but the roster holds
-            {{ roster.cash|millions }}. An entry is missing.
+            {% translate "The history comes to" %} {{ ledger_balance|millions }} {% translate "but the roster holds" %} {{ roster.cash|millions }}. {% translate "An entry is missing." %}
           </p>
         {% endif %}
       {% endif %}
@@ -119,12 +116,12 @@
         <table class="w-full min-w-[44rem] text-sm">
           <thead>
             <tr class="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-              <th scope="col" class="px-4 py-3 font-medium">When</th>
-              <th scope="col" class="px-3 py-3 font-medium">Kind</th>
-              <th scope="col" class="px-3 py-3 font-medium">Player out</th>
-              <th scope="col" class="px-3 py-3 font-medium">Player in</th>
-              <th scope="col" class="px-3 py-3 text-right font-medium">Cash flow</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Cash after</th>
+              <th scope="col" class="px-4 py-3 font-medium">{% translate "When" %}</th>
+              <th scope="col" class="px-3 py-3 font-medium">{% translate "Kind" %}</th>
+              <th scope="col" class="px-3 py-3 font-medium">{% translate "Player out" %}</th>
+              <th scope="col" class="px-3 py-3 font-medium">{% translate "Player in" %}</th>
+              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Cash flow" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Cash after" %}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -181,7 +178,7 @@
               </tr>
             {% endfor %}
             <tr class="bg-neutral-50 text-neutral-500 dark:bg-neutral-900/60 dark:text-neutral-400">
-              <td class="px-4 py-3" colspan="4">Season start</td>
+              <td class="px-4 py-3" colspan="4">{% translate "Season start" %}</td>
               <td class="px-3 py-3"></td>
               <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums"
                   title="{{ starting_cash|exact }}">
@@ -193,7 +190,7 @@
       </div>
     {% else %}
       <p class="px-5 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
-        No moves yet. As soon as you buy a player, it shows up here.
+        {% translate "No moves yet. As soon as you buy a player, it shows up here." %}
       </p>
     {% endif %}
   </div>

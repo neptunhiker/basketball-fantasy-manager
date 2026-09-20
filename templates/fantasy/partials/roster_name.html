@@ -1,10 +1,11 @@
+{% load i18n %}
 <form id="roster-name" class="min-w-0 flex-1"
       hx-post="{% url 'fantasy:roster-rename' roster.pk %}"
       hx-trigger="change from:input, submit"
       hx-target="#roster-name"
       hx-swap="outerHTML">
   {% csrf_token %}
-  <label for="roster-name-input" class="sr-only">Roster name</label>
+    <label for="roster-name-input" class="sr-only">{% translate "Roster name" %}</label>
   <input type="text" id="roster-name-input" name="name" value="{{ roster.name }}" maxlength="80"
          class="w-full min-w-0 truncate rounded-lg border border-transparent bg-transparent px-2 py-1 text-base font-semibold transition hover:border-neutral-300 focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:hover:border-neutral-700 dark:focus:bg-neutral-900">
 </form>

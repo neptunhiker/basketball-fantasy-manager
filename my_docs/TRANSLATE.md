@@ -236,7 +236,7 @@ and HTMX/detail regression coverage is included in the NBA test slice.
 - Charts, tooltips, labels, and accessibility text are covered.
 - API and database data remain unchanged.
 
-## Phase 6: Translate Fantasy Features
+## Phase 6: Translate Fantasy Features (Completed)
 
 ### Scope
 
@@ -253,6 +253,12 @@ and HTMX/detail regression coverage is included in the NBA test slice.
 - Use plural-aware strings for roster/player counts and transaction summaries.
 - Keep roster names, manager names, nicknames, and transaction data user-owned and untranslated.
 - Review modal and HTMX flows on narrow screens because German labels may be longer.
+
+The Fantasy roster, manager, season, rules, history, player-picker, trade modal,
+and HTMX update surfaces are now tagged and translated. Season/form/model/service
+validation messages and reusable modal labels are translated at their source.
+Roster, manager, season, player, and transaction data remain unchanged, and the
+Fantasy regression suite includes German staff-page coverage.
 
 ### Exit criteria
 

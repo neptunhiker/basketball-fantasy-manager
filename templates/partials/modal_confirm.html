@@ -56,8 +56,7 @@
 
     <div class="modal-actions">
       <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">
-        {% translate "Cancel" as default_cancel_label %}
-        {{ cancel_label|default:default_cancel_label }}
+        {% if cancel_label %}{{ cancel_label }}{% else %}{% translate "Cancel" %}{% endif %}
       </button>
       {# An empty `confirm_label` means there is nothing to confirm: the modal #}
       {# is explaining why the thing cannot be done, so it offers no button #}

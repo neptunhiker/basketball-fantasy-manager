@@ -1,4 +1,5 @@
 {% extends "app.html" %}
+{% load i18n %}
 
 {% block title %}{{ roster.name }} · {{ SITE_NAME }}{% endblock %}
 
@@ -17,7 +18,7 @@
     {# theme and Sign out -- so this steps aside there and the copy in the #}
     {# content block takes over. Exactly one of the two is ever shown. #}
     <span class="hidden shrink-0 items-baseline gap-1.5 text-xs font-normal text-neutral-500 md:flex dark:text-neutral-400">
-      Managed by
+      {% translate "Managed by" %}
       {# Links to Managers, which is where the handle can be renamed -- and #}
       {# is the only screen that lists the account's other profiles. #}
       <a href="{% url 'fantasy:manager-list' %}"
@@ -36,51 +37,51 @@
   {# not say which team. `aria-label` on both, at every width. #}
   {% if trading_allowed %}
     <button type="button"
-            aria-label="Trade"
+            aria-label="{% translate 'Trade' %}"
             {% if roster.trades_available > 0 %}
               hx-get="{% url 'fantasy:roster-trade' roster.pk %}"
               hx-target="#modal-root"
               hx-swap="innerHTML"
             {% else %}
               disabled
-              title="No trades available"
+              title="{% translate 'No trades available' %}"
             {% endif %}
             class="btn btn-secondary h-9 w-9 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3 {% if roster.trades_available == 0 %}opacity-50 cursor-not-allowed{% endif %}">
     <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
     </svg>
-    <span class="hidden sm:inline">Trade</span>
+    <span class="hidden sm:inline">{% translate "Trade" %}</span>
     </button>
   {% else %}
     <button type="button"
             disabled
             title="{{ trade_unavailable_reason }}"
-            aria-label="Trade (Disabled)"
+            aria-label="{% translate 'Trade (Disabled)' %}"
             class="btn btn-secondary h-9 w-9 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3 opacity-50 cursor-not-allowed">
     <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
     </svg>
-    <span class="hidden sm:inline">Trade</span>
+    <span class="hidden sm:inline">{% translate "Trade" %}</span>
     </button>
   {% endif %}
   <a href="{% url 'fantasy:roster-history' roster.pk %}"
-     aria-label="History"
+    aria-label="{% translate 'History' %}"
      class="btn btn-ghost h-9 w-9 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3">
     <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="9"/>
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5V12l3 2"/>
     </svg>
-    <span class="hidden sm:inline">History</span>
+    <span class="hidden sm:inline">{% translate "History" %}</span>
   </a>
   <a href="{% url 'fantasy:roster-rules' roster.pk %}" class="btn btn-ghost hidden text-xs sm:inline-flex">
-    Rules
+    {% translate "Rules" %}
   </a>
   <button type="button"
           hx-get="{% url 'fantasy:roster-delete' roster.pk %}"
           hx-target="#modal-root"
           hx-swap="innerHTML"
           class="btn btn-ghost !px-2 text-neutral-400 hover:text-red-600 dark:hover:text-red-400"
-          aria-label="Delete roster">
+          aria-label="{% translate 'Delete roster' %}">
     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/>
     </svg>
@@ -98,7 +99,7 @@
 {# *replaces* the 24px rather than adjusting it -- `-mb-2` set the gap to #}
 {# minus eight pixels and the card sat on top of this line. #}
 <p class="mb-2 flex min-w-0 items-baseline gap-1.5 text-xs text-neutral-500 md:hidden dark:text-neutral-400">
-  Managed by
+  {% translate "Managed by" %}
   <a href="{% url 'fantasy:manager-list' %}"
      class="truncate font-medium text-tertiary-700 transition hover:text-primary-600 dark:text-neutral-200 dark:hover:text-primary-300">{{ roster.manager.nick_name }}</a>
 </p>

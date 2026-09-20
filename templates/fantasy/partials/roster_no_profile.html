@@ -1,19 +1,20 @@
 {% extends "partials/modal.html" %}
+{% load i18n %}
 
-{% block modal_title %}Create a profile first{% endblock %}
+{% block modal_title %}{% translate "Create a profile first" %}{% endblock %}
 
 {% block modal_content %}
-  <p>You need a manager profile before you can create a roster.</p>
+  <p>{% translate "You need a manager profile before you can create a roster." %}</p>
   <div class="modal-actions">
     <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">
-      Cancel
+      {% translate "Cancel" %}
     </button>
     <button type="button"
             hx-get="{% url 'fantasy:manager-create' %}"
             hx-target="#modal-root"
             hx-swap="innerHTML"
             class="btn btn-primary">
-      Create manager profile
+      {% translate "Create manager profile" %}
     </button>
   </div>
 {% endblock %}

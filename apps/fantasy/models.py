@@ -25,6 +25,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.db.models import F, Prefetch, Q
 from django.db.models.functions import NullIf
@@ -175,20 +176,20 @@ class Season(TimeStampedModel):
         """Validate the lifecycle dates and their required ordering."""
         super().clean()
         if self.starts_on and self.ends_on and self.ends_on <= self.starts_on:
-            raise ValidationError({"ends_on": "A season has to end after it starts."})
+            raise ValidationError({"ends_on": _("A season has to end after it starts.")})
         if not self.starts_on or not self.ends_on:
             return
         season_open = timezone.make_aware(dt.datetime.combine(self.starts_on, dt.time.min))
         season_close = timezone.make_aware(dt.datetime.combine(self.ends_on, dt.time.max))
         if self.signings_open_at and self.signings_close_at:
             if self.signings_open_at >= self.signings_close_at:
-                raise ValidationError({"signings_close_at": "Signings must close after they open."})
+                raise ValidationError({"signings_close_at": _("Signings must close after they open.")})
             if self.signings_close_at >= season_open:
-                raise ValidationError({"signings_close_at": "Signings must close before the season starts."})
+                raise ValidationError({"signings_close_at": _("Signings must close before the season starts.")})
         if self.signings_open_at and self.signings_open_at >= season_open:
-            raise ValidationError({"signings_open_at": "Signings must open before the season starts."})
+            raise ValidationError({"signings_open_at": _("Signings must open before the season starts.")})
         if self.signings_close_at and self.signings_close_at > season_close:
-            raise ValidationError({"signings_close_at": "Signings cannot close after the season ends."})
+            raise ValidationError({"signings_close_at": _("Signings cannot close after the season ends.")})
 
     @property
     def timing(self):
@@ -675,9 +676,9 @@ class Transaction(TimeStampedModel):
 
         if self.kind in (self.Kind.BUY, self.Kind.SELL, self.Kind.TRADE):
             if not (self.player_in_id or self.player_out_id):
-                raise ValidationError("A transaction has to move at least one player.")
+                raise ValidationError(_("A transaction has to move at least one player."))
             if self.player_in_id and self.player_in_id == self.player_out_id:
-                raise ValidationError("The player in and the player out cannot be the same.")
+                raise ValidationError(_("The player in and the player out cannot be the same."))
             # Two records of the same money, so they are worth comparing. Only when
             # both prices are known: an old row has nothing to disagree with.
             if self.is_priced and self.implied_cash_delta != self.cash_delta:

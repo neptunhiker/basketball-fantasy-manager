@@ -1,4 +1,4 @@
-{% load money %}
+{% load i18n money %}
 {% comment %}
   The whole of the trade screen except the modal shell, and it swaps itself:
   every selection is an hx-get back to the same view with the choice in the
@@ -19,8 +19,7 @@
   {% endif %}
 
   <p class="text-sm text-neutral-500 dark:text-neutral-400">
-    One out, one in — in a single move. Both sides count at today's salary, and the
-    difference goes on your cash.
+    {% translate "One out, one in — in a single move. Both sides count at today's salary, and the difference goes on your cash." %}
   </p>
 
   <div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -29,10 +28,10 @@
     <section class="min-w-0">
       <div class="flex items-baseline justify-between gap-2">
         <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-          Player out
+          {% translate "Player out" %}
         </h3>
         <span class="text-xs text-neutral-400 dark:text-neutral-500">
-          {{ memberships|length }} on the roster
+          {{ memberships|length }} {% translate "on the roster" %}
         </span>
       </div>
 
@@ -75,7 +74,7 @@
         </div>
       {% else %}
         <p class="mt-2 rounded-xl border border-neutral-200 px-3 py-8 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-          Nobody on the roster yet to send out.
+          {% translate "Nobody on the roster yet to send out." %}
         </p>
       {% endif %}
     </section>
@@ -84,12 +83,12 @@
     <section class="min-w-0">
       <div class="flex items-baseline justify-between gap-2">
         <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-          Player in
+          {% translate "Player in" %}
         </h3>
         {# Not the balance: the balance plus what the outgoing player brings in. #}
         <span class="text-xs text-neutral-400 dark:text-neutral-500"
               title="{{ preview.budget|exact }}">
-          Budget {{ preview.budget|millions }}
+              {% translate "Budget" %} {{ preview.budget|millions }}
         </span>
       </div>
 
@@ -98,14 +97,14 @@
             hx-trigger="input changed delay:300ms from:input[type=search], change from:select, search"
             hx-target="#trade-body"
             hx-swap="outerHTML">
-        <label for="trade-search" class="sr-only">Search by name</label>
+        <label for="trade-search" class="sr-only">{% translate "Search by name" %}</label>
         <input type="search" id="trade-search" name="q" value="{{ filters.q }}"
-               placeholder="Search by name…"
+               placeholder="{% translate 'Search by name' %}…"
                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-        <label for="trade-position" class="sr-only">Position</label>
+        <label for="trade-position" class="sr-only">{% translate "Position" %}</label>
         <select id="trade-position" name="position"
                 class="block rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-          <option value="">All pos.</option>
+          <option value="">{% translate "All pos." %}</option>
           {% for value, label in positions %}
             <option value="{{ value }}" {% if filters.position == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
@@ -138,7 +137,7 @@
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-sm font-medium">{{ player.full_name }}</span>
                     <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
-                      {% if player.team %}{{ player.team.abbreviation }}{% else %}Free Agent{% endif %}
+                      {% if player.team %}{{ player.team.abbreviation }}{% else %}{% translate "Free Agent" %}{% endif %}
                     </span>
                   </span>
                   <span class="shrink-0 text-xs tabular-nums {% if player.affordable %}text-neutral-500 dark:text-neutral-400{% else %}text-neutral-400 dark:text-neutral-500{% endif %}"
@@ -153,9 +152,9 @@
       {% else %}
         <p class="mt-2 rounded-xl border border-neutral-200 px-3 py-8 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
           {% if filters.q or filters.position %}
-            Nothing matches those filters.
+            {% translate "Nothing matches those filters." %}
           {% else %}
-            No players with a salary on record.
+            {% translate "No players with a salary on record." %}
           {% endif %}
         </p>
       {% endif %}
@@ -166,7 +165,7 @@
   <div class="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
     <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
       <div class="min-w-0">
-        <dt class="text-xs text-neutral-500 dark:text-neutral-400">Player out</dt>
+        <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Player out" %}</dt>
         <dd class="mt-0.5 truncate text-sm font-medium">
           {% if preview.player_out %}
             {{ preview.player_out.full_name }}
@@ -174,12 +173,12 @@
               {{ preview.salary_out|millions }}
             </span>
           {% else %}
-            <span class="font-normal text-neutral-400 dark:text-neutral-500">not chosen</span>
+            <span class="font-normal text-neutral-400 dark:text-neutral-500">{% translate "not chosen" %}</span>
           {% endif %}
         </dd>
       </div>
       <div class="min-w-0">
-        <dt class="text-xs text-neutral-500 dark:text-neutral-400">Player in</dt>
+        <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Player in" %}</dt>
         <dd class="mt-0.5 truncate text-sm font-medium">
           {% if preview.player_in %}
             {{ preview.player_in.full_name }}
@@ -187,12 +186,12 @@
               {{ preview.salary_in|millions }}
             </span>
           {% else %}
-            <span class="font-normal text-neutral-400 dark:text-neutral-500">not chosen</span>
+            <span class="font-normal text-neutral-400 dark:text-neutral-500">{% translate "not chosen" %}</span>
           {% endif %}
         </dd>
       </div>
       <div class="min-w-0">
-        <dt class="text-xs text-neutral-500 dark:text-neutral-400">Cash flow</dt>
+        <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Cash flow" %}</dt>
         <dd class="mt-0.5 text-sm font-medium tabular-nums">
           {% if preview.ready %}
             {% include "nba/partials/change.html" with value=preview.delta unit="money" %}
@@ -202,7 +201,7 @@
         </dd>
       </div>
       <div class="min-w-0">
-        <dt class="text-xs text-neutral-500 dark:text-neutral-400">Cash after</dt>
+        <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Cash after" %}</dt>
         <dd class="mt-0.5 text-sm font-bold tabular-nums {% if not preview.affordable %}text-red-600 dark:text-red-400{% endif %}"
             title="{{ preview.cash_after|exact }}">
           {{ preview.cash_after|millions }}
@@ -212,25 +211,23 @@
 
     {% if not preview.has_trades %}
       <p class="mt-3 text-xs text-red-700 dark:text-red-300">
-        No trades available for this roster. You can buy trades on the roster page.
+        {% translate "No trades available for this roster. You can buy trades on the roster page." %}
       </p>
     {% elif preview.ready and not preview.affordable %}
       <p class="mt-3 text-xs text-red-700 dark:text-red-300">
-        Not enough cash: {{ preview.player_in.full_name }} costs more than the
-        {{ preview.budget|millions }} that your cash and the outgoing player make up together.
+        {% translate "Not enough cash:" %} {{ preview.player_in.full_name }} {% translate "costs more than the" %} {{ preview.budget|millions }} {% translate "that your cash and the outgoing player make up together." %}
       </p>
     {% elif preview.breaks %}
       {# Allowed on purpose: the roster may sit incomplete between two moves, #}
       {# exactly as it does when a player is released. #}
       <p class="mt-3 text-xs text-amber-700 dark:text-amber-300">
-        Afterwards you would be short: {{ preview.breaks|join:", " }}. The trade still goes
-        through — the roster just will not be complete any more.
+        {% translate "Afterwards you would be short:" %} {{ preview.breaks|join:", " }}. {% translate "The trade still goes through — the roster just will not be complete any more." %}
       </p>
     {% endif %}
   </div>
 
   <div class="modal-actions">
-    <button type="button" @click="open = false" class="btn btn-secondary">Cancel</button>
+    <button type="button" @click="open = false" class="btn btn-secondary">{% translate "Cancel" %}</button>
     {% if preview.ready and preview.affordable and preview.has_trades %}
       <button type="button"
               hx-post="{{ trade_url }}?out={{ preview.player_out.pk }}&amp;in={{ preview.player_in.pk }}"
@@ -238,12 +235,12 @@
               hx-target="#roster-panel"
               hx-swap="outerHTML"
               class="btn btn-primary">
-        Execute trade
+        {% translate "Execute trade" %}
       </button>
     {% else %}
       <button type="button" disabled class="btn btn-primary"
               title="{% if not preview.has_trades %}No trades available{% elif not preview.ready %}Pick both sides first{% else %}Not enough cash{% endif %}">
-        Execute trade
+        {% translate "Execute trade" %}
       </button>
     {% endif %}
   </div>

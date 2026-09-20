@@ -1,5 +1,5 @@
 {% extends "partials/modal.html" %}
-{% load static %}
+{% load i18n static %}
 
 {% block modal_title %}{{ title }}{% endblock %}
 
@@ -30,7 +30,7 @@
     {% endif %}
 
     <fieldset class="mt-5">
-      <legend class="form-label">Choose a roster icon</legend>
+      <legend class="form-label">{% translate "Choose a roster icon" %}</legend>
       <div class="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-5">
         {% for option_value, option_label in icon_choices %}
           <label class="group relative">
@@ -60,8 +60,10 @@
     {% endif %}
 
     <div class="modal-actions">
-      <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">{{ cancel_label|default:"Cancel" }}</button>
-      <button type="submit" class="btn btn-primary" :disabled="!typed.trim() || !icon">{{ submit_label|default:"Save" }}</button>
+      {% translate "Cancel" as default_cancel_label %}
+      {% translate "Save" as default_save_label %}
+      <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">{{ cancel_label|default:default_cancel_label }}</button>
+      <button type="submit" class="btn btn-primary" :disabled="!typed.trim() || !icon">{{ submit_label|default:default_save_label }}</button>
     </div>
   </form>
 {% endblock %}

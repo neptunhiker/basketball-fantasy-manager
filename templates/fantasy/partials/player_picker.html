@@ -1,4 +1,4 @@
-{% load money %}
+{% load i18n money %}
 {# Two elements under the id, not one. The strip below has to stay pinned #}
 {# for the whole length of the market, and `position: sticky` is bounded by #}
 {# its containing block: inside the card it would be clipped by #}
@@ -65,33 +65,33 @@
           hx-indicator="#picker-indicator">
       <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
         <div>
-          <label for="picker-search" class="sr-only">Search by name</label>
+          <label for="picker-search" class="sr-only">{% translate "Search by name" %}</label>
           <input type="search" id="picker-search" name="q" value="{{ filters.q }}"
-                 placeholder="Search by name…"
+                 placeholder="{% translate 'Search by name' %}…"
                  class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
         </div>
         <div>
-          <label for="picker-position" class="sr-only">Position</label>
+          <label for="picker-position" class="sr-only">{% translate "Position" %}</label>
           <select id="picker-position" name="position"
                   class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-            <option value="">All positions</option>
+            <option value="">{% translate "All positions" %}</option>
             {% for value, label in positions %}
               <option value="{{ value }}" {% if filters.position == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </div>
         <div>
-          <label for="picker-team" class="sr-only">Team</label>
+          <label for="picker-team" class="sr-only">{% translate "Team" %}</label>
           <select id="picker-team" name="team"
                   class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-            <option value="">All teams</option>
+            <option value="">{% translate "All teams" %}</option>
             {% for team in teams %}
               <option value="{{ team.abbreviation }}" {% if filters.team == team.abbreviation %}selected{% endif %}>{{ team.name }}</option>
             {% endfor %}
           </select>
         </div>
       </div>
-      <span id="picker-indicator" class="htmx-indicator mt-2 block text-xs text-neutral-500">Searching…</span>
+      <span id="picker-indicator" class="htmx-indicator mt-2 block text-xs text-neutral-500">{% translate "Searching" %}…</span>
     </form>
 
     {% if available %}
@@ -114,7 +114,7 @@
               <a href="{% url 'nba:player-detail' player.slug %}"
                  class="block truncate text-sm font-medium hover:text-primary-600 hover:underline dark:hover:text-primary-400">{{ player.full_name }}</a>
               <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
-                {% if player.team %}{{ player.team.abbreviation }} · {{ player.team.name }}{% else %}Free Agent{% endif %}
+                  {% if player.team %}{{ player.team.abbreviation }} · {{ player.team.name }}{% else %}{% translate "Free Agent" %}{% endif %}
               </span>
             </span>
             <span class="shrink-0 text-sm tabular-nums {% if player.affordable or not signings_open %}font-medium{% else %}text-neutral-400 dark:text-neutral-500{% endif %}"
@@ -124,7 +124,7 @@
 
             {% if transactions_allowed and roster.is_complete %}
               <button type="button" disabled class="btn btn-secondary !px-2.5 !py-1 text-xs opacity-50"
-                      title="The roster is full">Full</button>
+                      title="{% translate 'The roster is full' %}">{% translate "Full" %}</button>
             {% elif transactions_allowed and player.affordable %}
               <button type="button"
                       hx-post="{% url 'fantasy:roster-buy' roster.pk player.pk %}"
@@ -132,12 +132,12 @@
                       hx-swap="outerHTML"
                       hx-include="#picker-filters"
                       class="btn btn-primary !px-2.5 !py-1 text-xs"
-                      aria-label="Sign {{ player.full_name }}">
-                Sign
+                          aria-label="{% translate 'Sign player' %}: {{ player.full_name }}">
+                        {% translate "Sign" %}
               </button>
             {% elif transactions_allowed %}
               <button type="button" disabled class="btn btn-secondary !px-2.5 !py-1 text-xs opacity-50"
-                      title="Not enough cash">Too dear</button>
+                      title="{% translate 'Not enough cash' %}">{% translate "Too dear" %}</button>
             {% elif trading_allowed %}
               {# The picker's whole purpose after the cutoff: this is how you #}
               {# find an incoming player. `?in=` is the same query parameter the #}
@@ -147,12 +147,12 @@
                       hx-target="#modal-root"
                       hx-swap="innerHTML"
                       class="btn btn-secondary !px-2.5 !py-1 text-xs"
-                      aria-label="Trade for {{ player.full_name }}">
-                Trade for
+                          aria-label="{% translate 'Trade for player' %}: {{ player.full_name }}">
+                        {% translate "Trade for" %}
               </button>
             {% else %}
               <button type="button" disabled class="btn btn-secondary !px-2.5 !py-1 text-xs opacity-50"
-                      title="{% if not transactions_allowed %}Transactions are not currently allowed{% else %}Not enough cash{% endif %}">{% if not transactions_allowed %}Closed{% else %}Too dear{% endif %}</button>
+                      title="{% if not transactions_allowed %}{% translate 'Transactions are not currently allowed' %}{% else %}{% translate 'Not enough cash' %}{% endif %}">{% if not transactions_allowed %}{% translate "Closed" %}{% else %}{% translate "Too dear" %}{% endif %}</button>
             {% endif %}
           </li>
         {% endfor %}
@@ -161,14 +161,14 @@
       <div class="px-4 py-16 text-center">
         <p class="text-sm text-neutral-500 dark:text-neutral-400">
           {% if filters.q or filters.position or filters.team %}
-            Nothing matches those filters.
+            {% translate "Nothing matches those filters." %}
           {% else %}
-            No players with a salary on record.
+            {% translate "No players with a salary on record." %}
           {% endif %}
         </p>
         {% if not filters.q and not filters.position and not filters.team %}
           <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-            Salaries come from the snapshots. Without one, a player cannot be signed.
+            {% translate "Salaries come from the snapshots. Without one, a player cannot be signed." %}
           </p>
         {% endif %}
       </div>

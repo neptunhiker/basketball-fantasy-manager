@@ -17,6 +17,7 @@ from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.translation import gettext as _, gettext_lazy as _lazy
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
@@ -105,17 +106,17 @@ class SeasonFormView(AdminRequiredMixin, ModalFormView):
 
 
 class SeasonCreateView(SeasonFormView):
-    title = "New season"
+    title = _lazy("New season")
     body = (
         "A season is the frame everything else sits in: rosters belong to one, "
         "and so does every imported price."
     )
-    submit_label = "Create season"
+    submit_label = _lazy("Create season")
 
 
 class SeasonUpdateView(SeasonFormView):
-    title = "Edit season"
-    submit_label = "Save changes"
+    title = _lazy("Edit season")
+    submit_label = _lazy("Save changes")
 
     def get_object(self):
         if not hasattr(self, "_season"):
@@ -137,8 +138,8 @@ class SeasonDeleteView(AdminRequiredMixin, TypedConfirmView):
       * neither -> a plain confirm. There is nothing to lose but the row.
     """
 
-    title = "Delete this season?"
-    confirm_label = "Delete season"
+    title = _lazy("Delete this season?")
+    confirm_label = _lazy("Delete season")
 
     def get_object(self):
         if not hasattr(self, "_season"):
@@ -309,7 +310,7 @@ class ManagerNamePromptView(PromptView):
     lets someone save the dialog without renaming anything.
     """
 
-    field_label = "Nickname"
+    field_label = _lazy("Nickname")
     field_name = "nick_name"
     placeholder = "e.g. Buzz"
     # `Manager.nick_name` is 40, and a longer value would be truncated by the
@@ -336,9 +337,9 @@ class ManagerNamePromptView(PromptView):
 
 
 class ManagerCreateView(ManagerNamePromptView):
-    title = "New manager profile"
+    title = _lazy("New manager profile")
     body = ""
-    submit_label = "Create profile"
+    submit_label = _lazy("Create profile")
 
     def initial_value(self, obj):
         # Blank on purpose. `default_nickname` suggests a handle from the
@@ -354,8 +355,8 @@ class ManagerCreateView(ManagerNamePromptView):
 class ManagerRenameView(OwnManagerMixin, ManagerNamePromptView):
     """A rename, not a new handle: the rosters underneath do not move."""
 
-    title = "Rename profile"
-    submit_label = "Save"
+    title = _lazy("Rename profile")
+    submit_label = _lazy("Save")
 
     def get_object(self):
         return self.get_manager()
@@ -379,13 +380,13 @@ class ManagerDeleteView(OwnManagerMixin, TypedConfirmView):
     the dialog that is honest about what deleting a roster costs.
     """
 
-    title = "Delete this profile?"
+    title = _lazy("Delete this profile?")
     # No word to type. A profile that may be deleted holds nothing, so typing
     # DELETE would be friction guarding nothing -- and friction that guards
     # nothing teaches people to type it without reading. The word earns its
     # place on the roster dialog, where the loss is real.
     confirm_word = ""
-    confirm_label = "Delete profile"
+    confirm_label = _lazy("Delete profile")
 
     def get_object(self):
         return self.get_manager()
@@ -482,13 +483,13 @@ class RosterCreateView(PromptView):
     `get_choices`. The rules screen comes next either way.
     """
 
-    title = "New roster"
-    field_label = "Roster name"
+    title = _lazy("New roster")
+    field_label = _lazy("Roster name")
     field_name = "name"
     placeholder = "e.g. Bulla Ballers"
     max_length = 80
     help_text = "You can rename it at any time."
-    submit_label = "Create roster"
+    submit_label = _lazy("Create roster")
     choice_name = "manager"
     choice_label = "Manager"
     choice_help = "Which of your profiles plays this roster."
@@ -884,8 +885,8 @@ class RosterSellView(RosterChangeView):
 
 
 class RosterBuyTradeView(OwnRosterMixin, ConfirmView):
-    title = "Buy an available trade?"
-    confirm_label = "Buy Trade ($1.5M)"
+    title = _lazy("Buy an available trade?")
+    confirm_label = _lazy("Buy Trade ($1.5M)")
     tone = "primary"
 
     def get_object(self):
@@ -914,8 +915,8 @@ class RosterBuyTradeView(OwnRosterMixin, ConfirmView):
 
 
 class RosterSellTradeView(OwnRosterMixin, ConfirmView):
-    title = "Sell an available trade?"
-    confirm_label = "Sell Trade (+$1.0M)"
+    title = _lazy("Sell an available trade?")
+    confirm_label = _lazy("Sell Trade (+$1.0M)")
     tone = "primary"
 
     def get_object(self):
@@ -1081,8 +1082,8 @@ class RosterRenameView(OwnRosterMixin, View):
 
 
 class RosterDeleteView(OwnRosterMixin, TypedConfirmView):
-    title = "Delete this roster?"
-    confirm_label = "Delete permanently"
+    title = _lazy("Delete this roster?")
+    confirm_label = _lazy("Delete permanently")
 
     def get_object(self):
         return self.get_roster()

@@ -1,16 +1,15 @@
 {% extends "app.html" %}
-{% load static %}
-{% load money %}
+{% load i18n static money %}
 
-{% block title %}Manager profiles · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Manager profiles{% endblock %}
+{% block title %}{% translate "Manager profiles" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Manager profiles" %}{% endblock %}
 
 {% block header_actions %}
   <button type="button"
           hx-get="{% url 'fantasy:manager-create' %}"
           hx-target="#modal-root"
           hx-swap="innerHTML"
-          class="btn btn-primary hidden sm:inline-flex">New profile</button>
+          class="btn btn-primary hidden sm:inline-flex">{% translate "New profile" %}</button>
 {% endblock %}
 
 {% block content %}
@@ -33,7 +32,7 @@
                     hx-target="#modal-root"
                     hx-swap="innerHTML"
                     class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-                    aria-label="Rename {{ profile.nick_name }}">
+                    aria-label="{% translate 'Rename profile' %}: {{ profile.nick_name }}">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5V20ZM14 6.5 17.5 10"/>
               </svg>
@@ -45,7 +44,7 @@
                     hx-target="#modal-root"
                     hx-swap="innerHTML"
                     class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                    aria-label="Delete {{ profile.nick_name }}">
+                    aria-label="{% translate 'Delete profile' %}: {{ profile.nick_name }}">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/>
               </svg>
@@ -83,15 +82,15 @@
 
                             <dl class="mt-3 grid grid-cols-3 gap-2 text-xs">
                               <div>
-                                <dt class="text-neutral-500 dark:text-neutral-400">Cash</dt>
+                                <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Cash" %}</dt>
                                 <dd class="mt-0.5 font-semibold tabular-nums" title="{{ roster.cash|exact }}">{{ roster.cash|millions }}</dd>
                               </div>
                               <div>
-                                <dt class="text-neutral-500 dark:text-neutral-400">Team value</dt>
+                                <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Team value" %}</dt>
                                 <dd class="mt-0.5 font-semibold tabular-nums" title="{{ roster.squad_value|exact }}">{{ roster.squad_value|millions }}</dd>
                               </div>
                               <div>
-                                <dt class="text-neutral-500 dark:text-neutral-400">Players</dt>
+                                <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Players" %}</dt>
                                 <dd class="mt-0.5 font-semibold tabular-nums">{{ roster.player_count }} / 15</dd>
                               </div>
                             </dl>
@@ -104,7 +103,7 @@
               </div>
             </div>
           {% else %}
-            <p class="border-t border-neutral-200 px-5 py-4 text-xs text-neutral-400 dark:border-neutral-800 dark:text-neutral-500">No rosters yet.</p>
+            <p class="border-t border-neutral-200 px-5 py-4 text-xs text-neutral-400 dark:border-neutral-800 dark:text-neutral-500">{% translate "No rosters yet." %}</p>
           {% endif %}
         {% endwith %}
       </section>
@@ -113,16 +112,15 @@
 
 {% else %}
   <div class="card px-6 py-16 text-center">
-    <p class="text-sm font-medium">No profiles yet.</p>
+    <p class="text-sm font-medium">{% translate "No profiles yet." %}</p>
     <p class="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
-      A profile is a handle to play under. Your first one appears on its own
-      with your first roster — or make it here.
+      {% translate "A profile is a handle to play under. Your first one appears on its own with your first roster — or make it here." %}
     </p>
     <button type="button"
             hx-get="{% url 'fantasy:manager-create' %}"
             hx-target="#modal-root"
             hx-swap="innerHTML"
-            class="btn btn-primary mt-6">Create a profile</button>
+            class="btn btn-primary mt-6">{% translate "Create a profile" %}</button>
   </div>
 {% endif %}
 {% endblock %}

@@ -1,9 +1,8 @@
 {% extends "app.html" %}
-{% load static %}
-{% load money %}
+{% load i18n static money %}
 
-{% block title %}Rosters · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Rosters{% endblock %}
+{% block title %}{% translate "Rosters" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Rosters" %}{% endblock %}
 
 {% block header_actions %}
   {# Gone once signings close. A roster started then would open at 0 of 15 and #}
@@ -15,7 +14,7 @@
             hx-get="{% url 'fantasy:roster-create' %}"
             hx-target="#modal-root"
             hx-swap="innerHTML"
-            class="btn btn-primary">Create roster</button>
+            class="btn btn-primary">{% translate "Create roster" %}</button>
   {% endif %}
 {% endblock %}
 
@@ -42,9 +41,9 @@
           </a>
           <div class="flex shrink-0 items-center gap-1.5">
             {% if roster.is_complete %}
-              <span class="badge badge-success">Complete</span>
+              <span class="badge badge-success">{% translate "Complete" %}</span>
             {% elif roster.season.transactions_allowed %}
-              <span class="badge badge-pending">Building</span>
+              <span class="badge badge-pending">{% translate "Building" %}</span>
             {% else %}
               {# Not "Building": there is nothing left to build with. #}
               <span class="badge badge-warning"
@@ -55,7 +54,7 @@
                     hx-target="#modal-root"
                     hx-swap="innerHTML"
                     class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                    aria-label="Delete {{ roster.name }}">
+                    aria-label="{% translate 'Delete roster' %}: {{ roster.name }}">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/>
               </svg>
@@ -66,11 +65,11 @@
         <a href="{% url 'fantasy:roster-build' roster.pk %}" class="mt-4 block">
           <dl class="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt class="text-xs text-neutral-500 dark:text-neutral-400">Players</dt>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Players" %}</dt>
               <dd class="font-medium tabular-nums">{{ roster.player_count }} / 15</dd>
             </div>
             <div>
-              <dt class="text-xs text-neutral-500 dark:text-neutral-400">Cash</dt>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Cash" %}</dt>
               <dd class="font-medium tabular-nums" title="{{ roster.cash|exact }}">{{ roster.cash|millions }}</dd>
             </div>
           </dl>
@@ -84,15 +83,15 @@
           <p class="mt-3 border-t border-neutral-200 pt-3 text-xs dark:border-neutral-800
             {% if roster.season.signings_open %}text-neutral-500 dark:text-neutral-400{% else %}text-amber-700 dark:text-amber-300{% endif %}">
             {% if roster.season.transactions_allowed %}
-              Signings close {{ roster.season.signings_close_at|date:"j F" }} at {{ roster.season.signings_close_at|date:"H:i" }}
+              {% translate "Signings close" %} {{ roster.season.signings_close_at|date:"j F" }} {% translate "at" %} {{ roster.season.signings_close_at|date:"H:i" }}
             {% elif roster.season.signings_open_at and not roster.season.trading_allowed %}
-              Signings open {{ roster.season.signings_open_at|date:"j F" }} at {{ roster.season.signings_open_at|date:"H:i" }}
+              {% translate "Signings open" %} {{ roster.season.signings_open_at|date:"j F" }} {% translate "at" %} {{ roster.season.signings_open_at|date:"H:i" }}
             {% elif roster.season.trading_allowed %}
-              Signings closed — trades only
+              {% translate "Signings closed — trades only" %}
             {% elif roster.season.timing == "FINISHED" %}
-              Season closed — no roster changes
+              {% translate "Season closed — no roster changes" %}
             {% else %}
-              No roster changes until the season starts
+              {% translate "No roster changes until the season starts" %}
             {% endif %}
           </p>
         {% endif %}
@@ -101,28 +100,27 @@
   </div>
 {% else %}
   <div class="card px-6 py-16 text-center">
-    <p class="text-sm font-medium">No rosters yet.</p>
+    <p class="text-sm font-medium">{% translate "No rosters yet." %}</p>
     <p class="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
-      Put 15 players together inside the budget and compare who is worth what they cost.
+      {% translate "Put 15 players together inside the budget and compare who is worth what they cost." %}
     </p>
     {% if current_season and current_season.transactions_allowed %}
       <button type="button"
               hx-get="{% url 'fantasy:roster-create' %}"
               hx-target="#modal-root"
               hx-swap="innerHTML"
-              class="btn btn-primary mt-6">Create your first roster</button>
+              class="btn btn-primary mt-6">{% translate "Create your first roster" %}</button>
     {% elif current_season and current_season.signings_open_at and not current_season.transactions_allowed %}
       <p class="mt-6 text-xs text-amber-700 dark:text-amber-300">
-        Signings open on {{ current_season.signings_open_at|date:"j F" }} at
-        {{ current_season.signings_open_at|date:"H:i" }}.
+        {% translate "Signings open on" %} {{ current_season.signings_open_at|date:"j F" }} {% translate "at" %} {{ current_season.signings_open_at|date:"H:i" }}.
       </p>
     {% elif current_season %}
       <p class="mt-6 text-xs text-amber-700 dark:text-amber-300">
-        No new roster can be created in the current phase.
+        {% translate "No new roster can be created in the current phase." %}
       </p>
     {% else %}
       <p class="mt-6 text-xs text-neutral-400 dark:text-neutral-500">
-        That needs a season marked current first.
+        {% translate "That needs a season marked current first." %}
       </p>
     {% endif %}
   </div>

@@ -6,6 +6,7 @@ else is either played into existence -- rosters, transactions -- or imported.
 
 from django import forms
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.forms import StyledFormMixin
 
@@ -30,10 +31,9 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
     # illegal intermediate state never exists to be validated.
     is_current = forms.BooleanField(
         required=False,
-        label="The season the app works with",
+        label=_("The season the app works with"),
         help_text=(
-            "Only one season can hold this. Ticking it here takes it off "
-            "whichever season has it now."
+            _("Only one season can hold this. Ticking it here takes it off whichever season has it now.")
         ),
     )
 
@@ -60,7 +60,7 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
             ),
         }
         help_texts = {
-            "label": "How the season is written in the official game, e.g. 2026-27.",
+            "label": _("How the season is written in the official game, e.g. 2026-27."),
         }
 
     def __init__(self, *args, **kwargs):
@@ -79,10 +79,10 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
         cleaned = super().clean()
         starts_on, ends_on = cleaned.get("starts_on"), cleaned.get("ends_on")
         if starts_on and ends_on and ends_on <= starts_on:
-            self.add_error("ends_on", "A season has to end after it starts.")
+            self.add_error("ends_on", _("A season has to end after it starts."))
         open_at, close_at = cleaned.get("signings_open_at"), cleaned.get("signings_close_at")
         if open_at and close_at and open_at >= close_at:
-            self.add_error("signings_close_at", "Signings must close after they open.")
+            self.add_error("signings_close_at", _("Signings must close after they open."))
         return cleaned
 
     @transaction.atomic

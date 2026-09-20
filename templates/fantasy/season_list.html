@@ -1,7 +1,8 @@
 {% extends "app.html" %}
+{% load i18n %}
 
-{% block title %}Seasons · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Seasons{% endblock %}
+{% block title %}{% translate "Seasons" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Seasons" %}{% endblock %}
 
 {% block header_actions %}
   {# Admin only. `SeasonCreateView` checks again -- this decides whether to #}
@@ -11,7 +12,7 @@
             hx-get="{% url 'fantasy:season-create' %}"
             hx-target="#modal-root"
             hx-swap="innerHTML"
-            class="btn btn-primary hidden sm:inline-flex">New season</button>
+            class="btn btn-primary hidden sm:inline-flex">{% translate "New season" %}</button>
   {% endif %}
 {% endblock %}
 
@@ -22,12 +23,12 @@
       <table class="w-full text-left text-sm">
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
           <tr>
-            <th scope="col" class="px-4 py-3 font-medium">Season</th>
-            <th scope="col" class="px-4 py-3 font-medium">Dates</th>
-            <th scope="col" class="px-4 py-3 font-medium">State</th>
-            <th scope="col" class="px-4 py-3 font-medium">Signings</th>
-            <th scope="col" class="px-4 py-3 text-right font-medium">Rosters</th>
-            <th scope="col" class="px-4 py-3 text-right font-medium">Snapshots</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "Season" %}</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "Dates" %}</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "State" %}</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "Signings" %}</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Rosters" %}</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Snapshots" %}</th>
             {% if can_manage %}
               <th scope="col" class="px-4 py-3 text-right font-medium">
                 <span class="sr-only">Actions</span>
@@ -42,7 +43,7 @@
                 <div class="flex items-center gap-2">
                   <span class="font-medium">{{ season.label }}</span>
                   {% if season.is_current %}
-                    <span class="badge badge-success">Current</span>
+                    <span class="badge badge-success">{% translate "Current" %}</span>
                   {% endif %}
                 </div>
               </td>
@@ -62,14 +63,14 @@
                 {# The cutoff, and whether it has passed. A bare timestamp does #}
                 {# not answer the question the column is read for. #}
                 {% if not season.signings_close_at %}
-                  <span class="text-neutral-400 dark:text-neutral-500">Open all season</span>
+                  <span class="text-neutral-400 dark:text-neutral-500">{% translate "Open all season" %}</span>
                 {% elif season.signings_open %}
                   <span class="text-neutral-600 dark:text-neutral-400">
-                    Closes {{ season.signings_close_at|date:"M j, H:i" }}
+                    {% blocktranslate with date=season.signings_close_at|date:"M j, H:i" %}Closes {{ date }}{% endblocktranslate %}
                   </span>
                 {% else %}
                   <span class="text-amber-700 dark:text-amber-300">
-                    Closed {{ season.signings_close_at|date:"M j, H:i" }}
+                    {% blocktranslate with date=season.signings_close_at|date:"M j, H:i" %}Closed {{ date }}{% endblocktranslate %}
                   </span>
                 {% endif %}
               </td>
@@ -87,7 +88,7 @@
                             hx-target="#modal-root"
                             hx-swap="innerHTML"
                             class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-                            aria-label="Edit {{ season.label }}">
+                            aria-label="{% translate 'Edit season' %}: {{ season.label }}">
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5V20ZM14 6.5 17.5 10"/>
                       </svg>
@@ -100,7 +101,7 @@
                             hx-target="#modal-root"
                             hx-swap="innerHTML"
                             class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                            aria-label="Delete {{ season.label }}">
+                            aria-label="{% translate 'Delete season' %}: {{ season.label }}">
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/>
                       </svg>
@@ -115,24 +116,22 @@
     </div>
 
     <p class="border-t border-neutral-200 px-4 py-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-      <strong class="font-medium">Current</strong> is the season the app works with.
-      <strong class="font-medium">State</strong> says whether it has actually tipped off — the two
-      can differ for weeks before a season starts.
-      <strong class="font-medium">Signings</strong> is the moment buying and selling stop; trades
-      stay open all season either way.
+      <strong class="font-medium">{% translate "Current" %}</strong> {% translate "is the season the app works with." %}
+      <strong class="font-medium">{% translate "State" %}</strong> {% translate "says whether it has actually tipped off — the two can differ for weeks before a season starts." %}
+      <strong class="font-medium">{% translate "Signings" %}</strong> {% translate "is the moment buying and selling stop; trades stay open all season either way." %}
     </p>
   {% else %}
     <div class="px-4 py-16 text-center">
-      <p class="text-sm text-neutral-500 dark:text-neutral-400">No seasons yet.</p>
+      <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "No seasons yet." %}</p>
       <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-        Without a season there is nothing to build a roster in and nothing to import into.
+        {% translate "Without a season there is nothing to build a roster in and nothing to import into." %}
       </p>
       {% if can_manage %}
         <button type="button"
                 hx-get="{% url 'fantasy:season-create' %}"
                 hx-target="#modal-root"
                 hx-swap="innerHTML"
-                class="btn btn-primary mt-6">Create the first season</button>
+                class="btn btn-primary mt-6">{% translate "Create the first season" %}</button>
       {% endif %}
     </div>
   {% endif %}

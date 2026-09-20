@@ -65,6 +65,17 @@ def test_season_list_requires_login(client, db):
     assert reverse("accounts:login") in response.url
 
 
+def test_season_list_uses_the_saved_language(signed_in, seasons, user):
+    user.language = "de"
+    user.save(update_fields=["language"])
+
+    body = signed_in.get(reverse("fantasy:season-list")).content.decode()
+
+    assert "Neue Saison" in body
+    assert "Saison" in body
+    assert "Aktuell" in body
+
+
 def test_season_list_shows_every_season_newest_first(signed_in, seasons):
     response = signed_in.get(reverse("fantasy:season-list"))
     assert response.status_code == 200

@@ -15,6 +15,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from .models import (
     ROSTER_SIZE,
@@ -60,11 +61,11 @@ def _require_transactions(season):
             f"Signings open on {opened.strftime('%-d %B at %H:%M')}."
         )
     if season.signings_close_at is None:
-        raise ValidationError("Buying and releasing are not currently allowed.")
+        raise ValidationError(_("Buying and releasing are not currently allowed."))
     closed = timezone.localtime(season.signings_close_at)
-    raise ValidationError(
-        f"Signings closed on {closed.strftime('%-d %B at %H:%M')}. Trades only from here."
-    )
+    raise ValidationError(_("Signings closed on %(date)s. Trades only from here.") % {
+        "date": closed.strftime("%-d %B at %H:%M"),
+    })
 
 
 @transaction.atomic
@@ -79,7 +80,7 @@ def buy(roster, player, price, occurred_at=None, note=""):
     _require_transactions(locked.season)
 
     if price < 0:
-        raise ValidationError("A purchase price cannot be negative.")
+        raise ValidationError(_("A purchase price cannot be negative."))
     if price > locked.cash:
         raise ValidationError(
             f"Not enough cash: {locked.cash:,.0f} available, {price:,.0f} needed."
@@ -114,7 +115,7 @@ def sell(roster, player, price, occurred_at=None, note=""):
     _require_transactions(locked.season)
 
     if price < 0:
-        raise ValidationError("A sale price cannot be negative.")
+        raise ValidationError(_("A sale price cannot be negative."))
     membership = _open_membership(locked, player)
     if membership is None:
         raise ValidationError(f"{player} is not on the roster.")
@@ -150,13 +151,13 @@ def trade(roster, player_out, player_in, price_out, price_in, occurred_at=None, 
     locked = _lock(roster)
 
     if not locked.season.trading_allowed:
-        raise ValidationError("Trades are only allowed while the season is running.")
+        raise ValidationError(_("Trades are only allowed while the season is running."))
 
     if locked.trades_available <= 0:
-        raise ValidationError("No trades available for this roster.")
+        raise ValidationError(_("No trades available for this roster."))
 
     if player_out == player_in:
-        raise ValidationError("The player in and the player out cannot be the same.")
+        raise ValidationError(_("The player in and the player out cannot be the same."))
     membership = _open_membership(locked, player_out)
     if membership is None:
         raise ValidationError(f"{player_out} is not on the roster.")
@@ -199,7 +200,7 @@ def buy_trade(roster, occurred_at=None, note=""):
     locked = _lock(roster)
 
     if not locked.season.trading_allowed:
-        raise ValidationError("Trades are only allowed while the season is live.")
+        raise ValidationError(_("Trades are only allowed while the season is live."))
 
     if locked.cash < TRADE_BUY_PRICE:
         raise ValidationError(
@@ -230,7 +231,7 @@ def sell_trade(roster, occurred_at=None, note=""):
         raise ValidationError("Trades are only allowed while the season is live.")
 
     if locked.trades_available <= 0:
-        raise ValidationError("No trades available to sell.")
+        raise ValidationError(_("No trades available to sell."))
 
     locked.cash += TRADE_SELL_PRICE
     locked.trades_available -= 1

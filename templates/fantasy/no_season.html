@@ -1,14 +1,15 @@
 {% extends "app.html" %}
+{% load i18n %}
 
-{% block title %}No season · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}No season{% endblock %}
+{% block title %}{% translate "No season" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "No season" %}{% endblock %}
 
 {% block content %}
 <div class="card px-6 py-16 text-center">
-  <p class="text-sm font-medium">No season is marked as current.</p>
+  <p class="text-sm font-medium">{% translate "No season is marked as current." %}</p>
   <p class="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
-    A roster always belongs to a season. Create one first and mark it current.
+    {% translate "A roster always belongs to a season. Create one first and mark it current." %}
   </p>
-  <a href="{% url 'fantasy:season-list' %}" class="btn btn-secondary mt-6">Go to seasons</a>
+  <a href="{% url 'fantasy:season-list' %}" class="btn btn-secondary mt-6">{% translate "Go to seasons" %}</a>
 </div>
 {% endblock %}

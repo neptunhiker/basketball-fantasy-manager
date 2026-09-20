@@ -82,6 +82,22 @@ def test_player_list_requires_login(client, db):
     assert response.status_code == 302
 
 
+def test_player_list_uses_the_saved_language_for_full_and_htmx_responses(
+    signed_in, roster, user
+):
+    user.language = "de"
+    user.save(update_fields=["language"])
+
+    full_body = signed_in.get(reverse("nba:player-list")).content.decode()
+    htmx_body = signed_in.get(
+        reverse("nba:player-list"), headers={"hx-request": "true"}
+    ).content.decode()
+
+    assert "Spielersuche" in full_body
+    assert "Alle Positionen" in full_body
+    assert "Punkte pro Spiel und Gehalt" in htmx_body
+
+
 def test_hides_inactive_players_by_default(signed_in, roster):
     assert "Retired Guy" not in names(signed_in.get(reverse("nba:player-list")))
 

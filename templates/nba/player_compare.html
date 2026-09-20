@@ -1,8 +1,8 @@
 {% extends "app.html" %}
-{% load money %}
+{% load i18n money %}
 
-{% block title %}Compare players · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}Compare players{% endblock %}
+{% block title %}{% translate "Compare players" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Compare players" %}{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
@@ -11,10 +11,10 @@
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 class="text-base font-semibold text-neutral-800 dark:text-neutral-100">
-            Selected players
+            {% translate "Selected players" %}
           </h2>
           <p class="text-xs text-neutral-500 dark:text-neutral-400">
-            Compare up to {{ max_compare_players }} players side by side.
+            {% blocktranslate with maximum=max_compare_players %}Compare up to {{ maximum }} players side by side.{% endblocktranslate %}
           </p>
         </div>
 
@@ -25,14 +25,14 @@
 
           {% if not can_add_more %}
             <span class="inline-flex rounded-lg bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
-              Max 5 players
+              {% blocktranslate with maximum=max_compare_players %}Max {{ maximum }} players{% endblocktranslate %}
             </span>
           {% endif %}
 
           {% if selected_players %}
             <a href="{% url 'nba:player-compare' %}"
                class="btn btn-ghost !px-2.5 !py-1.5 text-xs text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
-              Clear all
+              {% translate "Clear all" %}
             </a>
           {% endif %}
         </div>
@@ -89,20 +89,20 @@
           <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
             <tr>
               <th scope="col" class="w-12 px-4 py-3 text-center font-medium">
-                <span class="sr-only">Watchlist</span>
+                <span class="sr-only">{% translate "Watchlist" %}</span>
               </th>
-              <th scope="col" class="px-4 py-3 font-medium">Player</th>
-              <th scope="col" class="px-4 py-3 text-center font-medium">Position</th>
-              <th scope="col" class="px-4 py-3 font-medium">Team</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Actual salary</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Expected salary</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Difference</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Points</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Avg/game</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Games</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Hotness</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Injury</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Status</th>
+              <th scope="col" class="px-4 py-3 font-medium">{% translate "Player" %}</th>
+              <th scope="col" class="px-4 py-3 text-center font-medium">{% translate "Position" %}</th>
+              <th scope="col" class="px-4 py-3 font-medium">{% translate "Team" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Actual salary" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Expected salary" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Difference" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Points" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Avg/game" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Games" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Hotness" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Injury" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Status" %}</th>
               <th scope="col" class="w-12 px-4 py-3 text-center font-medium">
                 <span class="sr-only">Remove</span>
               </th>
@@ -132,7 +132,7 @@
                         <span class="font-medium text-neutral-500 dark:text-neutral-400">{{ player.team.abbreviation }}</span>
                       </a>
                     {% else %}
-                      <span class="text-neutral-400 dark:text-neutral-500">Free Agent</span>
+                      <span class="text-neutral-400 dark:text-neutral-500">{% translate "Free Agent" %}</span>
                     {% endif %}
                   </td>
                   <td class="px-4 py-3 text-right tabular-nums" title="{{ player.current_salary|exact }}">
@@ -161,9 +161,9 @@
                   </td>
                   <td class="px-4 py-3 text-right">
                     {% if player.is_active %}
-                      <span class="badge badge-success">Active</span>
+                      <span class="badge badge-success">{% translate "Active" %}</span>
                     {% else %}
-                      <span class="badge badge-neutral">Inactive</span>
+                      <span class="badge badge-neutral">{% translate "Inactive" %}</span>
                     {% endif %}
                   </td>
                   <td class="px-4 py-3 text-center">
@@ -191,10 +191,10 @@
         </svg>
       </div>
       <h3 class="text-base font-semibold text-neutral-800 dark:text-neutral-100">
-        No players selected yet
+        {% translate "No players selected yet" %}
       </h3>
       <p class="mx-auto mt-1.5 max-w-sm text-sm text-neutral-500 dark:text-neutral-400">
-        Add up to 5 players to compare their salaries, recent fantasy trends, and roster fit side by side.
+        {% translate "Add up to 5 players to compare their salaries, recent fantasy trends, and roster fit side by side." %}
       </p>
       <div class="mt-6">
         <button type="button"
@@ -205,7 +205,7 @@
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
-          Add player
+          {% translate "Add player" %}
         </button>
       </div>
     </div>

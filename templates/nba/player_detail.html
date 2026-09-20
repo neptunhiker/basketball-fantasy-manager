@@ -1,10 +1,11 @@
 {% extends "app.html" %}
-{% load money %}
+{% load i18n money %}
 
 {% block title %}{{ player.full_name }} · {{ SITE_NAME }}{% endblock %}
 {% block page_title %}{{ player.full_name }}{% endblock %}
 
 {% block content %}
+{% blocktranslate with name=player.full_name asvar fp_chart_label %}Points per game for {{ name }}{% endblocktranslate %}
 <div class="space-y-6">
 
   <div class="card overflow-hidden">
@@ -28,9 +29,9 @@
             <a href="{% url 'nba:team-detail' player.team.abbreviation|lower %}"
                class="hover:text-primary-600 hover:underline dark:hover:text-primary-400">{{ player.team.name }}</a>
           {% else %}
-            · <span class="text-neutral-400 dark:text-neutral-500">Free Agent</span>
+            · <span class="text-neutral-400 dark:text-neutral-500">{% translate "Free Agent" %}</span>
           {% endif %}
-          {% if not player.is_active %}<span class="badge badge-neutral ml-1">Inactive</span>{% endif %}
+          {% if not player.is_active %}<span class="badge badge-neutral ml-1">{% translate "Inactive" %}</span>{% endif %}
         </p>
       </div>
       <div class="flex shrink-0 items-center gap-2">
@@ -38,8 +39,8 @@
           <button type="button" @click="open = true"
                   class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition
                     {% if is_injured %}border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/20{% else %}border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20{% endif %}"
-                  aria-label="{% if is_injured %}Injured{% else %}Healthy{% endif %}"
-                  title="{% if is_injured %}Injured{% else %}Healthy{% endif %}"
+                  aria-label="{% if is_injured %}{% translate 'Injured' %}{% else %}{% translate 'Healthy' %}{% endif %}"
+                  title="{% if is_injured %}{% translate 'Injured' %}{% else %}{% translate 'Healthy' %}{% endif %}"
                   aria-haspopup="dialog" aria-expanded="false"
                   :aria-expanded="open.toString()">
             {% if is_injured %}
@@ -59,23 +60,23 @@
             <div x-show="open" x-cloak @keydown.escape.window="open = false"
                  class="fixed inset-0 z-[100] flex items-end justify-center bg-tertiary-900/40 p-4 sm:items-center"
                  style="z-index: 100;"
-              role="button" aria-label="Close injury details"
+              role="button" aria-label="{% translate 'Close injury details' %}"
               @click.self="open = false">
               <div x-show="open" x-transition
                 class="relative max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl dark:bg-neutral-900 sm:p-6"
                 role="dialog" aria-modal="true" aria-labelledby="injury-modal-title">
               <button type="button" @click="open = false"
                       class="absolute right-4 top-4 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                      aria-label="Close injury details">
+                      aria-label="{% translate 'Close injury details' %}">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
                 </svg>
               </button>
-              <h2 id="injury-modal-title" class="pr-8 text-base font-semibold tracking-tight">{{ player.full_name }} Injury Status</h2>
-              <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Latest injury report</p>
+              <h2 id="injury-modal-title" class="pr-8 text-base font-semibold tracking-tight">{{ player.full_name }} {% translate "Injury Status" %}</h2>
+              <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{% translate "Latest injury report" %}</p>
               {% if last_injury_api_call %}
                 <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                  Last API request: <time datetime="{{ last_injury_api_call|date:'c' }}">{{ last_injury_api_call|date:"M j, Y, H:i" }}</time>
+                  {% translate "Last API request:" %} <time datetime="{{ last_injury_api_call|date:'c' }}">{{ last_injury_api_call|date:"M j, Y, H:i" }}</time>
                 </p>
               {% endif %}
               <div class="mt-3 border-b border-neutral-200 pb-3 dark:border-neutral-800">
@@ -84,30 +85,30 @@
               {% if latest_injury %}
                 <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <dt class="text-xs text-neutral-500 dark:text-neutral-400">Status</dt>
+                    <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Status" %}</dt>
                     <dd class="mt-0.5 font-medium">{{ latest_injury.status }}</dd>
                   </div>
                   {% if latest_injury.fantasy_status %}
                     <div>
-                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Fantasy status</dt>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Fantasy status" %}</dt>
                       <dd class="mt-0.5 font-medium">{{ latest_injury.fantasy_status }}{% if latest_injury.fantasy_status_abbreviation %} ({{ latest_injury.fantasy_status_abbreviation }}){% endif %}</dd>
                     </div>
                   {% endif %}
                   {% if latest_injury.injury_status_type %}
                     <div>
-                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Report type</dt>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Report type" %}</dt>
                       <dd class="mt-0.5 font-medium">{{ latest_injury.injury_status_type }}</dd>
                     </div>
                   {% endif %}
                   {% if latest_injury.feed_player_position or latest_injury.feed_player_status %}
                     <div>
-                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Player status</dt>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Player status" %}</dt>
                       <dd class="mt-0.5 font-medium">{% if latest_injury.feed_player_position %}{{ latest_injury.feed_player_position }}{% endif %}{% if latest_injury.feed_player_status %} · {{ latest_injury.feed_player_status }}{% endif %}</dd>
                     </div>
                   {% endif %}
                   {% if latest_injury.injury_type or latest_injury.injury_location or latest_injury.injury_detail or latest_injury.injury_side %}
                     <div class="sm:col-span-2">
-                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Injury</dt>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Injury" %}</dt>
                       <dd class="mt-0.5 font-medium">
                         {{ latest_injury.injury_type }}{% if latest_injury.injury_location %} · {{ latest_injury.injury_location }}{% endif %}{% if latest_injury.injury_detail %} · {{ latest_injury.injury_detail }}{% endif %}{% if latest_injury.injury_side %} · {{ latest_injury.injury_side }}{% endif %}
                       </dd>
@@ -115,23 +116,23 @@
                   {% endif %}
                   {% if latest_injury.return_date %}
                     <div>
-                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Expected return</dt>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Expected return" %}</dt>
                       <dd class="mt-0.5 font-medium">{{ latest_injury.return_date|date:"M j, Y" }}</dd>
                     </div>
                   {% endif %}
                   <div>
-                    <dt class="text-xs text-neutral-500 dark:text-neutral-400">Observed</dt>
+                    <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Observed" %}</dt>
                     <dd class="mt-0.5 font-medium">{{ latest_injury.observed_at|date:"M j, Y, H:i" }}</dd>
                   </div>
                   {% if latest_injury.reported_at %}
                     <div>
-                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Reported</dt>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Reported" %}</dt>
                       <dd class="mt-0.5 font-medium">{{ latest_injury.reported_at|date:"M j, Y, H:i" }}</dd>
                     </div>
                   {% endif %}
                   {% if latest_injury.provider_source_description or latest_injury.headline_source %}
                     <div>
-                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">Source</dt>
+                      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Source" %}</dt>
                       <dd class="mt-0.5 font-medium">{{ latest_injury.headline_source|default:latest_injury.provider_source_description }}</dd>
                     </div>
                   {% endif %}
@@ -144,19 +145,19 @@
                   </div>
                 {% endif %}
               {% else %}
-                <p class="mt-4 text-sm text-neutral-500 dark:text-neutral-400">No injury report has been recorded for this player.</p>
+                <p class="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{% translate "No injury report has been recorded for this player." %}</p>
               {% endif %}
               </div>
             </div>
           </template>
         </div>
-        <a href="{% url 'nba:player-list' %}" class="btn btn-secondary">All players</a>
+        <a href="{% url 'nba:player-list' %}" class="btn btn-secondary">{% translate "All players" %}</a>
       </div>
     </div>
 
     <div class="grid grid-cols-2 gap-px border-t border-neutral-200 bg-neutral-200 sm:grid-cols-6 dark:border-neutral-800 dark:bg-neutral-800">
       <div class="bg-white p-4 dark:bg-neutral-900">
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">Current salary</p>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Current salary" %}</p>
         <p class="mt-1 text-lg font-bold tabular-nums" title="{{ player.current_salary|exact }}">
           {{ player.current_salary|millions }}
         </p>
@@ -169,31 +170,31 @@
         {% endif %}
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">Expected salary</p>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Expected salary" %}</p>
         <p class="mt-1 text-lg font-bold tabular-nums" title="Based on current points per game">
           {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
         </p>
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">Points per game</p>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Points per game" %}</p>
         <p class="mt-1 text-lg font-bold tabular-nums">
           {{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}
         </p>
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">Points total</p>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Points total" %}</p>
         <p class="mt-1 text-lg font-bold tabular-nums">
           {{ player.current_total_fp|floatformat:"2g"|default:"–" }}
         </p>
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">Games</p>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Games" %}</p>
         <p class="mt-1 text-lg font-bold tabular-nums">
           {{ player.current_games_played|default_if_none:"–" }}
         </p>
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">Hotness</p>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Hotness" %}</p>
         <p class="mt-1 text-lg font-bold tabular-nums" title="Increases in fantasy points per game across the latest consecutive snapshots (up to the last 10 comparisons)">
           {{ hotness_score|default:"–" }}
         </p>
@@ -205,9 +206,9 @@
     <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <h2 class="text-sm font-semibold">Private notes</h2>
+          <h2 class="text-sm font-semibold">{% translate "Private notes" %}</h2>
           <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-            Only you can see these notes. They are for your own player context.
+            {% translate "Only you can see these notes. They are for your own player context." %}
           </p>
         </div>
       </div>
@@ -216,7 +217,7 @@
     <div class="space-y-4 p-4 sm:p-5">
       {% if note_form.errors %}
         <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
-          Please fix the note and try again.
+          {% translate "Please fix the note and try again." %}
         </div>
       {% endif %}
 
@@ -226,7 +227,7 @@
         {{ note_form.content }}
         <div class="flex items-center justify-between gap-3">
           <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ note_form.content.help_text }}</p>
-          <button type="submit" class="btn btn-primary">Save note</button>
+          <button type="submit" class="btn btn-primary">{% translate "Save note" %}</button>
         </div>
       </form>
 
@@ -244,30 +245,29 @@
           {% endfor %}
         </div>
       {% else %}
-        <p class="text-sm text-neutral-500 dark:text-neutral-400">No private notes yet. Save one to remember your take on this player.</p>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "No private notes yet. Save one to remember your take on this player." %}</p>
       {% endif %}
     </div>
   </div>
 
   <div class="card overflow-hidden">
     <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-      <h2 class="text-sm font-semibold">Snapshots</h2>
+      <h2 class="text-sm font-semibold">{% translate "Snapshots" %}</h2>
       <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-        One row per read, the newest on top, each with the change from the read below it.
-        The time is shown because the source can be read more than once a day.
+        {% translate "One row per read, the newest on top, each with the change from the read below it. The time is shown because the source can be read more than once a day." %}
       </p>
     </div>
 
     <div class="border-b border-neutral-200 px-4 pb-2 pt-4 dark:border-neutral-800">
       <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-        Points per game across the season
+        {% translate "Points per game across the season" %}
       </h3>
 
       {% if fp_chart %}
-        {% include "nba/partials/line_chart.html" with chart=fp_chart chart_id="fp-per-game" chart_label="Points per game for "|add:player.full_name %}
+        {% include "nba/partials/line_chart.html" with chart=fp_chart chart_id="fp-per-game" chart_label=fp_chart_label %}
       {% else %}
         <p class="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
-          A trend line needs at least two snapshots with games played.
+          {% translate "A trend line needs at least two snapshots with games played." %}
         </p>
       {% endif %}
     </div>
@@ -277,13 +277,13 @@
         <table class="w-full text-left text-sm">
           <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
             <tr>
-              <th scope="col" class="px-4 py-3 font-medium">As of</th>
-              <th scope="col" class="px-4 py-3 font-medium">Team</th>
-              <th scope="col" class="px-4 py-3 font-medium">Pos.</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Salary</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Points</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Avg/game</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">Games</th>
+              <th scope="col" class="px-4 py-3 font-medium">{% translate "As of" %}</th>
+              <th scope="col" class="px-4 py-3 font-medium">{% translate "Team" %}</th>
+              <th scope="col" class="px-4 py-3 font-medium">{% translate "Pos." %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Salary" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Points" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Avg/game" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Games" %}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -328,16 +328,15 @@
         </table>
       </div>
       <div class="border-t border-neutral-200 px-4 py-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-        {{ rows|length }} snapshot{{ rows|length|pluralize }}. Points and games are season
-        totals, so they grow from one snapshot to the next.
+        {% blocktranslate count snapshot_count=rows|length %}{{ snapshot_count }} snapshot. Points and games are season totals, so they grow from one snapshot to the next.{% plural %}{{ snapshot_count }} snapshots. Points and games are season totals, so they grow from one snapshot to the next.{% endblocktranslate %}
       </div>
     {% else %}
       <div class="px-4 py-16 text-center">
         <p class="text-sm text-neutral-500 dark:text-neutral-400">
-          No snapshots on record for {{ player.full_name }} yet.
+          {% blocktranslate with name=player.full_name %}No snapshots on record for {{ name }} yet.{% endblocktranslate %}
         </p>
         <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-          Snapshots come from the basketball.de import, which is not built yet.
+          {% translate "Snapshots come from the basketball.de import, which is not built yet." %}
         </p>
       </div>
     {% endif %}

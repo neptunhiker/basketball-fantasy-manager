@@ -1,4 +1,4 @@
-{% load l10n %}
+{% load i18n l10n %}
 <div x-data="{ selected: null, select(point) { this.selected = point.dataset } }"
   class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] md:items-stretch">
   <div class="min-w-0">
@@ -72,8 +72,8 @@
   <aside class="flex min-h-64 flex-col justify-center border-t border-neutral-200 pt-4 dark:border-neutral-800 md:border-l md:border-t-0 md:pl-4 md:pt-0"
          aria-live="polite">
     <div x-show="!selected" class="text-sm text-neutral-500 dark:text-neutral-400">
-      <p class="font-medium text-neutral-700 dark:text-neutral-200">Player details</p>
-      <p class="mt-1 text-xs leading-5">Hover over a point or focus it to inspect the player.</p>
+      <p class="font-medium text-neutral-700 dark:text-neutral-200">{% translate "Player details" %}</p>
+      <p class="mt-1 text-xs leading-5">{% translate "Hover over a point or focus it to inspect the player." %}</p>
     </div>
     <div x-show="selected" x-cloak>
       <h3 class="mt-1 text-base font-semibold text-neutral-900 dark:text-white">
@@ -83,33 +83,33 @@
       </h3>
       <dl class="mt-4 space-y-3 text-sm">
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400">Points per game</dt>
+          <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Points per game" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white"><span x-text="selected?.ppg"></span></dd>
         </div>
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400">Actual salary</dt>
+          <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Actual salary" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white">$<span x-text="selected?.salary"></span>M</dd>
         </div>
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400">Expected salary</dt>
+          <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Expected salary" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white">$<span x-text="selected?.expectedSalary"></span>M</dd>
         </div>
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400">Difference</dt>
+          <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Difference" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white">$<span x-text="selected?.difference"></span>M</dd>
         </div>
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400">Points</dt>
+          <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Points" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white" x-text="selected?.totalFp || '–'"></dd>
         </div>
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400">Games played</dt>
+          <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Games played" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white" x-text="selected?.gamesPlayed || '–'"></dd>
         </div>
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400" title="Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)">Hotness</dt>
+          <dt class="text-neutral-500 dark:text-neutral-400" title="{% translate 'Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)' %}">{% translate "Hotness" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white"
-              title="Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)"
+              title="{% translate 'Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)' %}"
               x-text="selected?.hotness || '–'"></dd>
         </div>
       </dl>

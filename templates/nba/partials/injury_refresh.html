@@ -1,18 +1,21 @@
+{% load i18n %}
+{% translate "Update injuries" as update_injuries_label %}
+{% translate "The next update can be invoked tomorrow." as next_update_label %}
 <div class="injury-refresh">
   {% if injury_refresh_available %}
     <form hx-post="{% url 'nba:injury-refresh' %}" hx-target="closest .injury-refresh" hx-swap="outerHTML" data-global-loading>
       {% csrf_token %}
       <button type="submit" class="btn btn-secondary !px-3 !py-1.5 text-xs">
-        Update injuries
+        {{ update_injuries_label }}
       </button>
     </form>
   {% else %}
-    <span class="inline-block" title="The next update can be invoked tomorrow.">
+    <span class="inline-block" title="{{ next_update_label }}">
       <button type="button" disabled aria-describedby="injury-refresh-limit" class="cursor-not-allowed rounded-lg border border-neutral-200 bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-500">
-        Update injuries
+        {{ update_injuries_label }}
       </button>
     </span>
-    <span id="injury-refresh-limit" class="sr-only">The next update can be invoked tomorrow.</span>
+    <span id="injury-refresh-limit" class="sr-only">{{ next_update_label }}</span>
   {% endif %}
   {% if injury_refresh_success %}
     <p class="mt-1 text-xs text-emerald-700 dark:text-emerald-300" role="status">{{ injury_refresh_success }}</p>

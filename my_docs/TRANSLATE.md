@@ -206,7 +206,7 @@ use Django's locale-aware date formatting at render time.
 - Date and count formatting is correct for both locales.
 - Existing dashboard tests continue to pass.
 
-## Phase 5: Translate NBA Features
+## Phase 5: Translate NBA Features (Completed)
 
 ### Scope
 
@@ -222,6 +222,13 @@ use Django's locale-aware date formatting at render time.
 - Review chart configuration carefully; strings rendered by JavaScript may need to be passed from translated template context or exposed through a small translation data object.
 - Translate status values only if they are application-owned. Keep external API values unchanged unless they are normalized first.
 - Check HTMX responses independently; partial responses must activate the same language as full-page responses.
+
+The NBA team and player pages, search/filter controls, watchlist controls, injury
+refresh/status partials, comparison modal and results, chart detail panels,
+statistics cards, snapshot tables, and Python-generated injury/statistics copy are
+now tagged and translated. Player names, team names, positions, injury-provider
+values, chart data, and other database/API values remain unchanged. German rendering
+and HTMX/detail regression coverage is included in the NBA test slice.
 
 ### Exit criteria
 

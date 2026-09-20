@@ -20,6 +20,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import formats, timezone
+from django.utils.translation import gettext as _
 from django.views import View
 from django.views.generic import DetailView, ListView
 
@@ -27,8 +28,8 @@ from apps.fantasy import services
 from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
 
 from . import charts, stats
-from .forms import PlayerNoteForm
-from .models import Player, PlayerInjury, PlayerNote, Team
+from .forms import PlayerNoteForm, TeamNoteForm
+from .models import Player, PlayerInjury, PlayerNote, Team, TeamNote
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
 
 
@@ -270,19 +271,19 @@ class InjuryRefreshView(LoginRequiredMixin, View):
             summary = sync_injuries()
         except DailyApiLimitExceeded:
             context = {
-                "injury_refresh_error": "The injury report was already updated today. The next update can be invoked tomorrow."
+                "injury_refresh_error": _("The injury report was already updated today. The next update can be invoked tomorrow.")
             }
         except NbaApiError:
             context = {
-                "injury_refresh_error": "The injury report could not be updated. Please try again tomorrow."
+                "injury_refresh_error": _("The injury report could not be updated. Please try again tomorrow.")
             }
         else:
             context = {
-                "injury_refresh_success": (
-                    "Injury report updated: "
-                    f"{summary['created']} created, {summary['updated']} updated, "
-                    f"{summary['unmatched']} unmatched."
+                "injury_refresh_success": _(
+                    "Injury report updated: %(created)d created, %(updated)d updated, "
+                    "%(unmatched)d unmatched."
                 )
+                % summary
             }
         return render(request, self.template_name, context)
 
@@ -559,6 +560,23 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         # and a hand-typed /teams/LAL/ arrive here.
         return get_object_or_404(Team, abbreviation__iexact=self.kwargs["abbreviation"])
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = TeamNoteForm(request.POST)
+        if form.is_valid():
+            TeamNote.objects.create(
+                user=request.user,
+                team=self.object,
+                content=form.cleaned_data["content"],
+            )
+            return self.get_success_url()
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def get_success_url(self):
+        return HttpResponseRedirect(
+            reverse("nba:team-detail", args=[self.object.abbreviation.lower()])
+        )
+
     def _sort_params(self):
         sort = self.request.GET.get("sort", self.DEFAULT_SORT)
         if sort not in self.SORT_FIELDS:
@@ -570,7 +588,12 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
 
     def _players(self):
         qs = self.object.players.filter(is_active=True).select_related("team").prefetch_related(
-            Prefetch("snapshots", queryset=PlayerSnapshot.objects.order_by("-as_of"))
+            Prefetch("snapshots", queryset=PlayerSnapshot.objects.order_by("-as_of")),
+            Prefetch(
+                "injuries",
+                queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
+                to_attr="injury_history",
+            ),
         )
 
         fantasy_points = F("current_fp_per_game")
@@ -635,37 +658,47 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         salary = stats.summarise(player.current_salary for player in players)
         per_game = stats.summarise(player.current_fp_per_game for player in players)
         points = stats.summarise(player.current_total_fp for player in players)
+        injured_count = sum(1 for player in players if player.is_injured)
 
         context["players"] = players
         context["cards"] = [
             _card(
-                "Salaries",
+            _("Salaries"),
                 "money",
                 [
-                    ("Average", salary["avg"]),
-                    ("Median", salary["median"]),
-                    ("Lowest", salary["min"]),
-                    ("Highest", salary["max"]),
-                    ("Total", salary["total"]),
+                    (_("Average"), salary["avg"]),
+                    (_("Median"), salary["median"]),
+                    (_("Lowest"), salary["min"]),
+                    (_("Highest"), salary["max"]),
+                    (_("Total"), salary["total"]),
                 ],
                 _coverage(salary, len(players)),
             ),
             _card(
-                "Fantasy points",
+                _("Fantasy points"),
                 "points",
                 [
-                    ("Avg per game", per_game["avg"]),
-                    ("Median per game", per_game["median"]),
-                    ("Fewest per game", per_game["min"]),
-                    ("Most per game", per_game["max"]),
-                    ("Points total", points["total"]),
+                    (_("Avg per game"), per_game["avg"]),
+                    (_("Median per game"), per_game["median"]),
+                    (_("Fewest per game"), per_game["min"]),
+                    (_("Most per game"), per_game["max"]),
+                    (_("Points total"), points["total"]),
                     # The team's real rate, which the four per-game rows above
                     # are not: they average players, this divides totals.
-                    ("Team per game", stats.scoring_rate(players)),
+                    (_("Team per game"), stats.scoring_rate(players)),
                 ],
                 _coverage(per_game, len(players)),
             ),
+            _card(
+                _("Player health"),
+                "count",
+                [
+                    (_("Healthy"), len(players) - injured_count),
+                    (_("Injured"), injured_count),
+                ],
+            ),
         ]
+
         context["inactive_count"] = self.object.players.filter(is_active=False).count()
         context["salary_fp_chart"] = charts.scatter_chart(
             (
@@ -690,6 +723,8 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         sort, descending = self._sort_params()
         context["current_sort"] = sort
         context["current_dir"] = "desc" if descending else "asc"
+        context["notes"] = self.object.notes.filter(user=self.request.user).order_by("-created_at")
+        context["note_form"] = kwargs.get("form") or TeamNoteForm()
         return context
 
 

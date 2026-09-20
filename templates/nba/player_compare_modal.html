@@ -1,11 +1,12 @@
 {% extends "partials/modal.html" %}
+{% load i18n %}
 
-{% block modal_title %}Add player to compare{% endblock %}
+{% block modal_title %}{% translate "Add player to compare" %}{% endblock %}
 
 {% block modal_content %}
   <div class="space-y-4">
     <p class="text-sm text-neutral-500 dark:text-neutral-400">
-      Search for an active player to add to the comparison ({{ selected_count }}/{{ max_compare_players }} selected).
+      {% blocktranslate with selected=selected_count maximum=max_compare_players %}Search for an active player to add to the comparison ({{ selected }}/{{ maximum }} selected).{% endblocktranslate %}
     </p>
 
     {% if can_add_more %}
@@ -14,7 +15,7 @@
           <input type="search"
                  name="q"
                  value="{{ search_query }}"
-                 placeholder="Search by player or team name…"
+                 placeholder="{% translate 'Search by player or team name' %}…"
                  data-autofocus
                  hx-get="{% url 'nba:player-compare-modal' %}?body=1{% for slug in selected_slugs %}&amp;player={{ slug }}{% endfor %}"
                  hx-trigger="input changed delay:250ms, search"
@@ -23,7 +24,7 @@
                  hx-indicator="#compare-search-spinner"
                  class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
           <span id="compare-search-spinner" class="htmx-indicator absolute right-3 top-2.5 text-xs text-neutral-400">
-            Searching…
+            {% translate "Searching" %}…
           </span>
         </div>
 
@@ -31,7 +32,7 @@
       </div>
     {% else %}
       <div class="rounded-xl border border-dashed border-amber-300 bg-amber-50/60 p-4 text-center text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-        You have reached the limit of {{ max_compare_players }} players. Remove a player from the comparison first to add another.
+        {% blocktranslate with maximum=max_compare_players %}You have reached the limit of {{ maximum }} players. Remove a player from the comparison first to add another.{% endblocktranslate %}
       </div>
     {% endif %}
   </div>

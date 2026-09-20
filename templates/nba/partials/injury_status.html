@@ -1,9 +1,13 @@
+{% load i18n %}
+{% translate "Injured" as injured_label %}
+{% translate "Healthy" as healthy_label %}
+{% translate "Close injury details" as close_injury_label %}
 <div x-data="{ open: false }" class="inline-block">
   <button type="button" @click="open = true"
           class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition
             {% if player.is_injured %}border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/20{% else %}border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20{% endif %}"
-          aria-label="{% if player.is_injured %}Injured{% else %}Healthy{% endif %}"
-          title="{% if player.is_injured %}Injured{% else %}Healthy{% endif %}"
+          aria-label="{% if player.is_injured %}{{ injured_label }}{% else %}{{ healthy_label }}{% endif %}"
+          title="{% if player.is_injured %}{{ injured_label }}{% else %}{{ healthy_label }}{% endif %}"
           aria-haspopup="dialog" aria-expanded="false"
           :aria-expanded="open.toString()">
     {% if player.is_injured %}
@@ -23,23 +27,23 @@
       <div x-show="open" x-cloak @keydown.escape.window="open = false"
          class="fixed inset-0 z-[100] flex items-end justify-center bg-tertiary-900/40 p-4 sm:items-center"
          style="z-index: 100;"
-        role="button" aria-label="Close injury details"
+        role="button" aria-label="{{ close_injury_label }}"
         @click.self="open = false">
      <div x-show="open" x-transition
        class="relative max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 text-left shadow-xl dark:bg-neutral-900 sm:p-6"
        role="dialog" aria-modal="true" aria-labelledby="injury-modal-title-{{ player.pk }}">
       <button type="button" @click="open = false"
               class="absolute right-4 top-4 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-              aria-label="Close injury details">
+              aria-label="{{ close_injury_label }}">
         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
         </svg>
       </button>
-      <h2 id="injury-modal-title-{{ player.pk }}" class="pr-8 text-base font-semibold tracking-tight">{{ player.full_name }} Injury Status</h2>
-      <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Latest injury report</p>
+      <h2 id="injury-modal-title-{{ player.pk }}" class="pr-8 text-base font-semibold tracking-tight">{{ player.full_name }} {% translate "Injury Status" %}</h2>
+      <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{% translate "Latest injury report" %}</p>
       {% if last_injury_api_call %}
         <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-          Last API request: <time datetime="{{ last_injury_api_call|date:'c' }}">{{ last_injury_api_call|date:"M j, Y, H:i" }}</time>
+          {% translate "Last API request:" %} <time datetime="{{ last_injury_api_call|date:'c' }}">{{ last_injury_api_call|date:"M j, Y, H:i" }}</time>
         </p>
       {% endif %}
       <div class="mt-3 border-b border-neutral-200 pb-3 dark:border-neutral-800">
@@ -49,30 +53,30 @@
         {% if latest_injury %}
           <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
             <div>
-              <dt class="text-xs text-neutral-500 dark:text-neutral-400">Status</dt>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Status" %}</dt>
               <dd class="mt-0.5 font-medium">{{ latest_injury.status }}</dd>
             </div>
             {% if latest_injury.fantasy_status %}
               <div>
-                <dt class="text-xs text-neutral-500 dark:text-neutral-400">Fantasy status</dt>
+                <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Fantasy status" %}</dt>
                 <dd class="mt-0.5 font-medium">{{ latest_injury.fantasy_status }}{% if latest_injury.fantasy_status_abbreviation %} ({{ latest_injury.fantasy_status_abbreviation }}){% endif %}</dd>
               </div>
             {% endif %}
             {% if latest_injury.injury_status_type %}
               <div>
-                <dt class="text-xs text-neutral-500 dark:text-neutral-400">Report type</dt>
+                <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Report type" %}</dt>
                 <dd class="mt-0.5 font-medium">{{ latest_injury.injury_status_type }}</dd>
               </div>
             {% endif %}
             {% if latest_injury.feed_player_position or latest_injury.feed_player_status %}
               <div>
-                <dt class="text-xs text-neutral-500 dark:text-neutral-400">Player status</dt>
+                <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Player status" %}</dt>
                 <dd class="mt-0.5 font-medium">{% if latest_injury.feed_player_position %}{{ latest_injury.feed_player_position }}{% endif %}{% if latest_injury.feed_player_status %} · {{ latest_injury.feed_player_status }}{% endif %}</dd>
               </div>
             {% endif %}
             {% if latest_injury.injury_type or latest_injury.injury_location or latest_injury.injury_detail or latest_injury.injury_side %}
               <div class="sm:col-span-2">
-                <dt class="text-xs text-neutral-500 dark:text-neutral-400">Injury</dt>
+                <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Injury" %}</dt>
                 <dd class="mt-0.5 font-medium">
                   {{ latest_injury.injury_type }}{% if latest_injury.injury_location %} · {{ latest_injury.injury_location }}{% endif %}{% if latest_injury.injury_detail %} · {{ latest_injury.injury_detail }}{% endif %}{% if latest_injury.injury_side %} · {{ latest_injury.injury_side }}{% endif %}
                 </dd>
@@ -80,23 +84,23 @@
             {% endif %}
             {% if latest_injury.return_date %}
               <div>
-                <dt class="text-xs text-neutral-500 dark:text-neutral-400">Expected return</dt>
+                <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Expected return" %}</dt>
                 <dd class="mt-0.5 font-medium">{{ latest_injury.return_date|date:"M j, Y" }}</dd>
               </div>
             {% endif %}
             <div>
-              <dt class="text-xs text-neutral-500 dark:text-neutral-400">Observed</dt>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Observed" %}</dt>
               <dd class="mt-0.5 font-medium">{{ latest_injury.observed_at|date:"M j, Y, H:i" }}</dd>
             </div>
             {% if latest_injury.reported_at %}
               <div>
-                <dt class="text-xs text-neutral-500 dark:text-neutral-400">Reported</dt>
+                <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Reported" %}</dt>
                 <dd class="mt-0.5 font-medium">{{ latest_injury.reported_at|date:"M j, Y, H:i" }}</dd>
               </div>
             {% endif %}
             {% if latest_injury.provider_source_description or latest_injury.headline_source %}
               <div>
-                <dt class="text-xs text-neutral-500 dark:text-neutral-400">Source</dt>
+                <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Source" %}</dt>
                 <dd class="mt-0.5 font-medium">{{ latest_injury.headline_source|default:latest_injury.provider_source_description }}</dd>
               </div>
             {% endif %}
@@ -109,7 +113,7 @@
             </div>
           {% endif %}
         {% else %}
-          <p class="mt-4 text-sm text-neutral-500 dark:text-neutral-400">No injury report has been recorded for this player.</p>
+          <p class="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{% translate "No injury report has been recorded for this player." %}</p>
         {% endif %}
       {% endwith %}
       </div>

@@ -1,8 +1,9 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.forms import StyledFormMixin
 
-from .models import PlayerNote
+from .models import PlayerNote, TeamNote
 
 
 class PlayerNoteForm(StyledFormMixin, forms.ModelForm):
@@ -15,12 +16,32 @@ class PlayerNoteForm(StyledFormMixin, forms.ModelForm):
             "content": forms.Textarea(
                 attrs={
                     "rows": 4,
-                    "placeholder": "Keep a private note about this player's role, minutes, matchup, or trend.",
+                    "placeholder": _("Keep a private note about this player's role, minutes, matchup, or trend."),
                 }
             )
         }
-        labels = {"content": "Private note"}
+        labels = {"content": _("Private note")}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["content"].help_text = "Only you can see this note."
+        self.fields["content"].help_text = _("Only you can see this note.")
+
+class TeamNoteForm(StyledFormMixin, forms.ModelForm):
+    """Private note a user keeps on a given team."""
+
+    class Meta:
+        model = TeamNote
+        fields = ["content"]
+        widgets = {
+            "content": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "placeholder": _("Keep a private note about this team's rotation, matchups, or trends."),
+                }
+            )
+        }
+        labels = {"content": _("Private note")}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["content"].help_text = _("Only you can see this note.")

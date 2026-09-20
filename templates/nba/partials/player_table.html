@@ -1,17 +1,31 @@
-{% load money %}
+{% load i18n money %}
+{% translate "Player" as player_label %}
+{% translate "Position" as position_label %}
+{% translate "Team" as team_label %}
+{% translate "Actual salary" as actual_salary_label %}
+{% translate "Expected salary" as expected_salary_label %}
+{% translate "Difference" as difference_label %}
+{% translate "Points" as points_label %}
+{% translate "Avg/game" as avg_game_label %}
+{% translate "Games" as games_label %}
+{% translate "Hotness" as hotness_label %}
+{% translate "Watchlist" as watchlist_label %}
+{% translate "Salary compared with points per game" as salary_chart_label %}
+{% translate "Points per game" as points_per_game_label %}
+{% translate "Salary ($ millions)" as salary_axis_label %}
 <div id="player-table">
   <div class="border-b border-neutral-200 px-4 pb-4 pt-5 dark:border-neutral-800">
     <div class="mb-2">
-      <h2 class="text-sm font-semibold">Points per game and salary</h2>
+      <h2 class="text-sm font-semibold">{% translate "Points per game and salary" %}</h2>
       <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-        Players with both figures recorded are shown.
+        {% translate "Players with both figures recorded are shown." %}
       </p>
     </div>
     {% if salary_fp_chart %}
-      {% include "nba/partials/scatter_chart.html" with chart=salary_fp_chart chart_id="salary-fp" chart_label="Salary compared with points per game" x_axis_label="Points per game" y_axis_label="Salary ($ millions)" %}
+      {% include "nba/partials/scatter_chart.html" with chart=salary_fp_chart chart_id="salary-fp" chart_label=salary_chart_label x_axis_label=points_per_game_label y_axis_label=salary_axis_label %}
     {% else %}
       <p class="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
-        The comparison appears when players have points per game and salary recorded.
+        {% translate "The comparison appears when players have points per game and salary recorded." %}
       </p>
     {% endif %}
   </div>
@@ -22,40 +36,40 @@
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
           <tr>
             <th scope="col" class="w-12 px-4 py-3 text-center font-medium">
-              <span class="sr-only">Watchlist</span>
+              <span class="sr-only">{{ watchlist_label }}</span>
             </th>
             <th scope="col" class="px-4 py-3 font-medium">
-              {% include "nba/partials/sort_header.html" with key="name" label="Player" %}
+              {% include "nba/partials/sort_header.html" with key="name" label=player_label %}
             </th>
             <th scope="col" class="px-4 py-3 text-center font-medium">
-              {% include "nba/partials/sort_header.html" with key="position" label="Position" %}
+              {% include "nba/partials/sort_header.html" with key="position" label=position_label %}
             </th>
             <th scope="col" class="px-4 py-3 font-medium">
-              {% include "nba/partials/sort_header.html" with key="team" label="Team" %}
+              {% include "nba/partials/sort_header.html" with key="team" label=team_label %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
-              {% include "nba/partials/sort_header.html" with key="salary" label="Actual salary" align="right" %}
+              {% include "nba/partials/sort_header.html" with key="salary" label=actual_salary_label align="right" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
-              {% include "nba/partials/sort_header.html" with key="expected" label="Expected salary" align="right" %}
+              {% include "nba/partials/sort_header.html" with key="expected" label=expected_salary_label align="right" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
-              {% include "nba/partials/sort_header.html" with key="difference" label="Difference" align="right" %}
+              {% include "nba/partials/sort_header.html" with key="difference" label=difference_label align="right" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
-              {% include "nba/partials/sort_header.html" with key="points" label="Points" align="right" %}
+              {% include "nba/partials/sort_header.html" with key="points" label=points_label align="right" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
-              {% include "nba/partials/sort_header.html" with key="avg" label="Avg/game" align="right" %}
+              {% include "nba/partials/sort_header.html" with key="avg" label=avg_game_label align="right" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
-              {% include "nba/partials/sort_header.html" with key="games" label="Games" align="right" %}
+              {% include "nba/partials/sort_header.html" with key="games" label=games_label align="right" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
-              {% include "nba/partials/sort_header.html" with key="hotness" label="Hotness" align="right" %}
+              {% include "nba/partials/sort_header.html" with key="hotness" label=hotness_label align="right" %}
             </th>
-            <th scope="col" class="px-4 py-3 text-right font-medium">Injury</th>
-            <th scope="col" class="px-4 py-3 text-right font-medium">Status</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Injury" %}</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Status" %}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -81,16 +95,16 @@
                     <span class="font-medium text-neutral-500 dark:text-neutral-400">{{ player.team.abbreviation }}</span>
                   </a>
                 {% else %}
-                  <span class="text-neutral-400 dark:text-neutral-500">Free Agent</span>
+                  <span class="text-neutral-400 dark:text-neutral-500">{% translate "Free Agent" %}</span>
                 {% endif %}
               </td>
               <td class="px-4 py-3 text-right tabular-nums" title="{{ player.current_salary|exact }}">
                 {{ player.current_salary|millions }}
               </td>
-              <td class="px-4 py-3 text-right tabular-nums" title="Based on current points per game">
+              <td class="px-4 py-3 text-right tabular-nums" title="{% translate 'Based on current points per game' %}">
                 {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
               </td>
-              <td class="px-4 py-3 text-right tabular-nums" title="Expected salary minus actual salary">
+              <td class="px-4 py-3 text-right tabular-nums" title="{% translate 'Expected salary minus actual salary' %}">
                 {{ player.salary_difference_amount|millions }}
               </td>
               <td class="px-4 py-3 text-right tabular-nums">
@@ -102,7 +116,7 @@
               <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_games_played|default_if_none:"–" }}
               </td>
-              <td class="px-4 py-3 text-right tabular-nums" title="Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)">
+              <td class="px-4 py-3 text-right tabular-nums" title="{% translate 'Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)' %}">
                 {{ player.hotness_score|default:"–" }}
               </td>
               <td class="px-4 py-3 text-right">
@@ -110,9 +124,9 @@
               </td>
               <td class="px-4 py-3 text-right">
                 {% if player.is_active %}
-                  <span class="badge badge-success">Active</span>
+                  <span class="badge badge-success">{% translate "Active" %}</span>
                 {% else %}
-                  <span class="badge badge-neutral">Inactive</span>
+                  <span class="badge badge-neutral">{% translate "Inactive" %}</span>
                 {% endif %}
               </td>
             </tr>
@@ -124,35 +138,35 @@
     {% if is_paginated %}
       <div class="flex items-center justify-between border-t border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">
         <span class="text-neutral-500 dark:text-neutral-400">
-          {{ page_obj.paginator.count }} players · page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          {% blocktranslate with count=page_obj.paginator.count page=page_obj.number pages=page_obj.paginator.num_pages %}{{ count }} players · page {{ page }} of {{ pages }}{% endblocktranslate %}
         </span>
         <div class="flex gap-2">
           {% if page_obj.has_previous %}
             <a href="{% querystring page=page_obj.previous_page_number %}"
-               class="btn btn-secondary !px-3 !py-1.5 text-xs">Previous</a>
+               class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Previous" %}</a>
           {% endif %}
           {% if page_obj.has_next %}
             <a href="{% querystring page=page_obj.next_page_number %}"
-               class="btn btn-secondary !px-3 !py-1.5 text-xs">Next</a>
+               class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Next" %}</a>
           {% endif %}
         </div>
       </div>
     {% else %}
       <div class="border-t border-neutral-200 px-4 py-3 text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-        {{ players|length }} players
+        {% blocktranslate count player_count=players|length %}{{ player_count }} player{% plural %}{{ player_count }} players{% endblocktranslate %}
       </div>
     {% endif %}
   {% else %}
     <div class="px-4 py-16 text-center">
       {% if watchlist_page %}
-        <p class="text-sm text-neutral-500 dark:text-neutral-400">Your watchlist is empty.</p>
-        <a href="{% url 'nba:player-list' %}" class="btn btn-primary mt-6">Browse players</a>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "Your watchlist is empty." %}</p>
+        <a href="{% url 'nba:player-list' %}" class="btn btn-primary mt-6">{% translate "Browse players" %}</a>
       {% elif request.GET.q or request.GET.position or request.GET.team or request.GET.injury_status or request.GET.roster or request.GET.max_salary or request.GET.min_games or request.GET.watchlist %}
-        <p class="text-sm text-neutral-500 dark:text-neutral-400">Nothing matches those filters.</p>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "Nothing matches those filters." %}</p>
       {% else %}
-        <p class="text-sm text-neutral-500 dark:text-neutral-400">No players yet.</p>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "No players yet." %}</p>
         <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-          Players come from the basketball.de import, which is not built yet.
+          {% translate "Players come from the basketball.de import, which is not built yet." %}
         </p>
       {% endif %}
     </div>

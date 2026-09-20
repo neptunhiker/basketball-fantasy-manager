@@ -1,15 +1,16 @@
 {% extends "app.html" %}
+{% load i18n %}
 
-{% block title %}{% if watchlist_page %}Watchlist{% else %}Players{% endif %} · {{ SITE_NAME }}{% endblock %}
-{% block page_title %}{% if watchlist_page %}Watchlist{% else %}Players{% endif %}{% endblock %}
+{% block title %}{% if watchlist_page %}{% translate "Watchlist" %}{% else %}{% translate "Players" %}{% endif %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% if watchlist_page %}{% translate "Watchlist" %}{% else %}{% translate "Players" %}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="card overflow-hidden">
   <div class="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
     <div>
-      <h2 class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Player search</h2>
+      <h2 class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{% translate "Player search" %}</h2>
     </div>
-    <a href="{% url 'nba:player-compare' %}" class="btn btn-secondary !px-3 !py-1.5 text-xs">Compare players</a>
+    <a href="{% url 'nba:player-compare' %}" class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Compare players" %}</a>
   </div>
   <form class="border-b border-neutral-200 p-4 dark:border-neutral-800"
         hx-get="{% url 'nba:player-list' %}"
@@ -21,17 +22,17 @@
 
     <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto_auto]">
       <div>
-        <label for="player-search" class="sr-only">Search by name</label>
+        <label for="player-search" class="sr-only">{% translate "Search by name" %}</label>
         <input type="search" id="player-search" name="q" value="{{ request.GET.q|default:'' }}"
-               placeholder="Search by name…"
+               placeholder="{% translate 'Search by name' %}…"
                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
       </div>
 
       <div>
-        <label for="player-position" class="sr-only">Position</label>
+        <label for="player-position" class="sr-only">{% translate "Position" %}</label>
         <select id="player-position" name="position"
                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-          <option value="">All positions</option>
+          <option value="">{% translate "All positions" %}</option>
           {% for value, label in positions %}
             <option value="{{ value }}" {% if request.GET.position == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
@@ -39,10 +40,10 @@
       </div>
 
       <div>
-        <label for="player-team" class="sr-only">Team</label>
+        <label for="player-team" class="sr-only">{% translate "Team" %}</label>
         <select id="player-team" name="team"
                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-          <option value="">All teams</option>
+          <option value="">{% translate "All teams" %}</option>
           {% for team in teams %}
             <option value="{{ team.abbreviation }}" {% if request.GET.team == team.abbreviation %}selected{% endif %}>{{ team.name }}</option>
           {% endfor %}
@@ -50,20 +51,20 @@
       </div>
 
       <div>
-        <label for="player-injury-status" class="sr-only">Injury status</label>
+        <label for="player-injury-status" class="sr-only">{% translate "Injury status" %}</label>
         <select id="player-injury-status" name="injury_status"
                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-          <option value="">All injury status</option>
-          <option value="healthy" {% if request.GET.injury_status == 'healthy' %}selected{% endif %}>Healthy</option>
-          <option value="injured" {% if request.GET.injury_status == 'injured' %}selected{% endif %}>Injured</option>
+          <option value="">{% translate "All injury status" %}</option>
+          <option value="healthy" {% if request.GET.injury_status == 'healthy' %}selected{% endif %}>{% translate "Healthy" %}</option>
+          <option value="injured" {% if request.GET.injury_status == 'injured' %}selected{% endif %}>{% translate "Injured" %}</option>
         </select>
       </div>
 
       <div>
-        <label for="player-roster" class="sr-only">Roster</label>
+        <label for="player-roster" class="sr-only">{% translate "Roster" %}</label>
         <select id="player-roster" name="roster"
                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
-          <option value="">All players</option>
+          <option value="">{% translate "All players" %}</option>
           {% for roster in rosters %}
             <option value="{{ roster.pk }}" {% if request.GET.roster == roster.pk|stringformat:'s' %}selected{% endif %}>{{ roster.name }}{% if rosters|length > 1 %} · {{ roster.manager.nick_name }}{% endif %}</option>
           {% endfor %}
@@ -71,10 +72,10 @@
       </div>
 
       <div>
-        <label for="player-max-salary" class="sr-only">Maximum salary in millions</label>
+        <label for="player-max-salary" class="sr-only">{% translate "Maximum salary in millions" %}</label>
         <input type="number" id="player-max-salary" name="max_salary"
                value="{{ request.GET.max_salary|default:'' }}" min="0" step="0.1"
-               placeholder="Max salary ($M)"
+               placeholder="{% translate 'Max salary ($M)' %}"
                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
       </div>
     </div>
@@ -84,22 +85,22 @@
         <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
           <input type="checkbox" name="inactive" value="1" {% if request.GET.inactive %}checked{% endif %}
                  class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
-          Include inactive players
+          {% translate "Include inactive players" %}
         </label>
         <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
           <input type="checkbox" name="min_games" value="6" {% if request.GET.min_games == "6" %}checked{% endif %}
                  class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
-          At least 6 games
+          {% translate "At least 6 games" %}
         </label>
         {% if not watchlist_page %}
           <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
             <input type="checkbox" name="watchlist" value="1" {% if watchlist_only %}checked{% endif %}
                    class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
-            Watched only
+            {% translate "Watched only" %}
           </label>
         {% endif %}
       </div>
-      <span id="player-indicator" class="htmx-indicator text-xs text-neutral-500">Searching…</span>
+      <span id="player-indicator" class="htmx-indicator text-xs text-neutral-500">{% translate "Searching" %}…</span>
     </div>
   </form>
 

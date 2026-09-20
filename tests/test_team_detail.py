@@ -11,7 +11,7 @@ from django.urls import reverse
 from apps.fantasy import services
 from apps.fantasy.models import Season
 from apps.nba import stats
-from apps.nba.models import Player, Team
+from apps.nba.models import Player, PlayerInjury, Team
 
 
 @pytest.fixture
@@ -291,11 +291,27 @@ def test_a_complete_team_says_nothing_about_coverage(signed_in, lakers):
     assert all(card["footnote"] == "" for card in cards)
 
 
+def test_the_team_page_shows_injured_versus_healthy_players(signed_in, lakers):
+    from django.utils import timezone
+
+    injured_player = lakers.players.get(last_name="Dear")
+    PlayerInjury.objects.create(
+        player=injured_player, observed_at=timezone.now(), status="Out"
+    )
+
+    cards = {card["title"]: card for card in signed_in.get(url(lakers)).context["cards"]}
+    rows = dict(cards["Player health"]["rows"])
+    assert rows["Healthy"] == 2
+    assert rows["Injured"] == 1
+
+
 def test_a_team_without_figures_says_so_instead_of_showing_zeros(signed_in, teams):
     make_player(teams["BOS"], "Nobody")
     response = signed_in.get(url(teams["BOS"]))
     body = response.content.decode()
-    assert all(card["rows"] == [] for card in response.context["cards"])
+    cards = {card["title"]: card for card in response.context["cards"]}
+    assert cards["Salaries"]["rows"] == []
+    assert cards["Fantasy points"]["rows"] == []
     assert "No values yet." in body
     assert "$0.00M" not in body
 
@@ -318,3 +334,41 @@ def test_the_team_list_links_to_every_team(signed_in, teams):
 def test_the_player_list_links_to_the_team(signed_in, lakers):
     body = signed_in.get(reverse("nba:player-list")).content.decode()
     assert f'href="{url("LAL")}"' in body
+
+
+# --- private notes -------------------------------------------------------------
+
+
+def test_logged_in_user_can_add_private_note_on_team_detail(signed_in, user, teams):
+    team = teams["BOS"]
+    first = "Great bench depth, keep an eye on the frontcourt rotation."
+    second = "Backcourt scoring is thin without their starting point guard."
+
+    response = signed_in.post(url(team), {"content": first})
+    assert response.status_code == 302
+
+    response = signed_in.post(url(team), {"content": second})
+    assert response.status_code == 302
+
+    notes = list(team.notes.filter(user=user).order_by("created_at"))
+    assert [note.content for note in notes] == [first, second]
+
+    body = signed_in.get(url(team)).content.decode()
+    assert first in body
+    assert second in body
+
+
+def test_private_team_notes_are_only_visible_to_their_owner(client, user, teams, db):
+    team = teams["BOS"]
+    other_user = user.__class__.objects.create_user(
+        email="other-team-note-user@example.com",
+        password="correct-horse-battery",
+    )
+    team.notes.create(user=user, content="Watch their pace after the trade deadline.")
+    team.notes.create(user=user, content="Their bench unit struggles on the road.")
+
+    client.login(email=other_user.email, password="correct-horse-battery")
+    body = client.get(url(team)).content.decode()
+
+    assert "Watch their pace after the trade deadline." not in body
+    assert "Their bench unit struggles on the road." not in body

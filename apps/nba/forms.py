@@ -45,3 +45,20 @@ class TeamNoteForm(StyledFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["content"].help_text = _("Only you can see this note.")
+
+
+class BbdeLoginForm(StyledFormMixin, forms.Form):
+    """The basketball.de login for one import. Never saved anywhere."""
+
+    username = forms.CharField(
+        label=_("basketball.de username"),
+        max_length=150,
+        widget=forms.TextInput(attrs={"autocomplete": "username"}),
+    )
+    # render_value=False: a form re-shown after an error must not echo the
+    # password back into the page.
+    password = forms.CharField(
+        label=_("basketball.de password"),
+        strip=False,
+        widget=forms.PasswordInput(render_value=False, attrs={"autocomplete": "current-password"}),
+    )

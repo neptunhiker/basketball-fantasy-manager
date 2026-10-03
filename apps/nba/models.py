@@ -9,7 +9,9 @@ import uuid
 from decimal import Decimal
 from itertools import pairwise
 
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from django.utils.text import slugify
 
 from apps.core.models import TimeStampedModel
@@ -104,6 +106,22 @@ class Player(TimeStampedModel):
         "Active",
         default=True,
         help_text="Cleared by the import when a player stops appearing in the source.",
+    )
+    # basketball.de's own number for the player, taken from their profile link.
+    # Names drift (suffixes, accents, a corrected spelling) and teams change
+    # with every trade, so after the first import this is the only key the
+    # import matches on. Empty for players basketball.de has never listed.
+    bbde_id = models.PositiveIntegerField(
+        "basketball.de ID",
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Set by the import. Fill in by hand to link a player the import could not match.",
+    )
+    is_rookie = models.BooleanField(
+        "Rookie",
+        default=False,
+        help_text="As flagged by the official game. Set by the import.",
     )
     # The four `current_*` columns are a cache of the newest PlayerSnapshot, not
     # authored values. The snapshot history remains the source of truth; these
@@ -384,3 +402,66 @@ class NbaApiUsage(TimeStampedModel):
 
     def __str__(self):
         return f"{self.provider} - {self.usage_date}: {self.request_count}"
+
+
+class ImportRun(TimeStampedModel):
+    """One attempt to import the player list from basketball.de.
+
+    The audit trail of the import: who started it, how far it got and what it
+    could not place. Deliberately has nowhere to put the basketball.de login --
+    the credentials live only in memory for the length of one run.
+    """
+
+    class Source(models.TextChoices):
+        WEB = "web", "Web"
+        COMMAND = "command", "Command"
+
+    class Status(models.TextChoices):
+        RUNNING = "running", "Running"
+        SUCCEEDED = "succeeded", "Succeeded"
+        FAILED = "failed", "Failed"
+
+    started_at = models.DateTimeField("Started at", default=timezone.now)
+    finished_at = models.DateTimeField("Finished at", null=True, blank=True)
+    triggered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Triggered by",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    source = models.CharField("Source", max_length=16, choices=Source)
+    status = models.CharField("Status", max_length=16, choices=Status, default=Status.RUNNING)
+    # A dry run does all the work and rolls it back, so the summary can be read
+    # before the first real import touches anything.
+    dry_run = models.BooleanField("Dry run", default=False)
+    season = models.ForeignKey(
+        "fantasy.Season",
+        verbose_name="Season",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    pages = models.PositiveIntegerField("Pages", default=0)
+    rows = models.PositiveIntegerField("Rows", default=0)
+    matched = models.PositiveIntegerField("Matched", default=0)
+    created = models.PositiveIntegerField("Created", default=0)
+    reactivated = models.PositiveIntegerField("Reactivated", default=0)
+    inactivated = models.PositiveIntegerField("Inactivated", default=0)
+    # Short human-readable lines rather than structured data: these are read by
+    # a person deciding what to fix by hand, never by code.
+    created_players = models.JSONField("Created players", default=list, blank=True)
+    ambiguous = models.JSONField("Ambiguous rows", default=list, blank=True)
+    skipped = models.JSONField("Skipped rows", default=list, blank=True)
+    warnings = models.JSONField("Warnings", default=list, blank=True)
+    error = models.TextField("Error", blank=True)
+
+    class Meta:
+        ordering = ["-started_at"]
+        verbose_name = "Import run"
+        verbose_name_plural = "Import runs"
+
+    def __str__(self):
+        return f"{self.get_status_display()} import, {self.started_at:%Y-%m-%d %H:%M}"

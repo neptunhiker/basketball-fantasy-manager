@@ -8,6 +8,7 @@ urlpatterns = [
     path("teams/", views.TeamListView.as_view(), name="team-list"),
     path("teams/<slug:abbreviation>/", views.TeamDetailView.as_view(), name="team-detail"),
     path("players/injuries/refresh/", views.InjuryRefreshView.as_view(), name="injury-refresh"),
+    path("players/import/", views.BbdeImportView.as_view(), name="bbde-import"),
     path("players/compare/", views.PlayerCompareView.as_view(), name="player-compare"),
     path("players/compare/modal/", views.PlayerCompareModalView.as_view(), name="player-compare-modal"),
     path("players/", views.PlayerListView.as_view(), name="player-list"),

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Player, PlayerInjury, Team
+from .models import ImportRun, Player, PlayerInjury, Team
 
 
 @admin.register(Team)
@@ -12,8 +12,8 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ["full_name", "position", "team", "is_active"]
-    list_filter = ["position", "is_active", "team"]
+    list_display = ["full_name", "position", "team", "is_active", "is_rookie", "bbde_id"]
+    list_filter = ["position", "is_active", "is_rookie", "team"]
     search_fields = ["first_name", "last_name"]
     list_select_related = ["team"]
     autocomplete_fields = ["team"]
@@ -35,3 +35,29 @@ class PlayerInjuryAdmin(admin.ModelAdmin):
     autocomplete_fields = ["player"]
     date_hierarchy = "observed_at"
     ordering = ["-observed_at", "-created_at"]
+
+
+@admin.register(ImportRun)
+class ImportRunAdmin(admin.ModelAdmin):
+    """The import log. Read-only: a run is a record of what happened."""
+
+    list_display = [
+        "started_at",
+        "status",
+        "source",
+        "dry_run",
+        "triggered_by",
+        "rows",
+        "matched",
+        "created",
+        "inactivated",
+    ]
+    list_filter = ["status", "source", "dry_run"]
+    list_select_related = ["triggered_by"]
+    date_hierarchy = "started_at"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

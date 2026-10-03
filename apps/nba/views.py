@@ -20,16 +20,21 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import formats, timezone
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views import View
+from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
 from django.views.generic import DetailView, ListView
 
+from apps.core.views import StaffRequiredMixin
 from apps.fantasy import services
 from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
 
 from . import charts, stats
-from .forms import PlayerNoteForm, TeamNoteForm
-from .models import Player, PlayerInjury, PlayerNote, Team, TeamNote
+from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
+from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
+from .importer import ImportAlreadyRunning, NoCurrentSeason, import_bbde
+from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
 
 
@@ -247,6 +252,8 @@ class PlayerListView(LoginRequiredMixin, ListView):
         sort, descending = self._sort_params()
         context["current_sort"] = sort
         context["current_dir"] = "desc" if descending else "asc"
+        if self.request.user.is_staff and not self.request.htmx:
+            context["last_bbde_import"] = last_bbde_import()
         return context
 
     def get_template_names(self):
@@ -286,6 +293,70 @@ class InjuryRefreshView(LoginRequiredMixin, View):
                 % summary
             }
         return render(request, self.template_name, context)
+
+
+def last_bbde_import():
+    """The newest import that actually changed data, for the "last import" line."""
+    return (
+        ImportRun.objects.filter(status=ImportRun.Status.SUCCEEDED, dry_run=False)
+        .select_related("triggered_by")
+        .first()
+    )
+
+
+@method_decorator(sensitive_post_parameters("password"), name="dispatch")
+class BbdeImportView(StaffRequiredMixin, View):
+    """Staff import of the basketball.de player list, in a modal.
+
+    GET shows the login form, POST runs the whole import inside the request
+    (about half a minute for the ~31 pages) and swaps the summary into the
+    same modal. The login is passed straight to the import and dropped with
+    the request: it is not saved, logged or queued, and the password field is
+    never rendered back into the page.
+    """
+
+    template_name = "nba/partials/bbde_import_modal.html"
+
+    def get(self, request):
+        return self._render(BbdeLoginForm())
+
+    @method_decorator(sensitive_variables("form"))
+    def post(self, request):
+        form = BbdeLoginForm(request.POST)
+        if not form.is_valid():
+            return self._render(form)
+        try:
+            run = import_bbde(
+                form.cleaned_data["username"],
+                form.cleaned_data["password"],
+                triggered_by=request.user,
+                source=ImportRun.Source.WEB,
+            )
+        except BbdeError as exc:
+            form.add_error(None, self._error_message(exc))
+            # A fresh form keeps the username and drops the password.
+            return self._render(form)
+        return render(request, self.template_name, {"run": run})
+
+    def _render(self, form):
+        form.fields["username"].widget.attrs["data-autofocus"] = ""
+        return render(
+            self.request,
+            self.template_name,
+            {"form": form, "last_import": last_bbde_import()},
+        )
+
+    @staticmethod
+    def _error_message(exc):
+        if isinstance(exc, BbdeAccountNotActivated):
+            return _("This basketball.de account has not been activated yet.")
+        if isinstance(exc, BbdeLoginError):
+            return _("basketball.de did not accept this username and password.")
+        if isinstance(exc, NoCurrentSeason):
+            return _("There is no current season to import into.")
+        if isinstance(exc, ImportAlreadyRunning):
+            return _("Another import is still running. Please try again shortly.")
+        return _("The import failed: %(reason)s") % {"reason": exc}
 
 
 class PlayerCompareView(LoginRequiredMixin, ListView):

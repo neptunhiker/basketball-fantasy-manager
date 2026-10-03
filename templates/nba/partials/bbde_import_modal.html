@@ -1,0 +1,88 @@
+{% extends "partials/modal.html" %}
+{% load i18n %}
+{% comment %}
+  Staff import of the basketball.de player list. Two states:
+  - `form`: the login form (GET, or POST with an error);
+  - `run`: the summary of a finished import.
+  The password field never renders a value, so an error does not echo it back.
+{% endcomment %}
+
+{% block modal_title %}{% translate "Import from basketball.de" %}{% endblock %}
+
+{% block modal_content %}
+  {% if run %}
+    <p role="status">
+      {% blocktranslate count counter=run.rows with pages=run.pages %}Read {{ counter }} player from {{ pages }} pages.{% plural %}Read {{ counter }} players from {{ pages }} pages.{% endblocktranslate %}
+    </p>
+    <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+      <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Updated" %}</dt><dd class="text-lg font-semibold text-tertiary-700 dark:text-neutral-100">{{ run.matched }}</dd></div>
+      <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "New" %}</dt><dd class="text-lg font-semibold text-tertiary-700 dark:text-neutral-100">{{ run.created }}</dd></div>
+      <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Reactivated" %}</dt><dd class="text-lg font-semibold text-tertiary-700 dark:text-neutral-100">{{ run.reactivated }}</dd></div>
+      <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Marked inactive" %}</dt><dd class="text-lg font-semibold text-tertiary-700 dark:text-neutral-100">{{ run.inactivated }}</dd></div>
+    </dl>
+
+    {% if run.ambiguous %}
+      <div class="mt-5">
+        <h3 class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "Could not be matched" %} ({{ run.ambiguous|length }})</h3>
+        <p class="form-help">{% translate "Several players share this name. Enter the basketball.de ID on the right player in the admin; the next import will then find them." %}</p>
+        <ul class="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-5 text-xs">
+          {% for line in run.ambiguous %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {% if run.created_players %}
+      <details class="mt-5">
+        <summary class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "New players" %} ({{ run.created_players|length }})</summary>
+        <ul class="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-5 text-xs">
+          {% for line in run.created_players %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+      </details>
+    {% endif %}
+    {% if run.skipped %}
+      <details class="mt-3">
+        <summary class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "Skipped rows" %} ({{ run.skipped|length }})</summary>
+        <ul class="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-5 text-xs">
+          {% for line in run.skipped %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+      </details>
+    {% endif %}
+    {% if run.warnings %}
+      <details class="mt-3">
+        <summary class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "Warnings" %} ({{ run.warnings|length }})</summary>
+        <ul class="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-5 text-xs">
+          {% for line in run.warnings %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+      </details>
+    {% endif %}
+
+    <div class="modal-actions">
+      <a href="{% url 'nba:player-list' %}" class="btn btn-primary">{% translate "Show players" %}</a>
+    </div>
+  {% else %}
+    <form hx-post="{% url 'nba:bbde-import' %}"
+          hx-target="#modal-root"
+          hx-swap="innerHTML"
+          data-global-loading>
+      {% csrf_token %}
+
+      <p>{% translate "Reads salaries and fantasy points of every player from the official game. Your basketball.de login is used for this import only and is never stored." %}</p>
+      <div class="mt-2">{% include "nba/partials/bbde_last_import.html" with run=last_import %}</div>
+
+      {% for error in form.non_field_errors %}
+        <p class="form-error mt-4" role="alert">{{ error }}</p>
+      {% endfor %}
+
+      <div class="mt-5 space-y-4">
+        {% for field in form %}
+          {% include "partials/form_field.html" with field=field %}
+        {% endfor %}
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">{% translate "Cancel" %}</button>
+        <button type="submit" class="btn btn-primary">{% translate "Start import" %}</button>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}

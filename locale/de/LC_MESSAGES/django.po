@@ -1760,8 +1760,8 @@ msgstr "Noch keine Spieler."
 
 #: templates/nba/partials/player_table.html:169
 #: templates/nba/team_detail.html:97
-msgid "Players come from the basketball.de import, which is not built yet."
-msgstr ""
+msgid "Players come from the basketball.de import."
+msgstr "Spieler kommen aus dem Import von basketball.de."
 "Spieler stammen aus dem basketball.de-Import, der noch nicht verfügbar ist."
 
 #: templates/nba/partials/scatter_chart.html:75
@@ -1958,8 +1958,8 @@ msgid "No snapshots on record for %(name)s yet."
 msgstr "Für %(name)s sind noch keine Snapshots erfasst."
 
 #: templates/nba/player_detail.html:339
-msgid "Snapshots come from the basketball.de import, which is not built yet."
-msgstr ""
+msgid "Snapshots come from the basketball.de import."
+msgstr "Snapshots kommen aus dem Import von basketball.de."
 "Snapshots stammen aus dem basketball.de-Import, der noch nicht verfügbar ist."
 
 #: templates/nba/player_list.html:11
@@ -2078,3 +2078,107 @@ msgstr "Zum dunklen Design wechseln"
 
 #~ msgid "Injury report updated: "
 #~ msgstr "Verletzungsbericht aktualisiert: "
+
+# basketball.de player import
+
+#: apps/nba/forms.py
+msgid "basketball.de username"
+msgstr "basketball.de-Benutzername"
+
+#: apps/nba/forms.py
+msgid "basketball.de password"
+msgstr "basketball.de-Passwort"
+
+#: apps/nba/views.py
+msgid "This basketball.de account has not been activated yet."
+msgstr "Dieses basketball.de-Konto ist noch nicht aktiviert."
+
+#: apps/nba/views.py
+msgid "basketball.de did not accept this username and password."
+msgstr "basketball.de hat diesen Benutzernamen und dieses Passwort nicht akzeptiert."
+
+#: apps/nba/views.py
+msgid "There is no current season to import into."
+msgstr "Es gibt keine aktuelle Saison, in die importiert werden kann."
+
+#: apps/nba/views.py
+msgid "Another import is still running. Please try again shortly."
+msgstr "Es läuft bereits ein Import. Bitte versuche es gleich noch einmal."
+
+#: apps/nba/views.py
+#, python-format
+msgid "The import failed: %(reason)s"
+msgstr "Der Import ist fehlgeschlagen: %(reason)s"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Import from basketball.de"
+msgstr "Von basketball.de importieren"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Updated"
+msgstr "Aktualisiert"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "New"
+msgstr "Neu"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Reactivated"
+msgstr "Reaktiviert"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Marked inactive"
+msgstr "Inaktiv gesetzt"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Could not be matched"
+msgstr "Nicht eindeutig zuzuordnen"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Several players share this name. Enter the basketball.de ID on the right player in the admin; the next import will then find them."
+msgstr "Mehrere Spieler tragen diesen Namen. Trage die basketball.de-ID im Admin-Bereich beim richtigen Spieler ein; der nächste Import findet ihn dann."
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "New players"
+msgstr "Neue Spieler"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Skipped rows"
+msgstr "Übersprungene Zeilen"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Warnings"
+msgstr "Warnungen"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Show players"
+msgstr "Spieler anzeigen"
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Reads salaries and fantasy points of every player from the official game. Your basketball.de login is used for this import only and is never stored."
+msgstr "Liest Gehälter und Fantasy-Punkte aller Spieler aus dem offiziellen Spiel. Deine basketball.de-Zugangsdaten werden nur für diesen Import verwendet und nie gespeichert."
+
+#: templates/nba/partials/bbde_import_modal.html
+msgid "Start import"
+msgstr "Import starten"
+
+#: templates/nba/partials/bbde_last_import.html
+#, python-format
+msgid "Last import from basketball.de: %(when)s by %(who)s"
+msgstr "Letzter Import von basketball.de: %(when)s durch %(who)s"
+
+#: templates/nba/partials/bbde_last_import.html
+#, python-format
+msgid "Last import from basketball.de: %(when)s"
+msgstr "Letzter Import von basketball.de: %(when)s"
+
+#: templates/nba/partials/bbde_last_import.html
+msgid "No import from basketball.de yet."
+msgstr "Noch kein Import von basketball.de."
+
+#: templates/nba/partials/bbde_import_modal.html
+#, python-format
+msgid "Read %(counter)s player from %(pages)s pages."
+msgid_plural "Read %(counter)s players from %(pages)s pages."
+msgstr[0] "%(counter)s Spieler von %(pages)s Seiten gelesen."
+msgstr[1] "%(counter)s Spieler von %(pages)s Seiten gelesen."

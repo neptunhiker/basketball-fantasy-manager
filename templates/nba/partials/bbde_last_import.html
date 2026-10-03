@@ -1,0 +1,15 @@
+{% load i18n %}
+{# "Last import from basketball.de: 03.10.2026 18:30 by Mia" -- staff only. Context: run (an ImportRun or None). #}
+<p class="text-xs text-neutral-500 dark:text-neutral-400">
+  {% if run %}
+    {% with when=run.finished_at|date:"SHORT_DATETIME_FORMAT" %}
+      {% if run.triggered_by %}
+        {% blocktranslate with who=run.triggered_by.display_name %}Last import from basketball.de: {{ when }} by {{ who }}{% endblocktranslate %}
+      {% else %}
+        {% blocktranslate %}Last import from basketball.de: {{ when }}{% endblocktranslate %}
+      {% endif %}
+    {% endwith %}
+  {% else %}
+    {% translate "No import from basketball.de yet." %}
+  {% endif %}
+</p>

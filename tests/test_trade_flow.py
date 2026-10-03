@@ -14,10 +14,13 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from apps.fantasy import services
-from apps.fantasy.models import STARTING_CASH, Roster, Season, Transaction
+from apps.fantasy.models import Roster, Season, Transaction
 from apps.nba.models import Player
 
 User = get_user_model()
+
+# What the rosters in these tests start with (the season fixture's budget).
+STARTING_CASH = Decimal("60000000")
 
 
 @pytest.fixture
@@ -27,6 +30,8 @@ def season(db):
         starts_on=dt.date(2026, 10, 20),
         ends_on=dt.date(2027, 4, 11),
         is_current=True,
+        # The budget these tests' arithmetic was written against.
+        starting_cash=Decimal("60000000"),
     )
 
 
@@ -55,7 +60,9 @@ def pool(db):
 
 @pytest.fixture
 def roster(season, manager):
-    return Roster.objects.create(manager=manager, season=season, name="Roster 1")
+    return Roster.objects.create(
+        manager=manager, season=season, name="Roster 1", trades_available=2
+    )
 
 
 @pytest.fixture
@@ -264,8 +271,10 @@ def test_a_stale_outgoing_player_is_simply_not_chosen(signed_in, squad, pool):
 # --- available trades and buy/sell trade market ------------------------------
 
 
-def test_roster_starts_with_default_available_trades(roster):
-    assert roster.trades_available == 2
+def test_a_new_roster_starts_without_trades(season, manager):
+    # Officially a team is drafted with no trades; they arrive on the schedule.
+    roster = Roster.objects.create(manager=manager, season=season, name="Fresh")
+    assert roster.trades_available == 0
 
 
 def test_trading_decrements_available_trades(roster, pool):

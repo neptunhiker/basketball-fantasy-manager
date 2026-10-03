@@ -2,7 +2,21 @@ from django.contrib import admin
 from django.db.models import Count
 from django.utils import timezone
 
-from .models import Manager, PlayerSnapshot, Roster, RosterPlayer, Season, Transaction
+from .models import (
+    Manager,
+    PlayerSnapshot,
+    Roster,
+    RosterPlayer,
+    Season,
+    TradeGrant,
+    Transaction,
+)
+
+
+class TradeGrantInline(admin.TabularInline):
+    model = TradeGrant
+    extra = 0
+    fields = ["label", "granted_at", "trades"]
 
 
 @admin.register(Season)
@@ -15,6 +29,7 @@ class SeasonAdmin(admin.ModelAdmin):
 
     list_display = ["label", "starts_on", "ends_on", "is_current", "signings"]
     list_filter = ["is_current"]
+    inlines = [TradeGrantInline]
 
     @admin.display(description="Signings", ordering="signings_close_at")
     def signings(self, obj):

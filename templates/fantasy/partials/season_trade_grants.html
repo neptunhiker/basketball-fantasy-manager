@@ -1,0 +1,69 @@
+{% extends "partials/modal.html" %}
+{% load i18n %}
+{% comment %}
+  The one-off free trades of a season (Helpside Trade, start trades, All-Star
+  Game, surprises). Weekly trades are configured on the season itself and only
+  summarised here. Every action re-renders this modal in place.
+{% endcomment %}
+
+{% block modal_title %}{% blocktranslate with season=season.label %}Free trades · {{ season }}{% endblocktranslate %}{% endblock %}
+
+{% block modal_content %}
+  <p>{% translate "Every roster of the season receives these trades automatically when the date passes." %}</p>
+
+  {% if grants %}
+    <ul class="mt-4 divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+      {% for grant in grants %}
+        <li class="flex items-center justify-between gap-3 px-3 py-2">
+          <span class="min-w-0">
+            <span class="block truncate font-medium text-tertiary-700 dark:text-neutral-100">{{ grant.label }}</span>
+            <span class="block text-xs">{{ grant.granted_at|date:"SHORT_DATETIME_FORMAT" }}</span>
+          </span>
+          <span class="flex shrink-0 items-center gap-2">
+            <span class="font-semibold tabular-nums text-tertiary-700 dark:text-neutral-100">+{{ grant.trades }}</span>
+            <form hx-post="{% url 'fantasy:season-trade-grants' season.pk %}" hx-target="#modal-root" hx-swap="innerHTML">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="grant" value="{{ grant.pk }}">
+              <button type="submit"
+                      class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                      aria-label="{% translate 'Remove' %}: {{ grant.label }}">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+                </svg>
+              </button>
+            </form>
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="mt-4 text-xs">{% translate "No one-off grants yet." %}</p>
+  {% endif %}
+
+  <p class="mt-3 text-xs">
+    {% if season.weekly_trades_from %}
+      {% blocktranslate with date=season.weekly_trades_from|date:"SHORT_DATETIME_FORMAT" per_week=season.weekly_trades_per_week count weeks=weekly_count %}Plus weekly: {{ per_week }} every 7 days from {{ date }} ({{ weeks }} payout this season).{% plural %}Plus weekly: {{ per_week }} every 7 days from {{ date }} ({{ weeks }} payouts this season).{% endblocktranslate %}
+    {% else %}
+      {% translate "No weekly trades. Set them in the season editor." %}
+    {% endif %}
+  </p>
+
+  <form class="mt-5 border-t border-neutral-200 pt-4 dark:border-neutral-800"
+        hx-post="{% url 'fantasy:season-trade-grants' season.pk %}"
+        hx-target="#modal-root"
+        hx-swap="innerHTML">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add">
+    <h3 class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "Add a grant" %}</h3>
+    <div class="mt-3 space-y-4">
+      {% for field in form %}
+        {% include "partials/form_field.html" with field=field %}
+      {% endfor %}
+    </div>
+    <div class="modal-actions">
+      <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">{% translate "Close" %}</button>
+      <button type="submit" class="btn btn-primary">{% translate "Add grant" %}</button>
+    </div>
+  </form>
+{% endblock %}

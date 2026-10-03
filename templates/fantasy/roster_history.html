@@ -139,6 +139,8 @@
                       bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300
                     {% elif row.move.kind == 'BUY_TRADE' or row.move.kind == 'SELL_TRADE' %}
                       bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300
+                    {% elif row.move.kind == 'GRANT_TRADE' %}
+                      bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300
                     {% else %}
                       bg-secondary-100 text-secondary-700 dark:bg-secondary-400/15 dark:text-secondary-300
                     {% endif %}">
@@ -157,7 +159,13 @@
                   {% endif %}
                 </td>
                 <td class="px-3 py-3">
-                  {% if row.move.player_in %}
+                  {% if row.move.kind == 'GRANT_TRADE' %}
+                    {# A free trade from the season's schedule: no player, no money. #}
+                    <span class="block font-medium">{{ row.move.note }}</span>
+                    <span class="block text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+                      {% blocktranslate count counter=row.move.trades_granted %}+{{ counter }} trade{% plural %}+{{ counter }} trades{% endblocktranslate %}
+                    </span>
+                  {% elif row.move.player_in %}
                     <span class="block font-medium">{{ row.move.player_in.full_name }}</span>
                     <span class="block text-xs tabular-nums text-neutral-500 dark:text-neutral-400"
                           title="{{ row.move.price_in|exact }}">

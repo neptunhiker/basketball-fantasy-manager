@@ -21,6 +21,7 @@ is an auth app that knows nothing about basketball.
 
 import datetime as dt
 import uuid
+from dataclasses import dataclass
 from decimal import Decimal
 
 from django.conf import settings
@@ -43,8 +44,13 @@ MINIMUM_BY_POSITION = {
     Player.Position.FORWARD: 5,
     Player.Position.CENTER: 2,
 }
-STARTING_CASH = Decimal("60000000")
-STARTING_TRADES = 2
+# What a new season starts rosters with unless the season says otherwise. The
+# budget is set per season (`Season.starting_cash`) because the official game
+# changes it from year to year; this is only the value a new season is offered.
+STARTING_CASH = Decimal("63000000")
+# Officially a team is drafted with no trades at all. Trades arrive later, on
+# the season's schedule -- see `Season.trade_grant_schedule`.
+STARTING_TRADES = 0
 TRADE_BUY_PRICE = Decimal("1500000")
 TRADE_SELL_PRICE = Decimal("1000000")
 ROSTER_ICON_CHOICES = [
@@ -117,6 +123,46 @@ class Season(TimeStampedModel):
             "signings open for the whole season."
         ),
     )
+    starting_cash = models.DecimalField(
+        "Starting budget",
+        max_digits=12,
+        decimal_places=2,
+        default=STARTING_CASH,
+        help_text="What every new roster of this season starts with, in dollars.",
+    )
+    # The official game hands out one free trade every Sunday evening once the
+    # trade phase is under way. Stored as the first such moment and a count, so
+    # the twenty-odd Sundays of a season are worked out rather than typed in.
+    weekly_trades_from = models.DateTimeField(
+        "Weekly trades from",
+        null=True,
+        blank=True,
+        help_text=(
+            "The first weekly trade. Another follows every 7 days at the same time "
+            "until the season ends. Leave empty for no weekly trades."
+        ),
+    )
+    weekly_trades_per_week = models.PositiveSmallIntegerField(
+        "Trades per week",
+        default=1,
+        help_text="How many trades each weekly grant adds to every roster.",
+    )
+    # Buying and selling trades for cash is only allowed inside this window.
+    trade_market_opens_at = models.DateTimeField(
+        "Trade buying opens",
+        null=True,
+        blank=True,
+        help_text="From this moment trades can be bought and sold. Leave empty for no limit.",
+    )
+    trade_market_closes_at = models.DateTimeField(
+        "Trade buying closes",
+        null=True,
+        blank=True,
+        help_text=(
+            "After this moment trades can no longer be bought or sold. "
+            "Leave empty for no limit."
+        ),
+    )
 
     class Meta:
         ordering = ["-starts_on"]
@@ -131,6 +177,9 @@ class Season(TimeStampedModel):
             models.CheckConstraint(
                 condition=Q(ends_on__gt=models.F("starts_on")),
                 name="season_ends_after_it_starts",
+            ),
+            models.CheckConstraint(
+                condition=Q(starting_cash__gte=0), name="season_starting_cash_is_never_negative"
             ),
         ]
 
@@ -163,6 +212,69 @@ class Season(TimeStampedModel):
         if self.signings_close_at and now >= self.signings_close_at:
             return False
         return True
+
+    @property
+    def trade_market_open(self):
+        """Whether trades can be bought or sold for cash right now.
+
+        Inside the season's trading period and, where the season sets one, its
+        trade market window.
+        """
+        if not self.trading_allowed:
+            return False
+        now = timezone.now()
+        if self.trade_market_opens_at and now < self.trade_market_opens_at:
+            return False
+        return not (self.trade_market_closes_at and now >= self.trade_market_closes_at)
+
+    def weekly_trade_moments(self, until=None):
+        """Every weekly grant from `weekly_trades_from` up to `until`.
+
+        Stepped in local wall-clock time, not in fixed 7-day intervals: the
+        official game pays out at 22:00 Berlin time every Sunday, and two of
+        those Sundays sit on either side of a clock change.
+        """
+        if self.weekly_trades_from is None or not self.weekly_trades_per_week:
+            return []
+        until = min(until or self.season_close_at, self.season_close_at)
+        zone = timezone.get_current_timezone()
+        first = timezone.localtime(self.weekly_trades_from, zone).replace(tzinfo=None)
+        moments = []
+        week = 0
+        while True:
+            moment = timezone.make_aware(first + dt.timedelta(weeks=week), zone)
+            if moment > until:
+                return moments
+            moments.append(moment)
+            week += 1
+
+    def trade_grant_schedule(self, until=None):
+        """Every trade grant of this season due by `until` (default: all of them).
+
+        Returns `TradeGrantDue` rows in chronological order. Each carries a
+        stable key, which is what keeps a grant from ever being paid twice: a
+        roster records the key of every grant it has received.
+        """
+        due = [
+            TradeGrantDue(
+                key=f"grant:{grant.pk}",
+                granted_at=grant.granted_at,
+                trades=grant.trades,
+                label=grant.label,
+            )
+            for grant in self.trade_grants.all()
+            if until is None or grant.granted_at <= until
+        ]
+        due += [
+            TradeGrantDue(
+                key=f"weekly:{timezone.localtime(moment).date().isoformat()}",
+                granted_at=moment,
+                trades=self.weekly_trades_per_week,
+                label="Weekly trade",
+            )
+            for moment in self.weekly_trade_moments(until)
+        ]
+        return sorted(due, key=lambda grant: (grant.granted_at, grant.key))
 
     @property
     def trading_allowed(self):
@@ -205,6 +317,44 @@ class Season(TimeStampedModel):
         if today > self.ends_on:
             return self.Timing.FINISHED
         return self.Timing.RUNNING
+
+
+@dataclass(frozen=True)
+class TradeGrantDue:
+    """One payout of free trades, whether a one-off grant or a weekly one."""
+
+    key: str
+    granted_at: dt.datetime
+    trades: int
+    label: str
+
+
+class TradeGrant(TimeStampedModel):
+    """A one-off batch of free trades the official game hands every team.
+
+    The Helpside Trade, the start trades when the trade phase opens, the
+    All-Star Game trade and the surprise trades. The weekly Sunday trades are
+    not stored here; `Season.weekly_trades_from` describes those.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    season = models.ForeignKey(
+        Season, verbose_name="Season", on_delete=models.CASCADE, related_name="trade_grants"
+    )
+    granted_at = models.DateTimeField("Granted at")
+    trades = models.PositiveSmallIntegerField("Trades", default=1)
+    label = models.CharField("Label", max_length=80)
+
+    class Meta:
+        ordering = ["granted_at"]
+        verbose_name = "Trade grant"
+        verbose_name_plural = "Trade grants"
+        constraints = [
+            models.CheckConstraint(condition=Q(trades__gte=1), name="a_trade_grant_grants_trades"),
+        ]
+
+    def __str__(self):
+        return f"{self.label} ({self.trades})"
 
 
 class Manager(TimeStampedModel):
@@ -313,10 +463,14 @@ class Roster(TimeStampedModel):
         choices=ROSTER_ICON_CHOICES,
         default="koala",
     )
+    # The season's budget at the moment this roster was created. Kept on the
+    # roster rather than read from the season, so editing a season's budget
+    # later cannot make an existing roster's ledger stop adding up.
+    starting_cash = models.DecimalField("Starting budget", max_digits=12, decimal_places=2)
     # A balance, not a derivation. Weekly price changes must not retroactively
     # alter what a past purchase cost, and the salary cap enforces itself here:
-    # you cannot buy what you cannot afford.
-    cash = models.DecimalField("Cash", max_digits=12, decimal_places=2, default=STARTING_CASH)
+    # you cannot buy what you cannot afford. Starts at `starting_cash`.
+    cash = models.DecimalField("Cash", max_digits=12, decimal_places=2)
     trades_available = models.PositiveIntegerField(
         "Available trades", default=STARTING_TRADES
     )
@@ -340,6 +494,15 @@ class Roster(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # A new roster takes its season's budget unless it was given one.
+        if self._state.adding:
+            if self.starting_cash is None:
+                self.starting_cash = self.season.starting_cash
+            if self.cash is None:
+                self.cash = self.starting_cash
+        super().save(*args, **kwargs)
 
     @property
     def current_players(self):
@@ -466,6 +629,15 @@ class Roster(TimeStampedModel):
             Decimal("0"),
         )
 
+    @property
+    def team_value(self):
+        """Squad value plus cash: the official game's "individual salary cap".
+
+        What the roster would be worth if every player were sold at today's
+        price. It moves with weekly salaries even when nobody touches the roster.
+        """
+        return self.squad_value + self.cash
+
 
 class RosterPlayerQuerySet(models.QuerySet):
     def open(self):
@@ -553,6 +725,7 @@ class Transaction(TimeStampedModel):
         TRADE = "TRADE", "Trade"
         BUY_TRADE = "BUY_TRADE", "Buy Trade"
         SELL_TRADE = "SELL_TRADE", "Sell Trade"
+        GRANT_TRADE = "GRANT_TRADE", "Trade granted"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     roster = models.ForeignKey(
@@ -599,6 +772,11 @@ class Transaction(TimeStampedModel):
     # has to stay readable on a row whose prices were never recorded.
     cash_delta = models.DecimalField("Cash flow", max_digits=12, decimal_places=2)
     note = models.CharField("Note", max_length=200, blank=True)
+    # Only on GRANT_TRADE rows: how many free trades arrived, and which grant
+    # they came from (see `Season.trade_grant_schedule`). The key is unique per
+    # roster, which is what makes paying a grant out twice impossible.
+    trades_granted = models.PositiveSmallIntegerField("Trades granted", null=True, blank=True)
+    grant_key = models.CharField("Grant", max_length=64, blank=True)
 
     class Meta:
         ordering = ["-occurred_at"]
@@ -608,8 +786,13 @@ class Transaction(TimeStampedModel):
             models.CheckConstraint(
                 condition=Q(player_in__isnull=False)
                 | Q(player_out__isnull=False)
-                | Q(kind__in=["BUY_TRADE", "SELL_TRADE"]),
+                | Q(kind__in=["BUY_TRADE", "SELL_TRADE", "GRANT_TRADE"]),
                 name="a_transaction_moves_at_least_one_player_or_trade",
+            ),
+            models.UniqueConstraint(
+                fields=["roster", "grant_key"],
+                condition=~Q(grant_key=""),
+                name="a_trade_grant_is_paid_once_per_roster",
             ),
             # NULL passes a CHECK in Postgres, which is exactly right here: an
             # unrecorded price is unknown, not negative.
@@ -635,6 +818,8 @@ class Transaction(TimeStampedModel):
     def description(self):
         if self.kind == self.Kind.TRADE:
             return f"{self.player_out} → {self.player_in}"
+        if self.kind == self.Kind.GRANT_TRADE:
+            return f"{self.note or self.get_kind_display()} (+{self.trades_granted})"
         if self.kind in (self.Kind.BUY_TRADE, self.Kind.SELL_TRADE):
             return self.get_kind_display()
         return str(self.player_in or self.player_out)

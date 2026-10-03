@@ -19,7 +19,6 @@ from django.utils.translation import gettext as _
 
 from .models import (
     ROSTER_SIZE,
-    STARTING_TRADES,
     TRADE_BUY_PRICE,
     TRADE_SELL_PRICE,
     Manager,
@@ -35,8 +34,95 @@ from .models import (
 
 def _lock(roster):
     """Re-read the roster inside the transaction so two concurrent buys cannot
-    both see the same balance and both decide it is affordable."""
-    return Roster.objects.select_for_update().get(pk=roster.pk)
+    both see the same balance and both decide it is affordable.
+
+    Also the moment any free trades that have fallen due are paid out, so a
+    trade decision is never made against a count that is a week behind.
+    """
+    locked = Roster.objects.select_related("season").select_for_update(of=("self",)).get(
+        pk=roster.pk
+    )
+    _pay_due_grants(locked, timezone.now())
+    return locked
+
+
+# --- free trades ---------------------------------------------------------------
+
+
+def _unpaid_grants(roster, paid_keys, now):
+    return [
+        grant
+        for grant in roster.season.trade_grant_schedule(until=now)
+        if grant.key not in paid_keys
+    ]
+
+
+def _pay_due_grants(locked, now):
+    """Credit `locked` with every grant due by `now` it has not received yet.
+
+    Expects a roster already locked by `_lock`. One GRANT_TRADE transaction per
+    grant, stamped with the grant's own moment, so the history shows when the
+    trades arrived rather than when somebody next opened the page.
+    """
+    paid = set(
+        locked.transactions.filter(kind=Transaction.Kind.GRANT_TRADE).values_list(
+            "grant_key", flat=True
+        )
+    )
+    due = _unpaid_grants(locked, paid, now)
+    if not due:
+        return 0
+    Transaction.objects.bulk_create(
+        Transaction(
+            roster=locked,
+            occurred_at=grant.granted_at,
+            kind=Transaction.Kind.GRANT_TRADE,
+            cash_delta=Decimal("0"),
+            trades_granted=grant.trades,
+            grant_key=grant.key,
+            note=grant.label,
+        )
+        for grant in due
+    )
+    total = sum(grant.trades for grant in due)
+    locked.trades_available += total
+    locked.save(update_fields=["trades_available", "updated_at"])
+    return total
+
+
+def pay_due_trade_grants(rosters, now=None):
+    """Bring every roster in `rosters` up to date with its season's free trades.
+
+    Grants are paid lazily rather than by a scheduled job: whenever a roster is
+    looked at or changed, whatever has fallen due since is credited first. The
+    common case -- nothing new -- costs two queries for the whole list and
+    takes no lock. Returns the number of trades paid out in total.
+    """
+    rosters = list(rosters)
+    if not rosters:
+        return 0
+    now = now or timezone.now()
+    paid = {}
+    for roster_id, key in Transaction.objects.filter(
+        roster__in=rosters, kind=Transaction.Kind.GRANT_TRADE
+    ).values_list("roster_id", "grant_key"):
+        paid.setdefault(roster_id, set()).add(key)
+
+    schedules = {}
+    total = 0
+    for roster in rosters:
+        if roster.season_id not in schedules:
+            schedules[roster.season_id] = roster.season.trade_grant_schedule(until=now)
+        received = paid.get(roster.pk, set())
+        if all(grant.key in received for grant in schedules[roster.season_id]):
+            continue
+        with transaction.atomic():
+            locked = Roster.objects.select_related("season").select_for_update(
+                of=("self",)
+            ).get(pk=roster.pk)
+            total += _pay_due_grants(locked, now)
+        roster.trades_available = locked.trades_available
+    return total
 
 
 def _open_membership(roster, player):
@@ -193,14 +279,34 @@ def trade(roster, player_out, player_in, price_out, price_in, occurred_at=None, 
     )
 
 
+def trade_market_closed_reason(season):
+    """Why trades cannot be bought or sold right now, or "" when they can."""
+    if season.trade_market_open:
+        return ""
+    now = timezone.now()
+    if not season.trading_allowed:
+        return _("Trades are only allowed while the season is live.")
+    if season.trade_market_opens_at and now < season.trade_market_opens_at:
+        return _("Trades can be bought and sold from %(date)s.") % {
+            "date": timezone.localtime(season.trade_market_opens_at).strftime("%d.%m.%Y %H:%M")
+        }
+    return _("Buying and selling trades closed on %(date)s.") % {
+        "date": timezone.localtime(season.trade_market_closes_at).strftime("%d.%m.%Y %H:%M")
+    }
+
+
+def _require_trade_market(season):
+    if reason := trade_market_closed_reason(season):
+        raise ValidationError(reason)
+
+
 @transaction.atomic
 def buy_trade(roster, occurred_at=None, note=""):
     """Buy an extra trade for $1.5M."""
     occurred_at = occurred_at or timezone.now()
     locked = _lock(roster)
 
-    if not locked.season.trading_allowed:
-        raise ValidationError(_("Trades are only allowed while the season is live."))
+    _require_trade_market(locked.season)
 
     if locked.cash < TRADE_BUY_PRICE:
         raise ValidationError(
@@ -227,8 +333,7 @@ def sell_trade(roster, occurred_at=None, note=""):
     occurred_at = occurred_at or timezone.now()
     locked = _lock(roster)
 
-    if not locked.season.trading_allowed:
-        raise ValidationError("Trades are only allowed while the season is live.")
+    _require_trade_market(locked.season)
 
     if locked.trades_available <= 0:
         raise ValidationError(_("No trades available to sell."))

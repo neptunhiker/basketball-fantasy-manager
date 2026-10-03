@@ -22,6 +22,8 @@ def season(db):
         starts_on=dt.date(2026, 10, 20),
         ends_on=dt.date(2027, 4, 11),
         is_current=True,
+        # The budget these tests' arithmetic was written against.
+        starting_cash=Decimal("60000000"),
     )
 
 

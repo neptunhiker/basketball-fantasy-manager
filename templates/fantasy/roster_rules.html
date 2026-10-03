@@ -96,6 +96,62 @@
         {% endif %}
       </dl>
 
+      {# Trades: where they come from, and when they can be bought or sold. #}
+      <h3 class="mt-8 text-base font-semibold tracking-tight">{% translate "Trades" %}</h3>
+      <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        {% translate "A roster starts without trades. Every roster receives the same free trades on these dates:" %}
+      </p>
+      {% if trade_grants or roster.season.weekly_trades_from %}
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for grant in trade_grants %}
+            <li class="flex items-baseline justify-between gap-4 rounded-lg bg-neutral-50 px-3 py-2 dark:bg-neutral-800/60">
+              <span>
+                <span class="font-medium">{{ grant.label }}</span>
+                <span class="block text-xs text-neutral-500 dark:text-neutral-400">{{ grant.granted_at|date:"SHORT_DATETIME_FORMAT" }}</span>
+              </span>
+              <span class="shrink-0 font-semibold tabular-nums">+{{ grant.trades }}</span>
+            </li>
+          {% endfor %}
+          {% if roster.season.weekly_trades_from %}
+            <li class="flex items-baseline justify-between gap-4 rounded-lg bg-neutral-50 px-3 py-2 dark:bg-neutral-800/60">
+              <span>
+                <span class="font-medium">{% translate "Weekly trade" %}</span>
+                <span class="block text-xs text-neutral-500 dark:text-neutral-400">
+                  {% blocktranslate with date=roster.season.weekly_trades_from|date:"SHORT_DATETIME_FORMAT" %}Every 7 days from {{ date }} until the season ends{% endblocktranslate %}
+                </span>
+              </span>
+              <span class="shrink-0 font-semibold tabular-nums">+{{ roster.season.weekly_trades_per_week }}</span>
+            </li>
+          {% endif %}
+        </ul>
+      {% else %}
+        <p class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">{% translate "No free trades are scheduled for this season yet." %}</p>
+      {% endif %}
+      <p class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+        {% blocktranslate with buy=trade_buy_price|millions sell=trade_sell_price|millions %}Extra trades cost {{ buy }}; an unused trade can be sold for {{ sell }}.{% endblocktranslate %}
+        {% if roster.season.trade_market_opens_at and roster.season.trade_market_closes_at %}
+          {% blocktranslate with start=roster.season.trade_market_opens_at|date:"SHORT_DATETIME_FORMAT" end=roster.season.trade_market_closes_at|date:"SHORT_DATETIME_FORMAT" %}Possible from {{ start }} until {{ end }}.{% endblocktranslate %}
+        {% elif roster.season.trade_market_opens_at %}
+          {% blocktranslate with start=roster.season.trade_market_opens_at|date:"SHORT_DATETIME_FORMAT" %}Possible from {{ start }}.{% endblocktranslate %}
+        {% elif roster.season.trade_market_closes_at %}
+          {% blocktranslate with end=roster.season.trade_market_closes_at|date:"SHORT_DATETIME_FORMAT" %}Possible until {{ end }}.{% endblocktranslate %}
+        {% endif %}
+      </p>
+
+      {# Team value: the official game's personal salary cap. #}
+      <h3 class="mt-8 text-base font-semibold tracking-tight">{% translate "Team value" %}</h3>
+      <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        {% translate "Team value is the current salary of every player on the roster plus your unspent cash. It is your personal salary cap: when salaries rise or fall each week, so does what you can afford." %}
+      </p>
+
+      {# Imported, never calculated here -- shown so the numbers can be read. #}
+      <h3 class="mt-8 text-base font-semibold tracking-tight">{% translate "How fantasy points are scored" %}</h3>
+      <div class="mt-2 rounded-xl bg-neutral-50 p-4 text-sm dark:bg-neutral-800/60">
+        <p>{% translate "Points + Rebounds + Assists × 1.5 + Steals × 2 + Blocks × 2" %}</p>
+        <p class="mt-1 text-neutral-500 dark:text-neutral-400">{% translate "minus" %}</p>
+        <p class="mt-1">{% translate "Turnovers × 2 + missed field goals × 0.5 + missed free throws × 0.5 + personal fouls × 0.5" %}</p>
+      </div>
+
       <div class="gradient-rule mt-8 h-px"></div>
 
       <div class="mt-6 flex flex-wrap items-center gap-3">

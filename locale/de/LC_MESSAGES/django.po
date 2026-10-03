@@ -2182,3 +2182,175 @@ msgid "Read %(counter)s player from %(pages)s pages."
 msgid_plural "Read %(counter)s players from %(pages)s pages."
 msgstr[0] "%(counter)s Spieler von %(pages)s Seiten gelesen."
 msgstr[1] "%(counter)s Spieler von %(pages)s Seiten gelesen."
+
+# official game rules: budget, free trades, trade market
+
+#: apps/fantasy/forms.py
+msgid "Starting budget"
+msgstr "Startbudget"
+
+#: apps/fantasy/forms.py
+msgid "Weekly trades from"
+msgstr "Wöchentliche Trades ab"
+
+#: apps/fantasy/forms.py
+msgid "Trades per week"
+msgstr "Trades pro Woche"
+
+#: apps/fantasy/forms.py
+msgid "Trade buying opens"
+msgstr "Trade-Kauf ab"
+
+#: apps/fantasy/forms.py
+msgid "Trade buying closes"
+msgstr "Trade-Kauf bis"
+
+#: apps/fantasy/forms.py
+msgid "In dollars, e.g. 63000000. Applies to rosters created from now on."
+msgstr "In Dollar, z. B. 63000000. Gilt für alle ab jetzt erstellten Kader."
+
+#: apps/fantasy/forms.py
+msgid "The first weekly free trade, e.g. a Sunday at 22:00. Another follows every 7 days until the season ends. Leave empty for none."
+msgstr "Der erste wöchentliche Gratis-Trade, z. B. ein Sonntag um 22:00 Uhr. Danach folgt alle 7 Tage einer, bis die Saison endet. Leer lassen für keine."
+
+#: apps/fantasy/forms.py
+msgid "How many trades each weekly grant adds to every roster."
+msgstr "Wie viele Trades jede wöchentliche Ausschüttung jedem Kader gutschreibt."
+
+#: apps/fantasy/forms.py
+msgid "From when trades can be bought and sold. Leave empty for no limit."
+msgstr "Ab wann Trades gekauft und verkauft werden können. Leer lassen für keine Einschränkung."
+
+#: apps/fantasy/forms.py
+msgid "Until when trades can be bought and sold. Leave empty for no limit."
+msgstr "Bis wann Trades gekauft und verkauft werden können. Leer lassen für keine Einschränkung."
+
+#: apps/fantasy/forms.py
+msgid "Trade buying must close after it opens."
+msgstr "Der Trade-Kauf muss nach seinem Beginn enden."
+
+#: apps/fantasy/forms.py
+msgid "Paid out at"
+msgstr "Ausgeschüttet am"
+
+#: apps/fantasy/forms.py
+msgid "Shown to players, e.g. Helpside Trade or All-Star Game."
+msgstr "Wird den Spielern angezeigt, z. B. Helpside Trade oder All-Star Game."
+
+#: apps/fantasy/services.py
+#, python-format
+msgid "Trades can be bought and sold from %(date)s."
+msgstr "Trades können ab %(date)s gekauft und verkauft werden."
+
+#: apps/fantasy/services.py
+#, python-format
+msgid "Buying and selling trades closed on %(date)s."
+msgstr "Der Kauf und Verkauf von Trades endete am %(date)s."
+
+#: templates/fantasy/partials/roster_panel.html
+msgid "Roster value plus cash: your personal salary cap."
+msgstr "Kaderwert plus Bargeld: dein persönlicher Salary Cap."
+
+#: templates/fantasy/partials/season_trade_grants.html
+#, python-format
+msgid "Free trades · %(season)s"
+msgstr "Gratis-Trades · %(season)s"
+
+#: templates/fantasy/partials/season_trade_grants.html
+msgid "Every roster of the season receives these trades automatically when the date passes."
+msgstr "Jeder Kader der Saison erhält diese Trades automatisch, sobald der Zeitpunkt erreicht ist."
+
+#: templates/fantasy/partials/season_trade_grants.html
+msgid "Remove"
+msgstr "Entfernen"
+
+#: templates/fantasy/partials/season_trade_grants.html
+msgid "No one-off grants yet."
+msgstr "Noch keine einmaligen Ausschüttungen."
+
+#: templates/fantasy/partials/season_trade_grants.html
+msgid "No weekly trades. Set them in the season editor."
+msgstr "Keine wöchentlichen Trades. Lege sie in der Saisonbearbeitung fest."
+
+#: templates/fantasy/partials/season_trade_grants.html
+msgid "Add a grant"
+msgstr "Ausschüttung hinzufügen"
+
+#: templates/fantasy/partials/season_trade_grants.html
+msgid "Add grant"
+msgstr "Hinzufügen"
+
+#: templates/fantasy/season_list.html
+msgid "Free trades"
+msgstr "Gratis-Trades"
+
+#: templates/fantasy/roster_rules.html
+msgid "A roster starts without trades. Every roster receives the same free trades on these dates:"
+msgstr "Ein Kader startet ohne Trades. Jeder Kader erhält zu diesen Zeitpunkten dieselben Gratis-Trades:"
+
+#: templates/fantasy/roster_rules.html
+msgid "Weekly trade"
+msgstr "Wöchentlicher Trade"
+
+#: templates/fantasy/roster_rules.html
+#, python-format
+msgid "Every 7 days from %(date)s until the season ends"
+msgstr "Alle 7 Tage ab %(date)s bis zum Saisonende"
+
+#: templates/fantasy/roster_rules.html
+msgid "No free trades are scheduled for this season yet."
+msgstr "Für diese Saison sind noch keine Gratis-Trades geplant."
+
+#: templates/fantasy/roster_rules.html
+#, python-format
+msgid "Extra trades cost %(buy)s; an unused trade can be sold for %(sell)s."
+msgstr "Zusätzliche Trades kosten %(buy)s; ein ungenutzter Trade kann für %(sell)s verkauft werden."
+
+#: templates/fantasy/roster_rules.html
+#, python-format
+msgid "Possible from %(start)s until %(end)s."
+msgstr "Möglich von %(start)s bis %(end)s."
+
+#: templates/fantasy/roster_rules.html
+#, python-format
+msgid "Possible from %(start)s."
+msgstr "Möglich ab %(start)s."
+
+#: templates/fantasy/roster_rules.html
+#, python-format
+msgid "Possible until %(end)s."
+msgstr "Möglich bis %(end)s."
+
+#: templates/fantasy/roster_rules.html
+msgid "Team value is the current salary of every player on the roster plus your unspent cash. It is your personal salary cap: when salaries rise or fall each week, so does what you can afford."
+msgstr "Der Teamwert ist das aktuelle Gehalt aller Spieler im Kader plus dein nicht ausgegebenes Bargeld. Er ist dein persönlicher Salary Cap: Steigen oder fallen die Gehälter jede Woche, ändert sich auch, was du dir leisten kannst."
+
+#: templates/fantasy/roster_rules.html
+msgid "How fantasy points are scored"
+msgstr "So werden Fantasy-Punkte berechnet"
+
+#: templates/fantasy/roster_rules.html
+msgid "Points + Rebounds + Assists × 1.5 + Steals × 2 + Blocks × 2"
+msgstr "Punkte + Rebounds + Assists × 1,5 + Steals × 2 + Blocks × 2"
+
+#: templates/fantasy/roster_rules.html
+msgid "minus"
+msgstr "minus"
+
+#: templates/fantasy/roster_rules.html
+msgid "Turnovers × 2 + missed field goals × 0.5 + missed free throws × 0.5 + personal fouls × 0.5"
+msgstr "Ballverluste × 2 + verfehlte Feldwürfe × 0,5 + verfehlte Freiwürfe × 0,5 + persönliche Fouls × 0,5"
+
+#: templates/fantasy/partials/season_trade_grants.html
+#, python-format
+msgid "Plus weekly: %(per_week)s every 7 days from %(date)s (%(weeks)s payout this season)."
+msgid_plural "Plus weekly: %(per_week)s every 7 days from %(date)s (%(weeks)s payouts this season)."
+msgstr[0] "Dazu wöchentlich: %(per_week)s alle 7 Tage ab %(date)s (%(weeks)s Ausschüttung in dieser Saison)."
+msgstr[1] "Dazu wöchentlich: %(per_week)s alle 7 Tage ab %(date)s (%(weeks)s Ausschüttungen in dieser Saison)."
+
+#: templates/fantasy/roster_history.html
+#, python-format
+msgid "+%(counter)s trade"
+msgid_plural "+%(counter)s trades"
+msgstr[0] "+%(counter)s Trade"
+msgstr[1] "+%(counter)s Trades"

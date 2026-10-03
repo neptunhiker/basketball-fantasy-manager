@@ -17,10 +17,13 @@ from django.urls import reverse
 
 from apps.fantasy import services
 from apps.fantasy.admin import TransactionAdmin
-from apps.fantasy.models import STARTING_CASH, Roster, Season, Transaction
+from apps.fantasy.models import Roster, Season, Transaction
 from apps.nba.models import Player
 
 User = get_user_model()
+
+# What the rosters in these tests start with (the season fixture's budget).
+STARTING_CASH = Decimal("60000000")
 
 
 @pytest.fixture
@@ -30,12 +33,16 @@ def season(db):
         starts_on=dt.date(2026, 10, 20),
         ends_on=dt.date(2027, 4, 11),
         is_current=True,
+        # The budget these tests' arithmetic was written against.
+        starting_cash=Decimal("60000000"),
     )
 
 
 @pytest.fixture
 def roster(season, manager):
-    return Roster.objects.create(manager=manager, season=season, name="Roster 1")
+    return Roster.objects.create(
+        manager=manager, season=season, name="Roster 1", trades_available=2
+    )
 
 
 @pytest.fixture

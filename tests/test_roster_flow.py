@@ -21,6 +21,8 @@ def season(db):
         starts_on=dt.date(2026, 10, 20),
         ends_on=dt.date(2027, 4, 11),
         is_current=True,
+        # The budget these tests' arithmetic was written against.
+        starting_cash=Decimal("60000000"),
     )
 
 
@@ -48,7 +50,9 @@ def pool(db):
 
 @pytest.fixture
 def roster(season, manager):
-    return Roster.objects.create(manager=manager, season=season, name="Roster 1")
+    return Roster.objects.create(
+        manager=manager, season=season, name="Roster 1", trades_available=2
+    )
 
 
 def build_url(roster):

@@ -10,7 +10,12 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.core.forms import StyledFormMixin
 
-from .models import Season
+from .models import Season, TradeGrant
+
+# `datetime-local` has no timezone of its own, which is right here: Django reads
+# and writes it in the active timezone, so an admin types the wall-clock time
+# the deadline actually falls at.
+DATETIME_WIDGET = {"attrs": {"type": "datetime-local"}, "format": "%Y-%m-%dT%H:%M"}
 
 
 class SeasonForm(StyledFormMixin, forms.ModelForm):
@@ -39,11 +44,34 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
 
     # Meta.fields first, then the declared ones, so this is what puts the
     # checkbox back between the dates and the cutoff.
-    field_order = ["label", "starts_on", "ends_on", "is_current", "signings_open_at", "signings_close_at"]
+    field_order = [
+        "label",
+        "starts_on",
+        "ends_on",
+        "is_current",
+        "signings_open_at",
+        "signings_close_at",
+        "starting_cash",
+        "weekly_trades_from",
+        "weekly_trades_per_week",
+        "trade_market_opens_at",
+        "trade_market_closes_at",
+    ]
 
     class Meta:
         model = Season
-        fields = ["label", "starts_on", "ends_on", "signings_open_at", "signings_close_at"]
+        fields = [
+            "label",
+            "starts_on",
+            "ends_on",
+            "signings_open_at",
+            "signings_close_at",
+            "starting_cash",
+            "weekly_trades_from",
+            "weekly_trades_per_week",
+            "trade_market_opens_at",
+            "trade_market_closes_at",
+        ]
         widgets = {
             # Native pickers. Without an explicit format the browser gets a
             # plain text box and the value it posts back is anyone's guess.
@@ -58,15 +86,52 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
             "signings_open_at": forms.DateTimeInput(
                 attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
             ),
+            "starting_cash": forms.NumberInput(attrs={"step": "100000", "min": "0"}),
+            "weekly_trades_from": forms.DateTimeInput(**DATETIME_WIDGET),
+            "trade_market_opens_at": forms.DateTimeInput(**DATETIME_WIDGET),
+            "trade_market_closes_at": forms.DateTimeInput(**DATETIME_WIDGET),
+        }
+        labels = {
+            "starting_cash": _("Starting budget"),
+            "weekly_trades_from": _("Weekly trades from"),
+            "weekly_trades_per_week": _("Trades per week"),
+            "trade_market_opens_at": _("Trade buying opens"),
+            "trade_market_closes_at": _("Trade buying closes"),
         }
         help_texts = {
             "label": _("How the season is written in the official game, e.g. 2026-27."),
+            "starting_cash": _(
+                "In dollars, e.g. 63000000. Applies to rosters created from now on."
+            ),
+            "weekly_trades_from": _(
+                "The first weekly free trade, e.g. a Sunday at 22:00. Another follows "
+                "every 7 days until the season ends. Leave empty for none."
+            ),
+            "weekly_trades_per_week": _("How many trades each weekly grant adds to every roster."),
+            "trade_market_opens_at": _(
+                "From when trades can be bought and sold. Leave empty for no limit."
+            ),
+            "trade_market_closes_at": _(
+                "Until when trades can be bought and sold. Leave empty for no limit."
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # The checkbox is not a model field here, so nothing fills it in.
         self.fields["is_current"].initial = self.instance.is_current
+        # Both have a sensible default, so leaving them blank means "the usual".
+        for name in ("starting_cash", "weekly_trades_per_week"):
+            self.fields[name].required = False
+            self.fields[name].widget.attrs.pop("required", None)
+
+    def _fill_default(self, name):
+        if self.cleaned_data.get(name) in (None, ""):
+            self.cleaned_data[name] = (
+                getattr(self.instance, name)
+                if self.instance.pk
+                else Season._meta.get_field(name).get_default()
+            )
 
     def clean(self):
         """The one rule the database states but cannot explain.
@@ -77,12 +142,22 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
         sentence, early enough to be shown next to the field.
         """
         cleaned = super().clean()
+        self._fill_default("starting_cash")
+        self._fill_default("weekly_trades_per_week")
         starts_on, ends_on = cleaned.get("starts_on"), cleaned.get("ends_on")
         if starts_on and ends_on and ends_on <= starts_on:
             self.add_error("ends_on", _("A season has to end after it starts."))
         open_at, close_at = cleaned.get("signings_open_at"), cleaned.get("signings_close_at")
         if open_at and close_at and open_at >= close_at:
             self.add_error("signings_close_at", _("Signings must close after they open."))
+        market_open, market_close = (
+            cleaned.get("trade_market_opens_at"),
+            cleaned.get("trade_market_closes_at"),
+        )
+        if market_open and market_close and market_open >= market_close:
+            self.add_error(
+                "trade_market_closes_at", _("Trade buying must close after it opens.")
+            )
         return cleaned
 
     @transaction.atomic
@@ -116,3 +191,23 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
         # database says, which is what keeps validation legal.
         self.instance.is_current = make_current
         return super().save(commit=commit)
+
+
+class TradeGrantForm(StyledFormMixin, forms.ModelForm):
+    """One one-off batch of free trades, e.g. the Helpside Trade."""
+
+    class Meta:
+        model = TradeGrant
+        fields = ["label", "granted_at", "trades"]
+        widgets = {
+            "granted_at": forms.DateTimeInput(**DATETIME_WIDGET),
+            "trades": forms.NumberInput(attrs={"min": "1"}),
+        }
+        labels = {
+            "label": _("Name"),
+            "granted_at": _("Paid out at"),
+            "trades": _("Trades"),
+        }
+        help_texts = {
+            "label": _("Shown to players, e.g. Helpside Trade or All-Star Game."),
+        }

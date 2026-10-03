@@ -9,6 +9,11 @@ urlpatterns = [
     path("seasons/new/", views.SeasonCreateView.as_view(), name="season-create"),
     path("seasons/<uuid:pk>/edit/", views.SeasonUpdateView.as_view(), name="season-update"),
     path("seasons/<uuid:pk>/delete/", views.SeasonDeleteView.as_view(), name="season-delete"),
+    path(
+        "seasons/<uuid:pk>/trade-grants/",
+        views.SeasonTradeGrantsView.as_view(),
+        name="season-trade-grants",
+    ),
     path("managers/", views.ManagerListView.as_view(), name="manager-list"),
     path("managers/new/", views.ManagerCreateView.as_view(), name="manager-create"),
     path("managers/<uuid:pk>/", views.ManagerDetailView.as_view(), name="manager-detail"),

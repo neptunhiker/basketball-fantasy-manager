@@ -32,17 +32,19 @@ from apps.core.views import (
 from apps.nba.models import Player, Team
 
 from . import services
-from .forms import SeasonForm
+from .forms import SeasonForm, TradeGrantForm
 from .models import (
     MINIMUM_BY_POSITION,
     ROSTER_SIZE,
     ROSTER_ICON_CHOICES,
-    STARTING_CASH,
+    TRADE_BUY_PRICE,
+    TRADE_SELL_PRICE,
     Manager,
     PlayerSnapshot,
     Roster,
     RosterPlayer,
     Season,
+    TradeGrant,
 )
 
 
@@ -122,6 +124,48 @@ class SeasonUpdateView(SeasonFormView):
         if not hasattr(self, "_season"):
             self._season = get_object_or_404(Season, pk=self.kwargs["pk"])
         return self._season
+
+
+class SeasonTradeGrantsView(AdminRequiredMixin, View):
+    """The one-off free trades of a season, listed, added and removed in a modal.
+
+    The weekly trades are not here: they are two fields on the season itself.
+    A grant that has already been paid out stays in every roster's history
+    when it is deleted -- deleting it only stops rosters that have not yet
+    received it from getting it.
+    """
+
+    template_name = "fantasy/partials/season_trade_grants.html"
+
+    def get_season(self):
+        return get_object_or_404(Season, pk=self.kwargs["pk"])
+
+    def render(self, season, form=None):
+        return render(
+            self.request,
+            self.template_name,
+            {
+                "season": season,
+                "grants": season.trade_grants.all(),
+                "form": form or TradeGrantForm(),
+                "weekly_count": len(season.weekly_trade_moments()),
+            },
+        )
+
+    def get(self, request, *args, **kwargs):
+        return self.render(self.get_season())
+
+    def post(self, request, *args, **kwargs):
+        season = self.get_season()
+        if request.POST.get("action") == "delete":
+            TradeGrant.objects.filter(season=season, pk=request.POST.get("grant")).delete()
+            return self.render(season)
+        form = TradeGrantForm(request.POST)
+        if form.is_valid():
+            form.instance.season = season
+            form.save()
+            return self.render(season)
+        return self.render(season, form)
 
 
 class SeasonDeleteView(AdminRequiredMixin, TypedConfirmView):
@@ -457,6 +501,8 @@ class OwnRosterMixin(LoginRequiredMixin):
                 pk=self.kwargs["pk"],
                 manager__user=self.request.user,
             )
+            # Free trades that fell due since the roster was last looked at.
+            services.pay_due_trade_grants([self._roster])
         return self._roster
 
 
@@ -472,6 +518,7 @@ class RosterListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        services.pay_due_trade_grants(context["rosters"])
         context["current_season"] = Season.objects.filter(is_current=True).first()
         return context
 
@@ -631,6 +678,11 @@ class RosterRulesView(OwnRosterMixin, TemplateView):
         ]
         context["required_slots"] = sum(MINIMUM_BY_POSITION.values())
         context["flex_slots"] = ROSTER_SIZE - context["required_slots"]
+        season = context["roster"].season
+        # The trade calendar: one-off grants by date, the weekly ones as a rule.
+        context["trade_grants"] = list(season.trade_grants.all())
+        context["trade_buy_price"] = TRADE_BUY_PRICE
+        context["trade_sell_price"] = TRADE_SELL_PRICE
         return context
 
 
@@ -638,7 +690,7 @@ class RosterHistoryView(OwnRosterMixin, TemplateView):
     """Every recorded move, newest first, with the balance it left behind.
 
     The running balance is the point of the screen rather than decoration. It is
-    computed forward from `STARTING_CASH` through the whole log, so the final
+    computed forward from the roster's starting budget through the whole log, so the final
     figure either agrees with `Roster.cash` or the two have drifted apart -- and
     `reconciles` says which, on the page, where it can be noticed. A ledger
     nobody checks is not a ledger.
@@ -659,7 +711,7 @@ class RosterHistoryView(OwnRosterMixin, TemplateView):
             ).order_by("occurred_at", "created_at")
         )
 
-        balance = STARTING_CASH
+        balance = roster.starting_cash
         rows = []
         for move in moves:
             balance += move.cash_delta
@@ -667,7 +719,7 @@ class RosterHistoryView(OwnRosterMixin, TemplateView):
 
         context["roster"] = roster
         context["rows"] = list(reversed(rows))
-        context["starting_cash"] = STARTING_CASH
+        context["starting_cash"] = roster.starting_cash
         context["ledger_balance"] = balance
         context["reconciles"] = balance == roster.cash
         context["counts"] = Counter(move.kind for move in moves)
@@ -788,17 +840,21 @@ def _build_context(request, roster, error=None):
     else:
         trade_unavailable_reason = ""
 
-    can_buy_trade = trading_allowed and roster.cash >= Decimal("1500000")
-    if not trading_allowed:
-        buy_trade_disabled_reason = trade_unavailable_reason
-    elif roster.cash < Decimal("1500000"):
+    # Buying and selling trades has its own window inside the trading period.
+    market_closed_reason = (
+        trade_unavailable_reason or services.trade_market_closed_reason(roster.season)
+    )
+    can_buy_trade = not market_closed_reason and roster.cash >= TRADE_BUY_PRICE
+    if market_closed_reason:
+        buy_trade_disabled_reason = market_closed_reason
+    elif roster.cash < TRADE_BUY_PRICE:
         buy_trade_disabled_reason = "Not enough cash ($1.5M needed)"
     else:
         buy_trade_disabled_reason = ""
 
-    can_sell_trade = trading_allowed and roster.trades_available > 0
-    if not trading_allowed:
-        sell_trade_disabled_reason = trade_unavailable_reason
+    can_sell_trade = not market_closed_reason and roster.trades_available > 0
+    if market_closed_reason:
+        sell_trade_disabled_reason = market_closed_reason
     elif roster.trades_available <= 0:
         sell_trade_disabled_reason = "No trades available to sell"
     else:

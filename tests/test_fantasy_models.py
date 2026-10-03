@@ -6,8 +6,11 @@ from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 
 from apps.fantasy import services
-from apps.fantasy.models import STARTING_CASH, Roster, RosterPlayer, Season, Transaction
+from apps.fantasy.models import Roster, RosterPlayer, Season, Transaction
 from apps.nba.models import Player
+
+# What the rosters in these tests start with (the season fixture's budget).
+STARTING_CASH = Decimal("60000000")
 
 
 @pytest.fixture
@@ -17,12 +20,16 @@ def season(db):
         starts_on=dt.date(2026, 9, 1),
         ends_on=dt.date(2027, 4, 12),
         is_current=True,
+        # The budget these tests' arithmetic was written against.
+        starting_cash=Decimal("60000000"),
     )
 
 
 @pytest.fixture
 def roster(season, manager):
-    return Roster.objects.create(manager=manager, season=season, name="My roster")
+    return Roster.objects.create(
+        manager=manager, season=season, name="My roster", trades_available=2
+    )
 
 
 def make_player(position, name):

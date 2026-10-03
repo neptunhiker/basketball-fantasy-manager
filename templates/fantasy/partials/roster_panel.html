@@ -73,6 +73,13 @@
            title="{{ roster.squad_value|exact }}">
           {{ roster.squad_value|millions }}
         </p>
+        {# Roster value plus cash: the official game's team value, which is #}
+        {# also the roster's personal salary cap. #}
+        <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400"
+           title="{% translate 'Roster value plus cash: your personal salary cap.' %}">
+          {% translate "Team value" %}
+          <span class="font-medium tabular-nums text-tertiary-700 dark:text-neutral-200">{{ roster.team_value|millions }}</span>
+        </p>
       </div>
 
       <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">

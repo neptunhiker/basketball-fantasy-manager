@@ -35,6 +35,8 @@ def season(db):
         starts_on="2025-10-01",
         ends_on="2026-04-30",
         is_current=True,
+        # The budget these tests' arithmetic was written against.
+        starting_cash=Decimal("60000000"),
     )
 
 
@@ -132,8 +134,9 @@ def test_each_roster_card_shows_icon_cash_team_value_and_player_count(signed_in,
     body = signed_in.get(LIST).content.decode()
 
     assert "img/roster_icons/lion.png" in body
-    assert "$50.40M" in body  # cash after a 9.60M signing
-    assert "$9.60M" in body  # squad value from one signed player
+    assert "$53.40M" in body  # cash after a 9.60M signing from the $63M budget
+    # Team value is squad plus cash: unchanged by a signing at today's price.
+    assert "$63.00M" in body
     assert "Players" in body
     assert "1 / 15" in body
     assert "Jalen Brunson" not in body  # individual players are no longer listed

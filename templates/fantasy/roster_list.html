@@ -63,7 +63,7 @@
         </div>
 
         <a href="{% url 'fantasy:roster-build' roster.pk %}" class="mt-4 block">
-          <dl class="grid grid-cols-2 gap-3 text-sm">
+          <dl class="grid grid-cols-3 gap-3 text-sm">
             <div>
               <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Players" %}</dt>
               <dd class="font-medium tabular-nums">{{ roster.player_count }} / 15</dd>
@@ -71,6 +71,10 @@
             <div>
               <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Cash" %}</dt>
               <dd class="font-medium tabular-nums" title="{{ roster.cash|exact }}">{{ roster.cash|millions }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Team value" %}</dt>
+              <dd class="font-medium tabular-nums" title="{{ roster.team_value|exact }}">{{ roster.team_value|millions }}</dd>
             </div>
           </dl>
         </a>

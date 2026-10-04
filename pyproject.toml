@@ -23,6 +23,7 @@ dev = [
     "pytest-cov>=6.0",
     "pre-commit>=4.0",
     "model-bakery>=1.20",
+    "pytest-playwright>=0.9.0",
 ]
 
 [tool.ruff]
@@ -40,5 +41,8 @@ known-first-party = ["apps", "config"]
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.dev"
 python_files = ["test_*.py"]
-addopts = "--reuse-db"
+addopts = "--reuse-db -m 'not browser'"
 testpaths = ["tests"]
+markers = [
+    "browser: drives a real browser via Playwright (run with `pytest -m browser`)",
+]

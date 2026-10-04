@@ -31,3 +31,6 @@ htmlcov/
 
 # Planning
 my_docs/
+
+# Screenshots from the browser checks (tests/browser)
+tmp/

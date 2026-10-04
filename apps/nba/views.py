@@ -29,21 +29,15 @@ from django.views.generic import DetailView, ListView
 from apps.core.views import StaffRequiredMixin
 from apps.fantasy import services
 from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
+from apps.fantasy.views import player_roster_options
 
 from . import charts, stats
+from .stats import DESCENDING_FIRST
 from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
 from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
 from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
-
-
-# Columns where a manager wants the biggest number on top: the first click on
-# one of these headers, and a sort with no direction given, goes high-first.
-# Names, teams and positions read A-Z instead.
-DESCENDING_FIRST = frozenset(
-    {"salary", "expected", "difference", "points", "avg", "games", "hotness"}
-)
 
 
 class TeamListView(LoginRequiredMixin, ListView):
@@ -865,6 +859,8 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # "Your rosters": sign him into one, or trade him in after the deadline.
+        context["roster_options"] = player_roster_options(self.request.user, self.object)
 
         # Newest first, which is both the order the table shows and the order
         # that makes each row's predecessor the next item in the list.

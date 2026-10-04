@@ -151,6 +151,7 @@
             </div>
           </template>
         </div>
+        <a href="{% url 'nba:player-compare' %}?player={{ player.slug }}" class="btn btn-secondary">{% translate "Compare" %}</a>
         <a href="{% url 'nba:player-list' %}" class="btn btn-secondary">{% translate "All players" %}</a>
       </div>
     </div>
@@ -201,6 +202,8 @@
       </div>
     </div>
   </div>
+
+  {% include "fantasy/partials/player_roster_options.html" %}
 
   <div class="card overflow-hidden">
     <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">

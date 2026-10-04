@@ -1,6 +1,8 @@
+import datetime as dt
 from collections import Counter
 from decimal import Decimal
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db.models import (
@@ -15,12 +17,17 @@ from django.db.models import (
 )
 from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
+from apps.core.htmx import add_toast
+from apps.core.templatetags.money import millions
 from apps.core.views import (
     AdminRequiredMixin,
     ConfirmView,
@@ -30,7 +37,7 @@ from apps.core.views import (
     TypedConfirmView,
 )
 from apps.nba.models import Player, Team
-from apps.nba.views import DESCENDING_FIRST
+from apps.nba.stats import DESCENDING_FIRST
 
 from . import services
 from .forms import SeasonForm, TradeGrantForm
@@ -685,7 +692,16 @@ class RosterRulesView(OwnRosterMixin, TemplateView):
         context["flex_slots"] = ROSTER_SIZE - context["required_slots"]
         season = context["roster"].season
         # The trade calendar: one-off grants by date, the weekly ones as a rule.
-        context["trade_grants"] = list(season.trade_grants.all())
+        # Past grants are marked received and the next one highlighted, so the
+        # calendar answers "when is my next trade" at a glance.
+        now = timezone.now()
+        grants = list(season.trade_grants.all())
+        upcoming = [grant for grant in grants if grant.granted_at > now]
+        for grant in grants:
+            grant.is_received = grant.granted_at <= now
+            grant.is_next = bool(upcoming) and grant is upcoming[0]
+        context["trade_grants"] = grants
+        context["next_trade_grant"] = services.next_trade_grant(season, now)
         context["trade_buy_price"] = TRADE_BUY_PRICE
         context["trade_sell_price"] = TRADE_SELL_PRICE
         return context
@@ -815,7 +831,25 @@ def _sort_roster_memberships(request, memberships):
     return sort, ("desc" if descending else "asc"), present + missing
 
 
-def _build_context(request, roster, error=None):
+def _signings_deadline(season, now=None):
+    """The next signing-window moment worth a line on the build page.
+
+    Before signings open: when they open. While they are open and a cutoff is
+    set: when they close, flagged once less than a day is left. Afterwards
+    nothing -- the panel already says signings are closed.
+    """
+    now = now or timezone.now()
+    if season.signings_open_at and now < season.signings_open_at:
+        return {"signings_open_at_upcoming": season.signings_open_at}
+    if season.transactions_allowed and season.signings_close_at and now < season.signings_close_at:
+        return {
+            "signings_deadline": season.signings_close_at,
+            "signings_deadline_soon": season.signings_close_at - now < dt.timedelta(hours=24),
+        }
+    return {}
+
+
+def _build_context(request, roster):
     filters = _picker_filters(request)
     # Read off the roster rather than queried here, so this list and every
     # figure derived from it -- the size, the value, the shortfalls, and
@@ -833,7 +867,6 @@ def _build_context(request, roster, error=None):
     current_sort, current_dir, memberships = _sort_roster_memberships(request, memberships)
     trading_allowed = roster.season.trading_allowed
     if not trading_allowed:
-        from django.utils import timezone
         now = timezone.now()
         if now < roster.season.season_open_at:
             opened = timezone.localtime(roster.season.season_open_at)
@@ -898,7 +931,8 @@ def _build_context(request, roster, error=None):
         "sell_trade_disabled_reason": sell_trade_disabled_reason,
         "trade_unavailable_reason": trade_unavailable_reason,
         "signings_close_at": roster.season.signings_close_at,
-        "error": error,
+        **_signings_deadline(roster.season),
+        "next_trade_grant": services.next_trade_grant(roster.season),
     }
 
 
@@ -924,20 +958,23 @@ class RosterChangeView(OwnRosterMixin, View):
     template_name = "fantasy/partials/build_update.html"
 
     def apply(self, roster, player):
+        """Make the change; return the sentence to confirm it with."""
         raise NotImplementedError
 
     def post(self, request, *args, **kwargs):
         roster = self.get_roster()
         player = get_object_or_404(Player, pk=kwargs["player_pk"])
 
-        error = None
+        # Success and failure both come back as a toast: the buttons are far
+        # down the market, where a message at the top of the page goes unseen.
         try:
-            self.apply(roster, player)
+            message, level = self.apply(roster, player), "success"
         except ValidationError as exc:
-            error = exc.messages[0]
+            message, level = exc.messages[0], "error"
 
         roster.refresh_from_db()
-        return render(request, self.template_name, _build_context(request, roster, error))
+        response = render(request, self.template_name, _build_context(request, roster))
+        return add_toast(response, message, level)
 
 
 class RosterBuyView(RosterChangeView):
@@ -947,11 +984,95 @@ class RosterBuyView(RosterChangeView):
         # The price is read here, never taken from the request: a client that
         # could name its own price could sign anyone for a euro.
         services.buy(roster, player, player.current_salary)
+        return _("%(name)s signed for %(price)s.") % {
+            "name": player.full_name,
+            "price": millions(player.current_salary),
+        }
 
 
 class RosterSellView(RosterChangeView):
     def apply(self, roster, player):
-        services.sell(roster, player, services.amount_paid_for(roster, player))
+        refund = services.amount_paid_for(roster, player)
+        services.sell(roster, player, refund)
+        return _("%(name)s released, %(price)s back.") % {
+            "name": player.full_name,
+            "price": millions(refund),
+        }
+
+
+def player_roster_options(user, player):
+    """What each of `user`'s current-season rosters can do with `player`.
+
+    For the "Your rosters" box on a player page. While signings are open a
+    roster can sign him (unless full, short of cash, or he has no price);
+    after the deadline it can trade him in through the usual dialog.
+    """
+    season = Season.objects.filter(is_current=True).first()
+    if season is None:
+        return []
+    rosters = list(
+        Roster.objects.filter(manager__user=user, season=season)
+        .select_related("season", "manager")
+        .with_squad()
+        .order_by("name")
+    )
+    services.pay_due_trade_grants(rosters)
+    options = []
+    for roster in rosters:
+        option = {
+            "roster": roster,
+            "roster_size": ROSTER_SIZE,
+            "on_roster": player in roster.current_squad,
+        }
+        if option["on_roster"]:
+            pass
+        elif season.transactions_allowed:
+            option["action"] = "sign"
+            if player.current_salary is None:
+                option["blocked"] = _("No salary on record yet.")
+            elif roster.player_count >= ROSTER_SIZE:
+                option["blocked"] = _("Roster is full.")
+            elif player.current_salary > roster.cash:
+                option["blocked"] = _("Not enough cash (%(cash)s left).") % {
+                    "cash": millions(roster.cash)
+                }
+        elif season.trading_allowed:
+            option["action"] = "trade"
+        options.append(option)
+    return options
+
+
+def render_player_roster_options(request, player):
+    return render(
+        request,
+        "fantasy/partials/player_roster_options.html",
+        {"player": player, "roster_options": player_roster_options(request.user, player)},
+    )
+
+
+class PlayerSignView(OwnRosterMixin, View):
+    """Sign a player from his own page, into one of your rosters.
+
+    The same rules and the same server-side price as signing from the market;
+    only the response differs: the player page's roster box, plus a toast.
+    """
+
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        roster = self.get_roster()
+        player = get_object_or_404(Player, pk=kwargs["player_pk"])
+        try:
+            message = RosterBuyView().apply(roster, player)
+            level = "success"
+        except ValidationError as exc:
+            message, level = exc.messages[0], "error"
+        message = (
+            _("%(message)s Roster: %(roster)s.") % {"message": message, "roster": roster.name}
+            if level == "success"
+            else message
+        )
+        return add_toast(render_player_roster_options(request, player), message, level)
 
 
 class RosterBuyTradeView(OwnRosterMixin, ConfirmView):
@@ -974,6 +1095,7 @@ class RosterBuyTradeView(OwnRosterMixin, ConfirmView):
     def perform(self, roster):
         services.buy_trade(roster)
         roster.refresh_from_db()
+        message = _("Trade bought for %(price)s.") % {"price": millions(TRADE_BUY_PRICE)}
         response = render(
             self.request,
             "fantasy/partials/build_update.html",
@@ -981,7 +1103,7 @@ class RosterBuyTradeView(OwnRosterMixin, ConfirmView):
         )
         response["HX-Retarget"] = "#roster-panel"
         response["HX-Reswap"] = "outerHTML"
-        return response
+        return add_toast(response, message)
 
 
 class RosterSellTradeView(OwnRosterMixin, ConfirmView):
@@ -1005,6 +1127,7 @@ class RosterSellTradeView(OwnRosterMixin, ConfirmView):
     def perform(self, roster):
         services.sell_trade(roster)
         roster.refresh_from_db()
+        message = _("Trade sold for %(price)s.") % {"price": millions(TRADE_SELL_PRICE)}
         response = render(
             self.request,
             "fantasy/partials/build_update.html",
@@ -1012,7 +1135,29 @@ class RosterSellTradeView(OwnRosterMixin, ConfirmView):
         )
         response["HX-Retarget"] = "#roster-panel"
         response["HX-Reswap"] = "outerHTML"
-        return response
+        return add_toast(response, message)
+
+
+def _flag_minimum_breaks(roster, player_out, candidates):
+    """Mark each candidate whose arrival for `player_out` leaves a position short.
+
+    Sets `trade_leaves` to e.g. "4 G" on those, None on the rest. Only a
+    position the swap itself takes below its minimum counts: a roster already
+    short of a center is not flagged again for every trade that leaves it so.
+    """
+    counts = roster.position_counts()
+    for candidate in candidates:
+        after = dict(counts)
+        after[player_out.position] -= 1
+        after[candidate.position] += 1
+        candidate.trade_leaves = next(
+            (
+                f"{after[position]} {position}"
+                for position, minimum in MINIMUM_BY_POSITION.items()
+                if after[position] < minimum and after[position] < counts[position]
+            ),
+            None,
+        )
 
 
 def _chosen_player(request, key):
@@ -1068,22 +1213,32 @@ class RosterTradeView(OwnRosterMixin, View):
 
         preview = services.trade_preview(roster, player_out, player_in)
         filters = _picker_filters(request)
+        available = _available_players(roster, filters, budget=preview["budget"])[:60]
+        # Carried through every link inside the dialog, so a trade started on a
+        # player page still knows where to go when it is executed.
+        return_query = "&return_to=player" if request.GET.get("return_to") == "player" else ""
+        if player_out is not None:
+            _flag_minimum_breaks(roster, player_out, available)
 
         return {
             "roster": roster,
             "memberships": memberships,
             "filters": filters,
             "positions": Player.Position.choices,
-            "available": _available_players(roster, filters, budget=preview["budget"])[:60],
+            "available": available,
+            # Where to go after a trade made from somewhere other than the
+            # build page (the player page), instead of swapping in its panels.
+            "return_to": "player" if request.GET.get("return_to") == "player" else "",
             "preview": preview,
             "trade_url": reverse("fantasy:roster-trade", args=[roster.pk]),
             # Ready-made query fragments, so a row that changes one side of the
             # trade does not drop the other.
-            "keep_out": f"&out={player_out.pk}" if player_out else "",
-            "keep_in": f"&in={player_in.pk}" if player_in else "",
+            "keep_out": (f"&out={player_out.pk}" if player_out else "") + return_query,
+            "keep_in": (f"&in={player_in.pk}" if player_in else "") + return_query,
             "state_query": "?body=1"
             + (f"&out={player_out.pk}" if player_out else "")
-            + (f"&in={player_in.pk}" if player_in else ""),
+            + (f"&in={player_in.pk}" if player_in else "")
+            + return_query,
             "panel_class": "modal-panel-xl",
             "error": error,
             # What to tell a roster with no trades left: buy one now, or when
@@ -1122,12 +1277,24 @@ class RosterTradeView(OwnRosterMixin, View):
             response["HX-Reswap"] = "outerHTML"
             return response
 
+        done = _("Trade done: %(out)s out, %(in)s in.") % {
+            "out": preview["player_out"].full_name,
+            "in": preview["player_in"].full_name,
+        }
+        if request.GET.get("return_to") == "player":
+            # Started on a player page, which has no roster panel to update:
+            # go to the roster instead, and say what happened there.
+            messages.success(request, done)
+            response = HttpResponse(status=204)
+            response["HX-Redirect"] = reverse("fantasy:roster-build", args=[roster.pk])
+            return response
+
         roster.refresh_from_db()
         response = render(
             request, "fantasy/partials/build_update.html", _build_context(request, roster)
         )
         response["HX-Trigger"] = "close-modal"
-        return response
+        return add_toast(response, done)
 
     def execute(self, roster, preview):
         player_out, player_in = preview["player_out"], preview["player_in"]

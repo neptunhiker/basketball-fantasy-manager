@@ -68,8 +68,13 @@
     </svg>
     <span class="hidden sm:inline">{% translate "History" %}</span>
   </a>
-  <a href="{% url 'fantasy:roster-rules' roster.pk %}" class="btn btn-ghost hidden text-xs sm:inline-flex">
-    {% translate "Rules" %}
+  <a href="{% url 'fantasy:roster-rules' roster.pk %}"
+     aria-label="{% translate 'Rules' %}"
+     class="btn btn-ghost h-9 w-9 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3">
+    <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5v-15ZM5 19.5A1.5 1.5 0 0 0 6.5 21H19M9 7h6M9 10.5h6"/>
+    </svg>
+    <span class="hidden sm:inline">{% translate "Rules" %}</span>
   </a>
   <button type="button"
           hx-get="{% url 'fantasy:roster-delete' roster.pk %}"

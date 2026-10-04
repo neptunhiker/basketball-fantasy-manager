@@ -8,13 +8,6 @@
 {# wrapper is not. #}
 <div id="roster-panel" class="space-y-4">
 
-  {% if error %}
-    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200"
-         role="alert">
-      {{ error }}
-    </div>
-  {% endif %}
-
   <div class="card overflow-hidden">
 
     {# Desktop hero header: prominent large icon & team header #}
@@ -146,9 +139,29 @@
             </button>
           </div>
         </div>
+        {# When the next free trade arrives, so 0 is not a dead end. #}
+        {% if next_trade_grant %}
+          <p class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+            {% blocktranslate with label=next_trade_grant.label date=next_trade_grant.granted_at|date:"SHORT_DATETIME_FORMAT" trades=next_trade_grant.trades %}Next: {{ label }} · {{ date }} (+{{ trades }}){% endblocktranslate %}
+            · <a href="{% url 'fantasy:roster-rules' roster.pk %}#trades" class="underline hover:text-primary-600 dark:hover:text-primary-300">{% translate "Trade calendar" %}</a>
+          </p>
+        {% endif %}
       </div>
 
     </div>
+
+    {# The signing deadline, where signing decisions are made. Relative time #}
+    {# for urgency, the date for planning; amber once less than a day is left. #}
+    {% if signings_deadline %}
+      <p class="border-t border-neutral-200 px-4 py-2.5 text-xs sm:px-5 dark:border-neutral-800
+        {% if signings_deadline_soon %}bg-amber-50 font-medium text-amber-900 dark:bg-amber-500/10 dark:text-amber-200{% else %}text-neutral-600 dark:text-neutral-300{% endif %}">
+        {% blocktranslate with when=signings_deadline|timeuntil date=signings_deadline|date:"SHORT_DATETIME_FORMAT" %}Signings close in {{ when }} ({{ date }}).{% endblocktranslate %}
+      </p>
+    {% elif signings_open_at_upcoming %}
+      <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-600 sm:px-5 dark:border-neutral-800 dark:text-neutral-300">
+        {% blocktranslate with when=signings_open_at_upcoming|timeuntil date=signings_open_at_upcoming|date:"SHORT_DATETIME_FORMAT" %}Signings open in {{ when }} ({{ date }}).{% endblocktranslate %}
+      </p>
+    {% endif %}
 
     {# Where the roster stands, in a sentence, on the same card as the #}
     {# numbers it is drawn from. #}

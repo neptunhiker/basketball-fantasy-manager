@@ -15,6 +15,7 @@ The screens have to say that before the deadline, not after.
 """
 
 import datetime as dt
+import json
 from decimal import Decimal
 from unittest import mock
 
@@ -28,6 +29,10 @@ from apps.fantasy.models import ROSTER_SIZE, Manager, Roster, Season
 from apps.nba.models import Player
 
 pytestmark = pytest.mark.django_db
+
+
+def toast(response):
+    return json.loads(response["HX-Trigger-After-Swap"])["toast"]
 
 
 @pytest.fixture
@@ -315,7 +320,9 @@ def test_a_hand_written_post_is_still_refused(signed_in, roster, season):
 
     buy = signed_in.post(reverse("fantasy:roster-buy", args=[roster.pk, player.pk]))
 
-    assert "Signings closed" in buy.content.decode()
+    # Refusals come back as a toast now (see apps.core.htmx.add_toast).
+    assert "Signings closed" in toast(buy)["message"]
+    assert toast(buy)["level"] == "error"
     assert roster.memberships.count() == 0
 
 
@@ -326,7 +333,9 @@ def test_a_hand_written_sell_is_refused_too(signed_in, roster, season):
 
     sell = signed_in.post(reverse("fantasy:roster-sell", args=[roster.pk, player.pk]))
 
-    assert "Signings closed" in sell.content.decode()
+    # Refusals come back as a toast now (see apps.core.htmx.add_toast).
+    assert "Signings closed" in toast(sell)["message"]
+    assert toast(sell)["level"] == "error"
     assert roster.memberships.filter(removed_at__isnull=True).count() == 1
 
 

@@ -31,6 +31,11 @@ urlpatterns = [
         name="roster-buy",
     ),
     path(
+        "rosters/<uuid:pk>/sign-player/<uuid:player_pk>/",
+        views.PlayerSignView.as_view(),
+        name="roster-sign-player",
+    ),
+    path(
         "rosters/<uuid:pk>/sell/<uuid:player_pk>/",
         views.RosterSellView.as_view(),
         name="roster-sell",

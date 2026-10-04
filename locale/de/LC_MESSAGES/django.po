@@ -2427,3 +2427,118 @@ msgid "Next free trade: %(label)s on %(date)s (+%(trades)s)."
 msgid_plural "Next free trades: %(label)s on %(date)s (+%(trades)s)."
 msgstr[0] "Nächster Gratis-Trade: %(label)s am %(date)s (+%(trades)s)."
 msgstr[1] "Nächste Gratis-Trades: %(label)s am %(date)s (+%(trades)s)."
+
+# UX round 2: guidance while building a roster
+
+#: apps/fantasy/views.py
+#, python-format
+msgid "%(name)s signed for %(price)s."
+msgstr "%(name)s für %(price)s verpflichtet."
+
+#: apps/fantasy/views.py
+#, python-format
+msgid "%(name)s released, %(price)s back."
+msgstr "%(name)s entlassen, %(price)s zurück."
+
+#: apps/fantasy/views.py
+#, python-format
+msgid "Trade bought for %(price)s."
+msgstr "Trade für %(price)s gekauft."
+
+#: apps/fantasy/views.py
+#, python-format
+msgid "Trade sold for %(price)s."
+msgstr "Trade für %(price)s verkauft."
+
+#: apps/fantasy/views.py
+#, python-format
+msgid "Trade done: %(out)s out, %(in)s in."
+msgstr "Trade durchgeführt: %(out)s raus, %(in)s rein."
+
+#: apps/fantasy/views.py
+msgid "No salary on record yet."
+msgstr "Noch kein Gehalt erfasst."
+
+#: apps/fantasy/views.py
+msgid "Roster is full."
+msgstr "Der Kader ist voll."
+
+#: apps/fantasy/views.py
+#, python-format
+msgid "Not enough cash (%(cash)s left)."
+msgstr "Nicht genug Cash (noch %(cash)s)."
+
+#: apps/fantasy/views.py
+#, python-format
+msgid "%(message)s Roster: %(roster)s."
+msgstr "%(message)s Kader: %(roster)s."
+
+#: templates/fantasy/partials/player_roster_options.html
+msgid "Your rosters"
+msgstr "Deine Kader"
+
+#: templates/fantasy/partials/player_roster_options.html
+msgid "On this roster"
+msgstr "In diesem Kader"
+
+#: templates/fantasy/partials/player_roster_options.html
+#, python-format
+msgid "Sign (%(price)s)"
+msgstr "Verpflichten (%(price)s)"
+
+#: templates/fantasy/partials/player_roster_options.html
+msgid "Trade in…"
+msgstr "Per Trade holen …"
+
+#: templates/fantasy/partials/player_roster_options.html
+msgid "You have no roster in the current season yet."
+msgstr "Du hast in der aktuellen Saison noch keinen Kader."
+
+#: templates/fantasy/partials/player_roster_options.html
+msgid "Create a roster"
+msgstr "Kader erstellen"
+
+#: templates/fantasy/partials/roster_panel.html
+#, python-format
+msgid "Next: %(label)s · %(date)s (+%(trades)s)"
+msgstr "Nächster: %(label)s · %(date)s (+%(trades)s)"
+
+#: templates/fantasy/partials/roster_panel.html
+msgid "Trade calendar"
+msgstr "Trade-Kalender"
+
+#: templates/fantasy/partials/roster_panel.html
+#, python-format
+msgid "Signings close in %(when)s (%(date)s)."
+msgstr "Die Transferphase schließt in %(when)s (%(date)s)."
+
+#: templates/fantasy/partials/roster_panel.html
+#, python-format
+msgid "Signings open in %(when)s (%(date)s)."
+msgstr "Die Transferphase öffnet in %(when)s (%(date)s)."
+
+#: templates/fantasy/partials/trade_body.html
+#, python-format
+msgid "leaves %(left)s"
+msgstr "lässt %(left)s übrig"
+
+#: templates/fantasy/partials/trade_body.html
+#, python-format
+msgid "Afterwards you would be short: %(gaps)s. The trade still goes through — the roster just will not be complete any more."
+msgstr "Danach würde dir fehlen: %(gaps)s. Der Trade ist trotzdem möglich – der Kader ist dann nur nicht mehr vollständig."
+
+#: templates/fantasy/partials/trade_body.html
+msgid "Pick a player to send out and one to bring in."
+msgstr "Wähle einen Spieler, der geht, und einen, der kommt."
+
+#: templates/fantasy/partials/trade_body.html
+msgid "Not enough cash for this trade."
+msgstr "Nicht genug Cash für diesen Trade."
+
+#: templates/fantasy/roster_rules.html
+msgid "Received"
+msgstr "Erhalten"
+
+#: templates/nba/player_detail.html
+msgid "Compare"
+msgstr "Vergleichen"

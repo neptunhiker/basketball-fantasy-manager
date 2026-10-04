@@ -97,16 +97,18 @@
       </dl>
 
       {# Trades: where they come from, and when they can be bought or sold. #}
-      <h3 class="mt-8 text-base font-semibold tracking-tight">{% translate "Trades" %}</h3>
+      <h3 id="trades" class="mt-8 [scroll-margin-top:5rem] text-base font-semibold tracking-tight">{% translate "Trades" %}</h3>
       <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
         {% translate "A roster starts without trades. Every roster receives the same free trades on these dates:" %}
       </p>
       {% if trade_grants or roster.season.weekly_trades_from %}
         <ul class="mt-3 space-y-2 text-sm">
           {% for grant in trade_grants %}
-            <li class="flex items-baseline justify-between gap-4 rounded-lg bg-neutral-50 px-3 py-2 dark:bg-neutral-800/60">
+            <li class="flex items-baseline justify-between gap-4 rounded-lg px-3 py-2
+              {% if grant.is_next %}bg-primary-50 ring-1 ring-primary-300 dark:bg-primary-500/10 dark:ring-primary-500/40{% elif grant.is_received %}bg-neutral-50 text-neutral-500 dark:bg-neutral-800/40 dark:text-neutral-400{% else %}bg-neutral-50 dark:bg-neutral-800/60{% endif %}">
               <span>
                 <span class="font-medium">{{ grant.label }}</span>
+                {% if grant.is_next %}<span class="badge badge-pending ml-1">{% translate "Next" %}</span>{% elif grant.is_received %}<span class="badge badge-neutral ml-1">{% translate "Received" %}</span>{% endif %}
                 <span class="block text-xs text-neutral-500 dark:text-neutral-400">{{ grant.granted_at|date:"SHORT_DATETIME_FORMAT" }}</span>
               </span>
               <span class="shrink-0 font-semibold tabular-nums">+{{ grant.trades }}</span>

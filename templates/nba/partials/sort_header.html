@@ -4,7 +4,7 @@ Sortable column header. Usage:
 Clicking toggles direction when the column is already active. Otherwise it
 starts ascending, or descending with first="desc" -- for numbers, where the
 biggest value is the one worth seeing first. Keep in step with
-apps.nba.views.DESCENDING_FIRST, which the views use when no direction is given.
+apps.nba.stats.DESCENDING_FIRST, which the views use when no direction is given.
 {% endcomment %}
 {% if current_sort == key %}
   {% if current_dir == "asc" %}

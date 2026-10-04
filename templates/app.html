@@ -187,11 +187,16 @@
 {# Every modal is loaded in here. See templates/partials/modal.html. #}
 <div id="modal-root" class="relative z-[100]" style="z-index: 100;"></div>
 
-{# Long-running HTMX actions opt in with `data-global-loading`. #}
+{# Long-running HTMX actions opt in with `data-global-loading`. The value picks #}
+{# the pengi: empty for the injured one, "bookkeeper" for data imports. #}
 <div id="global-loading-overlay" class="global-loading-overlay pointer-events-auto fixed inset-0 z-[200] hidden items-center justify-center bg-tertiary-900/20 backdrop-blur-sm dark:bg-neutral-950/45" role="status" aria-live="polite" aria-label="{% translate 'Loading' %}">
   <div class="global-loading-spinner relative flex items-center justify-center">
     <div class="absolute inset-0 rounded-full border-4 border-primary-200 border-t-primary-600 motion-safe:animate-spin dark:border-primary-500/20 dark:border-t-primary-300"></div>
-    <img src="{% static 'img/pengi_injured.png' %}" alt="" class="h-[90%] w-[90%] object-contain">
+    <img id="global-loading-image"
+         src="{% static 'img/pengi_injured.png' %}"
+         data-default-src="{% static 'img/pengi_injured.png' %}"
+         data-bookkeeper-src="{% static 'img/pengi_bookkeeper.png' %}"
+         alt="" class="h-[90%] w-[90%] object-contain">
   </div>
 </div>
 {% endblock %}
@@ -201,9 +206,12 @@
   <script>
     (function () {
       const overlay = document.getElementById("global-loading-overlay");
+      const image = document.getElementById("global-loading-image");
 
       document.body.addEventListener("htmx:beforeRequest", function (event) {
         if (event.detail.elt.matches("[data-global-loading]")) {
+          const variant = event.detail.elt.getAttribute("data-global-loading");
+          image.src = (variant && image.dataset[variant + "Src"]) || image.dataset.defaultSrc;
           overlay.classList.remove("hidden");
           overlay.classList.add("flex");
         }

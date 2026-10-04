@@ -187,3 +187,20 @@ def test_the_modal_speaks_german_to_german_staff(staff_client, staff_user):
 
     assert "Von basketball.de importieren" in response.text
     assert "nie gespeichert" in response.text
+
+
+def test_the_import_shows_the_bookkeeper_pengi_while_it_runs(staff_client):
+    modal = staff_client.get(reverse("nba:bbde-import")).text
+    page = staff_client.get(reverse("nba:player-list")).text
+
+    assert 'data-global-loading="bookkeeper"' in modal
+    assert "img/pengi_bookkeeper" in page
+
+
+def test_a_superuser_without_the_staff_flag_may_import_too(client, user, password):
+    user.is_superuser = True
+    user.save(update_fields=["is_superuser"])
+    client.login(email=user.email, password=password)
+
+    assert client.get(reverse("nba:bbde-import")).status_code == 200
+    assert "Import from basketball.de" in client.get(reverse("nba:player-list")).text

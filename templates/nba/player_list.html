@@ -9,12 +9,12 @@
   <div class="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
     <div>
       <h2 class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{% translate "Player search" %}</h2>
-      {% if request.user.is_staff %}
+      {% if can_import_from_bbde %}
         <div class="mt-0.5">{% include "nba/partials/bbde_last_import.html" with run=last_bbde_import %}</div>
       {% endif %}
     </div>
     <div class="flex flex-wrap items-center justify-end gap-2">
-      {% if request.user.is_staff %}
+      {% if can_import_from_bbde %}
         <button type="button"
                 hx-get="{% url 'nba:bbde-import' %}"
                 hx-target="#modal-root"

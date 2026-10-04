@@ -252,7 +252,8 @@ class PlayerListView(LoginRequiredMixin, ListView):
         sort, descending = self._sort_params()
         context["current_sort"] = sort
         context["current_dir"] = "desc" if descending else "asc"
-        if self.request.user.is_staff and not self.request.htmx:
+        context["can_import_from_bbde"] = can_import_from_bbde(self.request.user)
+        if context["can_import_from_bbde"] and not self.request.htmx:
             context["last_bbde_import"] = last_bbde_import()
         return context
 
@@ -295,6 +296,11 @@ class InjuryRefreshView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
+def can_import_from_bbde(user):
+    """Who may run the basketball.de import: staff, superusers and admins."""
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+
 def last_bbde_import():
     """The newest import that actually changed data, for the "last import" line."""
     return (
@@ -316,6 +322,11 @@ class BbdeImportView(StaffRequiredMixin, View):
     """
 
     template_name = "nba/partials/bbde_import_modal.html"
+
+    def test_func(self):
+        # Staff and superusers alike. Narrower would lock out an administrator
+        # whose account happens not to carry the staff flag.
+        return can_import_from_bbde(self.request.user)
 
     def get(self, request):
         return self._render(BbdeLoginForm())

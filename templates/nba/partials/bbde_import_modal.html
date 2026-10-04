@@ -63,7 +63,7 @@
     <form hx-post="{% url 'nba:bbde-import' %}"
           hx-target="#modal-root"
           hx-swap="innerHTML"
-          data-global-loading>
+          data-global-loading="bookkeeper">
       {% csrf_token %}
 
       <p>{% translate "Reads salaries and fantasy points of every player from the official game. Your basketball.de login is used for this import only and is never stored." %}</p>

@@ -30,6 +30,7 @@ from apps.core.views import (
     TypedConfirmView,
 )
 from apps.nba.models import Player, Team
+from apps.nba.views import DESCENDING_FIRST
 
 from . import services
 from .forms import SeasonForm, TradeGrantForm
@@ -511,10 +512,14 @@ class RosterListView(LoginRequiredMixin, ListView):
     context_object_name = "rosters"
 
     def get_queryset(self):
-        queryset = Roster.objects.select_related("season", "manager").with_squad()
-        if not (self.request.user.is_staff or self.request.user.is_superuser):
-            queryset = queryset.filter(manager__user=self.request.user)
-        return queryset
+        # Your own rosters only, staff included: every roster page is scoped to
+        # its owner (`OwnRosterMixin`), so listing anyone else's would only
+        # offer links that 404. Staff see other managers' rosters on Managers.
+        return (
+            Roster.objects.select_related("season", "manager")
+            .with_squad()
+            .filter(manager__user=self.request.user)
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -802,7 +807,7 @@ def _sort_roster_memberships(request, memberships):
     if sort not in ROSTER_SORT_FIELDS:
         sort = "name"
     direction = request.GET.get("dir")
-    descending = sort in {"avg", "points", "hotness"} if direction is None else direction == "desc"
+    descending = sort in DESCENDING_FIRST if direction is None else direction == "desc"
     key = ROSTER_SORT_FIELDS[sort]
     present = [membership for membership in memberships if key(membership.player) is not None]
     missing = [membership for membership in memberships if key(membership.player) is None]
@@ -871,6 +876,15 @@ def _build_context(request, roster, error=None):
         "teams": Team.objects.order_by("name"),
         "roster_size": ROSTER_SIZE,
         "progress": roster.position_progress(),
+        # The strip pinned above the market: positions against their minimums,
+        # and what an average open slot may still cost.
+        "squad": roster.position_progress(),
+        "open_slots": max(0, ROSTER_SIZE - roster.player_count),
+        "cash_per_open_slot": (
+            roster.cash / (ROSTER_SIZE - roster.player_count)
+            if roster.player_count < ROSTER_SIZE
+            else None
+        ),
         # What the picker and the squad panel branch on. `roster.season` is
         # select_related by `OwnRosterMixin`, so this costs nothing.
         "signings_open": roster.season.transactions_allowed,
@@ -1072,6 +1086,11 @@ class RosterTradeView(OwnRosterMixin, View):
             + (f"&in={player_in.pk}" if player_in else ""),
             "panel_class": "modal-panel-xl",
             "error": error,
+            # What to tell a roster with no trades left: buy one now, or when
+            # the next free one arrives.
+            "can_buy_trade": roster.season.trade_market_open and roster.cash >= TRADE_BUY_PRICE,
+            "trade_buy_price": TRADE_BUY_PRICE,
+            "next_trade_grant": services.next_trade_grant(roster.season),
         }
 
     def get(self, request, *args, **kwargs):

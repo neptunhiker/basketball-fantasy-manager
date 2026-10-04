@@ -28,6 +28,19 @@
     {# dropped on a small screen, and no breakpoint has to be guessed at. #}
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs sm:gap-x-4">
 
+      {# Cash, and what it means per player still to sign: the number a price #}
+      {# in the list below is actually measured against. #}
+      <p class="text-neutral-500 dark:text-neutral-400">
+        {% translate "Cash" %}
+        <span class="font-semibold tabular-nums text-tertiary-700 dark:text-neutral-100" title="{{ roster.cash|exact }}">{{ roster.cash|millions }}</span>
+      </p>
+      {% if cash_per_open_slot is not None %}
+        <p class="text-neutral-500 dark:text-neutral-400">
+          {% blocktranslate count slots=open_slots %}Avg. per open slot ({{ slots }} open){% plural %}Avg. per open slot ({{ slots }} open){% endblocktranslate %}
+          <span class="font-semibold tabular-nums text-tertiary-700 dark:text-neutral-100">{{ cash_per_open_slot|millions }}</span>
+        </p>
+      {% endif %}
+
       {# The positions are what earns this strip its height: cash says what #}
       {# is affordable, these say what to look for. Same order and the same #}
       {# codes as the sections in the team card, so the two read as one #}

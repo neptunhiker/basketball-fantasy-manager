@@ -48,6 +48,10 @@ class ImportAlreadyRunning(ImportBlocked):
     pass
 
 
+class NoTeams(ImportBlocked):
+    pass
+
+
 class _DryRunRollback(Exception):
     """Raised inside the write transaction to undo a dry run."""
 
@@ -79,6 +83,12 @@ def import_bbde(
     run = ImportRun.objects.create(
         triggered_by=triggered_by, source=source, season=season, dry_run=dry_run
     )
+    # Without teams every rostered player would be skipped as "unknown team",
+    # and the run would still report success. Stop before logging in instead.
+    if not Team.objects.exists():
+        message = "There are no NBA teams in the database. Run `manage.py seed_teams` first."
+        _fail(run, message)
+        raise NoTeams(message)
     try:
         client = client or BbdeClient()
         client.login(username, password)

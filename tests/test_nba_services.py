@@ -82,7 +82,7 @@ def test_parse_injuries_accepts_current_top_level_injuries_envelope(injury_paylo
 
 
 def test_sync_injuries_matches_name_and_team_and_keeps_history(db, injury_payload):
-    team = Team.objects.create(name="Los Angeles Lakers", abbreviation="LAL")
+    team = Team.objects.get(abbreviation="LAL")
     player = Player.objects.create(
         first_name="Luka", last_name="Doncic", position=Player.Position.GUARD, team=team
     )

@@ -295,6 +295,14 @@ def trade_market_closed_reason(season):
     }
 
 
+def next_trade_grant(season, now=None):
+    """The next free trade(s) still to come this season, or None."""
+    now = now or timezone.now()
+    return next(
+        (grant for grant in season.trade_grant_schedule() if grant.granted_at > now), None
+    )
+
+
 def _require_trade_market(season):
     if reason := trade_market_closed_reason(season):
         raise ValidationError(reason)

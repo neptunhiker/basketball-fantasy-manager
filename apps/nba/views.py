@@ -33,9 +33,17 @@ from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
 from . import charts, stats
 from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
-from .importer import ImportAlreadyRunning, NoCurrentSeason, import_bbde
+from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
 from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
+
+
+# Columns where a manager wants the biggest number on top: the first click on
+# one of these headers, and a sort with no direction given, goes high-first.
+# Names, teams and positions read A-Z instead.
+DESCENDING_FIRST = frozenset(
+    {"salary", "expected", "difference", "points", "avg", "games", "hotness"}
+)
 
 
 class TeamListView(LoginRequiredMixin, ListView):
@@ -75,7 +83,8 @@ class PlayerListView(LoginRequiredMixin, ListView):
         "games": [F("current_games_played")],
         "hotness": [],
     }
-    DEFAULT_SORT = "name"
+    # Best scorers first: what a manager scans the list for.
+    DEFAULT_SORT = "avg"
 
     def get_queryset(self):
         qs = Player.objects.select_related("team").prefetch_related(
@@ -215,7 +224,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
             sort = self.DEFAULT_SORT
         direction = self.request.GET.get("dir")
         if direction is None:
-            return sort, sort in {"avg", "points", "hotness"}
+            return sort, sort in DESCENDING_FIRST
         return sort, direction == "desc"
 
     def get_context_data(self, **kwargs):
@@ -367,6 +376,11 @@ class BbdeImportView(StaffRequiredMixin, View):
             return _("There is no current season to import into.")
         if isinstance(exc, ImportAlreadyRunning):
             return _("Another import is still running. Please try again shortly.")
+        if isinstance(exc, NoTeams):
+            return _(
+                "There are no NBA teams in the database yet. "
+                "Ask an administrator to run manage.py seed_teams first."
+            )
         return _("The import failed: %(reason)s") % {"reason": exc}
 
 
@@ -665,7 +679,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
             sort = self.DEFAULT_SORT
         direction = self.request.GET.get("dir")
         if direction is None:
-            return sort, sort in {"avg", "points", "hotness"}
+            return sort, sort in DESCENDING_FIRST
         return sort, direction == "desc"
 
     def _players(self):

@@ -5,8 +5,8 @@ from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.nba.models import NbaApiUsage, Player
-from apps.nba.services import DailyApiLimitExceeded, PROVIDER
+from apps.nba.models import NbaApiUsage, Player, Team
+from apps.nba.services import PROVIDER, DailyApiLimitExceeded
 
 
 @pytest.fixture
@@ -43,6 +43,8 @@ def test_team_list_is_grouped_east_before_west(client, user, password, teams):
 
 
 def test_empty_state_points_at_the_seed_command(client, user, password, db):
+    # Only reachable on a database whose teams were removed after migrating.
+    Team.objects.all().delete()
     client.login(email=user.email, password=password)
     body = client.get(reverse("nba:team-list")).content.decode()
     assert "seed_teams" in body

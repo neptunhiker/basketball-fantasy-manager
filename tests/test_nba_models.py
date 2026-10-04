@@ -7,12 +7,8 @@ from apps.nba.models import Player, Team
 
 @pytest.fixture
 def lakers(db):
-    return Team.objects.create(
-        name="Los Angeles Lakers",
-        abbreviation="LAL",
-        conference=Team.Conference.WEST,
-        division=Team.Division.PACIFIC,
-    )
+    # Every database has the 30 teams from migration nba.0013.
+    return Team.objects.get(abbreviation="LAL")
 
 
 def test_team_str(lakers):

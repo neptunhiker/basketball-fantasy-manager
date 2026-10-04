@@ -2394,3 +2394,36 @@ msgstr "Rolle speichern"
 #: templates/accounts/user_detail.html
 msgid "Change role"
 msgstr "Rolle ändern"
+
+# UX fixes, round 1
+
+#: apps/nba/views.py
+msgid "There are no NBA teams in the database yet. Ask an administrator to run manage.py seed_teams first."
+msgstr "Es sind noch keine NBA-Teams in der Datenbank. Bitte eine Administratorin oder einen Administrator, zuerst manage.py seed_teams auszuführen."
+
+#: templates/fantasy/no_season.html
+msgid "An administrator still needs to start the season. Until then you can already look around the players."
+msgstr "Die Saison muss noch von der Administration gestartet werden. Bis dahin kannst du dich schon bei den Spielern umsehen."
+
+#: templates/fantasy/partials/trade_body.html
+#, python-format
+msgid "Close this dialog and buy one for %(price)s in the Available Trades box."
+msgstr "Schließe diesen Dialog und kaufe einen für %(price)s im Feld „Verfügbare Trades“."
+
+#: templates/fantasy/partials/trade_body.html
+msgid "See the trade calendar"
+msgstr "Zum Trade-Kalender"
+
+#: templates/fantasy/partials/player_picker.html
+#, python-format
+msgid "Avg. per open slot (%(slots)s open)"
+msgid_plural "Avg. per open slot (%(slots)s open)"
+msgstr[0] "Ø pro freiem Platz (%(slots)s frei)"
+msgstr[1] "Ø pro freiem Platz (%(slots)s frei)"
+
+#: templates/fantasy/partials/trade_body.html
+#, python-format
+msgid "Next free trade: %(label)s on %(date)s (+%(trades)s)."
+msgid_plural "Next free trades: %(label)s on %(date)s (+%(trades)s)."
+msgstr[0] "Nächster Gratis-Trade: %(label)s am %(date)s (+%(trades)s)."
+msgstr[1] "Nächste Gratis-Trades: %(label)s am %(date)s (+%(trades)s)."

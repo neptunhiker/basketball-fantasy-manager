@@ -46,16 +46,23 @@ def test_a_user_sees_only_their_own_rosters(client, user, password, rosters):
     assert roster_names(response) == {"Own roster"}
 
 
-def test_a_staff_user_sees_all_rosters(client, staff_user, password, rosters):
+# Staff see other managers' rosters on the Managers pages. "My rosters" lists
+# only rosters that can be opened, and every roster page is owner-only.
+
+
+def test_a_staff_user_sees_only_their_own_rosters(client, staff_user, password, rosters, season):
+    mine = Manager.objects.create(user=staff_user, nick_name="Staff")
+    Roster.objects.create(manager=mine, season=season, name="Staff roster")
+
     response = login(client, staff_user, password).get(LIST)
 
     assert response.status_code == 200
-    assert roster_names(response) == {"Own roster", "Other roster"}
+    assert roster_names(response) == {"Staff roster"}
 
 
-def test_a_superuser_sees_all_rosters(client, password, rosters):
+def test_a_superuser_sees_only_their_own_rosters(client, password, rosters):
     superuser = User.objects.create_superuser(email="admin@example.com", password=password)
     response = login(client, superuser, password).get(LIST)
 
     assert response.status_code == 200
-    assert roster_names(response) == {"Own roster", "Other roster"}
+    assert roster_names(response) == set()

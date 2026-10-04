@@ -7,9 +7,18 @@
 {% block content %}
 <div class="card px-6 py-16 text-center">
   <p class="text-sm font-medium">{% translate "No season is marked as current." %}</p>
-  <p class="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
-    {% translate "A roster always belongs to a season. Create one first and mark it current." %}
-  </p>
-  <a href="{% url 'fantasy:season-list' %}" class="btn btn-secondary mt-6">{% translate "Go to seasons" %}</a>
+  {# The seasons page is for administrators only (staff and superuser), so #}
+  {# only they are sent there; everyone else gets somewhere they can go. #}
+  {% if request.user.is_staff and request.user.is_superuser %}
+    <p class="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
+      {% translate "A roster always belongs to a season. Create one first and mark it current." %}
+    </p>
+    <a href="{% url 'fantasy:season-list' %}" class="btn btn-secondary mt-6">{% translate "Go to seasons" %}</a>
+  {% else %}
+    <p class="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
+      {% translate "An administrator still needs to start the season. Until then you can already look around the players." %}
+    </p>
+    <a href="{% url 'nba:player-list' %}" class="btn btn-secondary mt-6">{% translate "Browse players" %}</a>
+  {% endif %}
 </div>
 {% endblock %}

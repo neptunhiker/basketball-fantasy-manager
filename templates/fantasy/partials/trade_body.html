@@ -211,7 +211,14 @@
 
     {% if not preview.has_trades %}
       <p class="mt-3 text-xs text-red-700 dark:text-red-300">
-        {% translate "No trades available for this roster. You can buy trades on the roster page." %}
+        {% translate "No trades available for this roster." %}
+        {% if can_buy_trade %}
+          {% blocktranslate with price=trade_buy_price|millions %}Close this dialog and buy one for {{ price }} in the Available Trades box.{% endblocktranslate %}
+        {% endif %}
+        {% if next_trade_grant %}
+          {% blocktranslate with label=next_trade_grant.label date=next_trade_grant.granted_at|date:"SHORT_DATETIME_FORMAT" count trades=next_trade_grant.trades %}Next free trade: {{ label }} on {{ date }} (+{{ trades }}).{% plural %}Next free trades: {{ label }} on {{ date }} (+{{ trades }}).{% endblocktranslate %}
+        {% endif %}
+        <a href="{% url 'fantasy:roster-rules' roster.pk %}" class="underline">{% translate "See the trade calendar" %}</a>
       </p>
     {% elif preview.ready and not preview.affordable %}
       <p class="mt-3 text-xs text-red-700 dark:text-red-300">

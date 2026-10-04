@@ -1,0 +1,6 @@
+{# The way back as an arrow beside the page title, phones only; from `sm` the #}
+{# page shows its own labelled button in the header. Context: href, label. #}
+<a href="{{ href }}" aria-label="{{ label }}"
+   class="btn btn-ghost h-10 w-10 shrink-0 !px-0 sm:hidden">
+  {% include "partials/icon.html" with name="back" class="h-5 w-5" %}
+</a>

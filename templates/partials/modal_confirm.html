@@ -41,7 +41,7 @@
              x-model="typed" data-autofocus
              autocomplete="off" autocapitalize="characters" spellcheck="false"
              aria-describedby="{% if error %}modal-confirm-error{% endif %}"
-             class="mt-1.5 block w-full rounded-lg border px-3 py-2 font-mono text-sm shadow-sm transition focus:outline-none focus:ring-2 dark:bg-neutral-900 dark:text-neutral-100 {% if error %}border-red-400 focus:border-red-500 focus:ring-red-500/30 dark:border-red-500/50{% else %}border-neutral-300 focus:border-primary-500 focus:ring-primary-500/30 dark:border-neutral-700{% endif %}">
+             class="mt-1.5 block w-full rounded-lg border px-3 py-2 font-mono text-base sm:text-sm shadow-sm transition focus:outline-none focus:ring-2 dark:bg-neutral-900 dark:text-neutral-100 {% if error %}border-red-400 focus:border-red-500 focus:ring-red-500/30 dark:border-red-500/50{% else %}border-neutral-300 focus:border-primary-500 focus:ring-primary-500/30 dark:border-neutral-700{% endif %}">
     {% endif %}
 
     {# Outside the `confirm_word` block, and that matters: a plain confirm can #}

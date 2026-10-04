@@ -100,10 +100,10 @@
         <label for="trade-search" class="sr-only">{% translate "Search by name" %}</label>
         <input type="search" id="trade-search" name="q" value="{{ filters.q }}"
                placeholder="{% translate 'Search by name' %}…"
-               class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+               class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
         <label for="trade-position" class="sr-only">{% translate "Position" %}</label>
         <select id="trade-position" name="position"
-                class="block rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+                class="block rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
           <option value="">{% translate "All pos." %}</option>
           {% for value, label in positions %}
             <option value="{{ value }}" {% if filters.position == value %}selected{% endif %}>{{ label }}</option>
@@ -238,6 +238,14 @@
     {% endif %}
   </div>
 
+  {# Said in words right above the buttons, not in a tooltip a phone never #}
+  {# shows -- and above, because on phones the button bar is pinned. #}
+  {% if not preview.ready or not preview.affordable or not preview.has_trades %}
+    <p id="trade-blocked-reason" class="mt-3 text-right text-xs text-neutral-500 dark:text-neutral-400">
+      {% if not preview.has_trades %}{% translate "No trades available." %}{% elif not preview.ready %}{% translate "Pick a player to send out and one to bring in." %}{% else %}{% translate "Not enough cash for this trade." %}{% endif %}
+    </p>
+  {% endif %}
+
   <div class="modal-actions">
     <button type="button" @click="open = false" class="btn btn-secondary">{% translate "Cancel" %}</button>
     {% if preview.ready and preview.affordable and preview.has_trades %}
@@ -255,10 +263,5 @@
       </button>
     {% endif %}
   </div>
-  {# Said in words under the button, not in a tooltip a phone never shows. #}
-  {% if not preview.ready or not preview.affordable or not preview.has_trades %}
-    <p id="trade-blocked-reason" class="mt-2 text-right text-xs text-neutral-500 dark:text-neutral-400">
-      {% if not preview.has_trades %}{% translate "No trades available." %}{% elif not preview.ready %}{% translate "Pick a player to send out and one to bring in." %}{% else %}{% translate "Not enough cash for this trade." %}{% endif %}
-    </p>
-  {% endif %}
+
 </div>

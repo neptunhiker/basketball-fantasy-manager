@@ -5,11 +5,9 @@
 {% block page_title %}{% translate "Manager profiles" %}{% endblock %}
 
 {% block header_actions %}
-  <button type="button"
-          hx-get="{% url 'fantasy:manager-create' %}"
-          hx-target="#modal-root"
-          hx-swap="innerHTML"
-          class="btn btn-primary hidden sm:inline-flex">{% translate "New profile" %}</button>
+  {% url 'fantasy:manager-create' as manager_create_url %}
+  {% translate "New profile" as new_profile_label %}
+  {% include "partials/header_action.html" with label=new_profile_label icon="plus" hx_get=manager_create_url %}
 {% endblock %}
 
 {% block content %}
@@ -31,7 +29,7 @@
                     hx-get="{% url 'fantasy:manager-rename' profile.pk %}"
                     hx-target="#modal-root"
                     hx-swap="innerHTML"
-                    class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                    class="max-sm:p-3 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                     aria-label="{% translate 'Rename profile' %}: {{ profile.nick_name }}">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5V20ZM14 6.5 17.5 10"/>
@@ -43,7 +41,7 @@
                     hx-get="{% url 'fantasy:manager-delete' profile.pk %}"
                     hx-target="#modal-root"
                     hx-swap="innerHTML"
-                    class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                    class="max-sm:p-3 rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                     aria-label="{% translate 'Delete profile' %}: {{ profile.nick_name }}">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/>

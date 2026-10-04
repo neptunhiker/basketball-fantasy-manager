@@ -2651,3 +2651,18 @@ msgid "%(count)s private note"
 msgid_plural "%(count)s private notes"
 msgstr[0] "%(count)s private Notiz"
 msgstr[1] "%(count)s private Notizen"
+
+# Mobile, phase 1
+
+#: templates/fantasy/roster_list.html
+msgid "Signings are closed; this roster can only change through trades."
+msgstr "Die Transferphase ist vorbei; dieser Kader kann sich nur noch durch Trades ändern."
+
+#: templates/fantasy/roster_list.html
+msgid "Signings have not opened yet."
+msgstr "Die Transferphase hat noch nicht begonnen."
+
+#: templates/fantasy/manager_detail.html
+#, python-format
+msgid "Back to %(name)s"
+msgstr "Zurück zu %(name)s"

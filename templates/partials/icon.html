@@ -1,0 +1,7 @@
+{# Small line icons used by the shared buttons. Context: name, class. #}
+<svg class="{{ class|default:'h-5 w-5' }}" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+  {% if name == "plus" %}<path stroke-linecap="round" d="M12 5v14M5 12h14"/>
+  {% elif name == "back" %}<path stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/>
+  {% elif name == "invite" %}<path stroke-linecap="round" stroke-linejoin="round" d="M15 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 3 17.5V19M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM19 8v6M16 11h6"/>
+  {% endif %}
+</svg>

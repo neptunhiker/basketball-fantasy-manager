@@ -930,6 +930,8 @@ def _build_context(request, roster):
         "buy_trade_disabled_reason": buy_trade_disabled_reason,
         "sell_trade_disabled_reason": sell_trade_disabled_reason,
         "trade_unavailable_reason": trade_unavailable_reason,
+        # Shown under the Buy/Sell buttons: why the trade market is shut.
+        "trade_market_note": market_closed_reason,
         "signings_close_at": roster.season.signings_close_at,
         **_signings_deadline(roster.season),
         "next_trade_grant": services.next_trade_grant(roster.season),

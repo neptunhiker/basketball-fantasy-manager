@@ -103,3 +103,22 @@ def test_seasons_is_visible_to_staff_superusers(client, staff_user, password):
     client.login(email=staff_user.email, password=password)
 
     assert f'href="{reverse("fantasy:season-list")}"' in sidebar(client)
+
+
+def test_the_mobile_menu_is_wired_for_keyboard_and_screen_readers(signed_in):
+    body = signed_in.get(reverse("core:dashboard")).content.decode()
+
+    assert 'id="app-nav"' in body
+    assert 'aria-controls="app-nav"' in body
+    assert ':aria-expanded="navOpen.toString()"' in body
+    assert (
+        ':inert="!navOpen &amp;&amp; !desktop"' in body or ':inert="!navOpen && !desktop"' in body
+    )
+    assert '@keydown.escape.window="closeNav()"' in body
+
+
+def test_sign_out_is_reachable_on_phones_through_the_menu(signed_in):
+    body = signed_in.get(reverse("core:dashboard")).content.decode()
+
+    # Once in the header (from `lg`), once in the menu's footer (below `lg`).
+    assert body.count(reverse("accounts:logout")) == 2

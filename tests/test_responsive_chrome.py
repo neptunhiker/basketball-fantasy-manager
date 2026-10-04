@@ -112,3 +112,78 @@ def test_no_negative_vertical_margins(path):
         f"Inside a `space-y-*` parent this replaces the gap rather than trimming "
         f"it. Use a positive `mb-*`/`mt-*`, which overrides it to a real value."
     )
+
+
+# --- phones: every action reachable, no zoom on focus, reasons in words ---------
+
+
+HEADER_BLOCK = re.compile(r"\{% block header_actions %\}(.*?)\{% endblock %\}", re.S)
+FIELD_TAG = re.compile(r"<(?:input|select|textarea)\b[^>]*>", re.S)
+DISABLED_BUTTON = re.compile(r"(<button\b[^>]*\bdisabled\b[^>]*>)(.*?)</button>", re.S)
+
+
+@pytest.mark.parametrize("path", _templates(), ids=lambda p: p.name)
+def test_a_header_action_hidden_on_phones_has_a_phone_alternative(path):
+    """`hidden sm:inline-flex` in the header once left phones without "New season",
+    "Invite" or "New profile". A page may still hide a labelled button below `sm`
+    -- but only next to the arrow of `partials/back_link.html`, which is the
+    phone's way back."""
+    source = _uncommented(path)
+    for block in HEADER_BLOCK.findall(source):
+        if "hidden sm:inline-flex" in block or "hidden sm:flex" in block:
+            assert "{% block back_link %}" in source, (
+                f"{path.relative_to(ROOT)} hides a header action below `sm` with no "
+                "phone alternative -- use partials/header_action.html or back_link.html"
+            )
+
+
+def test_shared_fields_are_16px_on_phones():
+    """Below 16px iOS Safari zooms the page on every focus."""
+    forms = (ROOT / "apps" / "core" / "forms.py").read_text()
+    assert "text-base sm:text-sm" in forms
+
+
+@pytest.mark.parametrize("path", _templates(), ids=lambda p: p.name)
+def test_no_field_is_smaller_than_16px_on_phones(path):
+    source = _uncommented(path)
+    offenders = []
+    for match in FIELD_TAG.finditer(source):
+        tag = match.group(0)
+        if any(kind in tag for kind in ('type="hidden"', 'type="checkbox"', 'type="radio"')):
+            continue
+        if re.search(r"\btext-(?:xs|sm)\b", tag) and "text-base" not in tag:
+            offenders.append(source[: match.start()].count("\n") + 1)
+    assert not offenders, (
+        f"{path.relative_to(ROOT)}: fields below 16px on phones (iOS zooms in) "
+        f"on lines {offenders}; use `text-base sm:text-sm`"
+    )
+
+
+@pytest.mark.parametrize("path", _templates(), ids=lambda p: p.name)
+def test_a_disabled_button_does_not_explain_itself_only_in_a_tooltip(path):
+    """A `title` never reaches a phone. A disabled button needs visible text,
+    `aria-describedby` pointing at visible text, or an `aria-label`."""
+    source = _uncommented(path)
+    offenders = []
+    for match in DISABLED_BUTTON.finditer(source):
+        tag, inner = match.group(1), match.group(2)
+        if "title=" not in tag:
+            continue
+        visible = re.sub(r"<svg.*?</svg>|<[^>]+>", "", inner, flags=re.S).strip()
+        if not visible and "aria-describedby" not in tag and "aria-label" not in tag:
+            offenders.append(source[: match.start()].count("\n") + 1)
+    assert not offenders, f"{path.relative_to(ROOT)}: title-only disabled buttons on {offenders}"
+
+
+def test_dialogs_are_bottom_sheets_on_phones():
+    css = (ROOT / "assets" / "input.css").read_text()
+    panel = css[css.index(".modal-panel {") : css.index("}", css.index(".modal-panel {"))]
+    actions = css[css.index(".modal-actions {") : css.index("}", css.index(".modal-actions {"))]
+
+    assert "max-sm:max-h-[90dvh]" in panel
+    assert "max-sm:sticky" in actions
+    assert "env(safe-area-inset-bottom)" in actions
+
+
+def test_the_viewport_allows_safe_area_padding():
+    assert "viewport-fit=cover" in (TEMPLATES / "base.html").read_text()

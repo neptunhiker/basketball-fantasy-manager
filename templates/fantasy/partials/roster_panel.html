@@ -128,10 +128,9 @@
                       hx-get="{% url 'fantasy:roster-buy-trade' roster.pk %}"
                       hx-target="#modal-root"
                       hx-swap="innerHTML"
-                      title="Buy 1 trade for $1.50M"
                     {% else %}
                       disabled
-                      title="{{ buy_trade_disabled_reason }}"
+                      aria-describedby="trade-market-note"
                     {% endif %}
                     class="btn btn-secondary !px-2 !py-1 text-xs {% if not can_buy_trade %}opacity-50 cursor-not-allowed{% endif %}">
               {% translate "Buy ($1.5M)" %}
@@ -141,16 +140,21 @@
                       hx-get="{% url 'fantasy:roster-sell-trade' roster.pk %}"
                       hx-target="#modal-root"
                       hx-swap="innerHTML"
-                      title="Sell 1 trade for $1.00M cash"
                     {% else %}
                       disabled
-                      title="{{ sell_trade_disabled_reason }}"
+                      aria-describedby="trade-market-note"
                     {% endif %}
                     class="btn btn-ghost !px-2 !py-1 text-xs {% if not can_sell_trade %}opacity-50 cursor-not-allowed{% endif %}">
               {% translate "Sell (+$1.0M)" %}
             </button>
           </div>
         </div>
+        {# Why buying/selling is closed, in words -- a tooltip never reaches a #}
+        {# phone. "Not enough cash" / "no trades" are already plain from the #}
+        {# figures, so only the reasons the figures cannot show are written. #}
+        {% if trade_market_note %}
+          <p id="trade-market-note" class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">{{ trade_market_note }}</p>
+        {% endif %}
         {# When the next free trade arrives, so 0 is not a dead end. #}
         {% if next_trade_grant %}
           <p class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
@@ -325,7 +329,6 @@
                                 hx-target="#modal-root"
                                 hx-swap="innerHTML"
                                 class="btn btn-ghost !px-1.5 !py-1"
-                                title="Trade"
                                 aria-label="Trade {{ membership.player.full_name }}">
                           <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>

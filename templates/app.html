@@ -3,11 +3,40 @@
 {% comment %}Shell for signed-in pages: sidebar navigation plus content area.{% endcomment %}
 
 {% block body %}
-<div class="flex min-h-full" x-data="{ navOpen: false }">
+{# The menu is a drawer below `lg` and a fixed column from there. As a drawer #}
+{# it is `inert` while closed -- not just slid away -- so the Tab key and screen #}
+{# readers skip it; Escape closes it and focus goes back to the menu button. #}
+<div class="flex min-h-full"
+     x-data="{
+       navOpen: false,
+       desktop: window.matchMedia('(min-width: 1024px)').matches,
+       init() {
+         const query = window.matchMedia('(min-width: 1024px)');
+         query.addEventListener('change', event => {
+           this.desktop = event.matches;
+           if (event.matches) this.navOpen = false;
+         });
+         this.$watch('navOpen', open => {
+           document.body.classList.toggle('overflow-hidden', open && !this.desktop);
+         });
+       },
+       openNav() {
+         this.navOpen = true;
+         this.$nextTick(() => this.$refs.nav.querySelector('a')?.focus());
+       },
+       closeNav() {
+         if (!this.navOpen) return;
+         this.navOpen = false;
+         this.$refs.menuButton.focus();
+       }
+     }"
+     @keydown.escape.window="closeNav()">
 
   {# Sidebar #}
-  <aside class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full border-r border-neutral-200 bg-white transition-transform duration-200 lg:translate-x-0 dark:border-neutral-800 dark:bg-neutral-900"
-         :class="navOpen && 'translate-x-0'">
+  <aside id="app-nav"
+         class="fixed inset-y-0 left-0 z-40 flex h-dvh w-64 -translate-x-full flex-col border-r border-neutral-200 bg-white transition-transform duration-200 motion-reduce:transition-none lg:translate-x-0 dark:border-neutral-800 dark:bg-neutral-900"
+         :class="navOpen && 'translate-x-0'"
+         :inert="!navOpen && !desktop">
     <div class="flex h-16 items-center gap-2.5 px-6">
       <img src="{% static 'img/pengi.png' %}" alt="" class="h-7 w-7 shrink-0 rounded-lg object-cover">
       <div class="min-w-0">
@@ -22,7 +51,10 @@
     </div>
     <div class="gradient-rule mx-6 h-px"></div>
 
-    <nav class="space-y-1 px-3 py-5" aria-label="{% translate 'Main navigation' %}">
+    {# Scrolls on its own, so a short (landscape) phone still reaches every link. #}
+    <nav x-ref="nav" class="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-5"
+         aria-label="{% translate 'Main navigation' %}"
+         @click="if (!desktop && $event.target.closest('a')) navOpen = false">
       {% url 'core:dashboard' as dashboard_url %}
       <a href="{{ dashboard_url }}"
          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition
@@ -118,7 +150,10 @@
       {% endif %}
     </nav>
 
-    <div class="absolute inset-x-0 bottom-0 border-t border-neutral-200 p-3 dark:border-neutral-800">
+    {# In the flow rather than pinned over the links, and clear of the home #}
+    {# indicator on phones. Below `lg` it also carries the theme switch and #}
+    {# Sign out, which leave the crowded phone header. #}
+    <div class="shrink-0 border-t border-neutral-200 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-neutral-800">
       {# The email is on the title rather than on screen: it answers "which #}
       {# account is this" often enough to keep, but not often enough to spend #}
       {# a line on -- and it was the only thing this card used to say twice. #}
@@ -129,11 +164,18 @@
         </span>
         <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ request.user.abbreviated_name }}</span>
       </a>
+      <div class="mt-1 flex items-center justify-between gap-2 px-1 lg:hidden">
+        {% include "partials/theme_toggle.html" %}
+        <form method="post" action="{% url 'accounts:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost h-10 !px-3 text-sm">{% translate "Sign out" %}</button>
+        </form>
+      </div>
     </div>
   </aside>
 
   {# Backdrop for the mobile sidebar #}
-  <div x-show="navOpen" x-cloak @click="navOpen = false"
+  <div x-show="navOpen" x-cloak @click="navOpen = false" aria-hidden="true"
        class="fixed inset-0 z-30 bg-tertiary-900/40 lg:hidden"></div>
 
   {# Main column #}
@@ -148,16 +190,24 @@
       {% if ENVIRONMENT == 'staging' %}border-orange-300 bg-orange-50/90 dark:border-orange-500/40 dark:bg-orange-950/70
       {% elif ENVIRONMENT != 'production' %}border-amber-300 bg-amber-50/90 dark:border-amber-500/40 dark:bg-amber-950/70
       {% else %}border-neutral-200 bg-neutral-50/80 dark:border-neutral-800 dark:bg-neutral-950/80{% endif %}">
-      <button type="button" @click="navOpen = !navOpen" class="btn btn-ghost h-9 w-9 !px-0 lg:hidden"
+      <button type="button" x-ref="menuButton" @click="navOpen ? closeNav() : openNav()"
+              class="btn btn-ghost h-10 w-10 !px-0 lg:hidden"
+              aria-controls="app-nav" :aria-expanded="navOpen.toString()"
               aria-label="{% translate 'Toggle navigation' %}">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
       </button>
+      {# A way back, as an arrow beside the title below `sm`; pages fill it #}
+      {# with partials/back_link.html. #}
+      {% block back_link %}{% endblock %}
       <h1 class="min-w-0 flex-1 truncate text-base font-semibold">{% block page_title %}{% endblock %}</h1>
       {% block header_actions %}{% endblock %}
-      {% include "partials/theme_toggle.html" %}
-      <form method="post" action="{% url 'accounts:logout' %}">
+      {# Below `lg` these two live in the menu's footer instead (see above). #}
+      <div class="hidden lg:contents">
+        {% include "partials/theme_toggle.html" %}
+      </div>
+      <form method="post" action="{% url 'accounts:logout' %}" class="hidden lg:block">
         {% csrf_token %}
         {# The icon alone below `sm`, the words from there. Even with the #}
         {# tighter spacing above, eight children and the word "Sign out" do #}
@@ -166,7 +216,7 @@
         {# says the same thing at every width to anything that is not #}
         {# looking at it. #}
         <button type="submit" aria-label="{% translate 'Sign out' %}"
-                class="btn btn-ghost h-9 w-9 !px-0 sm:h-auto sm:w-auto sm:!px-3">
+                class="btn btn-ghost h-10 w-10 !px-0 sm:h-auto sm:w-auto sm:!px-3">
           <svg class="h-4 w-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/>
           </svg>
@@ -198,7 +248,7 @@
        dismiss(id) { this.items = this.items.filter(item => item.id !== id); }
      }"
      @toast.window="push($event.detail)"
-     class="pointer-events-none fixed inset-x-4 bottom-4 z-[150] flex flex-col items-stretch gap-2 sm:inset-x-auto sm:bottom-auto sm:right-6 sm:top-20 sm:w-96"
+     class="pointer-events-none fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[150] flex flex-col items-stretch gap-2 sm:inset-x-auto sm:bottom-auto sm:right-6 sm:top-20 sm:w-96"
      aria-live="polite"
      role="status">
   <template x-for="item in items" :key="item.id">

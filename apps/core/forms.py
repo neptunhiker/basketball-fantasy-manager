@@ -11,7 +11,7 @@ from django import forms
 # Every field in the app gets these classes, so the widgets stay consistent
 # without repeating Tailwind strings in each template.
 INPUT_CLASSES = (
-    "block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm "
+    "block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm "
     "text-tertiary-700 placeholder-neutral-400 shadow-sm transition "
     "focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 "
     "disabled:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 "

@@ -38,13 +38,13 @@
         <label for="player-search" class="sr-only">{% translate "Search by name" %}</label>
         <input type="search" id="player-search" name="q" value="{{ request.GET.q|default:'' }}"
                placeholder="{% translate 'Search by name' %}…"
-               class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+               class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
       </div>
 
       <div>
         <label for="player-position" class="sr-only">{% translate "Position" %}</label>
         <select id="player-position" name="position"
-                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
           <option value="">{% translate "All positions" %}</option>
           {% for value, label in positions %}
             <option value="{{ value }}" {% if request.GET.position == value %}selected{% endif %}>{{ label }}</option>
@@ -55,7 +55,7 @@
       <div>
         <label for="player-team" class="sr-only">{% translate "Team" %}</label>
         <select id="player-team" name="team"
-                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
           <option value="">{% translate "All teams" %}</option>
           {% for team in teams %}
             <option value="{{ team.abbreviation }}" {% if request.GET.team == team.abbreviation %}selected{% endif %}>{{ team.name }}</option>
@@ -66,7 +66,7 @@
       <div>
         <label for="player-injury-status" class="sr-only">{% translate "Injury status" %}</label>
         <select id="player-injury-status" name="injury_status"
-                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
           <option value="">{% translate "All injury status" %}</option>
           <option value="healthy" {% if request.GET.injury_status == 'healthy' %}selected{% endif %}>{% translate "Healthy" %}</option>
           <option value="injured" {% if request.GET.injury_status == 'injured' %}selected{% endif %}>{% translate "Injured" %}</option>
@@ -76,7 +76,7 @@
       <div>
         <label for="player-roster" class="sr-only">{% translate "Roster" %}</label>
         <select id="player-roster" name="roster"
-                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
           <option value="">{% translate "All players" %}</option>
           {% for roster in rosters %}
             <option value="{{ roster.pk }}" {% if request.GET.roster == roster.pk|stringformat:'s' %}selected{% endif %}>{{ roster.name }}{% if rosters|length > 1 %} · {{ roster.manager.nick_name }}{% endif %}</option>
@@ -89,7 +89,7 @@
         <input type="number" id="player-max-salary" name="max_salary"
                value="{{ request.GET.max_salary|default:'' }}" min="0" step="0.1"
                placeholder="{% translate 'Max salary ($M)' %}"
-               class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+               class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
       </div>
     </div>
 

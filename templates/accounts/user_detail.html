@@ -4,6 +4,12 @@
 {% block title %}{{ person.display_name }} · {{ SITE_NAME }}{% endblock %}
 {% block page_title %}{{ person.display_name }}{% endblock %}
 
+{% block back_link %}
+  {% url 'accounts:user-list' as back_url %}
+  {% translate "Back to team" as back_label %}
+  {% include "partials/back_link.html" with href=back_url label=back_label %}
+{% endblock %}
+
 {% block header_actions %}
   <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary hidden sm:inline-flex">{% translate "Back to team" %}</a>
 {% endblock %}

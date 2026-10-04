@@ -4,8 +4,14 @@
 {% block title %}{{ profile.nick_name }} · {{ SITE_NAME }}{% endblock %}
 {% block page_title %}{{ profile.nick_name }}{% endblock %}
 
+{% block back_link %}
+  {% url 'accounts:user-detail' profile.user_id as back_url %}
+  {% blocktranslate with name=profile.user.display_name asvar back_label %}Back to {{ name }}{% endblocktranslate %}
+  {% include "partials/back_link.html" with href=back_url label=back_label %}
+{% endblock %}
+
 {% block header_actions %}
-  <a href="{% url 'accounts:user-detail' profile.user_id %}" class="btn btn-secondary hidden sm:inline-flex">{% translate "Back to" %} {{ profile.user.display_name }}</a>
+  <a href="{% url 'accounts:user-detail' profile.user_id %}" class="btn btn-secondary hidden sm:inline-flex">{% blocktranslate with name=profile.user.display_name %}Back to {{ name }}{% endblocktranslate %}</a>
 {% endblock %}
 
 {% block content %}

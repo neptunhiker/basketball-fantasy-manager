@@ -48,7 +48,7 @@
                 </span>
                 <span>{{ player.full_name }}</span>
                 <a href="{% url 'nba:player-compare' %}{% if item.remove_query %}?{{ item.remove_query }}{% endif %}"
-                   class="flex h-5 w-5 items-center justify-center rounded-full text-primary-400 transition hover:bg-primary-200/60 hover:text-primary-800 dark:text-primary-400 dark:hover:bg-primary-500/20 dark:hover:text-primary-200"
+                   class="flex h-5 w-5 relative after:absolute after:-inset-3 after:content-[''] items-center justify-center rounded-full text-primary-400 transition hover:bg-primary-200/60 hover:text-primary-800 dark:text-primary-400 dark:hover:bg-primary-500/20 dark:hover:text-primary-200"
                    title="{{ remove_label }}"
                    aria-label="{{ remove_label }}">
                   <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +168,7 @@
                   </td>
                   <td class="px-4 py-3 text-center">
                     <a href="{% url 'nba:player-compare' %}{% if item.remove_query %}?{{ item.remove_query }}{% endif %}"
-                       class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                       class="inline-flex h-10 w-10 sm:h-7 sm:w-7 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
                        title="{{ remove_label }}"
                        aria-label="{{ remove_label }}">
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

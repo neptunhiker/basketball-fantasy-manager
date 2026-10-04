@@ -7,7 +7,7 @@
 <span x-data="{ open: false }" class="relative inline-flex align-middle normal-case tracking-normal"
       @keydown.escape.stop="open = false">
   <button type="button" @click.stop.prevent="open = !open" @click.outside="open = false" :aria-expanded="open"
-          class="inline-flex h-4 w-4 items-center justify-center rounded-full text-neutral-400 transition hover:text-primary-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 dark:hover:text-primary-300"
+          class="inline-flex h-4 w-4 relative after:absolute after:-inset-3 after:content-[''] items-center justify-center rounded-full text-neutral-400 transition hover:text-primary-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 dark:hover:text-primary-300"
           aria-label="{% blocktranslate %}What is {{ label }}?{% endblocktranslate %}">
     <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 11v5M12 8h.01"/>

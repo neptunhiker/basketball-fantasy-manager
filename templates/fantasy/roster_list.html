@@ -46,14 +46,18 @@
               <span class="badge badge-pending">{% translate "Building" %}</span>
             {% else %}
               {# Not "Building": there is nothing left to build with. #}
-              <span class="badge badge-warning"
-                    title="{% if roster.season.trading_allowed %}Signings are closed; trades only{% elif roster.season.signings_open_at and not roster.season.signings_open %}Signings have not opened yet{% else %}No roster changes are available{% endif %}">Short</span>
+              {% translate "Short" as short_label %}
+              {% if roster.season.trading_allowed %}{% translate "Signings are closed; this roster can only change through trades." as short_reason %}{% elif roster.season.signings_open_at and not roster.season.signings_open %}{% translate "Signings have not opened yet." as short_reason %}{% else %}{% translate "No roster changes are available in this phase." as short_reason %}{% endif %}
+              <span class="inline-flex items-center gap-1">
+                <span class="badge badge-warning">{{ short_label }}</span>
+                {% include "partials/info_popover.html" with text=short_reason label=short_label %}
+              </span>
             {% endif %}
             <button type="button"
                     hx-get="{% url 'fantasy:roster-delete' roster.pk %}"
                     hx-target="#modal-root"
                     hx-swap="innerHTML"
-                    class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                    class="max-sm:p-3 rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                     aria-label="{% translate 'Delete roster' %}: {{ roster.name }}">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/>

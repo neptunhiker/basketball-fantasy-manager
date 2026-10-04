@@ -8,11 +8,9 @@
   {# Admin only. `SeasonCreateView` checks again -- this decides whether to #}
   {# offer a door, not whether it opens. #}
   {% if can_manage %}
-    <button type="button"
-            hx-get="{% url 'fantasy:season-create' %}"
-            hx-target="#modal-root"
-            hx-swap="innerHTML"
-            class="btn btn-primary hidden sm:inline-flex">{% translate "New season" %}</button>
+    {% url 'fantasy:season-create' as season_create_url %}
+    {% translate "New season" as new_season_label %}
+    {% include "partials/header_action.html" with label=new_season_label icon="plus" hx_get=season_create_url %}
   {% endif %}
 {% endblock %}
 
@@ -87,7 +85,7 @@
                             hx-get="{% url 'fantasy:season-update' season.pk %}"
                             hx-target="#modal-root"
                             hx-swap="innerHTML"
-                            class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                            class="max-sm:p-3 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                             aria-label="{% translate 'Edit season' %}: {{ season.label }}">
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5V20ZM14 6.5 17.5 10"/>
@@ -97,7 +95,7 @@
                             hx-get="{% url 'fantasy:season-trade-grants' season.pk %}"
                             hx-target="#modal-root"
                             hx-swap="innerHTML"
-                            class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                            class="max-sm:p-3 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                             aria-label="{% translate 'Free trades' %}: {{ season.label }}"
                             title="{% translate 'Free trades' %}">
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
@@ -111,7 +109,7 @@
                             hx-get="{% url 'fantasy:season-delete' season.pk %}"
                             hx-target="#modal-root"
                             hx-swap="innerHTML"
-                            class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                            class="max-sm:p-3 rounded-lg p-1.5 text-neutral-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                             aria-label="{% translate 'Delete season' %}: {{ season.label }}">
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/>

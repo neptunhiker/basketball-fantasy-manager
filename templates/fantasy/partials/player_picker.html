@@ -81,12 +81,12 @@
           <label for="picker-search" class="sr-only">{% translate "Search by name" %}</label>
           <input type="search" id="picker-search" name="q" value="{{ filters.q }}"
                  placeholder="{% translate 'Search by name' %}…"
-                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
         </div>
         <div>
           <label for="picker-position" class="sr-only">{% translate "Position" %}</label>
           <select id="picker-position" name="position"
-                  class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+                  class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
             <option value="">{% translate "All positions" %}</option>
             {% for value, label in positions %}
               <option value="{{ value }}" {% if filters.position == value %}selected{% endif %}>{{ label }}</option>
@@ -96,7 +96,7 @@
         <div>
           <label for="picker-team" class="sr-only">{% translate "Team" %}</label>
           <select id="picker-team" name="team"
-                  class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+                  class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
             <option value="">{% translate "All teams" %}</option>
             {% for team in teams %}
               <option value="{{ team.abbreviation }}" {% if filters.team == team.abbreviation %}selected{% endif %}>{{ team.name }}</option>

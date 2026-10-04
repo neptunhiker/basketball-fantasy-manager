@@ -20,7 +20,7 @@ apps.nba.stats.DESCENDING_FIRST, which the views use when no direction is given.
 <a href="{{ sort_url }}"
    class="group inline-flex items-center gap-1 {% if align == 'right' %}justify-end{% endif %} hover:text-primary-600 dark:hover:text-primary-400{% if current_sort == key %} text-primary-600 dark:text-primary-400{% endif %}">
   <span>{{ label }}</span>
-  <span class="text-[10px] leading-none {% if current_sort != key %}opacity-0 group-hover:opacity-40{% endif %}">
+  <span class="text-[10px] leading-none {% if current_sort != key %}opacity-30 group-hover:opacity-60{% endif %}">
     {% if current_sort == key and current_dir == "desc" %}&#9660;{% else %}&#9650;{% endif %}
   </span>
 </a>

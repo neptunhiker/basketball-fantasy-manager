@@ -216,10 +216,14 @@
 
   /* Buttons — compose as `btn btn-primary`. Tailwind v4 cannot @apply a class
      defined in the same layer, so the variants only add colour. */
+  /* At least 40px tall on phones, whatever padding a compact button asks for:
+     a finger needs the room even where a cursor does not (Sign in the market,
+     Buy/Sell, note actions). Width stays with each button. */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm
       font-semibold transition duration-150 focus-visible:outline-2
-      focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50;
+      focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50
+      max-sm:min-h-10;
     transition-timing-function: var(--ease-gentle);
   }
 

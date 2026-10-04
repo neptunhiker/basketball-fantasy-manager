@@ -4,6 +4,12 @@
 {% block title %}{{ player.full_name }} · {{ SITE_NAME }}{% endblock %}
 {% block page_title %}{{ player.full_name }}{% endblock %}
 
+{% block back_link %}
+  {% url 'nba:player-list' as back_url %}
+  {% translate "All players" as back_label %}
+  {% include "partials/back_link.html" with href=back_url label=back_label %}
+{% endblock %}
+
 {% block content %}
 {% blocktranslate with name=player.full_name asvar fp_chart_label %}Points per game for {{ name }}{% endblocktranslate %}
 <div class="space-y-6">
@@ -152,7 +158,8 @@
           </template>
         </div>
         <a href="{% url 'nba:player-compare' %}?player={{ player.slug }}" class="btn btn-secondary">{% translate "Compare" %}</a>
-        <a href="{% url 'nba:player-list' %}" class="btn btn-secondary">{% translate "All players" %}</a>
+        {# On phones the arrow beside the title is the way back. #}
+        <a href="{% url 'nba:player-list' %}" class="btn btn-secondary hidden sm:inline-flex">{% translate "All players" %}</a>
       </div>
     </div>
 

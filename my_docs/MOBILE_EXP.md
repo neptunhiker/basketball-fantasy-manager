@@ -1,6 +1,6 @@
 # Mobile experience – implementation plan
 
-Status: planned, not started · Branch: `feature/mobile` (on top of `feature/ux-round-3`)
+Status: phases 0–3 implemented on branch `mobile-exp` (October 2026) · see "Implementation notes" at the end
 Estimated effort: 4–5 working days · Delivery: one commit per phase, each checked on staging
 
 ## 1. Goal
@@ -321,3 +321,16 @@ On a real iPhone (Safari) and Android phone (Chrome), portrait and landscape:
 - Offline/PWA, push notifications
 - Redesigning the scatter chart (colours, legend, fair-value curve), which is its own topic
 - Injury badge as text instead of an icon, which is its own topic
+
+## 8. Implementation notes (where the build differs from the plan)
+
+- **Branch:** `mobile-exp` instead of `feature/mobile`. One commit per phase (0, 1, 2, 3).
+- **Header on phones (1.1/1.2):** the theme switch and Sign out moved into the side menu's footer below `lg`, because seven 40px controls did not fit a 375px header. The build page's Trade/History/Rules/Delete buttons were only enlarged, not moved to `header_action.html`, because they already followed the pattern.
+- **Touch targets (1.4, 3.2):** besides the listed buttons, every `.btn` is at least 40px tall below `sm` (one rule in `assets/input.css`).
+- **Sideways scroll (2.x):** the cause on the comparison and seasons pages was an `sr-only` label in a table's last header cell escaping its scroll frame. Fixed globally: `.overflow-x-auto { position: relative }`.
+- **Column hiding (2.5):** done on the table element (`max-sm:[&_tr>*:nth-child(n)]:hidden`), so header and body cells cannot drift apart. The column-visibility dict from 2.1 was not needed.
+- **Chart state (3.1):** no out-of-band swap was needed. `chartOpen` lives on the page's card, outside the swapped `#player-table`, and survives filtering.
+- **Player page (3.5):** the "Your rosters" box was not moved above the stat cards. It already follows them directly, and moving it would have split the header card. "All players" became the back arrow. Info popovers open as a card at the bottom of the screen on phones.
+- **Bug found and fixed along the way:** the lists' expected-salary formula used 4.668975 instead of 0.4668975, which made Value and Expected $4.2M off on the players list, team page and comparison. One shared `with_expected_salary()` now, with a regression test.
+- **Browser checks:** `uv run pytest -m browser` (24 checks). They use their own test database (`_browser` suffix). Screenshots go to `tmp/screens/<phase>/`.
+

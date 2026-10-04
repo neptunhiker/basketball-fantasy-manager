@@ -2704,3 +2704,35 @@ msgid "%(count)s injured"
 msgid_plural "%(count)s injured"
 msgstr[0] "%(count)s verletzt"
 msgstr[1] "%(count)s verletzt"
+
+# Mobile, phase 3
+
+#: templates/fantasy/partials/trade_body.html
+msgid "Step 1 of 2 · Who goes out?"
+msgstr "Schritt 1 von 2 · Wer geht?"
+
+#: templates/fantasy/partials/trade_body.html
+msgid "Step 2 of 2 · Who comes in?"
+msgstr "Schritt 2 von 2 · Wer kommt?"
+
+#: templates/fantasy/partials/trade_body.html
+#, python-format
+msgid "Coming in: %(name)s. Now choose who makes room."
+msgstr "Neu dabei: %(name)s. Wähle jetzt, wer Platz macht."
+
+#: templates/fantasy/partials/trade_body.html
+#, python-format
+msgid "Change player out (%(name)s)"
+msgstr "Abgebenden Spieler ändern (%(name)s)"
+
+#: templates/nba/partials/player_table.html
+msgid "Show chart"
+msgstr "Diagramm anzeigen"
+
+#: templates/nba/partials/player_table.html
+msgid "Hide chart"
+msgstr "Diagramm ausblenden"
+
+#: templates/nba/player_list.html
+msgid "Filters"
+msgstr "Filter"

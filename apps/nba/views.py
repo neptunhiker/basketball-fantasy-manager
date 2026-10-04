@@ -308,6 +308,16 @@ class PlayerListView(LoginRequiredMixin, ListView):
         context["watchlist_page"] = getattr(self, "watchlist_page", False)
         context["positions"] = Player.Position.choices
         context["teams"] = Team.objects.order_by("name")
+        # How many filters besides the search are set, for the phone's
+        # "Filters (n)" button that folds them away.
+        context["active_filter_count"] = sum(
+            1
+            for key in (
+                "position", "team", "injury_status", "roster", "max_salary", "min_games",
+                "inactive", "watchlist",
+            )
+            if self.request.GET.get(key, "").strip()
+        )
         context["rosters"] = Roster.objects.filter(
             manager__user=self.request.user
         ).select_related("manager", "season")

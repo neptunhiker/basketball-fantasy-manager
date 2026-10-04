@@ -15,8 +15,18 @@
 {% translate "Salary compared with points per game" as salary_chart_label %}
 {% translate "Points per game" as points_per_game_label %}
 {% translate "Salary ($ millions)" as salary_axis_label %}
+{% translate "Show chart" as show_chart_label %}
+{% translate "Hide chart" as hide_chart_label %}
 <div id="player-table">
-  <div class="border-b border-neutral-200 px-4 pb-4 pt-5 dark:border-neutral-800">
+  {# Phones: the chart folds behind "Show chart" (state on the page's card, #}
+  {# see player_list.html / team_detail.html); from `md` it is always open. #}
+  <button type="button" @click="chartOpen = !chartOpen" :aria-expanded="chartOpen.toString()"
+          aria-controls="player-chart"
+          class="flex w-full items-center justify-between border-b border-neutral-200 px-4 py-3 text-sm font-medium md:hidden dark:border-neutral-800">
+    <span x-text="chartOpen ? '{{ hide_chart_label|escapejs }}' : '{{ show_chart_label|escapejs }}'">{{ show_chart_label }}</span>
+    <svg class="h-4 w-4 transition" :class="chartOpen && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div id="player-chart" x-show="chartOpen" x-cloak class="border-b border-neutral-200 px-4 pb-4 pt-5 md:!block dark:border-neutral-800">
     <div class="mb-2">
       <h2 class="text-sm font-semibold">{% translate "Points per game and salary" %}</h2>
       <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">

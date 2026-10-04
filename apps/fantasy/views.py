@@ -1244,6 +1244,8 @@ class RosterTradeView(OwnRosterMixin, View):
             # Where to go after a trade made from somewhere other than the
             # build page (the player page), instead of swapping in its panels.
             "return_to": "player" if request.GET.get("return_to") == "player" else "",
+            # Phones show one list at a time: who goes out (1), then who comes in (2).
+            "mobile_step": 2 if player_out is not None else 1,
             "preview": preview,
             "trade_url": reverse("fantasy:roster-trade", args=[roster.pk]),
             # Ready-made query fragments, so a row that changes one side of the

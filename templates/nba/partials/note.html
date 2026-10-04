@@ -13,7 +13,7 @@
               hx-get="{{ note.edit_url }}"
               hx-target="#note-{{ note.pk }}"
               hx-swap="outerHTML"
-              class="btn btn-ghost !px-2 !py-1 text-xs">{% translate "Edit" %}</button>
+              class="btn btn-ghost !px-2 !py-1 text-xs max-sm:!px-3">{% translate "Edit" %}</button>
       <button type="button"
               hx-get="{{ note.delete_url }}"
               hx-target="#modal-root"

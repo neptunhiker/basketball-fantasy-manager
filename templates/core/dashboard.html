@@ -7,19 +7,20 @@
 {% block content %}
 {% if current_season %}
   <section class="relative isolate overflow-hidden rounded-xl border border-black/10 bg-[#17111f] text-white shadow-xl shadow-tertiary-700/10 animate-season-rise motion-reduce:animate-none">
-    <div class="pointer-events-none absolute inset-0 opacity-[.16]"
+    <div class="pointer-events-none absolute inset-0 hidden opacity-[.16] sm:block"
          style="background-image: linear-gradient(rgba(255,255,255,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.14) 1px, transparent 1px); background-size: 40px 40px;"></div>
 
-    <div class="relative p-6 sm:p-9 lg:p-10">
+    <div class="relative p-5 sm:p-9 lg:p-10">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-4 sm:gap-5">
           <img src="{% static 'img/pengi.png' %}"
                alt="{% translate 'Pengi logo' %}"
                class="h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 shrink-0 rounded-2xl border-2 border-white/20 object-cover shadow-xl">
           <div>
-            <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white">{{ SITE_NAME }}</h1>
+            {# h2: the page's one h1 is the header title above. #}
+            <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white">{{ SITE_NAME }}</h2>
             <div class="mt-1 flex items-center gap-2.5 font-mono text-[0.65rem] font-bold uppercase tracking-[.22em] text-secondary-300">
-              <span class="h-[7px] w-[7px] rounded-full bg-secondary-300 shadow-[0_0_0_4px_rgba(255,172,228,.18)] animate-pulse motion-reduce:animate-none"></span>
+              <span class="h-[7px] w-[7px] rounded-full bg-secondary-300 shadow-[0_0_0_4px_rgba(255,172,228,.18)] motion-safe:sm:animate-pulse"></span>
               {% blocktranslate with season_label=current_season.label tipoff=current_season.starts_on|date:"M j, Y" %}Season {{ season_label }} · Tip-off {{ tipoff }}{% endblocktranslate %}
             </div>
           </div>
@@ -27,29 +28,33 @@
       </div>
 
       {% if countdown_target_at %}
-        <p class="mt-8 font-mono text-xs font-bold uppercase tracking-[.2em] text-white/50">{% translate "Counting down to" %} <span class="text-secondary-300">{{ countdown_label }}</span> · {{ countdown_target_at|date:"F j, Y · H:i" }}</p>
-        <div class="mt-3 grid gap-2.5 sm:grid-cols-4" id="trading-countdown" data-target="{{ countdown_target_at|date:'c' }}">
-          <div class="min-w-0 rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
-            <div id="countdown-days" data-digits="1" class="truncate text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums transition-[font-size] duration-200 sm:text-[9rem] lg:text-[10rem] data-[digits=3]:text-5xl data-[digits=3]:sm:text-[6rem] data-[digits=3]:lg:text-[6.5rem] data-[digits=4]:text-4xl data-[digits=4]:sm:text-[4.5rem] data-[digits=4]:lg:text-[5rem]">0</div>
-            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-secondary-300">{% translate "Days" %}</div>
+        <p class="mt-6 font-mono text-xs font-bold uppercase tracking-[.2em] text-white/50 sm:mt-8">{% translate "Counting down to" %} <span class="text-secondary-300">{{ countdown_label }}</span> · {{ countdown_target_at|date:"F j, Y · H:i" }}</p>
+        {# One row of four at every width; the digits scale with the viewport #}
+        {# (`clamp`), so the buttons below stay on a phone's first screen. #}
+        {# Hidden from screen readers -- the line above says the same once, #}
+        {# instead of announcing every second. #}
+        <div class="mt-3 grid grid-cols-4 gap-1.5 sm:gap-2.5" id="trading-countdown" aria-hidden="true" data-target="{{ countdown_target_at|date:'c' }}">
+          <div class="min-w-0 rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-2 pb-2.5 pt-3 sm:px-[18px] sm:pb-4 sm:pt-5">
+            <div id="countdown-days" data-digits="1" class="truncate text-[clamp(1.75rem,9vw,8.5rem)] font-black leading-[.78] tracking-[-.06em] tabular-nums transition-[font-size] duration-200 data-[digits=3]:text-[clamp(1.35rem,6.5vw,6rem)] data-[digits=4]:text-[clamp(1.1rem,5vw,4.75rem)]">0</div>
+            <div class="mt-3 font-mono text-[0.55rem] font-bold uppercase tracking-[.12em] sm:text-[0.6rem] sm:tracking-[.24em] text-secondary-300">{% translate "Days" %}</div>
           </div>
-          <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
-            <div id="countdown-hours" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums sm:text-[9rem] lg:text-[10rem]">00</div>
-            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-white/50">{% translate "Hours" %}</div>
+          <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-2 pb-2.5 pt-3 sm:px-[18px] sm:pb-4 sm:pt-5">
+            <div id="countdown-hours" class="whitespace-nowrap text-[clamp(1.75rem,9vw,8.5rem)] font-black leading-[.78] tracking-[-.06em] tabular-nums">00</div>
+            <div class="mt-3 font-mono text-[0.55rem] font-bold uppercase tracking-[.12em] sm:text-[0.6rem] sm:tracking-[.24em] text-white/50">{% translate "Hours" %}</div>
           </div>
-          <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-4 pb-4 pt-5 sm:px-[18px]">
-            <div id="countdown-minutes" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] tabular-nums sm:text-[9rem] lg:text-[10rem]">00</div>
-            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-white/50">{% translate "Minutes" %}</div>
+          <div class="rounded-xl border border-white/[.12] bg-gradient-to-b from-white/[.07] to-white/[.02] px-2 pb-2.5 pt-3 sm:px-[18px] sm:pb-4 sm:pt-5">
+            <div id="countdown-minutes" class="whitespace-nowrap text-[clamp(1.75rem,9vw,8.5rem)] font-black leading-[.78] tracking-[-.06em] tabular-nums">00</div>
+            <div class="mt-3 font-mono text-[0.55rem] font-bold uppercase tracking-[.12em] sm:text-[0.6rem] sm:tracking-[.24em] text-white/50">{% translate "Minutes" %}</div>
           </div>
-          <div class="rounded-xl border border-secondary-300/40 bg-secondary-300/10 px-4 pb-4 pt-5 sm:px-[18px]">
-            <div id="countdown-seconds" class="whitespace-nowrap text-7xl font-black leading-[.78] tracking-[-.06em] text-secondary-300 tabular-nums sm:text-[9rem] lg:text-[10rem]">00</div>
-            <div class="mt-3 font-mono text-[0.6rem] font-bold uppercase tracking-[.24em] text-secondary-300">{% translate "Seconds" %}</div>
+          <div class="rounded-xl border border-secondary-300/40 bg-secondary-300/10 px-2 pb-2.5 pt-3 sm:px-[18px] sm:pb-4 sm:pt-5">
+            <div id="countdown-seconds" class="whitespace-nowrap text-[clamp(1.75rem,9vw,8.5rem)] font-black leading-[.78] tracking-[-.06em] text-secondary-300 tabular-nums">00</div>
+            <div class="mt-3 font-mono text-[0.55rem] font-bold uppercase tracking-[.12em] sm:text-[0.6rem] sm:tracking-[.24em] text-secondary-300">{% translate "Seconds" %}</div>
           </div>
         </div>
 
-        <div class="mt-8 flex flex-wrap items-end justify-between gap-6">
+        <div class="mt-6 flex flex-wrap items-end justify-between gap-4 sm:mt-8 sm:gap-6">
           <div class="min-w-0">
-            <h2 class="text-3xl font-extrabold leading-[1.1] tracking-[-.02em]">{{ countdown_heading }}</h2>
+            <h2 class="text-2xl font-extrabold leading-[1.1] tracking-[-.02em] sm:text-3xl">{{ countdown_heading }}</h2>
             <p class="mt-2 max-w-[42ch] text-sm leading-6 text-white/60">{{ countdown_description }}</p>
           </div>
           <div class="flex shrink-0 gap-2.5">
@@ -132,6 +137,18 @@
           document.getElementById("countdown-hours").textContent = pad(Math.floor((seconds % 86400) / 3600));
           document.getElementById("countdown-minutes").textContent = pad(Math.floor((seconds % 3600) / 60));
           document.getElementById("countdown-seconds").textContent = pad(seconds % 60);
+          // At zero the next phase has begun: reload once so the heading and
+          // the next deadline follow. Remembered per target, so a target that
+          // is still in the past after the reload cannot loop.
+          if (seconds === 0) {
+            var key = "countdown-reloaded:" + countdown.dataset.target;
+            try {
+              if (!sessionStorage.getItem(key)) {
+                sessionStorage.setItem(key, "1");
+                location.reload();
+              }
+            } catch (error) {}
+          }
         }
         tick();
         setInterval(tick, 1000);

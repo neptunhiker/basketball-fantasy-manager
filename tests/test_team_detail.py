@@ -214,7 +214,7 @@ def test_team_page_uses_the_player_table_with_sortable_stats(signed_in, lakers):
     assert response.context["current_sort"] == "avg"
     assert "Actual salary" in body
     assert "Expected salary" in body
-    assert "Difference" in body
+    assert "Value" in body
     assert "Hotness" in body
     assert 'sort=salary' in body
 

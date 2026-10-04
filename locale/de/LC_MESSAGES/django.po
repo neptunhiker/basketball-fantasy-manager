@@ -1717,6 +1717,8 @@ msgstr "Angezeigt werden Spieler, für die beide Werte erfasst sind."
 msgid ""
 "The comparison appears when players have points per game and salary recorded."
 msgstr ""
+"Der Vergleich erscheint, sobald für Spieler Punkte pro Spiel und Gehalt "
+"erfasst sind."
 
 #: templates/nba/partials/player_table.html:104
 msgid "Based on current points per game"
@@ -2542,3 +2544,110 @@ msgstr "Erhalten"
 #: templates/nba/player_detail.html
 msgid "Compare"
 msgstr "Vergleichen"
+
+# UX round 3: value, hotness, comparison, teams, notes
+
+#: apps/nba/views.py
+msgid "Delete this note?"
+msgstr "Diese Notiz löschen?"
+
+#: apps/nba/views.py
+msgid "Delete note"
+msgstr "Notiz löschen"
+
+#: apps/nba/views.py
+msgid "The note will be removed for good. This cannot be undone."
+msgstr "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."
+
+#: templates/nba/partials/player_table.html
+msgid "Value"
+msgstr "Wert"
+
+#: templates/nba/partials/player_table.html
+msgid "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid."
+msgstr "Wert ist das Gehalt, das für seine Punkte pro Spiel zu erwarten wäre, minus das, was er tatsächlich kostet. Ein Plus bedeutet ein Schnäppchen, ein Minus, dass er überbezahlt ist."
+
+#: templates/nba/partials/player_table.html
+msgid "Hotness says how often his points per game rose from one weekly snapshot to the next (up to the last 10 comparisons). Hot: rising at least 6 times in 10. Cold: at most 4 in 10. With fewer than 3 comparisons only the count is shown."
+msgstr "Hotness zeigt, wie oft seine Punkte pro Spiel von einem wöchentlichen Snapshot zum nächsten gestiegen sind (bis zu den letzten 10 Vergleichen). Hot: mindestens 6 von 10 gestiegen. Cold: höchstens 4 von 10. Bei weniger als 3 Vergleichen wird nur die Anzahl gezeigt."
+
+#: templates/nba/partials/player_table.html
+msgid "expected salary for his points per game minus actual salary — + means a bargain."
+msgstr "erwartetes Gehalt für seine Punkte pro Spiel minus tatsächliches Gehalt – + bedeutet ein Schnäppchen."
+
+#: templates/nba/partials/player_table.html
+msgid "how often his points per game rose over the last weeks."
+msgstr "wie oft seine Punkte pro Spiel in den letzten Wochen gestiegen sind."
+
+#: templates/nba/partials/compare_search_results.html
+#, python-format
+msgid "%(fpg)s FP/G"
+msgstr "%(fpg)s FP/G"
+
+#: templates/nba/partials/hotness.html
+msgid "Hot"
+msgstr "Hot"
+
+#: templates/nba/partials/hotness.html
+msgid "Steady"
+msgstr "Stabil"
+
+#: templates/nba/partials/hotness.html
+msgid "Cold"
+msgstr "Cold"
+
+#: templates/nba/partials/hotness.html
+#, python-format
+msgid "%(increases)s of %(comparisons)s"
+msgstr "%(increases)s von %(comparisons)s"
+
+#: templates/nba/partials/note.html
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: templates/nba/partials/note.html
+msgid "Delete"
+msgstr "Löschen"
+
+#: templates/nba/partials/note.html
+#, python-format
+msgid "edited %(date)s"
+msgstr "bearbeitet %(date)s"
+
+#: templates/nba/partials/notes.html
+msgid "Add a note"
+msgstr "Notiz hinzufügen"
+
+#: templates/nba/player_compare.html
+msgid "Comparison overview"
+msgstr "Vergleichsübersicht"
+
+#: templates/nba/player_compare.html
+#, python-format
+msgid "Remove %(name)s"
+msgstr "%(name)s entfernen"
+
+#: templates/nba/player_compare.html
+msgid "Add up to 5 players to compare their salaries, value and recent form side by side."
+msgstr "Füge bis zu 5 Spieler hinzu, um Gehalt, Wert und aktuelle Form nebeneinander zu vergleichen."
+
+#: templates/nba/player_detail.html
+#, python-format
+msgid "since %(date)s"
+msgstr "seit %(date)s"
+
+#: templates/nba/team_list.html
+msgid "FP/G"
+msgstr "FP/G"
+
+#: templates/partials/info_popover.html
+#, python-format
+msgid "What is %(label)s?"
+msgstr "Was ist %(label)s?"
+
+#: templates/nba/partials/note_count.html
+#, python-format
+msgid "%(count)s private note"
+msgid_plural "%(count)s private notes"
+msgstr[0] "%(count)s private Notiz"
+msgstr[1] "%(count)s private Notizen"

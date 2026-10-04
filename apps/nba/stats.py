@@ -68,3 +68,28 @@ def scoring_rate(players):
 DESCENDING_FIRST = frozenset(
     {"salary", "expected", "difference", "points", "avg", "games", "hotness"}
 )
+
+
+# Hotness is "how often did points per game rise between consecutive weekly
+# snapshots", e.g. 3 of 7. Below MIN_COMPARISONS it is shown as the bare
+# fraction: two weeks do not make a trend, and a label would claim one.
+HOT_SHARE = Decimal("0.6")
+COLD_SHARE = Decimal("0.4")
+MIN_COMPARISONS = 3
+
+
+def hotness_reading(score):
+    """Turn a hotness score like "3/7" into what the screens show.
+
+    Returns None for no score, else a dict with `increases`, `comparisons` and
+    `label` -- "hot", "steady", "cold", or None while there are too few
+    comparisons to call it.
+    """
+    if not score:
+        return None
+    increases, comparisons = (int(part) for part in str(score).split("/"))
+    label = None
+    if comparisons >= MIN_COMPARISONS:
+        share = Decimal(increases) / Decimal(comparisons)
+        label = "hot" if share >= HOT_SHARE else "cold" if share <= COLD_SHARE else "steady"
+    return {"increases": increases, "comparisons": comparisons, "label": label}

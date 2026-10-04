@@ -1,0 +1,48 @@
+{% load i18n %}
+{% comment %}
+  Private notes for a player or a team: the add form and the list, each note
+  editable and deletable (see note.html). With no notes yet the form folds
+  away behind one "Add a note" button.
+  Context: notes (each with edit_url/delete_url), note_form, notes_intro, notes_empty.
+{% endcomment %}
+<div id="notes" class="card overflow-hidden [scroll-margin-top:5rem]"
+     x-data="{ adding: {% if notes or note_form.errors %}true{% else %}false{% endif %} }">
+  <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <h2 class="text-sm font-semibold">{% translate "Private notes" %}</h2>
+        <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{{ notes_intro }}</p>
+      </div>
+      <button type="button" x-show="!adding" @click="adding = true; $nextTick(() => $refs.newNote.querySelector('textarea').focus())"
+              class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Add a note" %}</button>
+    </div>
+  </div>
+
+  <div class="space-y-4 p-4 sm:p-5" x-show="adding || {% if notes %}true{% else %}false{% endif %}" {% if not notes %}x-cloak{% endif %}>
+    {% if note_form.errors %}
+      <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+        {% translate "Please fix the note and try again." %}
+      </div>
+    {% endif %}
+
+    <form method="post" class="space-y-3" x-show="adding" x-ref="newNote">
+      {% csrf_token %}
+      {{ note_form.content.errors }}
+      {{ note_form.content }}
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ note_form.content.help_text }}</p>
+        <button type="submit" class="btn btn-primary">{% translate "Save note" %}</button>
+      </div>
+    </form>
+
+    {% if notes %}
+      <div class="space-y-3">
+        {% for note in notes %}
+          {% include "nba/partials/note.html" %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ notes_empty }}</p>
+    {% endif %}
+  </div>
+</div>

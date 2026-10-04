@@ -4,29 +4,33 @@ from urllib.parse import urlencode
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import (
     Case,
+    Count,
     DecimalField,
     Exists,
     ExpressionWrapper,
     F,
+    IntegerField,
     OuterRef,
     Prefetch,
     Q,
     Subquery,
+    Sum,
     Value,
     When,
 )
-from django.db.models.functions import Greatest
+from django.db.models.functions import Coalesce, Greatest
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import formats, timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _lazy
 from django.views import View
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
 from django.views.generic import DetailView, ListView
 
-from apps.core.views import StaffRequiredMixin
+from apps.core.views import ConfirmView, StaffRequiredMixin
 from apps.fantasy import services
 from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
 from apps.fantasy.views import player_roster_options
@@ -38,6 +42,18 @@ from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
 from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
 from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
+
+
+def my_note_count(user):
+    """How many private notes `user` keeps on each player, as an annotation."""
+    notes = (
+        PlayerNote.objects.filter(player=OuterRef("pk"), user=user)
+        .order_by()
+        .values("player")
+        .annotate(n=Count("pk"))
+        .values("n")
+    )
+    return Coalesce(Subquery(notes, output_field=IntegerField()), 0)
 
 
 class TeamListView(LoginRequiredMixin, ListView):
@@ -52,7 +68,62 @@ class TeamListView(LoginRequiredMixin, ListView):
         # (East before West, Atlantic/Central/Southeast, Northwest/Pacific/
         # Southwest), so plain alphabetical ordering is correct here. Rename a
         # choice value and this quietly stops being true.
-        return Team.objects.order_by("conference", "division", "name")
+        active = Q(players__is_active=True)
+        scored = active & Q(
+            players__current_total_fp__isnull=False, players__current_games_played__gt=0
+        )
+        my_notes = (
+            TeamNote.objects.filter(team=OuterRef("pk"), user=self.request.user)
+            .order_by()
+            .values("team")
+            .annotate(n=Count("pk"))
+            .values("n")
+        )
+        teams = list(
+            Team.objects.annotate(
+                active_players=Count("players", filter=active),
+                total_salary=Sum("players__current_salary", filter=active),
+                team_points=Sum("players__current_total_fp", filter=scored),
+                team_games=Sum("players__current_games_played", filter=scored),
+                note_count=Coalesce(Subquery(my_notes, output_field=IntegerField()), 0),
+            )
+            .prefetch_related(
+                # Who is injured is read from each player's newest report, the
+                # same rule as everywhere else -- three queries for all teams.
+                Prefetch(
+                    "players",
+                    queryset=Player.objects.filter(is_active=True).prefetch_related(
+                        Prefetch(
+                            "injuries",
+                            queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
+                            to_attr="injury_history",
+                        )
+                    ),
+                    to_attr="active_roster",
+                )
+            )
+            .order_by("conference", "division", "name")
+        )
+        for team in teams:
+            # Team points over team games, as on the team page -- not an average
+            # of averages, which would weigh a two-game player like a starter.
+            team.fp_per_game = (
+                (team.team_points / team.team_games).quantize(Decimal("0.01"))
+                if team.team_games
+                else None
+            )
+            team.injured_count = sum(1 for player in team.active_roster if player.is_injured)
+        if self.ranked:
+            teams.sort(key=lambda team: (team.fp_per_game is None, -(team.fp_per_game or 0)))
+        return teams
+
+    @property
+    def ranked(self):
+        """?sort=fpg: one flat ranking by points per game instead of the divisions."""
+        return self.request.GET.get("sort") == "fpg"
+
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(**kwargs), "ranked": self.ranked}
 
 
 class PlayerListView(LoginRequiredMixin, ListView):
@@ -94,7 +165,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
             user=self.request.user,
             player_id=OuterRef("pk"),
         )
-        qs = qs.annotate(is_watched=Exists(watched))
+        qs = qs.annotate(is_watched=Exists(watched), note_count=my_note_count(self.request.user))
         watchlist_only = self.request.GET.get("watchlist") == "1" or getattr(
             self, "watchlist_page", False
         )
@@ -401,31 +472,6 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
                 seen.add(value)
         return selected[:5]
 
-    def _compare_metric(self, player):
-        hotness = player.hotness_score()
-        salary_gap = None
-        if player.current_salary is not None and player.predicted_salary is not None:
-            salary_gap = player.predicted_salary - (player.current_salary / Decimal("1000000"))
-
-        if player.is_injured:
-            roster_fit = "Injury risk"
-        elif salary_gap is not None and salary_gap > 0:
-            roster_fit = "Value buy"
-        elif player.current_fp_per_game is not None and player.current_fp_per_game >= 18:
-            roster_fit = "High upside"
-        elif player.current_fp_per_game is not None and player.current_fp_per_game >= 12:
-            roster_fit = "Balanced"
-        else:
-            roster_fit = "Depth"
-
-        return {
-            "player": player,
-            "salary_gap": salary_gap,
-            "value_label": "Value buy" if salary_gap is not None and salary_gap > 0 else "Premium",
-            "trend_label": hotness or "No recent trend",
-            "roster_fit": roster_fit,
-        }
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         selected_slugs = self._selected_slugs()
@@ -494,7 +540,6 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
                 {
                     "player": player,
                     "remove_query": remove_query,
-                    "metric": self._compare_metric(player),
                 }
             )
 
@@ -513,7 +558,6 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
             context["search_results"] = [
                 player for player in context["search_results"] if player.slug not in selected_slugs
             ]
-        context["compare_metrics"] = [item["metric"] for item in selected_player_items]
         return context
 
 
@@ -664,7 +708,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
 
     def get_success_url(self):
         return HttpResponseRedirect(
-            reverse("nba:team-detail", args=[self.object.abbreviation.lower()])
+            reverse("nba:team-detail", args=[self.object.abbreviation.lower()]) + "#notes"
         )
 
     def _sort_params(self):
@@ -685,6 +729,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
                 to_attr="injury_history",
             ),
         )
+        qs = qs.annotate(note_count=my_note_count(self.request.user))
 
         fantasy_points = F("current_fp_per_game")
         expected_salary_millions = (
@@ -813,8 +858,19 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         sort, descending = self._sort_params()
         context["current_sort"] = sort
         context["current_dir"] = "desc" if descending else "asc"
-        context["notes"] = self.object.notes.filter(user=self.request.user).order_by("-created_at")
+        context["notes"] = with_note_urls(
+            self.object.notes.filter(user=self.request.user)
+            .select_related("team")
+            .order_by("-created_at"),
+            "team",
+        )
         context["note_form"] = kwargs.get("form") or TeamNoteForm()
+        context["notes_intro"] = _(
+            "Only you can see these notes. They are for your own team context."
+        )
+        context["notes_empty"] = _(
+            "No private notes yet. Save one to remember your take on this team."
+        )
         return context
 
 
@@ -855,7 +911,9 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
         return self.render_to_response(self.get_context_data(form=form))
 
     def get_success_url(self):
-        return HttpResponseRedirect(reverse("nba:player-detail", args=[self.object.slug]))
+        return HttpResponseRedirect(
+            reverse("nba:player-detail", args=[self.object.slug]) + "#notes"
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -890,8 +948,26 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
             not in {"healthy", "available", "returned", "cleared"}
         )
         context["hotness_score"] = self.object.hotness_score()
-        context["notes"] = self.object.notes.filter(user=self.request.user).order_by("-created_at")
+        # Value: what his points per game would be worth, minus what he costs.
+        predicted = self.object.predicted_salary
+        context["salary_difference_amount"] = (
+            predicted * Decimal("1000000") - self.object.current_salary
+            if predicted is not None and self.object.current_salary is not None
+            else None
+        )
+        context["notes"] = with_note_urls(
+            self.object.notes.filter(user=self.request.user)
+            .select_related("player")
+            .order_by("-created_at"),
+            "player",
+        )
         context["note_form"] = kwargs.get("form") or PlayerNoteForm()
+        context["notes_intro"] = _(
+            "Only you can see these notes. They are for your own player context."
+        )
+        context["notes_empty"] = _(
+            "No private notes yet. Save one to remember your take on this player."
+        )
         context["note"] = kwargs.get("note")
         # Oldest on the left, which is the opposite of the table below it: a
         # line is read forwards through the season, a table newest-first.
@@ -914,3 +990,105 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
             context["first_as_of"] = snapshots[-1].as_of
             context["salary_since_first"] = snapshots[0].salary - snapshots[-1].salary
         return context
+
+
+# --- notes: edit in place, delete with a confirmation ---------------------------
+
+
+def with_note_urls(notes, kind):
+    """Attach `edit_url` and `delete_url` to each note, for `nba/partials/note.html`."""
+    notes = list(notes)
+    for note in notes:
+        args = (
+            [note.player.slug, note.pk] if kind == "player" else
+            [note.team.abbreviation.lower(), note.pk]
+        )
+        note.edit_url = reverse(f"nba:{kind}-note-edit", args=args)
+        note.delete_url = reverse(f"nba:{kind}-note-delete", args=args)
+    return notes
+
+
+class OwnNoteMixin(LoginRequiredMixin):
+    """Scopes a note route to the account that wrote it: anyone else gets a 404."""
+
+    model = None
+    kind = ""
+
+    def get_note(self):
+        if not hasattr(self, "_note"):
+            lookup = (
+                {"player__slug": self.kwargs["slug"]}
+                if self.kind == "player"
+                else {"team__abbreviation__iexact": self.kwargs["abbreviation"]}
+            )
+            note = get_object_or_404(
+                self.model.objects.select_related(self.kind),
+                pk=self.kwargs["note_pk"],
+                user=self.request.user,
+                **lookup,
+            )
+            self._note = with_note_urls([note], self.kind)[0]
+        return self._note
+
+
+class NoteEditView(OwnNoteMixin, View):
+    """GET swaps a note for its edit form (or back, with ?cancel=1); POST saves it."""
+
+    form_class = None
+
+    def get(self, request, *args, **kwargs):
+        note = self.get_note()
+        if request.GET.get("cancel"):
+            return render(request, "nba/partials/note.html", {"note": note})
+        form = self.form_class(instance=note)
+        return render(request, "nba/partials/note_edit.html", {"note": note, "form": form})
+
+    def post(self, request, *args, **kwargs):
+        note = self.get_note()
+        form = self.form_class(request.POST, instance=note)
+        if not form.is_valid():
+            return render(request, "nba/partials/note_edit.html", {"note": note, "form": form})
+        form.save()
+        return render(request, "nba/partials/note.html", {"note": note})
+
+
+class PlayerNoteEditView(NoteEditView):
+    model = PlayerNote
+    kind = "player"
+    form_class = PlayerNoteForm
+
+
+class TeamNoteEditView(NoteEditView):
+    model = TeamNote
+    kind = "team"
+    form_class = TeamNoteForm
+
+
+class NoteDeleteView(OwnNoteMixin, ConfirmView):
+    title = _lazy("Delete this note?")
+    confirm_label = _lazy("Delete note")
+    tone = "danger"
+
+    def get_object(self):
+        return self.get_note()
+
+    def get_body(self, note):
+        return _("The note will be removed for good. This cannot be undone.")
+
+    def perform(self, note):
+        note.delete()
+
+    def get_success_url(self, note):
+        subject = getattr(note, self.kind)
+        args = [subject.slug] if self.kind == "player" else [subject.abbreviation.lower()]
+        return reverse(f"nba:{self.kind}-detail", args=args) + "#notes"
+
+
+class PlayerNoteDeleteView(NoteDeleteView):
+    model = PlayerNote
+    kind = "player"
+
+
+class TeamNoteDeleteView(NoteDeleteView):
+    model = TeamNote
+    kind = "team"

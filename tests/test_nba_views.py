@@ -283,7 +283,7 @@ def test_compare_page_selected_players_removal_link(signed_in, roster):
     # Table headers match players page
     assert "Actual salary" in body
     assert "Expected salary" in body
-    assert "Difference" in body
+    assert "Value" in body
     assert "Points" in body
     assert "Avg/game" in body
     assert "Games" in body
@@ -504,7 +504,7 @@ def test_player_list_displays_hotness_score(signed_in, roster):
     body = signed_in.get(reverse("nba:player-list")).content.decode()
 
     assert "Hotness" in body
-    assert "1/2" in body
+    assert "1 of 2" in body  # too few comparisons for a label
 
 
 def test_player_table_uses_team_abbreviations_and_right_aligns_non_name_columns(

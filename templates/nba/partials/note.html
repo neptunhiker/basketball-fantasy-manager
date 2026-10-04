@@ -1,0 +1,25 @@
+{% load i18n %}
+{# One note, with Edit (in place) and Delete (confirmed). Context: note (with edit_url, delete_url). #}
+<article id="note-{{ note.pk }}" class="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-800/60">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <p class="text-xs text-neutral-400 dark:text-neutral-500">
+      <time datetime="{{ note.created_at|date:'c' }}">{{ note.created_at|date:"SHORT_DATETIME_FORMAT" }}</time>
+      {% if note.was_edited %}
+        · {% blocktranslate with date=note.updated_at|date:"SHORT_DATETIME_FORMAT" %}edited {{ date }}{% endblocktranslate %}
+      {% endif %}
+    </p>
+    <div class="flex items-center gap-1">
+      <button type="button"
+              hx-get="{{ note.edit_url }}"
+              hx-target="#note-{{ note.pk }}"
+              hx-swap="outerHTML"
+              class="btn btn-ghost !px-2 !py-1 text-xs">{% translate "Edit" %}</button>
+      <button type="button"
+              hx-get="{{ note.delete_url }}"
+              hx-target="#modal-root"
+              hx-swap="innerHTML"
+              class="btn btn-ghost !px-2 !py-1 text-xs text-red-600 dark:text-red-400">{% translate "Delete" %}</button>
+    </div>
+  </div>
+  <p class="mt-2 whitespace-pre-line text-sm text-neutral-700 dark:text-neutral-200">{{ note.content }}</p>
+</article>

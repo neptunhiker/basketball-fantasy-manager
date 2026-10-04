@@ -156,7 +156,11 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-px border-t border-neutral-200 bg-neutral-200 sm:grid-cols-6 dark:border-neutral-800 dark:bg-neutral-800">
+    {% translate "Value" as value_label %}
+    {% translate "Hotness" as hotness_label %}
+    {% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
+    {% translate "Hotness says how often his points per game rose from one weekly snapshot to the next (up to the last 10 comparisons). Hot: rising at least 6 times in 10. Cold: at most 4 in 10. With fewer than 3 comparisons only the count is shown." as hotness_help %}
+    <div class="grid grid-cols-2 gap-px border-t border-neutral-200 bg-neutral-200 sm:grid-cols-4 lg:grid-cols-7 dark:border-neutral-800 dark:bg-neutral-800">
       <div class="bg-white p-4 dark:bg-neutral-900">
         <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Current salary" %}</p>
         <p class="mt-1 text-lg font-bold tabular-nums" title="{{ player.current_salary|exact }}">
@@ -166,14 +170,22 @@
           {# What these weeks did to his price -- the one figure a trade decision starts from. #}
           <p class="mt-0.5 text-xs">
             {% include "nba/partials/change.html" with value=salary_since_first unit="money" %}
-            <span class="text-neutral-400 dark:text-neutral-500">since {{ first_as_of|date:"M j" }}</span>
+            <span class="text-neutral-400 dark:text-neutral-500">{% blocktranslate with date=first_as_of|date:"SHORT_DATE_FORMAT" %}since {{ date }}{% endblocktranslate %}</span>
           </p>
         {% endif %}
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">
         <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Expected salary" %}</p>
-        <p class="mt-1 text-lg font-bold tabular-nums" title="Based on current points per game">
+        <p class="mt-1 text-lg font-bold tabular-nums">
           {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
+        </p>
+      </div>
+      <div class="bg-white p-4 dark:bg-neutral-900">
+        <p class="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+          {{ value_label }} {% include "partials/info_popover.html" with text=value_help label=value_label %}
+        </p>
+        <p class="mt-1 text-lg font-bold tabular-nums">
+          {% include "nba/partials/value.html" with amount=salary_difference_amount %}
         </p>
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">
@@ -195,63 +207,19 @@
         </p>
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Hotness" %}</p>
-        <p class="mt-1 text-lg font-bold tabular-nums" title="Increases in fantasy points per game across the latest consecutive snapshots (up to the last 10 comparisons)">
-          {{ hotness_score|default:"–" }}
+        <p class="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+          {{ hotness_label }} {% include "partials/info_popover.html" with text=hotness_help label=hotness_label %}
         </p>
+        <div class="mt-1 flex justify-start text-lg font-bold tabular-nums [&>span]:items-start">
+          {% include "nba/partials/hotness.html" with score=hotness_score %}
+        </div>
       </div>
     </div>
   </div>
 
   {% include "fantasy/partials/player_roster_options.html" %}
 
-  <div class="card overflow-hidden">
-    <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <h2 class="text-sm font-semibold">{% translate "Private notes" %}</h2>
-          <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-            {% translate "Only you can see these notes. They are for your own player context." %}
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="space-y-4 p-4 sm:p-5">
-      {% if note_form.errors %}
-        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
-          {% translate "Please fix the note and try again." %}
-        </div>
-      {% endif %}
-
-      <form method="post" class="space-y-3">
-        {% csrf_token %}
-        {{ note_form.content.errors }}
-        {{ note_form.content }}
-        <div class="flex items-center justify-between gap-3">
-          <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ note_form.content.help_text }}</p>
-          <button type="submit" class="btn btn-primary">{% translate "Save note" %}</button>
-        </div>
-      </form>
-
-      {% if notes %}
-        <div class="space-y-3">
-          {% for note in notes %}
-            <article class="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-800/60">
-              <div class="flex items-center justify-end gap-3">
-                <time class="text-xs text-neutral-400 dark:text-neutral-500" datetime="{{ note.created_at|date:'c' }}">
-                  {{ note.created_at|date:"M j, Y · H:i" }}
-                </time>
-              </div>
-              <p class="mt-2 whitespace-pre-line text-sm text-neutral-700 dark:text-neutral-200">{{ note.content }}</p>
-            </article>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "No private notes yet. Save one to remember your take on this player." %}</p>
-      {% endif %}
-    </div>
-  </div>
+  {% include "nba/partials/notes.html" %}
 
   <div class="card overflow-hidden">
     <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">

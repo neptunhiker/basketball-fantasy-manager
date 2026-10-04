@@ -1,0 +1,4 @@
+{% load money %}
+{# Value = expected salary for his points per game minus actual salary. #}
+{# Positive is a bargain (green), negative is overpaid (red). Context: amount (dollars or None). #}
+{% if amount is None %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% elif amount > 0 %}<span class="font-medium text-emerald-700 dark:text-emerald-400" title="{{ amount|exact }}">+{{ amount|millions }}</span>{% elif amount < 0 %}<span class="font-medium text-rose-700 dark:text-rose-400" title="{{ amount|exact }}">{{ amount|millions }}</span>{% else %}<span title="{{ amount|exact }}">{{ amount|millions }}</span>{% endif %}

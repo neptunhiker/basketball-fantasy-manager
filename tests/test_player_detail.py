@@ -411,7 +411,7 @@ def test_the_figures_are_rendered_in_millions_and_with_signs(signed_in, player):
     assert "+30.00" in body  # points gained that week
     assert 'title="$2,200,000"' in body
     assert "Hotness" in body
-    assert "1/2" in body
+    assert "1 of 2" in body  # too few comparisons for a label
 
 
 def test_no_template_comment_leaks_into_the_page(signed_in, player):

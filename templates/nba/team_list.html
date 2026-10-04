@@ -1,5 +1,5 @@
 {% extends "app.html" %}
-{% load i18n %}
+{% load i18n money %}
 
 {% block title %}{% translate "Teams" %} · {{ SITE_NAME }}{% endblock %}
 {% block page_title %}{% translate "Teams" %}{% endblock %}
@@ -17,37 +17,52 @@
       <table class="w-full text-left text-sm">
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
           <tr>
-            <th scope="col" class="px-4 py-3 font-medium">{% translate "Team" %}</th>
-            <th scope="col" class="px-4 py-3 font-medium">{% translate "Conference" %}</th>
-            <th scope="col" class="px-4 py-3 font-medium">{% translate "Division" %}</th>
+            {# "Team" returns to the divisions, "FP/G" ranks all 30 teams. #}
+            <th scope="col" class="px-4 py-3 font-medium">
+              <a href="{% url 'nba:team-list' %}" class="hover:text-primary-600 dark:hover:text-primary-400 {% if not ranked %}text-primary-600 dark:text-primary-400{% endif %}">{% translate "Team" %}</a>
+            </th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Players" %}</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">
+              <a href="?sort=fpg" class="hover:text-primary-600 dark:hover:text-primary-400 {% if ranked %}text-primary-600 dark:text-primary-400{% endif %}">{% translate "FP/G" %}{% if ranked %} &#9660;{% endif %}</a>
+            </th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Salary" %}</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Injured" %}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
           {% for team in teams %}
-            {% ifchanged team.division %}
-              <tr class="bg-neutral-50 dark:bg-neutral-800/40">
-                <th colspan="3" scope="colgroup"
-                    class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                  {{ team.get_conference_display }} · {{ team.get_division_display }}
-                </th>
-              </tr>
-            {% endifchanged %}
+            {% if not ranked %}
+              {% ifchanged team.division %}
+                <tr class="bg-neutral-50 dark:bg-neutral-800/40">
+                  <th colspan="5" scope="colgroup"
+                      class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                    {{ team.get_conference_display }} · {{ team.get_division_display }}
+                  </th>
+                </tr>
+              {% endifchanged %}
+            {% endif %}
             <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
               <td class="px-4 py-3">
-                <a href="{% url 'nba:team-detail' team.abbreviation|lower %}"
-                   class="group flex items-center gap-3">
-                  <span class="flex h-8 w-10 shrink-0 items-center justify-center rounded-md bg-primary-100 text-xs font-semibold tracking-wide text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">
-                    {{ team.abbreviation }}
-                  </span>
-                  <span class="font-medium group-hover:text-primary-600 group-hover:underline dark:group-hover:text-primary-400">{{ team.name }}</span>
-                </a>
+                <div class="flex items-center gap-3">
+                  {% if ranked %}<span class="w-5 text-right text-xs tabular-nums text-neutral-400">{{ forloop.counter }}</span>{% endif %}
+                  <a href="{% url 'nba:team-detail' team.abbreviation|lower %}" class="group flex min-w-0 items-center gap-3">
+                    <span class="flex h-8 w-10 shrink-0 items-center justify-center rounded-md bg-primary-100 text-xs font-semibold tracking-wide text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">
+                      {{ team.abbreviation }}
+                    </span>
+                    <span class="min-w-0">
+                      <span class="block truncate font-medium group-hover:text-primary-600 group-hover:underline dark:group-hover:text-primary-400">{{ team.name }}</span>
+                      {% if ranked %}<span class="block text-xs text-neutral-500 dark:text-neutral-400">{{ team.get_conference_display }} · {{ team.get_division_display }}</span>{% endif %}
+                    </span>
+                  </a>
+                  {% if team.note_count %}
+                    {% include "nba/partials/note_count.html" with count=team.note_count url_base=team.abbreviation|lower kind="team" %}
+                  {% endif %}
+                </div>
               </td>
-              <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
-                {{ team.get_conference_display|default:"—" }}
-              </td>
-              <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
-                {{ team.get_division_display|default:"—" }}
-              </td>
+              <td class="px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400">{{ team.active_players }}</td>
+              <td class="px-4 py-3 text-right font-medium tabular-nums">{{ team.fp_per_game|floatformat:"2g"|default:"–" }}</td>
+              <td class="px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400" title="{{ team.total_salary|exact }}">{{ team.total_salary|millions }}</td>
+              <td class="px-4 py-3 text-right tabular-nums {% if team.injured_count %}text-red-700 dark:text-red-300{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">{{ team.injured_count }}</td>
             </tr>
           {% endfor %}
         </tbody>

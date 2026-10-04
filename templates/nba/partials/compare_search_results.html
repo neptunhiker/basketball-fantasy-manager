@@ -26,7 +26,7 @@
                     {% if player.current_salary %}{{ player.current_salary|millions }}{% else %}–{% endif %}
                   </p>
                   <p class="text-[11px] tabular-nums text-neutral-500 dark:text-neutral-400">
-                    {% if player.current_fp_per_game %}{{ player.current_fp_per_game|floatformat:"2g" }} FP/G{% else %}–{% endif %}
+                    {% if player.current_fp_per_game %}{% blocktranslate with fpg=player.current_fp_per_game|floatformat:"2g" %}{{ fpg }} FP/G{% endblocktranslate %}{% else %}–{% endif %}
                   </p>
                 </div>
                 <span class="btn btn-secondary !px-2.5 !py-1 text-xs">

@@ -41,7 +41,7 @@
       {% if selected_player_items %}
         <div class="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-neutral-200 dark:border-neutral-800">
           {% for item in selected_player_items %}
-            {% with player=item.player %}
+            {% with player=item.player %}{% blocktranslate with name=player.full_name asvar remove_label %}Remove {{ name }}{% endblocktranslate %}
               <span class="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50/50 py-1 pl-2.5 pr-1.5 text-sm font-medium text-primary-700 shadow-sm dark:border-primary-500/25 dark:bg-primary-500/10 dark:text-primary-300">
                 <span class="flex h-5 w-5 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
                   {{ player.position }}
@@ -49,8 +49,8 @@
                 <span>{{ player.full_name }}</span>
                 <a href="{% url 'nba:player-compare' %}{% if item.remove_query %}?{{ item.remove_query }}{% endif %}"
                    class="flex h-5 w-5 items-center justify-center rounded-full text-primary-400 transition hover:bg-primary-200/60 hover:text-primary-800 dark:text-primary-400 dark:hover:bg-primary-500/20 dark:hover:text-primary-200"
-                   title="Remove {{ player.full_name }}"
-                   aria-label="Remove {{ player.full_name }}">
+                   title="{{ remove_label }}"
+                   aria-label="{{ remove_label }}">
                   <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                   </svg>
@@ -68,7 +68,7 @@
               <svg class="h-4 w-4 text-primary-500 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
-              <span>Add player</span>
+              <span>{% translate "Add player" %}</span>
             </button>
           {% endif %}
         </div>
@@ -80,7 +80,7 @@
     <div class="card overflow-hidden">
       <div class="border-b border-neutral-200 px-4 py-3 sm:px-5 dark:border-neutral-800">
         <h2 class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
-          Comparison overview
+          {% translate "Comparison overview" %}
         </h2>
       </div>
 
@@ -96,7 +96,7 @@
               <th scope="col" class="px-4 py-3 font-medium">{% translate "Team" %}</th>
               <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Actual salary" %}</th>
               <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Expected salary" %}</th>
-              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Difference" %}</th>
+              <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Value" %}</th>
               <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Points" %}</th>
               <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Avg/game" %}</th>
               <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Games" %}</th>
@@ -104,13 +104,13 @@
               <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Injury" %}</th>
               <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Status" %}</th>
               <th scope="col" class="w-12 px-4 py-3 text-center font-medium">
-                <span class="sr-only">Remove</span>
+                <span class="sr-only">{% translate "Remove" %}</span>
               </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
             {% for item in selected_player_items %}
-              {% with player=item.player %}
+              {% with player=item.player %}{% blocktranslate with name=player.full_name asvar remove_label %}Remove {{ name }}{% endblocktranslate %}
                 <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
                   <td class="px-4 py-3 text-center">
                     {% include "nba/partials/watchlist_button.html" with is_watched=player.is_watched remove_row=False %}
@@ -138,11 +138,11 @@
                   <td class="px-4 py-3 text-right tabular-nums" title="{{ player.current_salary|exact }}">
                     {{ player.current_salary|millions }}
                   </td>
-                  <td class="px-4 py-3 text-right tabular-nums" title="Based on current points per game">
+                  <td class="px-4 py-3 text-right tabular-nums">
                     {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
                   </td>
-                  <td class="px-4 py-3 text-right tabular-nums" title="Expected salary minus actual salary">
-                    {{ player.salary_difference_amount|millions }}
+                  <td class="px-4 py-3 text-right tabular-nums">
+                    {% include "nba/partials/value.html" with amount=player.salary_difference_amount %}
                   </td>
                   <td class="px-4 py-3 text-right tabular-nums">
                     {{ player.current_total_fp|floatformat:"2g"|default:"–" }}
@@ -153,8 +153,8 @@
                   <td class="px-4 py-3 text-right tabular-nums">
                     {{ player.current_games_played|default_if_none:"–" }}
                   </td>
-                  <td class="px-4 py-3 text-right tabular-nums" title="Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)">
-                    {{ player.hotness_score|default:"–" }}
+                  <td class="px-4 py-3 text-right tabular-nums">
+                    {% include "nba/partials/hotness.html" with score=player.hotness_score %}
                   </td>
                   <td class="px-4 py-3 text-right">
                     {% include "nba/partials/injury_status.html" with player=player %}
@@ -169,8 +169,8 @@
                   <td class="px-4 py-3 text-center">
                     <a href="{% url 'nba:player-compare' %}{% if item.remove_query %}?{{ item.remove_query }}{% endif %}"
                        class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-                       title="Remove {{ player.full_name }}"
-                       aria-label="Remove {{ player.full_name }}">
+                       title="{{ remove_label }}"
+                       aria-label="{{ remove_label }}">
                       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                       </svg>
@@ -194,7 +194,7 @@
         {% translate "No players selected yet" %}
       </h3>
       <p class="mx-auto mt-1.5 max-w-sm text-sm text-neutral-500 dark:text-neutral-400">
-        {% translate "Add up to 5 players to compare their salaries, recent fantasy trends, and roster fit side by side." %}
+        {% translate "Add up to 5 players to compare their salaries, value and recent form side by side." %}
       </p>
       <div class="mt-6">
         <button type="button"

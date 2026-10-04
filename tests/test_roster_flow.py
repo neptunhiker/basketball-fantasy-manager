@@ -291,7 +291,7 @@ def test_the_roster_uses_a_players_style_table_with_trade_actions(signed_in, ros
             "Team",
             "Actual salary",
             "Expected salary",
-            "Difference",
+            "Value",
             "Points",
             "Avg/game",
             "Games",

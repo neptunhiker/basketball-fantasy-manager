@@ -1,0 +1,12 @@
+{% load i18n %}
+{# A small note icon with the number of your notes, linking to them. #}
+{# Context: count, kind ("player"/"team"), url_base (slug or lower-case abbreviation). #}
+<a href="{% if kind == 'team' %}{% url 'nba:team-detail' url_base %}{% else %}{% url 'nba:player-detail' url_base %}{% endif %}#notes"
+   class="inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 py-0.5 text-xs text-primary-600 transition hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-500/10"
+   title="{% blocktranslate count count=count %}{{ count }} private note{% plural %}{{ count }} private notes{% endblocktranslate %}"
+   aria-label="{% blocktranslate count count=count %}{{ count }} private note{% plural %}{{ count }} private notes{% endblocktranslate %}">
+  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M5 4h14v12l-4 4H5V4ZM15 20v-4h4M8.5 9h7M8.5 12.5h4"/>
+  </svg>
+  <span class="tabular-nums">{{ count }}</span>
+</a>

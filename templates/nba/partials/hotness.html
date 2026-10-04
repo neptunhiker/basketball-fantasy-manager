@@ -1,0 +1,21 @@
+{% load i18n player_stats %}
+{# Hotness as a label (Hot / Steady / Cold) with "3 of 7" beneath. Fewer than #}
+{# three comparisons: only the fraction. Context: score ("3/7" or None). #}
+{% with reading=score|hotness_reading %}
+  {% if not reading %}
+    <span class="text-neutral-400 dark:text-neutral-500">–</span>
+  {% else %}
+    <span class="inline-flex flex-col items-end leading-tight">
+      {% if reading.label == "hot" %}
+        <span class="badge badge-success">{% translate "Hot" %}</span>
+      {% elif reading.label == "cold" %}
+        <span class="badge bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300">{% translate "Cold" %}</span>
+      {% elif reading.label == "steady" %}
+        <span class="badge badge-neutral">{% translate "Steady" %}</span>
+      {% endif %}
+      <span class="mt-0.5 text-[0.7rem] text-neutral-500 dark:text-neutral-400">
+        {% blocktranslate with increases=reading.increases comparisons=reading.comparisons %}{{ increases }} of {{ comparisons }}{% endblocktranslate %}
+      </span>
+    </span>
+  {% endif %}
+{% endwith %}

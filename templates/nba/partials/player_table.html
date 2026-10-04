@@ -4,11 +4,13 @@
 {% translate "Team" as team_label %}
 {% translate "Actual salary" as actual_salary_label %}
 {% translate "Expected salary" as expected_salary_label %}
-{% translate "Difference" as difference_label %}
+{% translate "Value" as value_label %}
 {% translate "Points" as points_label %}
 {% translate "Avg/game" as avg_game_label %}
 {% translate "Games" as games_label %}
 {% translate "Hotness" as hotness_label %}
+{% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
+{% translate "Hotness says how often his points per game rose from one weekly snapshot to the next (up to the last 10 comparisons). Hot: rising at least 6 times in 10. Cold: at most 4 in 10. With fewer than 3 comparisons only the count is shown." as hotness_help %}
 {% translate "Watchlist" as watchlist_label %}
 {% translate "Salary compared with points per game" as salary_chart_label %}
 {% translate "Points per game" as points_per_game_label %}
@@ -54,7 +56,10 @@
               {% include "nba/partials/sort_header.html" with key="expected" label=expected_salary_label align="right" first="desc" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
-              {% include "nba/partials/sort_header.html" with key="difference" label=difference_label align="right" first="desc" %}
+              <span class="inline-flex items-center gap-1">
+                {% include "nba/partials/sort_header.html" with key="difference" label=value_label align="right" first="desc" %}
+                {% include "partials/info_popover.html" with text=value_help label=value_label %}
+              </span>
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="points" label=points_label align="right" first="desc" %}
@@ -66,7 +71,10 @@
               {% include "nba/partials/sort_header.html" with key="games" label=games_label align="right" first="desc" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
-              {% include "nba/partials/sort_header.html" with key="hotness" label=hotness_label align="right" first="desc" %}
+              <span class="inline-flex items-center gap-1">
+                {% include "nba/partials/sort_header.html" with key="hotness" label=hotness_label align="right" first="desc" %}
+                {% include "partials/info_popover.html" with text=hotness_help label=hotness_label %}
+              </span>
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Injury" %}</th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Status" %}</th>
@@ -81,6 +89,9 @@
               <td class="px-4 py-3 font-medium">
                 <a href="{% url 'nba:player-detail' player.slug %}"
                    class="hover:text-primary-600 hover:underline dark:hover:text-primary-400">{{ player.full_name }}</a>
+                {% if player.note_count %}
+                  {% include "nba/partials/note_count.html" with count=player.note_count url_base=player.slug kind="player" %}
+                {% endif %}
               </td>
               <td class="px-4 py-3 text-center">
                 <span class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-primary-100 text-xs font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-300"
@@ -104,8 +115,8 @@
               <td class="px-4 py-3 text-right tabular-nums" title="{% translate 'Based on current points per game' %}">
                 {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
               </td>
-              <td class="px-4 py-3 text-right tabular-nums" title="{% translate 'Expected salary minus actual salary' %}">
-                {{ player.salary_difference_amount|millions }}
+              <td class="px-4 py-3 text-right tabular-nums">
+                {% include "nba/partials/value.html" with amount=player.salary_difference_amount %}
               </td>
               <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_total_fp|floatformat:"2g"|default:"–" }}
@@ -116,8 +127,8 @@
               <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_games_played|default_if_none:"–" }}
               </td>
-              <td class="px-4 py-3 text-right tabular-nums" title="{% translate 'Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)' %}">
-                {{ player.hotness_score|default:"–" }}
+              <td class="px-4 py-3 text-right tabular-nums">
+                {% include "nba/partials/hotness.html" with score=player.hotness_score %}
               </td>
               <td class="px-4 py-3 text-right">
                 {% include "nba/partials/injury_status.html" with player=player %}
@@ -134,6 +145,11 @@
         </tbody>
       </table>
     </div>
+    {# The two derived columns, explained where every reader sees it. #}
+    <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+      <strong class="font-medium">{{ value_label }}:</strong> {% translate "expected salary for his points per game minus actual salary — + means a bargain." %}
+      <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his points per game rose over the last weeks." %}
+    </p>
 
     {% if is_paginated %}
       <div class="flex items-center justify-between border-t border-neutral-200 px-4 py-3 text-sm dark:border-neutral-800">

@@ -1,0 +1,19 @@
+{% load i18n %}
+{# A note being edited in place. Saves or cancels back to note.html. Context: note, form. #}
+<form id="note-{{ note.pk }}"
+      hx-post="{{ note.edit_url }}"
+      hx-target="this"
+      hx-swap="outerHTML"
+      class="space-y-3 rounded-xl border border-primary-300 bg-white p-3 dark:border-primary-500/40 dark:bg-neutral-900">
+  {% csrf_token %}
+  {% for error in form.content.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+  {{ form.content }}
+  <div class="flex justify-end gap-2">
+    <button type="button"
+            hx-get="{{ note.edit_url }}?cancel=1"
+            hx-target="#note-{{ note.pk }}"
+            hx-swap="outerHTML"
+            class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Cancel" %}</button>
+    <button type="submit" class="btn btn-primary !px-3 !py-1.5 text-xs">{% translate "Save" %}</button>
+  </div>
+</form>

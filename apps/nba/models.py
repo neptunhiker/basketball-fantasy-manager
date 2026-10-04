@@ -5,6 +5,7 @@ NBA and would still be true if this app did not exist, which is what keeps them
 separate from the fantasy game layer.
 """
 
+import datetime as dt
 import uuid
 from decimal import Decimal
 from itertools import pairwise
@@ -289,6 +290,11 @@ class PlayerNote(TimeStampedModel):
         verbose_name = "Player note"
         verbose_name_plural = "Player notes"
 
+    @property
+    def was_edited(self):
+        """True once the note was changed after it was written (not on save noise)."""
+        return self.updated_at - self.created_at > dt.timedelta(minutes=1)
+
     def __str__(self):
         return f"{self.user} · {self.player}: {self.content[:40]}"
 
@@ -315,6 +321,11 @@ class TeamNote(TimeStampedModel):
         ordering = ["-created_at"]
         verbose_name = "Team note"
         verbose_name_plural = "Team notes"
+
+    @property
+    def was_edited(self):
+        """True once the note was changed after it was written (not on save noise)."""
+        return self.updated_at - self.created_at > dt.timedelta(minutes=1)
 
     def __str__(self):
         return f"{self.user} · {self.team}: {self.content[:40]}"

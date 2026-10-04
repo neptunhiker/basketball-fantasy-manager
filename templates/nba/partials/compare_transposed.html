@@ -1,0 +1,60 @@
+{% load i18n money %}
+{% comment %}
+  The comparison on phones (below `md`): one row per figure, one column per
+  player, the figure names fixed on the left -- so the same figure is compared
+  across players at a glance, with at most five narrow columns.
+  Context: selected_player_items, compare_rows ((key, label) pairs).
+{% endcomment %}
+<div class="overflow-x-auto md:hidden">
+  <table class="w-full text-left text-sm">
+    <thead class="border-b border-neutral-200 dark:border-neutral-800">
+      <tr>
+        <th scope="col" class="sticky left-0 z-[1] bg-white px-3 py-2 dark:bg-neutral-900">
+          <span class="sr-only">{% translate "Figure" %}</span>
+        </th>
+        {% for item in selected_player_items %}
+          {% with player=item.player %}
+            {% blocktranslate with name=player.full_name asvar remove_label %}Remove {{ name }}{% endblocktranslate %}
+            <th scope="col" class="min-w-[7.5rem] px-3 py-2 align-top font-medium">
+              <div class="flex items-start justify-between gap-1">
+                <a href="{% url 'nba:player-detail' player.slug %}"
+                   class="text-sm leading-tight text-tertiary-700 hover:text-primary-600 dark:text-neutral-100 dark:hover:text-primary-300">{{ player.full_name }}</a>
+                <a href="{% url 'nba:player-compare' %}{% if item.remove_query %}?{{ item.remove_query }}{% endif %}"
+                   class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                   aria-label="{{ remove_label }}">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </a>
+              </div>
+            </th>
+          {% endwith %}
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
+      {% for key, label in compare_rows %}
+        <tr>
+          <th scope="row" class="sticky left-0 z-[1] whitespace-nowrap bg-white px-3 py-2.5 text-xs font-medium text-neutral-500 shadow-[inset_-1px_0_0_var(--color-neutral-200)] dark:bg-neutral-900 dark:text-neutral-400 dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">{{ label }}</th>
+          {% for item in selected_player_items %}
+            {% with player=item.player %}
+              <td class="px-3 py-2.5 tabular-nums [&>span]:items-start">
+                {% if key == "team" %}{% if player.team %}{{ player.team.abbreviation }}{% else %}{% translate "Free Agent" %}{% endif %}
+                {% elif key == "position" %}{{ player.get_position_display }}
+                {% elif key == "salary" %}{{ player.current_salary|millions }}
+                {% elif key == "expected" %}{% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
+                {% elif key == "value" %}{% include "nba/partials/value.html" with amount=player.salary_difference_amount %}
+                {% elif key == "avg" %}{{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}
+                {% elif key == "points" %}{{ player.current_total_fp|floatformat:"2g"|default:"–" }}
+                {% elif key == "games" %}{{ player.current_games_played|default_if_none:"–" }}
+                {% elif key == "hotness" %}{% include "nba/partials/hotness.html" with score=player.hotness_score %}
+                {% elif key == "injury" %}{% include "nba/partials/injury_status.html" with player=player id_suffix="-compare" %}
+                {% endif %}
+              </td>
+            {% endwith %}
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

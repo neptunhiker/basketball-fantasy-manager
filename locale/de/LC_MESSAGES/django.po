@@ -2666,3 +2666,41 @@ msgstr "Die Transferphase hat noch nicht begonnen."
 #, python-format
 msgid "Back to %(name)s"
 msgstr "Zurück zu %(name)s"
+
+# Mobile, phase 2
+
+#: templates/fantasy/partials/squad_cards.html
+msgid "Release"
+msgstr "Entlassen"
+
+#: templates/fantasy/partials/squad_cards.html
+msgid "Sort by"
+msgstr "Sortieren nach"
+
+#: templates/fantasy/partials/squad_cards.html
+msgid "Sort"
+msgstr "Sortieren"
+
+#: templates/fantasy/partials/squad_cards.html
+msgid "Signings are closed, so players cannot be released."
+msgstr "Die Transferphase ist vorbei, daher können keine Spieler entlassen werden."
+
+#: templates/nba/partials/compare_transposed.html
+msgid "Figure"
+msgstr "Kennzahl"
+
+#: templates/fantasy/partials/history_cards.html
+msgid "Balance"
+msgstr "Kontostand"
+
+#: templates/fantasy/partials/roster_panel.html
+#, python-format
+msgid "Release %(name)s"
+msgstr "%(name)s entlassen"
+
+#: templates/nba/team_list.html
+#, python-format
+msgid "%(count)s injured"
+msgid_plural "%(count)s injured"
+msgstr[0] "%(count)s verletzt"
+msgstr[1] "%(count)s verletzt"

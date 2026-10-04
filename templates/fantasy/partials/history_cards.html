@@ -1,0 +1,42 @@
+{% load i18n money %}
+{# The ledger as cards on phones (below `md`); the table takes over from there. #}
+{# Same rows, newest first, each with the balance it left. Context: rows, starting_cash. #}
+<ul class="divide-y divide-neutral-200 md:hidden dark:divide-neutral-800">
+  {% for row in rows %}
+    {% with move=row.move %}
+      <li class="px-4 py-3 text-sm">
+        <div class="flex items-center justify-between gap-3">
+          <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-semibold
+            {% if move.kind == 'BUY' %}bg-primary-100 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300
+            {% elif move.kind == 'SELL' %}bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300
+            {% elif move.kind == 'BUY_TRADE' or move.kind == 'SELL_TRADE' %}bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300
+            {% elif move.kind == 'GRANT_TRADE' %}bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300
+            {% else %}bg-secondary-100 text-secondary-700 dark:bg-secondary-400/15 dark:text-secondary-300{% endif %}">
+            {{ move.get_kind_display }}
+          </span>
+          <time class="text-xs text-neutral-500 dark:text-neutral-400" datetime="{{ move.occurred_at|date:'c' }}">{{ move.occurred_at|date:"SHORT_DATETIME_FORMAT" }}</time>
+        </div>
+        <p class="mt-1.5">
+          {% if move.kind == 'GRANT_TRADE' %}
+            <span class="font-medium">{{ move.note }}</span>
+            <span class="text-neutral-500 dark:text-neutral-400">· {% blocktranslate count counter=move.trades_granted %}+{{ counter }} trade{% plural %}+{{ counter }} trades{% endblocktranslate %}</span>
+          {% else %}
+            {% if move.player_out %}<span class="font-medium">{{ move.player_out.full_name }}</span> <span class="text-neutral-500 dark:text-neutral-400">{{ move.price_out|millions }}</span>{% endif %}
+            {% if move.player_out and move.player_in %}<span class="text-neutral-400" aria-hidden="true">→</span>{% endif %}
+            {% if move.player_in %}<span class="font-medium">{{ move.player_in.full_name }}</span> <span class="text-neutral-500 dark:text-neutral-400">{{ move.price_in|millions }}</span>{% endif %}
+          {% endif %}
+        </p>
+        <div class="mt-1 flex items-center justify-between text-xs tabular-nums">
+          <span class="{% if move.cash_delta > 0 %}text-emerald-700 dark:text-emerald-400{% elif move.cash_delta < 0 %}text-rose-700 dark:text-rose-400{% else %}text-neutral-500{% endif %}">
+            {% translate "Cash" %} {% if move.cash_delta > 0 %}+{% endif %}{{ move.cash_delta|millions }}
+          </span>
+          <span class="text-neutral-500 dark:text-neutral-400">{% translate "Balance" %} <span class="font-medium text-tertiary-700 dark:text-neutral-100">{{ row.balance|millions }}</span></span>
+        </div>
+      </li>
+    {% endwith %}
+  {% endfor %}
+  <li class="flex items-center justify-between bg-neutral-50 px-4 py-3 text-xs text-neutral-500 dark:bg-neutral-900/60 dark:text-neutral-400">
+    <span>{% translate "Season start" %}</span>
+    <span class="tabular-nums">{{ starting_cash|millions }}</span>
+  </li>
+</ul>

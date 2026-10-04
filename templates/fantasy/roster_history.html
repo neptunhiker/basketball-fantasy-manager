@@ -110,9 +110,9 @@
   {# The ledger itself #}
   <div class="card overflow-hidden">
     {% if rows %}
-      {# Seven columns do not fit a phone, so the table scrolls inside the card #}
-      {# rather than pushing the page sideways. #}
-      <div class="overflow-x-auto">
+      {# Seven columns do not fit a phone: cards there, the table from `md`. #}
+      {% include "fantasy/partials/history_cards.html" %}
+      <div class="hidden overflow-x-auto md:block">
         <table class="w-full min-w-[44rem] text-sm">
           <thead>
             <tr class="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">

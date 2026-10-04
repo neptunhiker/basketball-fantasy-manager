@@ -31,7 +31,7 @@
         @click.self="open = false">
      <div x-show="open" x-transition
        class="relative max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 text-left shadow-xl dark:bg-neutral-900 sm:p-6"
-       role="dialog" aria-modal="true" aria-labelledby="injury-modal-title-{{ player.pk }}">
+       role="dialog" aria-modal="true" aria-labelledby="injury-modal-title-{{ player.pk }}{{ id_suffix }}">
       <button type="button" @click="open = false"
               class="max-sm:p-3 absolute right-4 top-4 rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
               aria-label="{{ close_injury_label }}">
@@ -39,7 +39,7 @@
           <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
         </svg>
       </button>
-      <h2 id="injury-modal-title-{{ player.pk }}" class="pr-8 text-base font-semibold tracking-tight">{{ player.full_name }} {% translate "Injury Status" %}</h2>
+      <h2 id="injury-modal-title-{{ player.pk }}{{ id_suffix }}" class="pr-8 text-base font-semibold tracking-tight">{{ player.full_name }} {% translate "Injury Status" %}</h2>
       <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{% translate "Latest injury report" %}</p>
       {% if last_injury_api_call %}
         <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">

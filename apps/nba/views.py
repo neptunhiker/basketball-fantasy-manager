@@ -44,6 +44,43 @@ from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
 
 
+def with_expected_salary(qs):
+    """Annotate `predicted_salary_amount` and `salary_difference_amount` (Value).
+
+    The database twin of `apps.nba.models.predict_salary`, so lists can sort by
+    it: the same polynomial on points per game, in millions, never below zero.
+    One copy only -- three hand-kept ones once drifted, with the constant term
+    written as 4.668975 instead of 0.4668975, which put every expected salary
+    $4.2M too high in the lists while the player page showed the right figure.
+    """
+    x = F("current_fp_per_game")
+    millions = (
+        Value(Decimal("8.753479e-6")) * x * x * x * x
+        + Value(Decimal("-8.583448e-4")) * x * x * x
+        + Value(Decimal("3.058140e-2")) * x * x
+        + Value(Decimal("-5.762906e-2")) * x
+        + Value(Decimal("4.668975e-1"))
+    )
+    expected = ExpressionWrapper(
+        millions * Value(Decimal("1000000")),
+        output_field=DecimalField(max_digits=20, decimal_places=2),
+    )
+    return qs.annotate(
+        predicted_salary_amount=Case(
+            When(
+                current_fp_per_game__isnull=False,
+                then=Greatest(Value(Decimal("0.00")), expected),
+            ),
+            output_field=DecimalField(max_digits=20, decimal_places=2),
+        )
+    ).annotate(
+        salary_difference_amount=ExpressionWrapper(
+            F("predicted_salary_amount") - F("current_salary"),
+            output_field=DecimalField(max_digits=20, decimal_places=2),
+        )
+    )
+
+
 def my_note_count(user):
     """How many private notes `user` keeps on each player, as an annotation."""
     notes = (
@@ -228,36 +265,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
         if max_salary is not None and max_salary >= 0:
             qs = qs.filter(current_salary__lte=max_salary * 1_000_000)
 
-        fantasy_points = F("current_fp_per_game")
-        expected_salary_millions = (
-            Value(Decimal("8.753479e-6"))
-            * fantasy_points
-            * fantasy_points
-            * fantasy_points
-            * fantasy_points
-            + Value(Decimal("-8.583448e-4")) * fantasy_points * fantasy_points * fantasy_points
-            + Value(Decimal("3.058140e-2")) * fantasy_points * fantasy_points
-            + Value(Decimal("-5.762906e-2")) * fantasy_points
-            + Value(Decimal("4.668975"))
-        )
-        expected_salary = ExpressionWrapper(
-            expected_salary_millions * Value(Decimal("1000000")),
-            output_field=DecimalField(max_digits=20, decimal_places=2),
-        )
-        qs = qs.annotate(
-            predicted_salary_amount=Case(
-                When(
-                    current_fp_per_game__isnull=False,
-                    then=Greatest(Value(Decimal("0.00")), expected_salary),
-                ),
-                output_field=DecimalField(max_digits=20, decimal_places=2),
-            )
-        ).annotate(
-            salary_difference_amount=ExpressionWrapper(
-                F("predicted_salary_amount") - F("current_salary"),
-                output_field=DecimalField(max_digits=20, decimal_places=2),
-            )
-        )
+        qs = with_expected_salary(qs)
 
         sort, descending = self._sort_params()
         if sort == "hotness":
@@ -449,6 +457,21 @@ class BbdeImportView(StaffRequiredMixin, View):
         return _("The import failed: %(reason)s") % {"reason": exc}
 
 
+# The rows of the phone comparison (one per figure), in reading order.
+COMPARE_ROWS = [
+    ("team", _lazy("Team")),
+    ("position", _lazy("Position")),
+    ("salary", _lazy("Actual salary")),
+    ("expected", _lazy("Expected salary")),
+    ("value", _lazy("Value")),
+    ("avg", _lazy("Avg/game")),
+    ("points", _lazy("Points")),
+    ("games", _lazy("Games")),
+    ("hotness", _lazy("Hotness")),
+    ("injury", _lazy("Injury")),
+]
+
+
 class PlayerCompareView(LoginRequiredMixin, ListView):
     model = Player
     template_name = "nba/player_compare.html"
@@ -497,36 +520,7 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
                 )
             )
 
-        fantasy_points = F("current_fp_per_game")
-        expected_salary_millions = (
-            Value(Decimal("8.753479e-6"))
-            * fantasy_points
-            * fantasy_points
-            * fantasy_points
-            * fantasy_points
-            + Value(Decimal("-8.583448e-4")) * fantasy_points * fantasy_points * fantasy_points
-            + Value(Decimal("3.058140e-2")) * fantasy_points * fantasy_points
-            + Value(Decimal("-5.762906e-2")) * fantasy_points
-            + Value(Decimal("4.668975"))
-        )
-        expected_salary = ExpressionWrapper(
-            expected_salary_millions * Value(Decimal("1000000")),
-            output_field=DecimalField(max_digits=20, decimal_places=2),
-        )
-        qs = qs.annotate(
-            predicted_salary_amount=Case(
-                When(
-                    current_fp_per_game__isnull=False,
-                    then=Greatest(Value(Decimal("0.00")), expected_salary),
-                ),
-                output_field=DecimalField(max_digits=20, decimal_places=2),
-            )
-        ).annotate(
-            salary_difference_amount=ExpressionWrapper(
-                F("predicted_salary_amount") - F("current_salary"),
-                output_field=DecimalField(max_digits=20, decimal_places=2),
-            )
-        )
+        qs = with_expected_salary(qs)
 
         selected_players = list(qs)
         selected_by_slug = {player.slug: player for player in selected_players}
@@ -547,6 +541,7 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
 
         context["selected_players"] = ordered_selected
         context["selected_player_items"] = selected_player_items
+        context["compare_rows"] = COMPARE_ROWS
         context["selected_slug_set"] = set(selected_slugs)
         context["selected_slugs"] = selected_slugs
         context["modal_query"] = modal_query
@@ -731,36 +726,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         )
         qs = qs.annotate(note_count=my_note_count(self.request.user))
 
-        fantasy_points = F("current_fp_per_game")
-        expected_salary_millions = (
-            Value(Decimal("8.753479e-6"))
-            * fantasy_points
-            * fantasy_points
-            * fantasy_points
-            * fantasy_points
-            + Value(Decimal("-8.583448e-4")) * fantasy_points * fantasy_points * fantasy_points
-            + Value(Decimal("3.058140e-2")) * fantasy_points * fantasy_points
-            + Value(Decimal("-5.762906e-2")) * fantasy_points
-            + Value(Decimal("4.668975"))
-        )
-        expected_salary = ExpressionWrapper(
-            expected_salary_millions * Value(Decimal("1000000")),
-            output_field=DecimalField(max_digits=20, decimal_places=2),
-        )
-        qs = qs.annotate(
-            predicted_salary_amount=Case(
-                When(
-                    current_fp_per_game__isnull=False,
-                    then=Greatest(Value(Decimal("0.00")), expected_salary),
-                ),
-                output_field=DecimalField(max_digits=20, decimal_places=2),
-            )
-        ).annotate(
-            salary_difference_amount=ExpressionWrapper(
-                F("predicted_salary_amount") - F("current_salary"),
-                output_field=DecimalField(max_digits=20, decimal_places=2),
-            )
-        )
+        qs = with_expected_salary(qs)
 
         sort, descending = self._sort_params()
         if sort == "hotness":

@@ -76,6 +76,15 @@
 }
 
 @layer base {
+  /* A sideways-scrolling frame is also the containing block of what is inside
+     it. Without this, an absolutely positioned descendant -- the `sr-only`
+     label in a table's last header cell -- is placed against the page instead,
+     at its spot far to the right of a wide table, and drags the whole page
+     into a sideways scroll on a phone although the table itself is clipped. */
+  .overflow-x-auto {
+    position: relative;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
   }

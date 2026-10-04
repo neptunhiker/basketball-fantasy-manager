@@ -221,7 +221,8 @@
     </div>
 
     {% if memberships %}
-      <div class="overflow-x-auto">
+      {% include "fantasy/partials/squad_cards.html" %}
+      <div class="hidden overflow-x-auto md:block">
         <table class="w-full min-w-[75rem] text-left text-sm">
           <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
             <tr>
@@ -363,8 +364,8 @@
                               hx-swap="outerHTML"
                               hx-include="#picker-filters"
                               class="btn btn-ghost !px-2 !py-1 text-xs"
-                              aria-label="Release {{ membership.player.full_name }}">
-                        Release
+                              aria-label="{% blocktranslate with name=membership.player.full_name %}Release {{ name }}{% endblocktranslate %}">
+                        {% translate "Release" %}
                       </button>
                     {% endif %}
                   </div>

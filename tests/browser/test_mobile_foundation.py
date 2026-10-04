@@ -7,8 +7,8 @@ from django.urls import reverse
 from .conftest import page_overflow, shot
 from .test_baseline import key_pages
 
-# Pages whose tables are only reworked in Phase 2.
-PHASE_2_PAGES = {"compare", "seasons"}
+# Phase 2 reworked the last wide tables: no page may scroll sideways any more.
+PHASE_2_PAGES = set()
 
 SMALL_TARGETS_JS = """
 (selector) => [...document.querySelectorAll(selector)]

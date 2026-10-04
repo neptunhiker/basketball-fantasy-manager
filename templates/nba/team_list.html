@@ -14,7 +14,8 @@
     </div>
 
     <div class="overflow-x-auto">
-      <table class="w-full text-left text-sm">
+      {# Phones: salary waits for `sm`; injuries show as a badge under the name. #}
+      <table class="w-full text-left text-sm max-sm:[&_tr>*:nth-child(4)]:hidden max-sm:[&_tr>*:nth-child(5)]:hidden">
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
           <tr>
             {# "Team" returns to the divisions, "FP/G" ranks all 30 teams. #}
@@ -52,6 +53,7 @@
                     <span class="min-w-0">
                       <span class="block truncate font-medium group-hover:text-primary-600 group-hover:underline dark:group-hover:text-primary-400">{{ team.name }}</span>
                       {% if ranked %}<span class="block text-xs text-neutral-500 dark:text-neutral-400">{{ team.get_conference_display }} · {{ team.get_division_display }}</span>{% endif %}
+                      {% if team.injured_count %}<span class="mt-0.5 inline-block text-xs text-red-700 sm:hidden dark:text-red-300">{% blocktranslate count count=team.injured_count %}{{ count }} injured{% plural %}{{ count }} injured{% endblocktranslate %}</span>{% endif %}
                     </span>
                   </a>
                   {% if team.note_count %}

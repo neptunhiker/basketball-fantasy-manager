@@ -515,7 +515,11 @@ def test_player_table_uses_team_abbreviations_and_right_aligns_non_name_columns(
     assert "LAL" in body
     assert 'class="ml-1.5"' not in body
     assert '<th scope="col" class="px-4 py-3 text-right font-medium">Injury</th>' in body
-    assert '<th scope="col" class="px-4 py-3 text-right font-medium">Status</th>' in body
+    # "Status" only appears once inactive players can be listed at all.
+    status_header = '<th scope="col" class="px-4 py-3 text-right font-medium">Status</th>'
+    assert status_header not in body
+    with_inactive = signed_in.get(reverse("nba:player-list"), {"inactive": "1"}).content.decode()
+    assert status_header in with_inactive
 
 
 def test_player_list_shows_latest_injury_in_clickable_column(signed_in, roster):
@@ -542,3 +546,29 @@ def test_player_list_shows_latest_injury_in_clickable_column(signed_in, roster):
 def test_empty_state_mentions_the_missing_import(signed_in, teams):
     body = signed_in.get(reverse("nba:player-list")).content.decode()
     assert "basketball.de" in body
+
+
+@pytest.mark.parametrize("fp_per_game", ["5.00", "14.00", "27.50", "42.00"])
+def test_the_list_values_match_the_player_page(db, fp_per_game):
+    """The database formula and `predict_salary` must agree.
+
+    A hand-kept copy once had 4.668975 for 0.4668975, so every list showed
+    expected salaries $4.2M too high while the player page was right.
+    """
+    from decimal import Decimal
+
+    from apps.nba.models import predict_salary
+    from apps.nba.views import with_expected_salary
+
+    player = Player.objects.create(
+        first_name="T",
+        last_name="Probe",
+        position="C",
+        current_salary=1_550_000,
+        current_fp_per_game=Decimal(fp_per_game),
+    )
+    row = with_expected_salary(Player.objects.filter(pk=player.pk)).get()
+
+    in_python = predict_salary(Decimal(fp_per_game)) * 1_000_000
+    assert abs(row.predicted_salary_amount - in_python) < Decimal("10000")
+    assert abs(row.salary_difference_amount - (in_python - 1_550_000)) < Decimal("10000")

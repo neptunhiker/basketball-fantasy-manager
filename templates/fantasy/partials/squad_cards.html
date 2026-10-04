@@ -1,0 +1,90 @@
+{% load i18n money %}
+{% comment %}
+  The roster's players as cards, for phones (below `md`); the table takes over
+  from there. Same `memberships` list and the same actions as the table, so the
+  two cannot disagree -- only the shape differs: everything about a player,
+  and what can be done with him, within one thumb's reach.
+{% endcomment %}
+<div class="md:hidden">
+  {# Sorting without column headers: the same keys, and a number column #}
+  {# starts with its highest value (see apps.nba.stats.DESCENDING_FIRST). #}
+  <form method="get" class="flex items-center gap-2 border-t border-neutral-200 px-4 py-2.5 dark:border-neutral-800">
+    <label for="squad-sort" class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Sort by" %}</label>
+    <select id="squad-sort" name="sort" @change="$el.form.requestSubmit()"
+            class="block flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base shadow-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+      {% for key, label in squad_sort_options %}
+        <option value="{{ key }}" {% if current_sort == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <noscript><button type="submit" class="btn btn-secondary h-10">{% translate "Sort" %}</button></noscript>
+  </form>
+
+  <ul class="divide-y divide-neutral-200 border-t border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+    {% for membership in memberships %}
+      {% with player=membership.player %}
+        <li class="px-4 py-3">
+          <div class="flex items-start gap-3">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-xs font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-300"
+                  aria-hidden="true">{{ player.position }}</span>
+            <div class="min-w-0 flex-1">
+              <a href="{% url 'nba:player-detail' player.slug %}"
+                 class="block truncate font-medium text-tertiary-700 hover:text-primary-600 dark:text-neutral-100 dark:hover:text-primary-300">{{ player.full_name }}</a>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                {{ player.get_position_display }} ·
+                {% if player.team %}{{ player.team.abbreviation }}{% else %}{% translate "Free Agent" %}{% endif %}
+                {% if not player.is_active %}· {% translate "Inactive" %}{% endif %}
+              </p>
+            </div>
+            <div class="shrink-0">{% include "nba/partials/injury_status.html" with player=player id_suffix="-card" %}</div>
+          </div>
+
+          <dl class="mt-2 grid grid-cols-4 gap-2 text-xs">
+            <div>
+              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Salary" %}</dt>
+              <dd class="font-medium tabular-nums" title="{{ player.current_salary|exact }}">{{ player.current_salary|millions }}</dd>
+            </div>
+            <div>
+              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Value" %}</dt>
+              <dd class="tabular-nums">{% include "nba/partials/value.html" with amount=player.salary_difference_amount %}</dd>
+            </div>
+            <div>
+              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "FP/G" %}</dt>
+              <dd class="font-medium tabular-nums">{{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}</dd>
+            </div>
+            <div class="[&>span]:items-start">
+              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Hotness" %}</dt>
+              <dd>{% include "nba/partials/hotness.html" with score=player.hotness_score %}</dd>
+            </div>
+          </dl>
+
+          <div class="mt-3 grid {% if transactions_allowed %}grid-cols-2{% else %}grid-cols-1{% endif %} gap-2">
+            {% if trading_allowed and roster.trades_available > 0 %}
+              <button type="button"
+                      hx-get="{% url 'fantasy:roster-trade' roster.pk %}?out={{ player.pk }}"
+                      hx-target="#modal-root"
+                      hx-swap="innerHTML"
+                      class="btn btn-secondary h-11">{% translate "Trade" %}</button>
+            {% else %}
+              <button type="button" disabled class="btn btn-secondary h-11 opacity-50">{% translate "Trade" %}</button>
+            {% endif %}
+            {% if transactions_allowed %}
+              <button type="button"
+                      hx-post="{% url 'fantasy:roster-sell' roster.pk player.pk %}"
+                      hx-target="#roster-panel"
+                      hx-swap="outerHTML"
+                      hx-include="#picker-filters"
+                      class="btn btn-ghost h-11 border border-neutral-200 dark:border-neutral-700">{% translate "Release" %}</button>
+            {% endif %}
+          </div>
+        </li>
+      {% endwith %}
+    {% endfor %}
+  </ul>
+  {# Why the buttons are greyed out, once for all cards rather than per card. #}
+  {% if not trading_allowed or roster.trades_available == 0 or not transactions_allowed %}
+    <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+      {% if not trading_allowed %}{{ trade_unavailable_reason }}{% elif roster.trades_available == 0 %}{% translate "No trades available." %}{% endif %}
+      {% if not transactions_allowed %}{% translate "Signings are closed, so players cannot be released." %}{% endif %}
+    </p>
+  {% endif %}
+</div>

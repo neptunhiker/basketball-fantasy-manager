@@ -797,6 +797,17 @@ def _available_players(roster, filters, budget=None):
     return qs
 
 
+SQUAD_SORT_OPTIONS = [
+    ("name", _lazy("Player")),
+    ("position", _lazy("Position")),
+    ("team", _lazy("Team")),
+    ("salary", _lazy("Actual salary")),
+    ("difference", _lazy("Value")),
+    ("avg", _lazy("Avg/game")),
+    ("games", _lazy("Games")),
+    ("hotness", _lazy("Hotness")),
+]
+
 ROSTER_SORT_FIELDS = {
     "name": lambda player: (player.last_name, player.first_name),
     "position": lambda player: player.position,
@@ -905,6 +916,8 @@ def _build_context(request, roster):
         "memberships": memberships,
         "current_sort": current_sort,
         "current_dir": current_dir,
+        # The phone cards' "Sort by" list: the table's columns, in its order.
+        "squad_sort_options": SQUAD_SORT_OPTIONS,
         "positions": Player.Position.choices,
         "teams": Team.objects.order_by("name"),
         "roster_size": ROSTER_SIZE,

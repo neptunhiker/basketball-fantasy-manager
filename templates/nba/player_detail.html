@@ -245,7 +245,9 @@
 
     {% if rows %}
       <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
+        {# Phones: date, salary, points per game and games; team, position and #}
+        {# season points wait for `md`. #}
+        <table class="w-full text-left text-sm max-md:[&_tr>*:nth-child(2)]:hidden max-md:[&_tr>*:nth-child(3)]:hidden max-md:[&_tr>*:nth-child(5)]:hidden">
           <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
             <tr>
               <th scope="col" class="px-4 py-3 font-medium">{% translate "As of" %}</th>

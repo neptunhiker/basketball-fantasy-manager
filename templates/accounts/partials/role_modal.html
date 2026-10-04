@@ -1,0 +1,50 @@
+{% extends "partials/modal.html" %}
+{% load i18n %}
+{% comment %}
+  Change someone's role. Superusers only (see UserRoleView). Each option says
+  what the role allows, so nobody has to know what "staff" means in Django.
+{% endcomment %}
+
+{% block modal_title %}{% blocktranslate with name=person.display_name %}Role of {{ name }}{% endblocktranslate %}{% endblock %}
+
+{% block modal_content %}
+  <form hx-post="{% url 'accounts:user-role' person.pk %}"
+        hx-target="#modal-root"
+        hx-swap="innerHTML">
+    {% csrf_token %}
+
+    {% for error in form.non_field_errors %}
+      <p class="form-error mb-4" role="alert">{{ error }}</p>
+    {% endfor %}
+
+    <fieldset class="space-y-2">
+      <legend class="sr-only">{% translate "Role" %}</legend>
+      {% for choice in form.role %}
+        <label class="flex items-start gap-3 rounded-xl border border-neutral-200 p-3 transition has-[:checked]:border-primary-400 has-[:checked]:bg-primary-50 dark:border-neutral-700 dark:has-[:checked]:border-primary-500/60 dark:has-[:checked]:bg-primary-500/10">
+          <input type="radio" name="{{ choice.data.name }}" value="{{ choice.data.value }}"
+                 {% if choice.data.selected %}checked{% endif %}
+                 {% if forloop.first %}data-autofocus{% endif %}
+                 class="mt-0.5 h-4 w-4 border-neutral-300 text-primary-500 focus:ring-primary-500/30">
+          <span>
+            <span class="block font-medium text-tertiary-700 dark:text-neutral-100">{{ choice.choice_label }}</span>
+            <span class="block text-xs text-neutral-500 dark:text-neutral-400">
+              {% if choice.data.value == "coach" %}
+                {% translate "Plays the game: rosters, players, watchlist." %}
+              {% elif choice.data.value == "team" %}
+                {% translate "Also sees the team page and can import player data from basketball.de." %}
+              {% else %}
+                {% translate "Also manages seasons and can change everyone's role." %}
+              {% endif %}
+            </span>
+          </span>
+        </label>
+      {% endfor %}
+    </fieldset>
+    {% for error in form.role.errors %}<p class="form-error mt-2">{{ error }}</p>{% endfor %}
+
+    <div class="modal-actions">
+      <button type="button" @click="$dispatch('close-modal')" class="btn btn-secondary">{% translate "Cancel" %}</button>
+      <button type="submit" class="btn btn-primary">{% translate "Save role" %}</button>
+    </div>
+  </form>
+{% endblock %}

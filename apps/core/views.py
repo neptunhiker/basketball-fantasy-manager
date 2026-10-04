@@ -125,6 +125,13 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_staff
 
 
+class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """Only superusers decide who else gets which rights."""
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Only staff superusers may administer global configuration."""
 

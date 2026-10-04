@@ -11,6 +11,8 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.core.forms import StyledFormMixin
 
+from .models import Role
+
 User = get_user_model()
 
 
@@ -132,3 +134,9 @@ class AdminUserChangeForm(UserChangeForm):
     class Meta:
         model = User
         fields = "__all__"
+
+
+class RoleForm(forms.Form):
+    """Pick one of the three roles. Rendered as radio cards by its template."""
+
+    role = forms.ChoiceField(label=_("Role"), choices=Role.choices, widget=forms.RadioSelect)

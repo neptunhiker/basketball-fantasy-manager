@@ -35,7 +35,17 @@
     </div>
     <div>
       <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Role" %}</dt>
-      <dd class="mt-0.5">{% if person.is_superuser %}{% translate "Administration" %}{% elif person.is_staff %}{% translate "Team" %}{% else %}{% translate "Coach" %}{% endif %}</dd>
+      <dd class="mt-0.5 flex flex-wrap items-center gap-2">
+        <span>{{ person.role.label }}</span>
+        {# Superusers only, and never on your own account: see services.change_role. #}
+        {% if request.user.is_superuser and person.pk != request.user.pk %}
+          <button type="button"
+                  hx-get="{% url 'accounts:user-role' person.pk %}"
+                  hx-target="#modal-root"
+                  hx-swap="innerHTML"
+                  class="btn btn-secondary !px-2 !py-1 text-xs">{% translate "Change role" %}</button>
+        {% endif %}
+      </dd>
     </div>
     <div>
       <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Manager profiles" %}</dt>

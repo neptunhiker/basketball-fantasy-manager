@@ -2354,3 +2354,43 @@ msgid "+%(counter)s trade"
 msgid_plural "+%(counter)s trades"
 msgstr[0] "+%(counter)s Trade"
 msgstr[1] "+%(counter)s Trades"
+
+# user roles
+
+#: apps/accounts/services.py
+msgid "You cannot change your own role."
+msgstr "Du kannst deine eigene Rolle nicht ändern."
+
+#: apps/accounts/services.py
+msgid "The last administrator cannot lose that role."
+msgstr "Der letzten Administratorin bzw. dem letzten Administrator kann diese Rolle nicht entzogen werden."
+
+#: apps/accounts/views.py
+#, python-format
+msgid "%(name)s is now: %(role)s."
+msgstr "%(name)s ist jetzt: %(role)s."
+
+#: templates/accounts/partials/role_modal.html
+#, python-format
+msgid "Role of %(name)s"
+msgstr "Rolle von %(name)s"
+
+#: templates/accounts/partials/role_modal.html
+msgid "Plays the game: rosters, players, watchlist."
+msgstr "Spielt das Spiel: Kader, Spieler, Watchlist."
+
+#: templates/accounts/partials/role_modal.html
+msgid "Also sees the team page and can import player data from basketball.de."
+msgstr "Sieht zusätzlich die Teamseite und kann Spielerdaten von basketball.de importieren."
+
+#: templates/accounts/partials/role_modal.html
+msgid "Also manages seasons and can change everyone's role."
+msgstr "Verwaltet zusätzlich Saisons und kann die Rollen aller ändern."
+
+#: templates/accounts/partials/role_modal.html
+msgid "Save role"
+msgstr "Rolle speichern"
+
+#: templates/accounts/user_detail.html
+msgid "Change role"
+msgstr "Rolle ändern"

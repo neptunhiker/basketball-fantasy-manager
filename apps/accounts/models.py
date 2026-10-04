@@ -9,6 +9,18 @@ from django.utils.translation import gettext_lazy as _
 from .managers import UserManager
 
 
+class Role(models.TextChoices):
+    """The three kinds of account, as the team page names them.
+
+    Not a column of its own: a role is a reading of the two Django flags, so
+    the admin site, `createsuperuser` and this app can never disagree about it.
+    """
+
+    COACH = "coach", _("Coach")
+    TEAM = "team", _("Team")
+    ADMIN = "admin", _("Administration")
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     """A staff member, coordinator or coach. Identified by email, never a username."""
 
@@ -90,6 +102,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         if parts:
             return "".join(p[0].upper() for p in parts)
         return self.email[0].upper()
+
+    @property
+    def role(self):
+        if self.is_superuser:
+            return Role.ADMIN
+        if self.is_staff:
+            return Role.TEAM
+        return Role.COACH
 
     @property
     def has_accepted_invitation(self):

@@ -6,8 +6,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count, Prefetch
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -17,7 +18,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView, View
 
-from apps.core.views import StaffRequiredMixin
+from apps.core.views import StaffRequiredMixin, SuperuserRequiredMixin
 from apps.fantasy.models import Manager
 
 from .forms import (
@@ -25,10 +26,11 @@ from .forms import (
     EmailAuthenticationForm,
     InvitationForm,
     ProfileForm,
+    RoleForm,
     StyledPasswordResetForm,
     StyledSetPasswordForm,
 )
-from .services import invite_user
+from .services import change_role, invite_user
 from .tokens import invitation_token_generator
 
 User = get_user_model()
@@ -150,6 +152,46 @@ class UserDetailView(StaffRequiredMixin, DetailView):
                 ),
             )
         )
+
+
+class UserRoleView(SuperuserRequiredMixin, View):
+    """Change someone's role (Coach, Team, Administration) in a modal.
+
+    The rules live in `services.change_role`; this only asks and reports. A
+    refused change comes back as the same modal with the reason, because HTMX
+    only swaps successful responses.
+    """
+
+    template_name = "accounts/partials/role_modal.html"
+
+    def get_person(self):
+        return get_object_or_404(User, pk=self.kwargs["pk"])
+
+    def render_modal(self, person, form):
+        return render(self.request, self.template_name, {"person": person, "form": form})
+
+    def get(self, request, *args, **kwargs):
+        person = self.get_person()
+        return self.render_modal(person, RoleForm(initial={"role": person.role}))
+
+    def post(self, request, *args, **kwargs):
+        person = self.get_person()
+        form = RoleForm(request.POST)
+        if form.is_valid():
+            try:
+                change_role(request.user, person, form.cleaned_data["role"])
+            except ValidationError as exc:
+                form.add_error(None, exc)
+            else:
+                messages.success(
+                    request,
+                    _("%(name)s is now: %(role)s.")
+                    % {"name": person.display_name, "role": person.role.label},
+                )
+                response = HttpResponse(status=204)
+                response["HX-Redirect"] = reverse("accounts:user-detail", args=[person.pk])
+                return response
+        return self.render_modal(person, form)
 
 
 class InviteUserView(StaffRequiredMixin, CreateView):

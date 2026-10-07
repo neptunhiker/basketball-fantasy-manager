@@ -1,0 +1,20 @@
+{% load i18n %}
+{% comment %}
+  "Watchlist only", as a pressed/unpressed chip. A real checkbox underneath, so
+  it is sent with the filter form it sits in, works with the keyboard and is
+  read out as checked or not. `peer-checked` restyles it the moment it is
+  pressed, before the filtered list arrives.
+
+  The count is the viewer's watched players this roster could still add,
+  regardless of the other filters.
+{% endcomment %}
+<label class="relative inline-flex">
+  <input type="checkbox" name="watchlist" value="1" {% if filters.watchlist %}checked{% endif %}
+         class="peer sr-only">
+  <span class="inline-flex min-h-10 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-600 shadow-sm transition hover:border-primary-300 hover:text-primary-700 peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500/30 peer-checked:border-primary-500 peer-checked:bg-primary-50 peer-checked:text-primary-700 peer-checked:[&_svg]:fill-current sm:min-h-0 sm:py-1.5 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:text-primary-300 dark:peer-checked:bg-primary-500/10 dark:peer-checked:text-primary-300">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m12 3.8 2.5 5.1 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8L12 3.8Z"/>
+    </svg>
+    {% blocktranslate with count=watchlist_count %}Watchlist ({{ count }}){% endblocktranslate %}
+  </span>
+</label>

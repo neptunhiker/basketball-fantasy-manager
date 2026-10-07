@@ -1,0 +1,9 @@
+{% load i18n %}
+{# The empty list with the watchlist filter on: say which of three reasons it is. #}
+{% if watchlist_empty %}
+  {% translate "Your watchlist is empty. Star players here or on the Players page." %}
+{% elif watchlist_count == 0 %}
+  {% translate "None of your watched players can be added: they are on this roster already or have no salary on record." %}
+{% else %}
+  {% translate "None of your watched players match those filters." %}
+{% endif %}

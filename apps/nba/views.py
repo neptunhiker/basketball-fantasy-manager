@@ -637,7 +637,7 @@ class WatchlistToggleView(LoginRequiredMixin, View):
         if entry is not None and request.GET.get("remove_row") == "1":
             return HttpResponse("")
 
-        return render(
+        response = render(
             request,
             "nba/partials/watchlist_button.html",
             {
@@ -645,6 +645,10 @@ class WatchlistToggleView(LoginRequiredMixin, View):
                 "is_watched": entry is None,
             },
         )
+        # For lists filtered by the watchlist (the roster page's market): they
+        # refresh themselves on this event, so the row and the count follow.
+        response["HX-Trigger"] = "watchlist-changed"
+        return response
 
 
 def _card(title, unit, rows, footnote=""):

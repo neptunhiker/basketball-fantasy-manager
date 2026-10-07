@@ -101,6 +101,7 @@
       {% if preview.player_out %}
         <button type="button"
                 hx-get="{{ trade_url }}?body=1{{ keep_in }}"
+                hx-include="#trade-filters"
                 hx-target="#trade-body"
                 hx-swap="outerHTML"
                 class="btn btn-ghost mb-3 w-full justify-start !px-2 text-sm sm:hidden">
@@ -119,9 +120,9 @@
         </span>
       </div>
 
-      <form id="trade-filters" class="mt-2 grid grid-cols-[1fr_auto] gap-2"
+      <form id="trade-filters" class="mt-2 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_auto_auto]"
             hx-get="{{ trade_url }}{{ state_query }}"
-            hx-trigger="input changed delay:300ms from:input[type=search], change from:select, search"
+            hx-trigger="input changed delay:300ms from:input[type=search], change from:select, change from:input[type=checkbox], search"
             hx-target="#trade-body"
             hx-swap="outerHTML">
         <label for="trade-search" class="sr-only">{% translate "Search by name" %}</label>
@@ -136,6 +137,8 @@
             <option value="{{ value }}" {% if filters.position == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
+        {# Its own row on phones, beside the fields from `sm` up. #}
+        <div class="col-span-2 sm:col-span-1">{% include "fantasy/partials/watchlist_chip.html" %}</div>
       </form>
 
       {% if available %}
@@ -162,7 +165,15 @@
                     {{ player.position }}
                   </span>
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate text-sm font-medium">{{ player.full_name }}</span>
+                    <span class="flex items-center gap-1 text-sm font-medium">
+                      <span class="truncate">{{ player.full_name }}</span>
+                      {# A marker, not the toggle: this whole row is already a button. #}
+                      {% if player.is_watched %}
+                        <svg class="h-3.5 w-3.5 shrink-0 text-primary-500 dark:text-primary-300" fill="currentColor" viewBox="0 0 24 24" role="img" aria-label="{% translate 'On your watchlist' %}">
+                          <path d="m12 3.8 2.5 5.1 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8L12 3.8Z"/>
+                        </svg>
+                      {% endif %}
+                    </span>
                     <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
                       {% if player.team %}{{ player.team.abbreviation }}{% else %}{% translate "Free Agent" %}{% endif %}
                       {# Any position can replace any other; this only flags a swap #}
@@ -183,7 +194,9 @@
         </div>
       {% else %}
         <p class="mt-2 rounded-xl border border-neutral-200 px-3 py-8 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-          {% if filters.q or filters.position %}
+          {% if filters.watchlist %}
+            {% include "fantasy/partials/watchlist_empty.html" %}
+          {% elif filters.q or filters.position %}
             {% translate "Nothing matches those filters." %}
           {% else %}
             {% translate "No players with a salary on record." %}

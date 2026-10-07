@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import (
     BooleanField,
     Count,
+    Exists,
     ExpressionWrapper,
     IntegerField,
     OuterRef,
@@ -56,6 +57,7 @@ from .models import (
     RosterPlayer,
     Season,
     TradeGrant,
+    WatchlistEntry,
 )
 
 
@@ -776,10 +778,48 @@ def _picker_filters(request):
         "q": data.get("q", "").strip(),
         "position": data.get("position", ""),
         "team": data.get("team", "").strip(),
+        "watchlist": data.get("watchlist") == "1",
     }
 
 
-def _available_players(roster, filters, budget=None):
+def _market(roster):
+    """Every player this roster could still add: active, priced, not on it."""
+    return Player.objects.filter(is_active=True, current_salary__isnull=False).exclude(
+        # Already on the roster: an open membership row.
+        roster_memberships__roster=roster,
+        roster_memberships__removed_at__isnull=True,
+    )
+
+
+def _watched_by(user):
+    return WatchlistEntry.objects.filter(user=user, player=OuterRef("pk"))
+
+
+def _watchlist_context(roster, user, filters):
+    """The chip's count, and -- only when the filtered list comes up empty --
+    whether that is because the watchlist itself is empty."""
+    count = _watchlist_count(roster, user)
+    return {
+        "watchlist_count": count,
+        "watchlist_empty": (
+            filters["watchlist"]
+            and count == 0
+            and not WatchlistEntry.objects.filter(user=user).exists()
+        ),
+    }
+
+
+def _watchlist_count(roster, user):
+    """How many of `user`'s watched players this roster could still add.
+
+    Deliberately blind to the search, position and team filters: the chip
+    answers "how many of my players are still out there", and a number that
+    jumped with every keystroke would answer nothing.
+    """
+    return _market(roster).filter(Exists(_watched_by(user))).count()
+
+
+def _available_players(roster, filters, user, budget=None):
     """The players this roster could still add, marked by affordability.
 
     `budget` is what the marking is done against, and it is not always the
@@ -788,20 +828,22 @@ def _available_players(roster, filters, budget=None):
     """
     budget = roster.cash if budget is None else budget
     qs = (
-        Player.objects.filter(is_active=True, current_salary__isnull=False)
-        .exclude(
-            # Already on the roster: an open membership row.
-            roster_memberships__roster=roster,
-            roster_memberships__removed_at__isnull=True,
-        )
+        _market(roster)
         .select_related("team")
         .annotate(
             # Django templates cannot compare with <=, so affordability is
             # decided in SQL. A NULL salary was excluded above.
-            affordable=ExpressionWrapper(Q(current_salary__lte=budget), output_field=BooleanField())
+            affordable=ExpressionWrapper(
+                Q(current_salary__lte=budget), output_field=BooleanField()
+            ),
+            # The viewer's watchlist, not the roster owner's: the two are the
+            # same person today, and the star is about who is looking.
+            is_watched=Exists(_watched_by(user)),
         )
         .order_by("-current_salary", "last_name")
     )
+    if filters["watchlist"]:
+        qs = qs.filter(is_watched=True)
 
     for term in filters["q"].split():
         qs = qs.filter(Q(first_name__icontains=term) | Q(last_name__icontains=term))
@@ -928,7 +970,8 @@ def _build_context(request, roster):
     return {
         "roster": roster,
         "filters": filters,
-        "available": _available_players(roster, filters)[:100],
+        "available": _available_players(roster, filters, request.user)[:100],
+        **_watchlist_context(roster, request.user, filters),
         "memberships": memberships,
         "current_sort": current_sort,
         "current_dir": current_dir,
@@ -1248,7 +1291,9 @@ class RosterTradeView(OwnRosterMixin, View):
 
         preview = services.trade_preview(roster, player_out, player_in)
         filters = _picker_filters(request)
-        available = _available_players(roster, filters, budget=preview["budget"])[:60]
+        available = _available_players(
+            roster, filters, request.user, budget=preview["budget"]
+        )[:60]
         # Carried through every link inside the dialog, so a trade started on a
         # player page still knows where to go when it is executed.
         return_query = "&return_to=player" if request.GET.get("return_to") == "player" else ""
@@ -1261,6 +1306,7 @@ class RosterTradeView(OwnRosterMixin, View):
             "filters": filters,
             "positions": Player.Position.choices,
             "available": available,
+            **_watchlist_context(roster, request.user, filters),
             # Where to go after a trade made from somewhere other than the
             # build page (the player page), instead of swapping in its panels.
             "return_to": "player" if request.GET.get("return_to") == "player" else "",

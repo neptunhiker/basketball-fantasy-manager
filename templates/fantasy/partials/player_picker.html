@@ -72,11 +72,11 @@
 
     <form id="picker-filters" class="border-b border-neutral-200 p-4 dark:border-neutral-800"
           hx-get="{% url 'fantasy:roster-build' roster.pk %}"
-          hx-trigger="input changed delay:300ms from:input[type=search], change from:select, search"
+          hx-trigger="input changed delay:300ms from:input[type=search], change from:select, change from:input[type=checkbox], search, watchlist-changed from:body"
           hx-target="#player-picker"
           hx-swap="outerHTML"
           hx-indicator="#picker-indicator">
-      <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+      <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
         <div>
           <label for="picker-search" class="sr-only">{% translate "Search by name" %}</label>
           <input type="search" id="picker-search" name="q" value="{{ filters.q }}"
@@ -103,6 +103,7 @@
             {% endfor %}
           </select>
         </div>
+        {% include "fantasy/partials/watchlist_chip.html" %}
       </div>
       <span id="picker-indicator" class="htmx-indicator mt-2 block text-xs text-neutral-500">{% translate "Searching" %}…</span>
     </form>
@@ -114,7 +115,10 @@
           {# trade nets the two salaries, so what this roster can reach depends #}
           {# on who it sends out -- unknowable until the modal, which does that #}
           {# arithmetic properly. So the marking stops rather than mislead. #}
-          <li class="flex items-center gap-3 px-4 py-2.5 {% if signings_open and not player.affordable %}opacity-55{% endif %}">
+          <li class="flex items-center gap-3 py-2.5 pl-2 pr-4 {% if signings_open and not player.affordable %}opacity-55{% endif %}">
+            {# The star refreshes this list when pressed (watchlist-changed), #}
+            {# so the chip's count and a filtered list follow it. #}
+            <span class="-mr-1 shrink-0">{% include "nba/partials/watchlist_button.html" with is_watched=player.is_watched %}</span>
             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
               {{ player.position }}
             </span>
@@ -173,13 +177,15 @@
     {% else %}
       <div class="px-4 py-16 text-center">
         <p class="text-sm text-neutral-500 dark:text-neutral-400">
-          {% if filters.q or filters.position or filters.team %}
+          {% if filters.watchlist %}
+            {% include "fantasy/partials/watchlist_empty.html" %}
+          {% elif filters.q or filters.position or filters.team %}
             {% translate "Nothing matches those filters." %}
           {% else %}
             {% translate "No players with a salary on record." %}
           {% endif %}
         </p>
-        {% if not filters.q and not filters.position and not filters.team %}
+        {% if not filters.q and not filters.position and not filters.team and not filters.watchlist %}
           <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
             {% translate "Salaries come from the snapshots. Without one, a player cannot be signed." %}
           </p>

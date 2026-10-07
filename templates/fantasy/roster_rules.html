@@ -6,7 +6,7 @@
   {% load static %}
   <span class="flex min-w-0 items-center gap-3">
     <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
-         alt="{{ roster.get_icon_display }} roster icon"
+         alt="{% blocktranslate with icon=roster.get_icon_display %}{{ icon }} roster icon{% endblocktranslate %}"
          class="h-10 w-10 shrink-0 rounded-xl border-2 border-white object-cover shadow-md sm:h-12 sm:w-12 dark:border-neutral-800">
     <span class="truncate">{{ roster.name }}</span>
   </span>
@@ -85,8 +85,9 @@
             </dt>
             <dd>
               <span class="font-medium">
-                {% if roster.season.signings_open %}{% translate "Complete it by" %}{% else %}{% translate "Signings closed" %}{% endif %}
-                {{ roster.season.signings_close_at|date:"j F" }} at {{ roster.season.signings_close_at|date:"H:i" }}
+                {% with date=roster.season.signings_close_at|date:"MONTH_DAY_FORMAT" time=roster.season.signings_close_at|date:"TIME_FORMAT" %}
+                  {% if roster.season.signings_open %}{% blocktranslate %}Complete it by {{ date }} at {{ time }}{% endblocktranslate %}{% else %}{% blocktranslate %}Signings closed {{ date }} at {{ time }}{% endblocktranslate %}{% endif %}
+                {% endwith %}
               </span>
               <span class="block text-neutral-500 dark:text-neutral-400">
                 {% blocktranslate with size=roster_size %}Buying and selling stop at that moment. Trades stay open every day for the rest of the season — but a trade swaps one player for one player, so a roster short of {{ size }} then stays short.{% endblocktranslate %}

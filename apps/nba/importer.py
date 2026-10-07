@@ -14,6 +14,7 @@ from decimal import Decimal
 
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from apps.fantasy.models import Season
 from apps.fantasy.services import record_snapshot
@@ -74,11 +75,13 @@ def import_bbde(
     """
     season = Season.objects.filter(is_current=True).first()
     if season is None:
-        raise NoCurrentSeason("There is no current season to import into.")
+        raise NoCurrentSeason(_("There is no current season to import into."))
     if ImportRun.objects.filter(
         status=ImportRun.Status.RUNNING, started_at__gte=timezone.now() - RUNNING_TIMEOUT
     ).exists():
-        raise ImportAlreadyRunning("Another import is still running. Please try again shortly.")
+        raise ImportAlreadyRunning(
+            _("Another import is still running. Please try again shortly.")
+        )
 
     run = ImportRun.objects.create(
         triggered_by=triggered_by, source=source, season=season, dry_run=dry_run
@@ -86,7 +89,7 @@ def import_bbde(
     # Without teams every rostered player would be skipped as "unknown team",
     # and the run would still report success. Stop before logging in instead.
     if not Team.objects.exists():
-        message = "There are no NBA teams in the database. Run `manage.py seed_teams` first."
+        message = _("There are no NBA teams in the database. Run `manage.py seed_teams` first.")
         _fail(run, message)
         raise NoTeams(message)
     try:
@@ -99,7 +102,7 @@ def import_bbde(
         raise
     except Exception:
         logger.exception("basketball.de import %s failed", run.pk)
-        _fail(run, "Unexpected error. The details are in the server log.")
+        _fail(run, _("Unexpected error. The details are in the server log."))
         raise
 
     run.status = ImportRun.Status.SUCCEEDED
@@ -139,7 +142,8 @@ def _apply(run, season, pages, *, dry_run):
     expected_pages = pages[0].last_page if pages else None
     if expected_pages and expected_pages != len(pages):
         run.warnings.append(
-            f"The pager announced {expected_pages} pages but {len(pages)} were read."
+            _("The pager announced %(expected)d pages but %(read)d were read.")
+            % {"expected": expected_pages, "read": len(pages)}
         )
     rows = _unique_rows(run, pages)
     run.rows = len(rows)
@@ -176,7 +180,10 @@ def _write(run, season, rows):
         elif row.team_name in teams:
             team = teams[row.team_name]
         else:
-            run.skipped.append(f"{row.display_name}: unknown team {row.team_name!r}")
+            run.skipped.append(
+                _("%(player)s: unknown team '%(team)s'")
+                % {"player": row.display_name, "team": row.team_name}
+            )
             continue
 
         player = by_bbde_id.get(row.bbde_id) if row.bbde_id is not None else None
@@ -211,8 +218,11 @@ def _write(run, season, rows):
 
         if not row.games_consistent:
             run.warnings.append(
-                f"{row.display_name}: games played could not be derived exactly "
-                f"(FP {row.total_fp}, FP/G {row.fp_per_game})."
+                _(
+                    "%(player)s: games played could not be derived exactly "
+                    "(FP %(fp)s, FP/G %(fpg)s)."
+                )
+                % {"player": row.display_name, "fp": row.total_fp, "fpg": row.fp_per_game}
             )
         record_snapshot(
             player,
@@ -252,8 +262,11 @@ def _inactivate_missing(run, seen):
     )
     if previous and previous.rows and run.rows < previous.rows * INACTIVATION_MIN_SHARE:
         run.warnings.append(
-            f"Only {run.rows} rows were read, against {previous.rows} last time, "
-            "so no player was marked inactive."
+            _(
+                "Only %(rows)d rows were read, against %(previous)d last time, "
+                "so no player was marked inactive."
+            )
+            % {"rows": run.rows, "previous": previous.rows}
         )
         return
     run.inactivated = (

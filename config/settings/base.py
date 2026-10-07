@@ -101,6 +101,8 @@ LANGUAGES = (
     ("de", "German"),
 )
 LOCALE_PATHS = [BASE_DIR / "locale"]
+# Day-first dates and a 24-hour clock in English too; see config/formats/en.
+FORMAT_MODULE_PATH = ["config.formats"]
 TIME_ZONE = "Europe/Berlin"
 USE_I18N = True
 USE_TZ = True

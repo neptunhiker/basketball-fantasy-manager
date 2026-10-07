@@ -14,6 +14,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
 
@@ -43,16 +44,16 @@ class Team(TimeStampedModel):
     """An NBA franchise."""
 
     class Conference(models.TextChoices):
-        EAST = "EAST", "Eastern Conference"
-        WEST = "WEST", "Western Conference"
+        EAST = "EAST", _("Eastern Conference")
+        WEST = "WEST", _("Western Conference")
 
     class Division(models.TextChoices):
-        ATLANTIC = "ATLANTIC", "Atlantic"
-        CENTRAL = "CENTRAL", "Central"
-        SOUTHEAST = "SOUTHEAST", "Southeast"
-        NORTHWEST = "NORTHWEST", "Northwest"
-        PACIFIC = "PACIFIC", "Pacific"
-        SOUTHWEST = "SOUTHWEST", "Southwest"
+        ATLANTIC = "ATLANTIC", _("Atlantic")
+        CENTRAL = "CENTRAL", _("Central")
+        SOUTHEAST = "SOUTHEAST", _("Southeast")
+        NORTHWEST = "NORTHWEST", _("Northwest")
+        PACIFIC = "PACIFIC", _("Pacific")
+        SOUTHWEST = "SOUTHWEST", _("Southwest")
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField("Name", max_length=64, unique=True)
@@ -80,9 +81,9 @@ class Player(TimeStampedModel):
     """
 
     class Position(models.TextChoices):
-        GUARD = "G", "Guard"
-        FORWARD = "F", "Forward"
-        CENTER = "C", "Center"
+        GUARD = "G", _("Guard")
+        FORWARD = "F", _("Forward")
+        CENTER = "C", _("Center")
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # Derived from the name on first save and then left alone. A player URL that
@@ -424,13 +425,13 @@ class ImportRun(TimeStampedModel):
     """
 
     class Source(models.TextChoices):
-        WEB = "web", "Web"
-        COMMAND = "command", "Command"
+        WEB = "web", _("Web")
+        COMMAND = "command", _("Command")
 
     class Status(models.TextChoices):
-        RUNNING = "running", "Running"
-        SUCCEEDED = "succeeded", "Succeeded"
-        FAILED = "failed", "Failed"
+        RUNNING = "running", _("Running")
+        SUCCEEDED = "succeeded", _("Succeeded")
+        FAILED = "failed", _("Failed")
 
     started_at = models.DateTimeField("Started at", default=timezone.now)
     finished_at = models.DateTimeField("Finished at", null=True, blank=True)

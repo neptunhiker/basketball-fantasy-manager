@@ -313,7 +313,7 @@ def test_the_page_says_the_log_reconciles(signed_in, roster):
     body = response.content.decode()
 
     assert response.context["reconciles"] is True
-    assert "comes to exactly the" in body
+    assert "adds up to exactly the" in body
     assert "An entry is missing" not in body
 
 

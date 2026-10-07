@@ -21,11 +21,14 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import number_format
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 from django.utils.translation import gettext_lazy as _lazy
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
+from apps.core.dates import local_date
 from apps.core.htmx import add_toast
 from apps.core.templatetags.money import millions
 from apps.core.views import (
@@ -216,38 +219,44 @@ class SeasonDeleteView(AdminRequiredMixin, TypedConfirmView):
 
     def get_context(self, obj, error=None):
         context = super().get_context(obj, error=error)
-        rosters, _ = self.counts(obj)
+        rosters, _snapshots = self.counts(obj)
         if rosters:
             # No confirm button at all rather than one that fails: the modal is
             # explaining why this cannot be done.
             context["confirm_label"] = ""
-            context["cancel_label"] = "Close"
+            context["cancel_label"] = _("Close")
         return context
 
     def get_body(self, obj):
         rosters, snapshots = self.counts(obj)
         if rosters:
-            return (
-                f"{obj.label} still holds {rosters} "
-                f"{'roster' if rosters == 1 else 'rosters'}. Delete those first -- "
-                "a roster's whole transaction history hangs off its season, and "
-                "the database will not let the season go while they exist."
-            )
+            return ngettext(
+                "%(season)s still holds %(count)d roster. Delete it first -- a "
+                "roster's whole transaction history hangs off its season, and the "
+                "database will not let the season go while it exists.",
+                "%(season)s still holds %(count)d rosters. Delete those first -- a "
+                "roster's whole transaction history hangs off its season, and the "
+                "database will not let the season go while they exist.",
+                rosters,
+            ) % {"season": obj.label, "count": rosters}
         if snapshots:
-            return (
-                f"{obj.label} holds {snapshots:,} imported "
-                f"{'price' if snapshots == 1 else 'prices'} and no rosters. "
-                "Deleting the season deletes every one of them -- the entire "
-                "salary history for that year, which nothing can rebuild."
-            )
-        return (
-            f"{obj.label} holds no rosters and no prices, so nothing goes with it. "
+            return ngettext(
+                "%(season)s holds %(count)s imported price and no rosters. Deleting "
+                "the season deletes it -- the salary history for that year, which "
+                "nothing can rebuild.",
+                "%(season)s holds %(count)s imported prices and no rosters. Deleting "
+                "the season deletes every one of them -- the entire salary history "
+                "for that year, which nothing can rebuild.",
+                snapshots,
+            ) % {"season": obj.label, "count": number_format(snapshots, force_grouping=True)}
+        return _(
+            "%(season)s holds no rosters and no prices, so nothing goes with it. "
             "The season itself is gone for good, though."
-        )
+        ) % {"season": obj.label}
 
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
-        rosters, _ = self.counts(obj)
+        rosters, _snapshots = self.counts(obj)
         if rosters:
             # Reachable without the button -- a hand-written POST, or a dialog
             # left open while a roster was created. Re-rendered rather than a
@@ -263,7 +272,8 @@ class SeasonDeleteView(AdminRequiredMixin, TypedConfirmView):
             # the count and the delete. PROTECT is what actually holds the
             # line, so this only has to turn it into a sentence.
             raise ValidationError(
-                f"{obj.label} has a roster in it now, so it cannot be deleted."
+                _("%(season)s has a roster in it now, so it cannot be deleted.")
+                % {"season": obj.label}
             ) from exc
 
     def get_success_url(self, obj):
@@ -381,7 +391,9 @@ class ManagerNamePromptView(PromptView):
             # exists because two profiles by one name cannot be told apart on
             # screen, and "Buzz" beside "buzz" is that problem exactly. The
             # constraint stays the backstop for an exact duplicate racing in.
-            raise ValidationError(f'You already have a profile called "{value}".')
+            raise ValidationError(
+                _('You already have a profile called "%(name)s".') % {"name": value}
+            )
         return value
 
     def get_success_url(self, result):
@@ -454,22 +466,22 @@ class ManagerDeleteView(OwnManagerMixin, TypedConfirmView):
             # No confirm button at all, rather than one that refuses when
             # pressed: the modal is an explanation, not a dare.
             context["confirm_label"] = ""
-            context["cancel_label"] = "Close"
+            context["cancel_label"] = _("Close")
         return context
 
     def get_body(self, obj):
         held = self.held_rosters(obj)
         if held:
             names = ", ".join(f'"{roster.name}"' for roster in held)
-            return (
-                f'"{obj.nick_name}" still plays {names}. Delete or rename those '
-                "first -- removing the profile would take them and their whole "
-                "transaction history with it."
-            )
-        return (
-            f'"{obj.nick_name}" plays no rosters, so nothing else goes with it. '
+            return _(
+                '"%(name)s" still plays %(rosters)s. Delete or rename those first -- '
+                "removing the profile would take them and their whole transaction "
+                "history with it."
+            ) % {"name": obj.nick_name, "rosters": names}
+        return _(
+            '"%(name)s" plays no rosters, so nothing else goes with it. '
             "The handle is gone for good, though."
-        )
+        ) % {"name": obj.nick_name}
 
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
@@ -545,13 +557,13 @@ class RosterCreateView(PromptView):
     title = _lazy("New roster")
     field_label = _lazy("Roster name")
     field_name = "name"
-    placeholder = "e.g. Bulla Ballers"
+    placeholder = _lazy("e.g. Bulla Ballers")
     max_length = 80
-    help_text = "You can rename it at any time."
+    help_text = _lazy("You can rename it at any time.")
     submit_label = _lazy("Create roster")
     choice_name = "manager"
-    choice_label = "Manager"
-    choice_help = "Which of your profiles plays this roster."
+    choice_label = _lazy("Manager")
+    choice_help = _lazy("Which of your profiles plays this roster.")
     template_name = "fantasy/partials/roster_create.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -627,7 +639,7 @@ class RosterCreateView(PromptView):
         except (Manager.DoesNotExist, ValidationError, ValueError, TypeError):
             # DoesNotExist covers somebody else's profile; the rest cover a
             # value that is not a UUID at all.
-            raise ValidationError("Pick one of your manager profiles.") from None
+            raise ValidationError(_("Pick one of your manager profiles.")) from None
 
     def clean(self, value, obj, choice=None):
         value = super().clean(value, obj, choice)
@@ -645,9 +657,12 @@ class RosterCreateView(PromptView):
             # would point at a decision they were never asked to make.
             if self.get_choices():
                 raise ValidationError(
-                    f'{choice.nick_name} already has a roster called "{value}" this season.'
+                    _('%(manager)s already has a roster called "%(name)s" this season.')
+                    % {"manager": choice.nick_name, "name": value}
                 )
-            raise ValidationError(f'You already have a roster called "{value}" this season.')
+            raise ValidationError(
+                _('You already have a roster called "%(name)s" this season.') % {"name": value}
+            )
         return value
 
     def perform(self, obj, value, choice=None):
@@ -668,7 +683,7 @@ class RosterCreateView(PromptView):
         # first available icon rather than breaking roster creation.
         raw = raw or "koala"
         if raw not in choices:
-            raise ValidationError("Pick one of the available roster icons.")
+            raise ValidationError(_("Pick one of the available roster icons."))
         return raw
 
     def get_success_url(self, result):
@@ -880,12 +895,11 @@ def _build_context(request, roster):
     if not trading_allowed:
         now = timezone.now()
         if now < roster.season.season_open_at:
-            opened = timezone.localtime(roster.season.season_open_at)
-            trade_unavailable_reason = (
-                f"Trades become available when the season starts on {opened.strftime('%-d %B %Y')}."
-            )
+            trade_unavailable_reason = _(
+                "Trades become available when the season starts on %(date)s."
+            ) % {"date": local_date(roster.season.season_open_at)}
         else:
-            trade_unavailable_reason = "The season has ended. Trading is closed."
+            trade_unavailable_reason = _("The season has ended. Trading is closed.")
     else:
         trade_unavailable_reason = ""
 
@@ -897,7 +911,9 @@ def _build_context(request, roster):
     if market_closed_reason:
         buy_trade_disabled_reason = market_closed_reason
     elif roster.cash < TRADE_BUY_PRICE:
-        buy_trade_disabled_reason = "Not enough cash ($1.5M needed)"
+        buy_trade_disabled_reason = _("Not enough cash (%(price)s needed)") % {
+            "price": millions(TRADE_BUY_PRICE)
+        }
     else:
         buy_trade_disabled_reason = ""
 
@@ -905,7 +921,7 @@ def _build_context(request, roster):
     if market_closed_reason:
         sell_trade_disabled_reason = market_closed_reason
     elif roster.trades_available <= 0:
-        sell_trade_disabled_reason = "No trades available to sell"
+        sell_trade_disabled_reason = _("No trades available to sell")
     else:
         sell_trade_disabled_reason = ""
 
@@ -995,7 +1011,7 @@ class RosterChangeView(OwnRosterMixin, View):
 class RosterBuyView(RosterChangeView):
     def apply(self, roster, player):
         if player.current_salary is None:
-            raise ValidationError(f"No salary on record for {player}.")
+            raise ValidationError(_("No salary on record for %(player)s.") % {"player": player})
         # The price is read here, never taken from the request: a client that
         # could name its own price could sign anyone for a euro.
         services.buy(roster, player, player.current_salary)
@@ -1099,13 +1115,14 @@ class RosterBuyTradeView(OwnRosterMixin, ConfirmView):
         return self.get_roster()
 
     def get_body(self, roster):
-        cost_m = Decimal("1.5")
-        current_m = roster.cash / Decimal("1000000")
-        after_m = (roster.cash - Decimal("1500000")) / Decimal("1000000")
-        return (
-            f"Do you really want to buy 1 extra trade for ${cost_m:.2f}M cash? "
-            f"Your cash balance will decrease from ${current_m:.2f}M to ${after_m:.2f}M."
-        )
+        return _(
+            "Do you really want to buy 1 extra trade for %(price)s cash? "
+            "Your cash balance will decrease from %(before)s to %(after)s."
+        ) % {
+            "price": millions(TRADE_BUY_PRICE),
+            "before": millions(roster.cash),
+            "after": millions(roster.cash - TRADE_BUY_PRICE),
+        }
 
     def perform(self, roster):
         services.buy_trade(roster)
@@ -1130,14 +1147,17 @@ class RosterSellTradeView(OwnRosterMixin, ConfirmView):
         return self.get_roster()
 
     def get_body(self, roster):
-        gain_m = Decimal("1.0")
-        current_m = roster.cash / Decimal("1000000")
-        after_m = (roster.cash + Decimal("1000000")) / Decimal("1000000")
-        return (
-            f"Do you really want to sell 1 trade for ${gain_m:.2f}M cash? "
-            f"Your available trades will decrease from {roster.trades_available} to {roster.trades_available - 1}, "
-            f"and your cash balance will increase from ${current_m:.2f}M to ${after_m:.2f}M."
-        )
+        return _(
+            "Do you really want to sell 1 trade for %(price)s cash? "
+            "Your available trades will decrease from %(trades)d to %(trades_after)d, "
+            "and your cash balance will increase from %(before)s to %(after)s."
+        ) % {
+            "price": millions(TRADE_SELL_PRICE),
+            "trades": roster.trades_available,
+            "trades_after": roster.trades_available - 1,
+            "before": millions(roster.cash),
+            "after": millions(roster.cash + TRADE_SELL_PRICE),
+        }
 
     def perform(self, roster):
         services.sell_trade(roster)
@@ -1276,9 +1296,9 @@ class RosterTradeView(OwnRosterMixin, View):
 
         error = None
         if not preview["has_trades"]:
-            error = "No trades available for this roster."
+            error = _("No trades available for this roster.")
         elif not preview["ready"]:
-            error = "Pick a player to send out and one to bring in."
+            error = _("Pick a player to send out and one to bring in.")
         else:
             try:
                 self.execute(roster, preview)
@@ -1317,7 +1337,9 @@ class RosterTradeView(OwnRosterMixin, View):
         player_out, player_in = preview["player_out"], preview["player_in"]
         for player in (player_out, player_in):
             if player.current_salary is None:
-                raise ValidationError(f"No salary on record for {player}.")
+                raise ValidationError(
+                    _("No salary on record for %(player)s.") % {"player": player}
+                )
         # The prices are read off the players here, never taken from the
         # request: a client that could name both prices could trade anyone for
         # anyone and bank the difference.
@@ -1348,10 +1370,13 @@ class RosterDeleteView(OwnRosterMixin, TypedConfirmView):
         return self.get_roster()
 
     def get_body(self, obj):
-        return (
-            f'"{obj.name}" will be deleted along with its {obj.player_count} '
-            "players and its entire transaction history. This cannot be undone."
-        )
+        return ngettext(
+            '"%(name)s" will be deleted along with its %(count)d player and its '
+            "entire transaction history. This cannot be undone.",
+            '"%(name)s" will be deleted along with its %(count)d players and its '
+            "entire transaction history. This cannot be undone.",
+            obj.player_count,
+        ) % {"name": obj.name, "count": obj.player_count}
 
     def perform(self, obj):
         obj.delete()

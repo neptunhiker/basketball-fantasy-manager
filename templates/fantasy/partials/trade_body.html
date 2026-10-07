@@ -48,7 +48,7 @@
           {% translate "Player out" %}
         </h3>
         <span class="text-xs text-neutral-400 dark:text-neutral-500">
-          {{ memberships|length }} {% translate "on the roster" %}
+          {% blocktranslate count count=memberships|length %}{{ count }} on the roster{% plural %}{{ count }} on the roster{% endblocktranslate %}
         </span>
       </div>
 

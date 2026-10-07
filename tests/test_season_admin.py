@@ -370,7 +370,7 @@ def test_a_season_holding_rosters_cannot_be_deleted(staff, season, manager):
     body = response.content.decode()
 
     assert Season.objects.filter(pk=season.pk).exists()
-    assert "Delete those first" in body
+    assert "Delete it first" in body
     # Refused by the guard, not by tripping over PROTECT and reporting back:
     # the race message below is what that would look like, and its absence is
     # what says the delete was never attempted.

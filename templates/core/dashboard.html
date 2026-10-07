@@ -21,14 +21,14 @@
             <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white">{{ SITE_NAME }}</h2>
             <div class="mt-1 flex items-center gap-2.5 font-mono text-[0.65rem] font-bold uppercase tracking-[.22em] text-secondary-300">
               <span class="h-[7px] w-[7px] rounded-full bg-secondary-300 shadow-[0_0_0_4px_rgba(255,172,228,.18)] motion-safe:sm:animate-pulse"></span>
-              {% blocktranslate with season_label=current_season.label tipoff=current_season.starts_on|date:"M j, Y" %}Season {{ season_label }} · Tip-off {{ tipoff }}{% endblocktranslate %}
+              {% blocktranslate with season_label=current_season.label tipoff=current_season.starts_on|date:"SHORT_DATE_FORMAT" %}Season {{ season_label }} · Tip-off {{ tipoff }}{% endblocktranslate %}
             </div>
           </div>
         </div>
       </div>
 
       {% if countdown_target_at %}
-        <p class="mt-6 font-mono text-xs font-bold uppercase tracking-[.2em] text-white/50 sm:mt-8">{% translate "Counting down to" %} <span class="text-secondary-300">{{ countdown_label }}</span> · {{ countdown_target_at|date:"F j, Y · H:i" }}</p>
+        <p class="mt-6 font-mono text-xs font-bold uppercase tracking-[.2em] text-white/50 sm:mt-8">{% translate "Counting down to" %} <span class="text-secondary-300">{{ countdown_label }}</span> · {{ countdown_target_at|date:"DATETIME_FORMAT" }}</p>
         {# One row of four at every width; the digits scale with the viewport #}
         {# (`clamp`), so the buttons below stay on a phone's first screen. #}
         {# Hidden from screen readers -- the line above says the same once, #}
@@ -67,7 +67,7 @@
           <div class="min-w-0">
             <p class="font-mono text-[0.65rem] font-bold uppercase tracking-[.22em] text-secondary-300">{% if current_season.timing == "FINISHED" %}{% translate "Season complete" %}{% elif trading_window_open %}{% translate "Trading window open" %}{% else %}{% translate "Season desk" %}{% endif %}</p>
             <h2 class="mt-4 text-4xl font-extrabold leading-[1.05] tracking-[-.02em] sm:text-6xl">{% if current_season.timing == "FINISHED" %}{% translate "The season has ended." %}{% else %}{% translate "The season is underway." %}{% endif %}</h2>
-            <p class="mt-4 max-w-[44ch] text-sm leading-6 text-white/60">{% blocktranslate with season_label=current_season.label end_date=current_season.ends_on|date:"F j, Y" %}{{ season_label }} runs through {{ end_date }}. Keep your roster moving.{% endblocktranslate %}</p>
+            <p class="mt-4 max-w-[44ch] text-sm leading-6 text-white/60">{% blocktranslate with season_label=current_season.label end_date=current_season.ends_on|date:"DATE_FORMAT" %}{{ season_label }} runs through {{ end_date }}. Keep your roster moving.{% endblocktranslate %}</p>
           </div>
           <div class="flex shrink-0 gap-2.5">
             <a href="{% url 'fantasy:roster-list' %}" class="btn bg-secondary-400 font-bold text-[#17111f] hover:bg-secondary-300">{% if dashboard_roster_count %}{% if dashboard_roster_count > 1 %}{% translate "My rosters" %}{% else %}{% translate "My roster" %}{% endif %}{% else %}{% translate "Build a roster" %}{% endif %}</a>
@@ -81,19 +81,19 @@
   <section class="grid gap-px overflow-hidden rounded-xl border border-neutral-200 bg-neutral-200 sm:grid-cols-4 dark:border-neutral-800 dark:bg-neutral-800">
     <div class="bg-white p-5 dark:bg-neutral-900">
       <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Signings open" %}</p>
-      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_open_at %}{{ current_season.signings_open_at|date:"M j, Y · H:i" }}{% else %}{% translate "Open now" %}{% endif %}</p>
+      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_open_at %}{{ current_season.signings_open_at|date:"SHORT_DATETIME_FORMAT" }}{% else %}{% translate "Open now" %}{% endif %}</p>
     </div>
     <div class="bg-white p-5 dark:bg-neutral-900">
       <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Signings close" %}</p>
-      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_close_at %}{{ current_season.signings_close_at|date:"M j, Y · H:i" }}{% else %}{% translate "No cutoff" %}{% endif %}</p>
+      <p class="mt-2 text-[17px] font-bold">{% if current_season.signings_close_at %}{{ current_season.signings_close_at|date:"SHORT_DATETIME_FORMAT" }}{% else %}{% translate "No cutoff" %}{% endif %}</p>
     </div>
     <div class="bg-white p-5 dark:bg-neutral-900">
       <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Season open" %}</p>
-      <p class="mt-2 text-[17px] font-bold">{{ current_season.starts_on|date:"M j, Y" }}</p>
+      <p class="mt-2 text-[17px] font-bold">{{ current_season.starts_on|date:"SHORT_DATE_FORMAT" }}</p>
     </div>
     <div class="bg-white p-5 dark:bg-neutral-900">
       <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Season close" %}</p>
-      <p class="mt-2 text-[17px] font-bold">{{ current_season.ends_on|date:"M j, Y" }}</p>
+      <p class="mt-2 text-[17px] font-bold">{{ current_season.ends_on|date:"SHORT_DATE_FORMAT" }}</p>
     </div>
   </section>
 {% else %}

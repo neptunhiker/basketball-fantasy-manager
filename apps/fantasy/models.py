@@ -27,6 +27,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_noop, ngettext
 from django.db import models
 from django.db.models import F, Prefetch, Q
 from django.db.models.functions import NullIf
@@ -34,6 +35,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 
 from apps.core.models import TimeStampedModel
+from apps.core.templatetags.money import exact
 from apps.nba.models import Player, PlayerInjury, Team
 
 # The official game's rules. Kept together so the day they change, they change
@@ -54,26 +56,26 @@ STARTING_TRADES = 0
 TRADE_BUY_PRICE = Decimal("1500000")
 TRADE_SELL_PRICE = Decimal("1000000")
 ROSTER_ICON_CHOICES = [
-    ("bear", "Bear"),
-    ("bunny", "Bunny"),
-    ("croc", "Crocodile"),
-    ("deer", "Deer"),
-    ("elephant", "Elephant"),
-    ("fox", "Fox"),
-    ("fox_2", "Fox 2"),
-    ("giraffe", "Giraffe"),
-    ("koala", "Koala"),
-    ("lion", "Lion"),
-    ("monkey", "Monkey"),
-    ("owl", "Owl"),
-    ("panda", "Panda"),
-    ("racoon", "Racoon"),
-    ("seal", "Seal"),
-    ("sonic", "Sonic"),
-    ("squirrel", "Squirrel"),
-    ("tiger", "Tiger"),
-    ("wolf", "Wolf"),
-    ("zebra", "Zebra"),
+    ("bear", _("Bear")),
+    ("bunny", _("Bunny")),
+    ("croc", _("Crocodile")),
+    ("deer", _("Deer")),
+    ("elephant", _("Elephant")),
+    ("fox", _("Fox")),
+    ("fox_2", _("Fox 2")),
+    ("giraffe", _("Giraffe")),
+    ("koala", _("Koala")),
+    ("lion", _("Lion")),
+    ("monkey", _("Monkey")),
+    ("owl", _("Owl")),
+    ("panda", _("Panda")),
+    ("racoon", _("Racoon")),
+    ("seal", _("Seal")),
+    ("sonic", _("Sonic")),
+    ("squirrel", _("Squirrel")),
+    ("tiger", _("Tiger")),
+    ("wolf", _("Wolf")),
+    ("zebra", _("Zebra")),
 ]
 
 
@@ -87,18 +89,29 @@ def position_shortfalls(counts):
     gaps = []
     for position, minimum in MINIMUM_BY_POSITION.items():
         if (short := minimum - counts[position]) > 0:
-            label = Player.Position(position).label
-            gaps.append(f"{short} more {label}{'s' if short > 1 else ''}")
+            gaps.append(_more_of(position, short))
     return gaps
+
+
+def _more_of(position, count):
+    """`1 more Guard`, `3 more Guards` -- one whole sentence per position, so a
+    translation can inflect the noun instead of having an `s` bolted on."""
+    if position == Player.Position.GUARD:
+        text = ngettext("%(count)d more Guard", "%(count)d more Guards", count)
+    elif position == Player.Position.FORWARD:
+        text = ngettext("%(count)d more Forward", "%(count)d more Forwards", count)
+    else:
+        text = ngettext("%(count)d more Center", "%(count)d more Centers", count)
+    return text % {"count": count}
 
 
 class Season(TimeStampedModel):
     """One season of the official game, e.g. 2025-26."""
 
     class Timing(models.TextChoices):
-        UPCOMING = "UPCOMING", "Upcoming"
-        RUNNING = "RUNNING", "In progress"
-        FINISHED = "FINISHED", "Finished"
+        UPCOMING = "UPCOMING", _("Upcoming")
+        RUNNING = "RUNNING", _("In progress")
+        FINISHED = "FINISHED", _("Finished")
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     label = models.CharField("Label", max_length=16, unique=True)
@@ -270,7 +283,7 @@ class Season(TimeStampedModel):
                 key=f"weekly:{timezone.localtime(moment).date().isoformat()}",
                 granted_at=moment,
                 trades=self.weekly_trades_per_week,
-                label="Weekly trade",
+                label=gettext_noop("Weekly trade"),
             )
             for moment in self.weekly_trade_moments(until)
         ]
@@ -586,9 +599,15 @@ class Roster(TimeStampedModel):
         gaps = position_shortfalls(counts)
 
         if (short := ROSTER_SIZE - sum(counts.values())) > 0:
-            gaps.append(f"{short} more players")
+            gaps.append(
+                ngettext("%(count)d more player", "%(count)d more players", short)
+                % {"count": short}
+            )
         elif short < 0:
-            gaps.append(f"{-short} players too many")
+            gaps.append(
+                ngettext("%(count)d player too many", "%(count)d players too many", -short)
+                % {"count": -short}
+            )
 
         return gaps
 
@@ -720,12 +739,12 @@ class Transaction(TimeStampedModel):
     """A single move: buying, selling, swapping players, or buying/selling trades."""
 
     class Kind(models.TextChoices):
-        BUY = "BUY", "Buy"
-        SELL = "SELL", "Sell"
-        TRADE = "TRADE", "Trade"
-        BUY_TRADE = "BUY_TRADE", "Buy Trade"
-        SELL_TRADE = "SELL_TRADE", "Sell Trade"
-        GRANT_TRADE = "GRANT_TRADE", "Trade granted"
+        BUY = "BUY", _("Buy")
+        SELL = "SELL", _("Sell")
+        TRADE = "TRADE", _("Trade")
+        BUY_TRADE = "BUY_TRADE", _("Buy Trade")
+        SELL_TRADE = "SELL_TRADE", _("Sell Trade")
+        GRANT_TRADE = "GRANT_TRADE", _("Trade granted")
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     roster = models.ForeignKey(
@@ -867,12 +886,17 @@ class Transaction(TimeStampedModel):
             # Two records of the same money, so they are worth comparing. Only when
             # both prices are known: an old row has nothing to disagree with.
             if self.is_priced and self.implied_cash_delta != self.cash_delta:
-                out_str = f"{self.price_out:,.0f}" if self.price_out is not None else "0"
-                in_str = f"{self.price_in:,.0f}" if self.price_in is not None else "0"
                 raise ValidationError(
-                    f"Cash flow {self.cash_delta:,.0f} does not match the prices: "
-                    f"out ({out_str}) minus in ({in_str}) "
-                    f"is {self.implied_cash_delta:,.0f}."
+                    _(
+                        "Cash flow %(delta)s does not match the prices: out (%(out)s) "
+                        "minus in (%(in)s) is %(implied)s."
+                    )
+                    % {
+                        "delta": exact(self.cash_delta),
+                        "out": exact(self.price_out or 0),
+                        "in": exact(self.price_in or 0),
+                        "implied": exact(self.implied_cash_delta),
+                    }
                 )
 
 

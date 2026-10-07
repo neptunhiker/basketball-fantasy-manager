@@ -25,7 +25,7 @@
     {# Desktop hero header: prominent large icon & team header #}
     <div class="hidden items-center gap-5 border-b border-neutral-200 bg-neutral-50/50 p-5 md:flex dark:border-neutral-800 dark:bg-neutral-900/50">
       <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
-           alt="{{ roster.get_icon_display }} roster icon"
+           alt="{% blocktranslate with icon=roster.get_icon_display %}{{ icon }} roster icon{% endblocktranslate %}"
            class="h-16 w-16 shrink-0 rounded-2xl border-2 border-white object-cover shadow-lg lg:h-20 lg:w-20 dark:border-neutral-800">
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-3">
@@ -41,7 +41,7 @@
           {% endif %}
         </div>
         <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-          {{ roster.season.label }} · Manager:
+          {{ roster.season.label }} · {% translate "Manager:" %}
           <a href="{% url 'fantasy:manager-list' %}"
              class="font-medium text-tertiary-700 underline decoration-neutral-300 underline-offset-2 transition hover:text-primary-600 dark:text-neutral-200 dark:hover:text-primary-300">{{ roster.manager.nick_name }}</a>
         </p>
@@ -101,7 +101,7 @@
         </div>
       </div>
 
-      <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900" aria-label="Players by position">
+      <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900" aria-label="{% translate "Players by position" %}">
         <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Positions" %}</p>
         <div class="mt-1 flex items-baseline justify-between gap-2">
           {% for position in progress %}
@@ -193,7 +193,7 @@
       {# Still true, and no longer actionable. Prompting for players that #}
       {# can never be signed would read as a task rather than a closed door. #}
       <p class="border-t border-neutral-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-900 sm:px-5 dark:border-neutral-800 dark:bg-amber-500/10 dark:text-amber-200">
-        Short of {{ roster.missing|join:", " }}.
+        {% blocktranslate with missing=roster.missing|join:", " %}Short of {{ missing }}.{% endblocktranslate %}
         {% if trading_allowed %}
           {% translate "Signings are closed — trades can still change the shape of this roster, but not its size." %}
         {% else %}
@@ -217,7 +217,7 @@
 
     <div class="flex items-center justify-between border-t border-neutral-200 px-4 py-3 dark:border-neutral-800 sm:px-5">
       <p class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Your roster" %}</p>
-      <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ memberships|length }} {% translate "players" %}</p>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate count count=memberships|length %}{{ count }} player{% plural %}{{ count }} players{% endblocktranslate %}</p>
     </div>
 
     {% if memberships %}
@@ -293,7 +293,7 @@
                 <td class="px-4 py-3 text-right tabular-nums" title="{{ membership.player.current_salary|exact }}">
                   {{ membership.player.current_salary|millions }}
                 </td>
-                <td class="px-4 py-3 text-right tabular-nums" title="Based on current points per game">
+                <td class="px-4 py-3 text-right tabular-nums" title="{% translate "Based on current points per game" %}">
                   {% if membership.player.predicted_salary is not None %}${{ membership.player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
                 </td>
                 <td class="px-4 py-3 text-right tabular-nums">
@@ -316,9 +316,9 @@
                 </td>
                 <td class="px-4 py-3 text-right">
                   {% if membership.player.is_active %}
-                    <span class="badge badge-success">Active</span>
+                    <span class="badge badge-success">{% translate "Active" %}</span>
                   {% else %}
-                    <span class="badge badge-neutral">Inactive</span>
+                    <span class="badge badge-neutral">{% translate "Inactive" %}</span>
                   {% endif %}
                 </td>
                 <td class="px-4 py-3 text-right">
@@ -330,7 +330,7 @@
                                 hx-target="#modal-root"
                                 hx-swap="innerHTML"
                                 class="btn btn-ghost !px-1.5 !py-1"
-                                aria-label="Trade {{ membership.player.full_name }}">
+                                aria-label="{% blocktranslate with name=membership.player.full_name %}Trade {{ name }}{% endblocktranslate %}">
                           <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
                           </svg>
@@ -339,8 +339,8 @@
                         <button type="button"
                                 disabled
                                 class="btn btn-ghost !px-1.5 !py-1 opacity-40 cursor-not-allowed text-neutral-400"
-                                title="No trades available"
-                                aria-label="Trade {{ membership.player.full_name }} (No trades available)">
+                                title="{% translate "No trades available" %}"
+                                aria-label="{% blocktranslate with name=membership.player.full_name %}Trade {{ name }} (No trades available){% endblocktranslate %}">
                           <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
                           </svg>
@@ -351,7 +351,7 @@
                               disabled
                               class="btn btn-ghost !px-1.5 !py-1 opacity-40 cursor-not-allowed text-neutral-400"
                               title="{{ trade_unavailable_reason }}"
-                              aria-label="Trade {{ membership.player.full_name }} ({{ trade_unavailable_reason }})">
+                              aria-label="{% blocktranslate with name=membership.player.full_name reason=trade_unavailable_reason %}Trade {{ name }} ({{ reason }}){% endblocktranslate %}">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>
                         </svg>
@@ -378,9 +378,9 @@
     {% else %}
       <p class="border-t border-neutral-200 px-5 py-8 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
         {% if signings_open %}
-          No players picked yet. Sign one from the list below.
+          {% translate "No players picked yet. Sign one from the list below." %}
         {% else %}
-          No players on this roster.
+          {% translate "No players on this roster." %}
         {% endif %}
       </p>
     {% endif %}

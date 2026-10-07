@@ -73,7 +73,7 @@ def test_modal_shell_uses_the_saved_language(signed_in, roster, user):
 
 def test_the_shell_names_what_will_be_lost(signed_in, roster):
     body = signed_in.get(delete_url(roster)).content.decode()
-    assert "its 1 players" in body
+    assert "its 1 player and" in body
     assert "cannot be undone" in body
 
 

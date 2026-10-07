@@ -20,7 +20,7 @@
           <div class="min-w-0 flex-1">
             <p class="truncate text-lg font-semibold text-tertiary-700 dark:text-neutral-100">{{ profile.nick_name }}</p>
             <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-              {{ rosters|length }} roster{{ rosters|length|pluralize }}
+              {% blocktranslate count count=rosters|length %}{{ count }} roster{% plural %}{{ count }} rosters{% endblocktranslate %}
             </p>
           </div>
 
@@ -61,7 +61,7 @@
                         {{ season.grouper.label }}
                       </h3>
                       <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                        {{ season.list|length }} roster{{ season.list|length|pluralize }}
+                        {% blocktranslate count count=season.list|length %}{{ count }} roster{% plural %}{{ count }} rosters{% endblocktranslate %}
                       </p>
                     </div>
 
@@ -71,7 +71,7 @@
                           <a href="{% url 'fantasy:roster-build' roster.pk %}" class="block min-w-0">
                             <span class="flex min-w-0 items-center gap-2.5">
                               <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
-                                   alt="{{ roster.get_icon_display }} roster icon"
+                                   alt="{% blocktranslate with icon=roster.get_icon_display %}{{ icon }} roster icon{% endblocktranslate %}"
                                    class="h-9 w-9 shrink-0 rounded-lg object-cover">
                               <span class="min-w-0">
                                 <span class="block truncate font-semibold text-tertiary-700 dark:text-neutral-100">{{ roster.name }}</span>

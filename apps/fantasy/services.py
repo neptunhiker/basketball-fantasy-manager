@@ -17,6 +17,9 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from apps.core.dates import local_moment
+from apps.core.templatetags.money import millions
+
 from .models import (
     ROSTER_SIZE,
     TRADE_BUY_PRICE,
@@ -142,15 +145,13 @@ def _require_transactions(season):
     if season.transactions_allowed:
         return
     if season.signings_open_at and timezone.now() < season.signings_open_at:
-        opened = timezone.localtime(season.signings_open_at)
         raise ValidationError(
-            f"Signings open on {opened.strftime('%-d %B at %H:%M')}."
+            _("Signings open on %(date)s.") % {"date": local_moment(season.signings_open_at)}
         )
     if season.signings_close_at is None:
         raise ValidationError(_("Buying and releasing are not currently allowed."))
-    closed = timezone.localtime(season.signings_close_at)
     raise ValidationError(_("Signings closed on %(date)s. Trades only from here.") % {
-        "date": closed.strftime("%-d %B at %H:%M"),
+        "date": local_moment(season.signings_close_at),
     })
 
 
@@ -169,12 +170,15 @@ def buy(roster, player, price, occurred_at=None, note=""):
         raise ValidationError(_("A purchase price cannot be negative."))
     if price > locked.cash:
         raise ValidationError(
-            f"Not enough cash: {locked.cash:,.0f} available, {price:,.0f} needed."
+            _("Not enough cash: %(available)s available, %(needed)s needed.")
+            % {"available": millions(locked.cash), "needed": millions(price)}
         )
     if _open_membership(locked, player):
-        raise ValidationError(f"{player} is already on the roster.")
+        raise ValidationError(_("%(player)s is already on the roster.") % {"player": player})
     if locked.player_count >= ROSTER_SIZE:
-        raise ValidationError(f"The roster is full at {ROSTER_SIZE} players.")
+        raise ValidationError(
+            _("The roster is full at %(size)d players.") % {"size": ROSTER_SIZE}
+        )
 
     RosterPlayer.objects.create(roster=locked, player=player, added_at=occurred_at)
     locked.cash -= price
@@ -204,7 +208,7 @@ def sell(roster, player, price, occurred_at=None, note=""):
         raise ValidationError(_("A sale price cannot be negative."))
     membership = _open_membership(locked, player)
     if membership is None:
-        raise ValidationError(f"{player} is not on the roster.")
+        raise ValidationError(_("%(player)s is not on the roster.") % {"player": player})
 
     # The spell is closed rather than deleted: the roster's history should still
     # show that this player was once part of it.
@@ -246,14 +250,15 @@ def trade(roster, player_out, player_in, price_out, price_in, occurred_at=None, 
         raise ValidationError(_("The player in and the player out cannot be the same."))
     membership = _open_membership(locked, player_out)
     if membership is None:
-        raise ValidationError(f"{player_out} is not on the roster.")
+        raise ValidationError(_("%(player)s is not on the roster.") % {"player": player_out})
     if _open_membership(locked, player_in):
-        raise ValidationError(f"{player_in} is already on the roster.")
+        raise ValidationError(_("%(player)s is already on the roster.") % {"player": player_in})
 
     delta = price_out - price_in
     if locked.cash + delta < 0:
         raise ValidationError(
-            f"Not enough cash: {locked.cash + price_out:,.0f} available, {price_in:,.0f} needed."
+            _("Not enough cash: %(available)s available, %(needed)s needed.")
+            % {"available": millions(locked.cash + price_out), "needed": millions(price_in)}
         )
 
     membership.removed_at = occurred_at
@@ -288,10 +293,10 @@ def trade_market_closed_reason(season):
         return _("Trades are only allowed while the season is live.")
     if season.trade_market_opens_at and now < season.trade_market_opens_at:
         return _("Trades can be bought and sold from %(date)s.") % {
-            "date": timezone.localtime(season.trade_market_opens_at).strftime("%d.%m.%Y %H:%M")
+            "date": local_moment(season.trade_market_opens_at)
         }
     return _("Buying and selling trades closed on %(date)s.") % {
-        "date": timezone.localtime(season.trade_market_closes_at).strftime("%d.%m.%Y %H:%M")
+        "date": local_moment(season.trade_market_closes_at)
     }
 
 
@@ -318,7 +323,8 @@ def buy_trade(roster, occurred_at=None, note=""):
 
     if locked.cash < TRADE_BUY_PRICE:
         raise ValidationError(
-            f"Not enough cash: {locked.cash:,.0f} available, {TRADE_BUY_PRICE:,.0f} needed to buy a trade."
+            _("Not enough cash: %(available)s available, %(needed)s needed to buy a trade.")
+            % {"available": millions(locked.cash), "needed": millions(TRADE_BUY_PRICE)}
         )
 
     locked.cash -= TRADE_BUY_PRICE
@@ -469,7 +475,7 @@ def ensure_manager(user):
     # `get_or_create` rather than `create`, because a double-submitted form is
     # two concurrent first rosters and would otherwise be an IntegrityError.
     # `unique_nickname_per_user` is what makes the retry land on the same row.
-    manager, _ = Manager.objects.get_or_create(user=user, nick_name=default_nickname(user))
+    manager, _created = Manager.objects.get_or_create(user=user, nick_name=default_nickname(user))
     return manager
 
 
@@ -487,14 +493,17 @@ def default_roster_name(manager, season):
     `manager` may be None, which is the state of anyone about to build their
     first roster: no profile means no rosters, so every name is free.
     """
+    def name(index):
+        return _("Roster %(number)d") % {"number": index}
+
     if manager is None:
-        return "Roster 1"
+        return name(1)
 
     taken = set(manager.rosters.filter(season=season).values_list("name", flat=True))
     index = 1
-    while f"Roster {index}" in taken:
+    while name(index) in taken:
         index += 1
-    return f"Roster {index}"
+    return name(index)
 
 
 def create_roster(manager, season, name, icon="koala"):
@@ -510,12 +519,13 @@ def create_roster(manager, season, name, icon="koala"):
     exists.
     """
     if icon not in dict(ROSTER_ICON_CHOICES):
-        raise ValidationError("Pick one of the available roster icons.")
+        raise ValidationError(_("Pick one of the available roster icons."))
     if not season.transactions_allowed:
         if season.signings_open_at and timezone.now() < season.signings_open_at:
-            opened = timezone.localtime(season.signings_open_at)
-            raise ValidationError(f"Signings open on {opened.strftime('%-d %B at %H:%M')}.")
-        raise ValidationError("A new roster cannot be created outside the signing window.")
+            raise ValidationError(
+                _("Signings open on %(date)s.") % {"date": local_moment(season.signings_open_at)}
+            )
+        raise ValidationError(_("A new roster cannot be created outside the signing window."))
     return Roster.objects.create(manager=manager, season=season, name=name, icon=icon)
 
 

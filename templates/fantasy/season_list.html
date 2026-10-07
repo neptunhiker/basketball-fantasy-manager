@@ -30,7 +30,7 @@
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Snapshots" %}</th>
             {% if can_manage %}
               <th scope="col" class="px-4 py-3 text-right font-medium">
-                <span class="sr-only">Actions</span>
+                <span class="sr-only">{% translate "Actions" %}</span>
               </th>
             {% endif %}
           </tr>
@@ -48,7 +48,7 @@
                 <span class="mt-1 block text-xs text-neutral-500 sm:hidden dark:text-neutral-400">{{ season.timing.label }}</span>
               </td>
               <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
-                {{ season.starts_on|date:"M j, Y" }} – {{ season.ends_on|date:"M j, Y" }}
+                {{ season.starts_on|date:"SHORT_DATE_FORMAT" }} – {{ season.ends_on|date:"SHORT_DATE_FORMAT" }}
               </td>
               <td class="px-4 py-3">
                 {% if season.timing == season.Timing.RUNNING %}
@@ -66,11 +66,11 @@
                   <span class="text-neutral-400 dark:text-neutral-500">{% translate "Open all season" %}</span>
                 {% elif season.signings_open %}
                   <span class="text-neutral-600 dark:text-neutral-400">
-                    {% blocktranslate with date=season.signings_close_at|date:"M j, H:i" %}Closes {{ date }}{% endblocktranslate %}
+                    {% blocktranslate with date=season.signings_close_at|date:"SHORT_DATETIME_FORMAT" %}Closes {{ date }}{% endblocktranslate %}
                   </span>
                 {% else %}
                   <span class="text-amber-700 dark:text-amber-300">
-                    {% blocktranslate with date=season.signings_close_at|date:"M j, H:i" %}Closed {{ date }}{% endblocktranslate %}
+                    {% blocktranslate with date=season.signings_close_at|date:"SHORT_DATETIME_FORMAT" %}Closed {{ date }}{% endblocktranslate %}
                   </span>
                 {% endif %}
               </td>

@@ -92,6 +92,11 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
             "trade_market_closes_at": forms.DateTimeInput(**DATETIME_WIDGET),
         }
         labels = {
+            "label": _("Label"),
+            "starts_on": _("Starts on"),
+            "ends_on": _("Ends on"),
+            "signings_open_at": _("Signings open"),
+            "signings_close_at": _("Signings close"),
             "starting_cash": _("Starting budget"),
             "weekly_trades_from": _("Weekly trades from"),
             "weekly_trades_per_week": _("Trades per week"),
@@ -100,6 +105,15 @@ class SeasonForm(StyledFormMixin, forms.ModelForm):
         }
         help_texts = {
             "label": _("How the season is written in the official game, e.g. 2026-27."),
+            "signings_open_at": _(
+                "Before this moment rosters cannot be created and players cannot be "
+                "signed. Leave empty to open immediately."
+            ),
+            "signings_close_at": _(
+                "After this moment a roster can only change through trades: no more "
+                "buying, no more selling, and no new rosters. Leave empty to keep "
+                "signings open for the whole season."
+            ),
             "starting_cash": _(
                 "In dollars, e.g. 63000000. Applies to rosters created from now on."
             ),

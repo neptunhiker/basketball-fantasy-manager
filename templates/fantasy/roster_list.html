@@ -36,7 +36,7 @@
             {# only line on it that earns full weight. Not a link -- the card is #}
             {# already one, and a link inside a link is not markup. #}
             <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
-              {{ roster.season.label }} · Managed by {{ roster.manager.nick_name }}
+              {% blocktranslate with season=roster.season.label name=roster.manager.nick_name %}{{ season }} · Managed by {{ name }}{% endblocktranslate %}
             </span>
           </a>
           <div class="flex shrink-0 items-center gap-1.5">
@@ -91,9 +91,9 @@
           <p class="mt-3 border-t border-neutral-200 pt-3 text-xs dark:border-neutral-800
             {% if roster.season.signings_open %}text-neutral-500 dark:text-neutral-400{% else %}text-amber-700 dark:text-amber-300{% endif %}">
             {% if roster.season.transactions_allowed %}
-              {% translate "Signings close" %} {{ roster.season.signings_close_at|date:"j F" }} {% translate "at" %} {{ roster.season.signings_close_at|date:"H:i" }}
+              {% blocktranslate with date=roster.season.signings_close_at|date:"DATE_FORMAT" time=roster.season.signings_close_at|date:"TIME_FORMAT" %}Signings close on {{ date }} at {{ time }}{% endblocktranslate %}
             {% elif roster.season.signings_open_at and not roster.season.trading_allowed %}
-              {% translate "Signings open" %} {{ roster.season.signings_open_at|date:"j F" }} {% translate "at" %} {{ roster.season.signings_open_at|date:"H:i" }}
+              {% blocktranslate with date=roster.season.signings_open_at|date:"DATE_FORMAT" time=roster.season.signings_open_at|date:"TIME_FORMAT" %}Signings open on {{ date }} at {{ time }}{% endblocktranslate %}
             {% elif roster.season.trading_allowed %}
               {% translate "Signings closed — trades only" %}
             {% elif roster.season.timing == "FINISHED" %}
@@ -120,7 +120,7 @@
               class="btn btn-primary mt-6">{% translate "Create your first roster" %}</button>
     {% elif current_season and current_season.signings_open_at and not current_season.transactions_allowed %}
       <p class="mt-6 text-xs text-amber-700 dark:text-amber-300">
-        {% translate "Signings open on" %} {{ current_season.signings_open_at|date:"j F" }} {% translate "at" %} {{ current_season.signings_open_at|date:"H:i" }}.
+        {% blocktranslate with date=current_season.signings_open_at|date:"DATE_FORMAT" time=current_season.signings_open_at|date:"TIME_FORMAT" %}Signings open on {{ date }} at {{ time }}.{% endblocktranslate %}
       </p>
     {% elif current_season %}
       <p class="mt-6 text-xs text-amber-700 dark:text-amber-300">

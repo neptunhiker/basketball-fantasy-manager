@@ -30,7 +30,7 @@
               {{ season.grouper.label }}
             </h3>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
-              {{ season.list|length }} roster{{ season.list|length|pluralize }}
+              {% blocktranslate count count=season.list|length %}{{ count }} roster{% plural %}{{ count }} rosters{% endblocktranslate %}
             </p>
           </div>
 
@@ -39,7 +39,7 @@
               <article class="card p-3.5">
                 <span class="flex min-w-0 items-center gap-2.5">
                   <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
-                       alt="{{ roster.get_icon_display }} roster icon"
+                       alt="{% blocktranslate with icon=roster.get_icon_display %}{{ icon }} roster icon{% endblocktranslate %}"
                        class="h-9 w-9 shrink-0 rounded-lg object-cover">
                   <span class="min-w-0">
                     <span class="block truncate font-semibold text-tertiary-700 dark:text-neutral-100">{{ roster.name }}</span>

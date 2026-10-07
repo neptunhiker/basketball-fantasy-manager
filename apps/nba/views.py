@@ -26,6 +26,7 @@ from django.utils import formats, timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
+from django.utils.translation import ngettext
 from django.views import View
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
 from django.views.generic import DetailView, ListView
@@ -666,7 +667,11 @@ def _coverage(summary, total):
     """A note naming how many players a card is based on, when it is not all."""
     if summary["n"] == 0 or summary["n"] == total:
         return ""
-    return f"From {summary['n']} of {total} players. No value on record for the rest."
+    return ngettext(
+        "From %(n)d of %(total)d player. No value on record for the rest.",
+        "From %(n)d of %(total)d players. No value on record for the rest.",
+        total,
+    ) % {"n": summary["n"], "total": total}
 
 
 class TeamDetailView(LoginRequiredMixin, DetailView):

@@ -1,7 +1,18 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.utils import translation
 
 from apps.fantasy.models import Manager
+
+
+@pytest.fixture(autouse=True)
+def _english_after_each_test():
+    """A request by a German-speaking user activates German for the thread and
+    nothing switches it back -- the next request activates its own language,
+    but a service called directly would answer in German. Reset per test."""
+    yield
+    translation.activate("en")
+
 
 User = get_user_model()
 

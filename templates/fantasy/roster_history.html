@@ -13,11 +13,11 @@
   claim worth showing rather than assuming.
 {% endcomment %}
 
-{% block title %}History · {{ roster.name }} · {{ SITE_NAME }}{% endblock %}
+{% block title %}{% translate "History" %} · {{ roster.name }} · {{ SITE_NAME }}{% endblock %}
 {% block page_title %}
   <span class="flex min-w-0 items-center gap-3">
     <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
-         alt="{{ roster.get_icon_display }} roster icon"
+         alt="{% blocktranslate with icon=roster.get_icon_display %}{{ icon }} roster icon{% endblocktranslate %}"
          class="h-10 w-10 shrink-0 rounded-xl border-2 border-white object-cover shadow-md sm:h-12 sm:w-12 dark:border-neutral-800">
     <span class="truncate">{{ roster.name }}</span>
   </span>
@@ -39,11 +39,11 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-4 sm:gap-5 min-w-0">
           <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
-               alt="{{ roster.get_icon_display }} roster icon"
+               alt="{% blocktranslate with icon=roster.get_icon_display %}{{ icon }} roster icon{% endblocktranslate %}"
                class="h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 shrink-0 rounded-2xl border-2 border-white object-cover shadow-lg dark:border-neutral-800">
           <div class="min-w-0">
             <p class="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
-              {{ roster.season.label }} · Manager: {{ roster.manager.nick_name }}
+              {% blocktranslate with season=roster.season.label name=roster.manager.nick_name %}{{ season }} · Manager: {{ name }}{% endblocktranslate %}
             </p>
             <h2 class="mt-1 text-2xl font-bold tracking-tight text-tertiary-700 sm:text-3xl dark:text-neutral-100 truncate">
               {{ roster.name }}
@@ -85,7 +85,7 @@
       {% if rows %}
         {% if reconciles %}
           <p class="mt-6 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-800 dark:bg-green-500/10 dark:text-green-300">
-            {% translate "Starting cash plus all" %} {{ rows|length }} {% translate "moves comes to exactly the" %} {{ roster.cash|millions }} {% translate "the roster holds." %}
+            {% blocktranslate with cash=roster.cash|millions count moves=rows|length %}The starting budget plus {{ moves }} move adds up to exactly the {{ cash }} the roster holds.{% plural %}The starting budget plus all {{ moves }} moves adds up to exactly the {{ cash }} the roster holds.{% endblocktranslate %}
           </p>
         {% else %}
           {# Unreachable through the service layer, which writes membership, #}
@@ -93,15 +93,14 @@
           {# something wrote around it -- so it says so rather than hiding. #}
           <p class="mt-6 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800 dark:bg-red-500/10 dark:text-red-200"
              role="alert">
-            {% translate "The history comes to" %} {{ ledger_balance|millions }} {% translate "but the roster holds" %} {{ roster.cash|millions }}. {% translate "An entry is missing." %}
+            {% blocktranslate with ledger=ledger_balance|millions cash=roster.cash|millions %}The history adds up to {{ ledger }}, but the roster holds {{ cash }}. An entry is missing.{% endblocktranslate %}
           </p>
         {% endif %}
       {% endif %}
 
       {% if unpriced %}
         <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-          {{ unpriced }} move{{ unpriced|pluralize }} {{ unpriced|pluralize:"was,were" }} recorded
-          before the individual prices were kept — those rows show the net cash flow only.
+          {% blocktranslate count counter=unpriced %}{{ counter }} move was recorded before the individual prices were kept — that row shows the net cash flow only.{% plural %}{{ counter }} moves were recorded before the individual prices were kept — those rows show the net cash flow only.{% endblocktranslate %}
         </p>
       {% endif %}
     </div>
@@ -128,8 +127,8 @@
             {% for row in rows %}
               <tr class="align-top">
                 <td class="whitespace-nowrap px-4 py-3 text-neutral-500 dark:text-neutral-400">
-                  {{ row.move.occurred_at|date:"M j, Y" }}
-                  <span class="block text-xs">{{ row.move.occurred_at|date:"H:i" }}</span>
+                  {{ row.move.occurred_at|date:"SHORT_DATE_FORMAT" }}
+                  <span class="block text-xs">{{ row.move.occurred_at|date:"TIME_FORMAT" }}</span>
                 </td>
                 <td class="px-3 py-3">
                   <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-semibold
@@ -161,7 +160,7 @@
                 <td class="px-3 py-3">
                   {% if row.move.kind == 'GRANT_TRADE' %}
                     {# A free trade from the season's schedule: no player, no money. #}
-                    <span class="block font-medium">{{ row.move.note }}</span>
+                    <span class="block font-medium">{% translate row.move.note %}</span>
                     <span class="block text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
                       {% blocktranslate count counter=row.move.trades_granted %}+{{ counter }} trade{% plural %}+{{ counter }} trades{% endblocktranslate %}
                     </span>

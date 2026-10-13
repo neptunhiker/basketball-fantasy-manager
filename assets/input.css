@@ -118,8 +118,9 @@
      and still does. Native controls are listed because they are clickable but
      get an arrow by default, and the labels because clicking one toggles the
      box inside it -- which makes the label part of the control, not text about
-     it. Only checkbox and radio labels: a label for a text field focuses a
-     caret, and a hand would promise a toggle that is not there.
+     it. Only checkbox, radio and file labels: a label for a text field
+     focuses a caret, and a hand would promise a toggle that is not there.
+     A file label opens the file picker, as the upload drop zone does.
 
      Base layer, so a `cursor-*` utility in a template still wins where a
      specific element needs to say something different. */
@@ -129,6 +130,7 @@
   select,
   label:has(input[type="checkbox"]),
   label:has(input[type="radio"]),
+  label:has(input[type="file"]),
   input:where([type="checkbox"], [type="radio"], [type="submit"], [type="reset"], [type="button"], [type="file"], [type="color"]),
   ::file-selector-button {
     cursor: pointer;

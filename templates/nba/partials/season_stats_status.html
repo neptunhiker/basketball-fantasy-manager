@@ -1,0 +1,11 @@
+{# The state of one season stats upload as a badge. Context: run (a SeasonStatsImport). #}
+{% load i18n %}
+{% if run.status == "imported" %}
+  <span class="badge badge-success">{% translate "Imported" %}</span>
+{% elif run.status == "previewed" %}
+  <span class="badge badge-pending">{% translate "Preview open" %}</span>
+{% elif run.status == "failed" %}
+  <span class="badge badge-warning">{{ run.get_status_display }}</span>
+{% else %}
+  <span class="badge badge-neutral">{{ run.get_status_display }}</span>
+{% endif %}

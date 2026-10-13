@@ -8,20 +8,25 @@
 {# `chartOpen` lives here, outside the part filters swap, so a chart opened on #}
 {# a phone stays open while filtering. From `md` the chart always shows. #}
 <div class="card overflow-hidden" x-data="{ chartOpen: false }">
-  <div class="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+  {# Phones: the title first, the buttons in a wrapping row below it. #}
+  <div class="flex flex-col gap-3 border-b border-neutral-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
     <div>
       <h2 class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{% translate "Player search" %}</h2>
       {% if can_import_from_bbde %}
         <div class="mt-0.5">{% include "nba/partials/bbde_last_import.html" with run=last_bbde_import %}</div>
       {% endif %}
     </div>
-    <div class="flex flex-wrap items-center justify-end gap-2">
+    <div class="flex flex-wrap items-center gap-2 sm:justify-end">
       {% if can_import_from_bbde %}
         <button type="button"
                 hx-get="{% url 'nba:bbde-import' %}"
                 hx-target="#modal-root"
                 hx-swap="innerHTML"
                 class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Import from basketball.de" %}</button>
+      {% endif %}
+      {# Superusers only; the upload views check again. #}
+      {% if request.user.is_superuser %}
+        <a href="{% url 'nba:season-stats-upload' %}" class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Season stats" %}</a>
       {% endif %}
       <a href="{% url 'nba:player-compare' %}" class="btn btn-secondary !px-3 !py-1.5 text-xs">{% translate "Compare players" %}</a>
     </div>

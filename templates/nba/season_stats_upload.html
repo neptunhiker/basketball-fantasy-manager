@@ -1,0 +1,216 @@
+{% extends "app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Season stats" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Season stats" %}{% endblock %}
+
+{% block back_link %}
+  {% url 'nba:player-list' as back_url %}
+  {% translate "All players" as back_label %}
+  {% include "partials/back_link.html" with href=back_url label=back_label %}
+{% endblock %}
+
+{% block content %}
+<div class="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+
+  {# --- Upload ----------------------------------------------------------- #}
+  <section class="card overflow-hidden" aria-labelledby="upload-heading">
+    <div class="gradient-rule h-1"></div>
+    <div class="p-5 sm:p-6">
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Official NBA stats" %}</p>
+      <h2 id="upload-heading" class="mt-1.5 text-lg font-semibold">{% translate "Upload a season" %}</h2>
+      <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        {% translate "Upload the per-game CSV export from NBA.com. You will see a preview of every change before anything is saved." %}
+      </p>
+
+      <form method="post" enctype="multipart/form-data" class="mt-6 space-y-5"
+            x-data="{ fileName: '', dragging: false, busy: false }"
+            @submit="busy = true">
+        {% csrf_token %}
+
+        {% for error in form.non_field_errors %}
+          <p class="form-error" role="alert">{{ error }}</p>
+        {% endfor %}
+
+        {% include "partials/form_field.html" with field=form.season %}
+
+        <div>
+          <span class="form-label" id="file-label">{{ form.file.label }}<span class="text-primary-500" aria-hidden="true"> *</span></span>
+          {# The real input is visually hidden inside the drop zone, which is its #}
+          {# label: a click, a tap or a dropped file all land in the same input. #}
+          <label for="{{ form.file.id_for_label }}"
+                 @dragover.prevent="dragging = true"
+                 @dragleave.prevent="dragging = false"
+                 @drop.prevent="dragging = false; if ($event.dataTransfer.files.length) { $refs.file.files = $event.dataTransfer.files; fileName = $refs.file.files[0].name }"
+                 :class="dragging ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' : (fileName ? 'border-primary-300 bg-primary-50/40 dark:border-primary-500/40 dark:bg-primary-500/5' : 'border-neutral-300 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-950/40')"
+                 class="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-4 py-8 text-center transition hover:border-primary-400 sm:py-10 dark:border-neutral-700 dark:bg-neutral-950/40 dark:hover:border-primary-500/60 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-primary-500">
+            <span class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-primary-600 shadow-sm ring-1 ring-neutral-200 dark:bg-neutral-900 dark:text-primary-300 dark:ring-neutral-700">
+              <svg x-show="!fileName" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0-4 4m4-4 4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+              </svg>
+              <svg x-show="fileName" x-cloak class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Zm0 0v5h5M9 14l2 2 4-4"/>
+              </svg>
+            </span>
+            <span class="min-w-0 max-w-full">
+              <span x-show="!fileName" class="block text-sm font-medium">
+                <span class="text-primary-600 dark:text-primary-300">{% translate "Choose a file" %}</span>
+                <span class="max-sm:hidden"> {% translate "or drag it here" %}</span>
+              </span>
+              <span x-show="fileName" x-cloak x-text="fileName" class="block truncate text-sm font-semibold"></span>
+              <span class="mt-1 block text-xs text-neutral-500 dark:text-neutral-400">
+                <span x-show="fileName" x-cloak>{% translate "Choose a different file" %} · </span>{% translate "CSV, UTF-8, up to 2 MB" %}
+              </span>
+            </span>
+            <input type="file" name="{{ form.file.html_name }}" id="{{ form.file.id_for_label }}"
+                   accept=".csv,text/csv" class="sr-only" x-ref="file"
+                   aria-labelledby="file-label"
+                   {% if form.file.errors %}aria-invalid="true" aria-describedby="file-errors"{% endif %}
+                   @change="fileName = $event.target.files.length ? $event.target.files[0].name : ''">
+          </label>
+          {% if form.file.errors %}
+            <div id="file-errors" role="alert">
+              {% for error in form.file.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="flex flex-col-reverse gap-3 border-t border-neutral-200 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Nothing is saved until you confirm the preview." %}</p>
+          <button type="submit" class="btn btn-primary w-full sm:w-auto" :disabled="!fileName || busy">
+            <svg x-show="busy" x-cloak class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
+              <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v3a5 5 0 0 0-5 5H4Z"/>
+            </svg>
+            <span x-show="!busy">{% translate "Show preview" %}</span>
+            <span x-show="busy" x-cloak>{% translate "Reading file…" %}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  {# --- What is stored, and what the file needs --------------------------- #}
+  <div class="space-y-6">
+    <section class="card p-5 sm:p-6" aria-labelledby="stored-heading">
+      <h2 id="stored-heading" class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Stored seasons" %}</h2>
+      {% if stored_seasons %}
+        <ul class="mt-4 divide-y divide-neutral-100 dark:divide-neutral-800">
+          {% for season in stored_seasons %}
+            <li class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+              <div class="min-w-0">
+                <p class="font-semibold tabular-nums">{{ season.season }}</p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                  {% blocktranslate with date=season.updated|date:"SHORT_DATE_FORMAT" %}Updated {{ date }}{% endblocktranslate %}
+                </p>
+              </div>
+              <span class="badge badge-success tabular-nums">
+                {% blocktranslate count counter=season.players %}{{ counter }} player{% plural %}{{ counter }} players{% endblocktranslate %}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="mt-4 text-sm text-neutral-500 dark:text-neutral-400">{% translate "No season stats yet." %}</p>
+      {% endif %}
+    </section>
+
+    <section class="card p-5 sm:p-6" aria-labelledby="format-heading">
+      <h2 id="format-heading" class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "The file" %}</h2>
+      <ul class="mt-4 space-y-3 text-sm text-neutral-600 dark:text-neutral-300">
+        <li class="flex gap-3">
+          <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400" aria-hidden="true"></span>
+          <span>{% translate "One line per player, with the column names in the first line. Semicolons or commas both work." %}</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400" aria-hidden="true"></span>
+          <span>
+            {% translate "Columns are found by name:" %}
+            <span class="mt-1 block font-mono text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">PLAYER TEAM AGE GP W L MIN PTS FGM FGA FG% 3PM 3PA 3P% FTM FTA FT% OREB DREB REB AST TOV STL BLK PF TFP</span>
+          </span>
+        </li>
+        <li class="flex gap-3">
+          <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400" aria-hidden="true"></span>
+          <span>{% translate "Any other column, such as HSFP, DD2, TD3 or +/-, is ignored." %}</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400" aria-hidden="true"></span>
+          <span>{% translate "Uploading a season again replaces it completely." %}</span>
+        </li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+{# --- Recent uploads ------------------------------------------------------ #}
+<section class="card overflow-hidden" aria-labelledby="uploads-heading">
+  <div class="border-b border-neutral-200 px-5 py-4 sm:px-6 dark:border-neutral-800">
+    <h2 id="uploads-heading" class="text-sm font-semibold">{% translate "Recent uploads" %}</h2>
+  </div>
+  {% if uploads %}
+    {# Phones: one card per upload. #}
+    <ul class="divide-y divide-neutral-200 sm:hidden dark:divide-neutral-800">
+      {% for run in uploads %}
+        <li>
+          <a href="{% url 'nba:season-stats-import' run.pk %}" class="flex items-center gap-3 px-5 py-4 transition active:bg-neutral-50 dark:active:bg-neutral-800/50">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold tabular-nums">{{ run.season }}</span>
+                {% include "nba/partials/season_stats_status.html" %}
+              </div>
+              <p class="mt-1 truncate text-xs text-neutral-500 dark:text-neutral-400">
+                {{ run.created_at|date:"SHORT_DATETIME_FORMAT" }}{% if run.triggered_by %} · {{ run.triggered_by.display_name }}{% endif %}
+              </p>
+              <p class="mt-0.5 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+                {% blocktranslate with matched=run.matched rows=run.rows %}{{ matched }} of {{ rows }} matched{% endblocktranslate %}
+              </p>
+            </div>
+            <svg class="h-4 w-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/>
+            </svg>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+    {# From `sm`: a table. #}
+    <div class="overflow-x-auto max-sm:hidden">
+      <table class="w-full text-left text-sm md:[&_tr>*:nth-child(3)]:table-cell [&_tr>*:nth-child(3)]:hidden">
+        <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
+          <tr>
+            <th scope="col" class="px-6 py-3 font-medium">{% translate "Uploaded" %}</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "Season" %}</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "File" %}</th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "Status" %}</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Matched" %}</th>
+            <th scope="col" class="px-6 py-3"><span class="sr-only">{% translate "Open" %}</span></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
+          {% for run in uploads %}
+            <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+              <td class="px-6 py-3">
+                <span class="block whitespace-nowrap">{{ run.created_at|date:"SHORT_DATETIME_FORMAT" }}</span>
+                <span class="block text-xs text-neutral-500 dark:text-neutral-400">{% if run.triggered_by %}{{ run.triggered_by.display_name }}{% else %}{% translate "Command" %}{% endif %}</span>
+              </td>
+              <td class="px-4 py-3 font-semibold tabular-nums">{{ run.season }}</td>
+              <td class="max-w-[14rem] truncate px-4 py-3 text-neutral-600 dark:text-neutral-400" title="{{ run.file_name }}">{{ run.file_name|default:"–" }}</td>
+              <td class="px-4 py-3">{% include "nba/partials/season_stats_status.html" %}</td>
+              <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400">{{ run.matched }} / {{ run.rows }}</td>
+              <td class="px-6 py-3 text-right">
+                <a href="{% url 'nba:season-stats-import' run.pk %}" class="btn btn-ghost !px-3 !py-1.5 text-xs">
+                  {% if run.status == "previewed" %}{% translate "Open preview" %}{% else %}{% translate "Details" %}{% endif %}
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="px-6 py-12 text-center">
+      <p class="text-sm font-medium">{% translate "No uploads yet." %}</p>
+      <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{% translate "Your first upload will appear here." %}</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

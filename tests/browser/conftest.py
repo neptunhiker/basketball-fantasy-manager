@@ -26,7 +26,8 @@ os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
 SCREENS = Path(__file__).resolve().parents[2] / "tmp" / "screens"
 PHONE = {"width": 375, "height": 812}
 TABLET = {"width": 768, "height": 1024}
-VIEWPORTS = {"phone": PHONE, "tablet": TABLET}
+DESKTOP = {"width": 1440, "height": 900}
+VIEWPORTS = {"phone": PHONE, "tablet": TABLET, "desktop": DESKTOP}
 
 User = get_user_model()
 

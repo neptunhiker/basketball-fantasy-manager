@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 20:47+0200\n"
+"POT-Creation-Date: 2026-10-13 21:16+0200\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -78,7 +78,8 @@ msgstr "Coach"
 #: templates/fantasy/partials/roster_panel.html:5
 #: templates/nba/partials/player_table.html:4
 #: templates/nba/player_compare.html:97 templates/nba/player_detail.html:261
-#: templates/nba/player_list.html:68 templates/nba/team_list.html:23
+#: templates/nba/player_list.html:73
+#: templates/nba/season_stats_import.html:127 templates/nba/team_list.html:23
 msgid "Team"
 msgstr "Team"
 
@@ -1020,6 +1021,7 @@ msgid "Web"
 msgstr "Web"
 
 #: apps/nba/models.py:429 apps/nba/models.py:511
+#: templates/nba/season_stats_upload.html:193
 msgid "Command"
 msgstr "Befehl"
 
@@ -1039,7 +1041,7 @@ msgstr "Fehlgeschlagen"
 msgid "Previewed"
 msgstr "Vorschau"
 
-#: apps/nba/models.py:515
+#: apps/nba/models.py:515 templates/nba/partials/season_stats_status.html:4
 msgid "Imported"
 msgstr "Importiert"
 
@@ -1051,7 +1053,7 @@ msgstr "Verworfen"
 msgid "Expired"
 msgstr "Abgelaufen"
 
-#: apps/nba/season_stats.py:142
+#: apps/nba/season_stats.py:142 apps/nba/season_stats_views.py:81
 msgid "The file is larger than 2 MB."
 msgstr "Die Datei ist größer als 2 MB."
 
@@ -1114,7 +1116,7 @@ msgstr ""
 "%(player)s ist nicht in der Datei; die Statistiken für %(season)s werden "
 "entfernt."
 
-#: apps/nba/season_stats.py:403
+#: apps/nba/season_stats.py:403 templates/nba/season_stats_import.html:223
 msgid "No line of this file matched a player, so there is nothing to import."
 msgstr ""
 "Keine Zeile dieser Datei passt zu einem Spieler, daher gibt es nichts zu "
@@ -1124,7 +1126,7 @@ msgstr ""
 msgid "This preview has expired. Please upload the file again."
 msgstr "Diese Vorschau ist abgelaufen. Bitte lade die Datei erneut hoch."
 
-#: apps/nba/season_stats.py:442
+#: apps/nba/season_stats.py:442 templates/nba/season_stats_import.html:68
 msgid "Only the person who uploaded the file can import it."
 msgstr "Nur wer die Datei hochgeladen hat, kann sie importieren."
 
@@ -1136,6 +1138,28 @@ msgstr "Diese Vorschau ist bereits abgeschlossen."
 #, python-format
 msgid "%(player)s was deleted after the preview and was left out."
 msgstr "%(player)s wurde nach der Vorschau gelöscht und ausgelassen."
+
+#: apps/nba/season_stats_views.py:57 templates/fantasy/season_list.html:25
+#: templates/nba/season_stats_upload.html:181
+msgid "Season"
+msgstr "Saison"
+
+#: apps/nba/season_stats_views.py:59
+msgid "The NBA season the file covers, for example 2025-26."
+msgstr "Die NBA-Saison, die die Datei abdeckt, zum Beispiel 2025-26."
+
+#: apps/nba/season_stats_views.py:61
+msgid "CSV file"
+msgstr "CSV-Datei"
+
+#: apps/nba/season_stats_views.py:209
+#, python-format
+msgid "Imported %(count)d players for %(season)s."
+msgstr "%(count)d Spieler für %(season)s importiert."
+
+#: apps/nba/season_stats_views.py:223
+msgid "The preview was discarded. Nothing was saved."
+msgstr "Die Vorschau wurde verworfen. Es wurde nichts gespeichert."
 
 #: apps/nba/views.py:375
 msgid ""
@@ -1251,13 +1275,13 @@ msgstr "Spielergesundheit"
 
 #: apps/nba/views.py:816 templates/nba/partials/injury_status.html:3
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
-#: templates/nba/player_list.html:83
+#: templates/nba/player_list.html:88
 msgid "Healthy"
 msgstr "Gesund"
 
 #: apps/nba/views.py:817 templates/nba/partials/injury_status.html:2
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
-#: templates/nba/player_list.html:84 templates/nba/team_list.html:30
+#: templates/nba/player_list.html:89 templates/nba/team_list.html:30
 msgid "Injured"
 msgstr "Verletzt"
 
@@ -1451,6 +1475,7 @@ msgstr "Person"
 #: templates/nba/partials/injury_status.html:56
 #: templates/nba/partials/player_table.html:95
 #: templates/nba/player_compare.html:106 templates/nba/player_detail.html:94
+#: templates/nba/season_stats_upload.html:183
 msgid "Status"
 msgstr "Status"
 
@@ -1661,7 +1686,7 @@ msgstr "Nach E-Mail-Adresse suchen"
 #: templates/accounts/user_list.html:46
 #: templates/fantasy/partials/player_picker.html:108
 #: templates/nba/player_compare_modal.html:27
-#: templates/nba/player_list.html:129
+#: templates/nba/player_list.html:134
 msgid "Searching"
 msgstr "Suche läuft"
 
@@ -1744,7 +1769,7 @@ msgstr "Tage"
 msgid "Hours"
 msgstr "Stunden"
 
-#: templates/core/dashboard.html:47
+#: templates/core/dashboard.html:47 templates/nba/season_stats_import.html:129
 msgid "Minutes"
 msgstr "Minuten"
 
@@ -1960,7 +1985,7 @@ msgstr[1] "Ø pro freiem Platz (%(slots)s frei)"
 #: templates/fantasy/partials/player_picker.html:83
 #: templates/fantasy/partials/trade_body.html:128
 #: templates/fantasy/partials/trade_body.html:130
-#: templates/nba/player_list.html:43 templates/nba/player_list.html:45
+#: templates/nba/player_list.html:48 templates/nba/player_list.html:50
 msgid "Search by name"
 msgstr "Nach Namen suchen"
 
@@ -1968,17 +1993,17 @@ msgstr "Nach Namen suchen"
 #: templates/fantasy/partials/roster_panel.html:4
 #: templates/fantasy/partials/trade_body.html:132
 #: templates/nba/partials/player_table.html:3
-#: templates/nba/player_compare.html:96 templates/nba/player_list.html:57
+#: templates/nba/player_compare.html:96 templates/nba/player_list.html:62
 msgid "Position"
 msgstr "Position"
 
 #: templates/fantasy/partials/player_picker.html:90
-#: templates/nba/player_list.html:60
+#: templates/nba/player_list.html:65
 msgid "All positions"
 msgstr "Alle Positionen"
 
 #: templates/fantasy/partials/player_picker.html:100
-#: templates/nba/player_list.html:71 templates/nba/team_detail.html:30
+#: templates/nba/player_list.html:76 templates/nba/team_detail.html:30
 msgid "All teams"
 msgstr "Alle Teams"
 
@@ -2107,6 +2132,7 @@ msgstr "Managerprofil erstellen"
 #: templates/fantasy/partials/roster_panel.html:3
 #: templates/nba/partials/player_table.html:2
 #: templates/nba/player_compare.html:95
+#: templates/nba/season_stats_import.html:126
 msgid "Player"
 msgstr "Spieler"
 
@@ -2136,6 +2162,7 @@ msgstr "Wert"
 #: templates/nba/partials/player_table.html:8
 #: templates/nba/partials/scatter_chart.html:102
 #: templates/nba/player_compare.html:101 templates/nba/player_detail.html:264
+#: templates/nba/season_stats_import.html:130
 msgid "Points"
 msgstr "Punkte"
 
@@ -2910,10 +2937,6 @@ msgstr ""
 msgid "New season"
 msgstr "Neue Saison"
 
-#: templates/fantasy/season_list.html:25
-msgid "Season"
-msgstr "Saison"
-
 #: templates/fantasy/season_list.html:26
 msgid "Dates"
 msgstr "Daten"
@@ -3001,7 +3024,7 @@ msgid "Create the first season"
 msgstr "Erste Saison erstellen"
 
 #: templates/nba/partials/bbde_import_modal.html:10
-#: templates/nba/player_list.html:24
+#: templates/nba/player_list.html:25
 msgid "Import from basketball.de"
 msgstr "Von basketball.de importieren"
 
@@ -3013,10 +3036,12 @@ msgstr[0] "%(counter)s Spieler von %(pages)s Seiten gelesen."
 msgstr[1] "%(counter)s Spieler von %(pages)s Seiten gelesen."
 
 #: templates/nba/partials/bbde_import_modal.html:18
+#: templates/nba/season_stats_import.html:103
 msgid "Updated"
 msgstr "Aktualisiert"
 
 #: templates/nba/partials/bbde_import_modal.html:19
+#: templates/nba/season_stats_import.html:99
 msgid "New"
 msgstr "Neu"
 
@@ -3325,6 +3350,7 @@ msgstr ""
 "zu prüfen."
 
 #: templates/nba/partials/scatter_chart.html:106
+#: templates/nba/season_stats_import.html:128
 msgid "Games played"
 msgstr "Gespielte Spiele"
 
@@ -3336,6 +3362,10 @@ msgid ""
 msgstr ""
 "Steigerungen der Fantasy-Punkte pro Spiel über die letzten "
 "aufeinanderfolgenden Snapshots (bis zu den letzten 10 Vergleichen)"
+
+#: templates/nba/partials/season_stats_status.html:6
+msgid "Preview open"
+msgstr "Vorschau offen"
 
 #: templates/nba/partials/stat_card.html:31
 msgid "No values yet."
@@ -3364,7 +3394,7 @@ msgid "Add %(name)s to watchlist"
 msgstr "%(name)s zur Beobachtungsliste hinzufügen"
 
 #: templates/nba/player_compare.html:4 templates/nba/player_compare.html:5
-#: templates/nba/player_list.html:26
+#: templates/nba/player_list.html:31
 msgid "Compare players"
 msgstr "Spieler vergleichen"
 
@@ -3433,7 +3463,7 @@ msgstr ""
 "Spieler aus dem Vergleich, um einen weiteren hinzuzufügen."
 
 #: templates/nba/player_detail.html:9 templates/nba/player_detail.html:162
-#: templates/nba/player_list.html:92
+#: templates/nba/player_list.html:97 templates/nba/season_stats_upload.html:9
 msgid "All players"
 msgstr "Alle Spieler"
 
@@ -3508,45 +3538,395 @@ msgstr ""
 "Snapshots kommen aus dem Import von basketball.de.Snapshots stammen aus dem "
 "basketball.de-Import, der noch nicht verfügbar ist."
 
-#: templates/nba/player_list.html:13
+#: templates/nba/player_list.html:14
 msgid "Player search"
 msgstr "Spielersuche"
 
-#: templates/nba/player_list.html:50
+#: templates/nba/player_list.html:29 templates/nba/season_stats_upload.html:4
+#: templates/nba/season_stats_upload.html:5
+msgid "Season stats"
+msgstr "Saisonstatistiken"
+
+#: templates/nba/player_list.html:55
 msgid "Filters"
 msgstr "Filter"
 
-#: templates/nba/player_list.html:79
+#: templates/nba/player_list.html:84
 msgid "Injury status"
 msgstr "Verletzungsstatus"
 
-#: templates/nba/player_list.html:82
+#: templates/nba/player_list.html:87
 msgid "All injury status"
 msgstr "Alle Verletzungsstatus"
 
-#: templates/nba/player_list.html:89
+#: templates/nba/player_list.html:94
 msgid "Roster"
 msgstr "Kader"
 
-#: templates/nba/player_list.html:100
+#: templates/nba/player_list.html:105
 msgid "Maximum salary in millions"
 msgstr "Maximales Gehalt in Millionen"
 
-#: templates/nba/player_list.html:103
+#: templates/nba/player_list.html:108
 msgid "Max salary ($M)"
 msgstr "Max. Gehalt (Mio. $)"
 
-#: templates/nba/player_list.html:114
+#: templates/nba/player_list.html:119
 msgid "Include inactive players"
 msgstr "Inaktive Spieler einschließen"
 
-#: templates/nba/player_list.html:119
+#: templates/nba/player_list.html:124
 msgid "At least 6 games"
 msgstr "Mindestens 6 Spiele"
 
-#: templates/nba/player_list.html:125
+#: templates/nba/player_list.html:130
 msgid "Watched only"
 msgstr "Nur beobachtete"
+
+#: templates/nba/season_stats_import.html:4
+#: templates/nba/season_stats_import.html:5
+#, python-format
+msgid "Season stats %(season)s"
+msgstr "Saisonstatistiken %(season)s"
+
+#: templates/nba/season_stats_import.html:9
+#: templates/nba/season_stats_import.html:14
+msgid "All uploads"
+msgstr "Alle Uploads"
+
+#: templates/nba/season_stats_import.html:27
+msgid "Preview"
+msgstr "Vorschau"
+
+#: templates/nba/season_stats_import.html:27
+msgid "Upload"
+msgstr "Upload"
+
+#: templates/nba/season_stats_import.html:43
+#: templates/nba/season_stats_import.html:48
+msgid "Lines matched"
+msgstr "Zugeordnete Zeilen"
+
+#: templates/nba/season_stats_import.html:60
+#, python-format
+msgid ""
+"Nothing has been saved yet. Check the numbers below, then import. This "
+"preview can be imported until %(time)s."
+msgstr ""
+"Noch ist nichts gespeichert. Prüfe die Zahlen unten und importiere dann. "
+"Diese Vorschau kann bis %(time)s Uhr importiert werden."
+
+#: templates/nba/season_stats_import.html:66
+#, python-format
+msgid "Only %(who)s, who uploaded this file, can import it."
+msgstr "Nur %(who)s hat diese Datei hochgeladen und kann sie importieren."
+
+#: templates/nba/season_stats_import.html:75
+#, python-format
+msgid "Imported on %(date)s. These are now the stored %(season)s stats."
+msgstr ""
+"Importiert am %(date)s. Das sind jetzt die gespeicherten Statistiken für "
+"%(season)s."
+
+#: templates/nba/season_stats_import.html:80
+msgid "The import failed and nothing was changed."
+msgstr "Der Import ist fehlgeschlagen, es wurde nichts geändert."
+
+#: templates/nba/season_stats_import.html:85
+msgid "This preview expired without being imported. Nothing was saved."
+msgstr ""
+"Diese Vorschau ist abgelaufen, ohne importiert zu werden. Es wurde nichts "
+"gespeichert."
+
+#: templates/nba/season_stats_import.html:87
+msgid "This preview was discarded. Nothing was saved."
+msgstr "Diese Vorschau wurde verworfen. Es wurde nichts gespeichert."
+
+#: templates/nba/season_stats_import.html:95
+#: templates/nba/season_stats_upload.html:184
+msgid "Matched"
+msgstr "Zugeordnet"
+
+#: templates/nba/season_stats_import.html:107
+msgid "Removed"
+msgstr "Entfernt"
+
+#: templates/nba/season_stats_import.html:118
+msgid "Top players by fantasy points"
+msgstr "Top-Spieler nach Fantasy-Punkten"
+
+#: templates/nba/season_stats_import.html:119
+msgid "A quick check that the numbers landed in the right columns."
+msgstr ""
+"Eine schnelle Kontrolle, ob die Zahlen in den richtigen Spalten gelandet "
+"sind."
+
+#: templates/nba/season_stats_import.html:128
+msgid "GP"
+msgstr "SP"
+
+#: templates/nba/season_stats_import.html:129
+msgid "MIN"
+msgstr "MIN"
+
+#: templates/nba/season_stats_import.html:130
+msgid "PTS"
+msgstr "PKT"
+
+#: templates/nba/season_stats_import.html:131
+msgid "Rebounds"
+msgstr "Rebounds"
+
+#: templates/nba/season_stats_import.html:131
+msgid "REB"
+msgstr "REB"
+
+#: templates/nba/season_stats_import.html:132
+msgid "Assists"
+msgstr "Assists"
+
+#: templates/nba/season_stats_import.html:132
+msgid "AST"
+msgstr "AST"
+
+#: templates/nba/season_stats_import.html:133
+msgid "Fantasy points per game (NBA.com)"
+msgstr "Fantasy-Punkte pro Spiel (NBA.com)"
+
+#: templates/nba/season_stats_import.html:133
+msgid "FP"
+msgstr "FP"
+
+#: templates/nba/season_stats_import.html:141
+#, python-format
+msgid "“%(name)s” in the file"
+msgstr "„%(name)s“ in der Datei"
+
+#: templates/nba/season_stats_import.html:162
+msgid "Worth a look"
+msgstr "Einen Blick wert"
+
+#: templates/nba/season_stats_import.html:163
+msgid ""
+"Lines that were left out, matched under another name, or change existing "
+"data."
+msgstr ""
+"Zeilen, die ausgelassen wurden, unter anderem Namen zugeordnet wurden oder "
+"vorhandene Daten ändern."
+
+#: templates/nba/season_stats_import.html:166
+msgid "Several possible players"
+msgstr "Mehrere mögliche Spieler"
+
+#: templates/nba/season_stats_import.html:167
+msgid ""
+"More than one player fits these lines, so they are left out rather than "
+"guessed. Fix the name in the file, or ask a developer to add an alias."
+msgstr ""
+"Zu diesen Zeilen passt mehr als ein Spieler, deshalb werden sie ausgelassen "
+"statt geraten. Korrigiere den Namen in der Datei oder bitte einen "
+"Entwickler, einen Alias anzulegen."
+
+#: templates/nba/season_stats_import.html:171
+msgid "Changes to stored data"
+msgstr "Änderungen an gespeicherten Daten"
+
+#: templates/nba/season_stats_import.html:175
+msgid "No player found"
+msgstr "Kein Spieler gefunden"
+
+#: templates/nba/season_stats_import.html:176
+msgid ""
+"Nobody in the game has these names. Usually they are retired or unsigned "
+"players; their lines are left out."
+msgstr ""
+"Im Spiel gibt es niemanden mit diesen Namen. Meist sind es zurückgetretene "
+"oder vertragslose Spieler; ihre Zeilen werden ausgelassen."
+
+#: templates/nba/season_stats_import.html:180
+msgid "Matched under another name"
+msgstr "Unter anderem Namen zugeordnet"
+
+#: templates/nba/season_stats_import.html:181
+msgid ""
+"The file spells these players differently. Check that each one is the right "
+"player."
+msgstr ""
+"Die Datei schreibt diese Spieler anders. Prüfe, ob jeweils der richtige "
+"Spieler gemeint ist."
+
+#: templates/nba/season_stats_import.html:196
+msgid "matched to"
+msgstr "zugeordnet zu"
+
+#: templates/nba/season_stats_import.html:205
+msgid "Lines that could not be read"
+msgstr "Zeilen, die nicht gelesen werden konnten"
+
+#: templates/nba/season_stats_import.html:206
+msgid "These lines have a missing or invalid value and are left out."
+msgstr ""
+"Diese Zeilen haben einen fehlenden oder ungültigen Wert und werden "
+"ausgelassen."
+
+#: templates/nba/season_stats_import.html:215
+msgid "Import or discard"
+msgstr "Importieren oder verwerfen"
+
+#: templates/nba/season_stats_import.html:220
+#, python-format
+msgid "Import %(counter)s player into %(season)s?"
+msgid_plural "Import %(counter)s players into %(season)s?"
+msgstr[0] "%(counter)s Spieler in %(season)s importieren?"
+msgstr[1] "%(counter)s Spieler in %(season)s importieren?"
+
+#: templates/nba/season_stats_import.html:221
+#, python-format
+msgid "%(counter)s player loses their stats."
+msgid_plural "%(counter)s players lose their stats."
+msgstr[0] "%(counter)s Spieler verliert seine Statistiken."
+msgstr[1] "%(counter)s Spieler verlieren ihre Statistiken."
+
+#: templates/nba/season_stats_import.html:229
+msgid "Discard"
+msgstr "Verwerfen"
+
+#: templates/nba/season_stats_import.html:238
+#, python-format
+msgid "Import %(counter)s player"
+msgid_plural "Import %(counter)s players"
+msgstr[0] "%(counter)s Spieler importieren"
+msgstr[1] "%(counter)s Spieler importieren"
+
+#: templates/nba/season_stats_import.html:246
+msgid "Upload a file"
+msgstr "Datei hochladen"
+
+#: templates/nba/season_stats_upload.html:20
+msgid "Official NBA stats"
+msgstr "Offizielle NBA-Statistiken"
+
+#: templates/nba/season_stats_upload.html:21
+msgid "Upload a season"
+msgstr "Saison hochladen"
+
+#: templates/nba/season_stats_upload.html:23
+msgid ""
+"Upload the per-game CSV export from NBA.com. You will see a preview of every"
+" change before anything is saved."
+msgstr ""
+"Lade den CSV-Export der Durchschnittswerte pro Spiel von NBA.com hoch. Du "
+"siehst eine Vorschau aller Änderungen, bevor etwas gespeichert wird."
+
+#: templates/nba/season_stats_upload.html:57
+msgid "Choose a file"
+msgstr "Datei auswählen"
+
+#: templates/nba/season_stats_upload.html:58
+msgid "or drag it here"
+msgstr "oder hierher ziehen"
+
+#: templates/nba/season_stats_upload.html:62
+msgid "Choose a different file"
+msgstr "Andere Datei wählen"
+
+#: templates/nba/season_stats_upload.html:62
+msgid "CSV, UTF-8, up to 2 MB"
+msgstr "CSV, UTF-8, bis 2 MB"
+
+#: templates/nba/season_stats_upload.html:79
+msgid "Nothing is saved until you confirm the preview."
+msgstr "Gespeichert wird erst, wenn du die Vorschau bestätigst."
+
+#: templates/nba/season_stats_upload.html:85
+msgid "Show preview"
+msgstr "Vorschau anzeigen"
+
+#: templates/nba/season_stats_upload.html:86
+msgid "Reading file…"
+msgstr "Datei wird gelesen …"
+
+#: templates/nba/season_stats_upload.html:96
+msgid "Stored seasons"
+msgstr "Gespeicherte Saisons"
+
+#: templates/nba/season_stats_upload.html:104
+#, python-format
+msgid "Updated %(date)s"
+msgstr "Aktualisiert am %(date)s"
+
+#: templates/nba/season_stats_upload.html:108
+#, python-format
+msgid "%(counter)s player"
+msgid_plural "%(counter)s players"
+msgstr[0] "%(counter)s Spieler"
+msgstr[1] "%(counter)s Spieler"
+
+#: templates/nba/season_stats_upload.html:114
+msgid "No season stats yet."
+msgstr "Noch keine Saisonstatistiken."
+
+#: templates/nba/season_stats_upload.html:119
+msgid "The file"
+msgstr "Die Datei"
+
+#: templates/nba/season_stats_upload.html:123
+msgid ""
+"One line per player, with the column names in the first line. Semicolons or "
+"commas both work."
+msgstr ""
+"Eine Zeile pro Spieler, die Spaltennamen in der ersten Zeile. Semikolons und"
+" Kommas funktionieren beide."
+
+#: templates/nba/season_stats_upload.html:128
+msgid "Columns are found by name:"
+msgstr "Spalten werden am Namen erkannt:"
+
+#: templates/nba/season_stats_upload.html:134
+msgid "Any other column, such as HSFP, DD2, TD3 or +/-, is ignored."
+msgstr "Alle anderen Spalten, etwa HSFP, DD2, TD3 oder +/-, werden ignoriert."
+
+#: templates/nba/season_stats_upload.html:138
+msgid "Uploading a season again replaces it completely."
+msgstr ""
+"Wird eine Saison erneut hochgeladen, ersetzt sie die alte vollständig."
+
+#: templates/nba/season_stats_upload.html:148
+msgid "Recent uploads"
+msgstr "Letzte Uploads"
+
+#: templates/nba/season_stats_upload.html:165
+#, python-format
+msgid "%(matched)s of %(rows)s matched"
+msgstr "%(matched)s von %(rows)s zugeordnet"
+
+#: templates/nba/season_stats_upload.html:180
+msgid "Uploaded"
+msgstr "Hochgeladen"
+
+#: templates/nba/season_stats_upload.html:182
+msgid "File"
+msgstr "Datei"
+
+#: templates/nba/season_stats_upload.html:185
+msgid "Open"
+msgstr "Öffnen"
+
+#: templates/nba/season_stats_upload.html:201
+msgid "Open preview"
+msgstr "Vorschau öffnen"
+
+#: templates/nba/season_stats_upload.html:201
+msgid "Details"
+msgstr "Details"
+
+#: templates/nba/season_stats_upload.html:211
+msgid "No uploads yet."
+msgstr "Noch keine Uploads."
+
+#: templates/nba/season_stats_upload.html:212
+msgid "Your first upload will appear here."
+msgstr "Dein erster Upload erscheint hier."
 
 #: templates/nba/team_detail.html:8
 msgid "Conference unknown"

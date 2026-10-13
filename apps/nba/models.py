@@ -11,6 +11,7 @@ from decimal import Decimal
 from itertools import pairwise
 
 from django.conf import settings
+from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
@@ -205,8 +206,7 @@ class Player(TimeStampedModel):
         latest = self.latest_injury
         return bool(
             latest
-            and latest.status.casefold()
-            not in {"healthy", "available", "returned", "cleared"}
+            and latest.status.casefold() not in {"healthy", "available", "returned", "cleared"}
         )
 
     def hotness_score(self):
@@ -228,9 +228,9 @@ class Player(TimeStampedModel):
         if latest is None:
             return None
 
-        snapshots = [
-            snapshot for snapshot in snapshots if snapshot.season_id == latest.season_id
-        ][:11]
+        snapshots = [snapshot for snapshot in snapshots if snapshot.season_id == latest.season_id][
+            :11
+        ]
         snapshots.reverse()
 
         increases = 0
@@ -477,3 +477,151 @@ class ImportRun(TimeStampedModel):
 
     def __str__(self):
         return f"{self.get_status_display()} import, {self.started_at:%Y-%m-%d %H:%M}"
+
+
+# An NBA season as basketball people write it: the year it starts and the last
+# two digits of the year it ends.
+season_label_validator = RegexValidator(
+    r"^\d{4}-\d{2}$", "Use the format YYYY-YY, for example 2025-26."
+)
+
+
+def _per_game(label):
+    """A one-decimal per-game average, as the official stats print them."""
+    return models.DecimalField(label, max_digits=4, decimal_places=1)
+
+
+def _percentage(label):
+    return models.DecimalField(
+        label, max_digits=4, decimal_places=1, validators=[MaxValueValidator(100)]
+    )
+
+
+class SeasonStatsImport(TimeStampedModel):
+    """One upload of an official season stats file.
+
+    Holds the preview between upload and confirmation: the parsed, matched rows
+    sit in `payload` until a superuser confirms or discards them, so the file
+    is uploaded once and never kept. Afterwards the record stays as the audit
+    trail of who changed which season's stats, and `payload` is emptied.
+    """
+
+    class Source(models.TextChoices):
+        WEB = "web", _("Web")
+        COMMAND = "command", _("Command")
+
+    class Status(models.TextChoices):
+        PREVIEWED = "previewed", _("Previewed")
+        IMPORTED = "imported", _("Imported")
+        DISCARDED = "discarded", _("Discarded")
+        EXPIRED = "expired", _("Expired")
+        FAILED = "failed", _("Failed")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    season = models.CharField("Season", max_length=7, validators=[season_label_validator])
+    file_name = models.CharField("File name", max_length=255, blank=True)
+    triggered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Triggered by",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    source = models.CharField("Source", max_length=16, choices=Source)
+    status = models.CharField("Status", max_length=16, choices=Status, default=Status.PREVIEWED)
+    rows = models.PositiveIntegerField("Rows", default=0)
+    matched = models.PositiveIntegerField("Matched", default=0)
+    created = models.PositiveIntegerField("Created", default=0)
+    updated = models.PositiveIntegerField("Updated", default=0)
+    removed = models.PositiveIntegerField("Removed", default=0)
+    # Short human-readable lines, as on ImportRun: read by a person deciding
+    # what to fix, never by code.
+    unmatched = models.JSONField("Unmatched rows", default=list, blank=True)
+    ambiguous = models.JSONField("Ambiguous rows", default=list, blank=True)
+    skipped = models.JSONField("Skipped rows", default=list, blank=True)
+    warnings = models.JSONField("Warnings", default=list, blank=True)
+    # The matched rows between preview and confirmation, emptied once the
+    # preview is imported, discarded or expired.
+    payload = models.JSONField("Pending rows", default=list, blank=True)
+    imported_at = models.DateTimeField("Imported at", null=True, blank=True)
+    error = models.TextField("Error", blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Season stats import"
+        verbose_name_plural = "Season stats imports"
+
+    def __str__(self):
+        return f"{self.season} {self.get_status_display()}, {self.created_at:%Y-%m-%d %H:%M}"
+
+
+class PlayerSeasonStats(TimeStampedModel):
+    """A player's official per-game averages for one finished NBA season.
+
+    Reference data from an outside file, not something the game computes: the
+    numbers are stored exactly as published, percentages included, because
+    recalculating them from rounded averages would be wrong for players who
+    rarely shoot. The team is the one the file names, as text -- it is last
+    season's team, and many players have moved since.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    player = models.ForeignKey(
+        Player,
+        verbose_name="Player",
+        on_delete=models.CASCADE,
+        related_name="season_stats",
+    )
+    season = models.CharField("Season", max_length=7, validators=[season_label_validator])
+    # The name as the file spelled it, to trace a row back to its source line.
+    source_name = models.CharField("Name in file", max_length=128)
+    import_run = models.ForeignKey(
+        SeasonStatsImport,
+        verbose_name="Import",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="stats",
+    )
+    team_abbreviation = models.CharField("Team", max_length=4, blank=True)
+    age = models.PositiveSmallIntegerField("Age")
+    games_played = models.PositiveSmallIntegerField("Games played")
+    wins = models.PositiveSmallIntegerField("Wins")
+    losses = models.PositiveSmallIntegerField("Losses")
+    minutes = _per_game("Minutes")
+    points = _per_game("Points")
+    field_goals_made = _per_game("Field goals made")
+    field_goals_attempted = _per_game("Field goals attempted")
+    field_goal_pct = _percentage("Field goal %")
+    threes_made = _per_game("3-pointers made")
+    threes_attempted = _per_game("3-pointers attempted")
+    three_pct = _percentage("3-point %")
+    free_throws_made = _per_game("Free throws made")
+    free_throws_attempted = _per_game("Free throws attempted")
+    free_throw_pct = _percentage("Free throw %")
+    offensive_rebounds = _per_game("Offensive rebounds")
+    defensive_rebounds = _per_game("Defensive rebounds")
+    rebounds = _per_game("Rebounds")
+    assists = _per_game("Assists")
+    turnovers = _per_game("Turnovers")
+    steals = _per_game("Steals")
+    blocks = _per_game("Blocks")
+    personal_fouls = _per_game("Personal fouls")
+    # NBA.com fantasy points: PTS + 1.2 REB + 1.5 AST + 3 STL + 3 BLK - TOV.
+    # Not the official game's scoring, which comes from basketball.de.
+    fantasy_points = _per_game("Fantasy points (NBA.com)")
+
+    class Meta:
+        ordering = ["-season", "player__last_name", "player__first_name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["player", "season"], name="one_stats_row_per_player_per_season"
+            ),
+        ]
+        indexes = [models.Index(fields=["season", "fantasy_points"])]
+        verbose_name = "Player season stats"
+        verbose_name_plural = "Player season stats"
+
+    def __str__(self):
+        return f"{self.player} {self.season}"

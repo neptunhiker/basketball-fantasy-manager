@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import ImportRun, Player, PlayerInjury, Team
+from .models import (
+    ImportRun,
+    Player,
+    PlayerInjury,
+    PlayerSeasonStats,
+    SeasonStatsImport,
+    Team,
+)
 
 
 @admin.register(Team)
@@ -55,6 +62,61 @@ class ImportRunAdmin(admin.ModelAdmin):
     list_filter = ["status", "source", "dry_run"]
     list_select_related = ["triggered_by"]
     date_hierarchy = "started_at"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(SeasonStatsImport)
+class SeasonStatsImportAdmin(admin.ModelAdmin):
+    """The season stats upload log. Read-only, like the basketball.de log."""
+
+    list_display = [
+        "created_at",
+        "season",
+        "status",
+        "source",
+        "triggered_by",
+        "rows",
+        "matched",
+        "created",
+        "updated",
+        "removed",
+    ]
+    list_filter = ["status", "season", "source"]
+    list_select_related = ["triggered_by"]
+    date_hierarchy = "created_at"
+    # The pending rows are hundreds of lines of numbers, and gone after import.
+    exclude = ["payload"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PlayerSeasonStats)
+class PlayerSeasonStatsAdmin(admin.ModelAdmin):
+    """Read-only: a wrong number is fixed in the file and uploaded again."""
+
+    list_display = [
+        "player",
+        "season",
+        "team_abbreviation",
+        "games_played",
+        "minutes",
+        "points",
+        "rebounds",
+        "assists",
+        "fantasy_points",
+    ]
+    list_filter = ["season"]
+    search_fields = ["player__first_name", "player__last_name", "source_name"]
+    list_select_related = ["player"]
 
     def has_add_permission(self, request):
         return False

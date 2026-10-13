@@ -1,6 +1,7 @@
 """The season stats card on the player page in a real browser. Screenshots land
 in tmp/screens/player-season-stats/."""
 
+import re
 from decimal import Decimal
 
 import pytest
@@ -100,3 +101,26 @@ def _path(name):
     target = SCREENS / FOLDER
     target.mkdir(parents=True, exist_ok=True)
     return str(target / f"{name}.png")
+
+
+@pytest.mark.parametrize("size", ["phone", "desktop"])
+def test_the_card_starts_collapsed_and_opens_on_a_tap(game, stored, open_page, size):
+    player = stored[1]
+    page = open_page(game["user"], reverse("nba:player-detail", args=[player.slug]), size=size)
+    card = page.locator("#season-stats")
+    card.scroll_into_view_if_needed()
+
+    assert card.get_by_text("Season 2025-26").is_visible()
+    headline = card.get_by_text(re.compile(r"^\d+\.\d FP$"))
+    assert headline.is_visible(), "the headline numbers show closed"
+    assert not card.get_by_text("Shooting").is_visible()
+    summary = card.locator("summary")
+    assert summary.bounding_box()["height"] >= 44
+    assert page_overflow(page) == 0
+    card.screenshot(path=_path(f"card-collapsed-{size}"))
+
+    summary.click()
+    expect(card.get_by_text("Shooting")).to_be_visible()
+    assert not headline.is_visible()
+    summary.click()
+    expect(card.get_by_text("Shooting")).to_be_hidden()

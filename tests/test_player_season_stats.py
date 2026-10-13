@@ -198,3 +198,13 @@ def test_the_card_costs_the_same_however_many_players_are_ranked(signed_in, luka
         page_of(signed_in, luka)
 
     assert len(many) == len(few)
+
+
+def test_the_card_starts_collapsed(signed_in, luka):
+    stats_for(luka)
+
+    page = page_of(signed_in, luka)
+
+    card = page[page.index('id="season-stats"') :]
+    details = card[card.index("<details") : card.index(">", card.index("<details"))]
+    assert " open" not in details

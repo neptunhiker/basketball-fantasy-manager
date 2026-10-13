@@ -7,23 +7,38 @@
 {% endcomment %}
 {% if stats %}
 <section id="season-stats" class="card scroll-mt-24 overflow-hidden" aria-labelledby="season-stats-heading">
+{# Collapsed by default: the summary line carries the four headline numbers, #}
+{# the rest opens on demand. A link straight to #season-stats opens it. #}
+<details class="group" x-data x-init="if (location.hash === '#season-stats') $el.open = true">
 
   {# --- Heading: which season, and what the averages stand on ------------ #}
-  <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 border-b border-neutral-200 px-5 py-4 sm:px-6 dark:border-neutral-800">
-    <div class="min-w-0">
+  <summary class="flex list-none items-center gap-4 px-5 py-4 select-none transition hover:bg-neutral-50 sm:px-6 dark:hover:bg-neutral-800/50 group-open:border-b group-open:border-neutral-200 dark:group-open:border-neutral-800 [&::-webkit-details-marker]:hidden">
+    <div class="min-w-0 flex-1">
       <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Official NBA stats" %}</p>
-      <h2 id="season-stats-heading" class="mt-1 text-base font-semibold">{% blocktranslate with season=stats.season %}Season {{ season }}{% endblocktranslate %}</h2>
-      <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "Regular season, per game" %}</p>
+      <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <h2 id="season-stats-heading" class="text-base font-semibold">{% blocktranslate with season=stats.season %}Season {{ season }}{% endblocktranslate %}</h2>
+        <div class="flex flex-wrap items-center gap-2">
+          {% if stats.team_abbreviation %}
+            <span class="badge badge-neutral" title="{% translate 'Team in that season' %}">
+              {{ stats.team_abbreviation }}{% if moved and current_team %} <span aria-hidden="true">→</span><span class="sr-only">{% translate "now" %}</span> {{ current_team }}{% endif %}
+            </span>
+          {% endif %}
+          <span class="badge badge-neutral">{% blocktranslate with age=stats.age %}Age {{ age }}{% endblocktranslate %}</span>
+        </div>
+      </div>
+      {# Closed: the four numbers people open the card for. Open: what they mean. #}
+      <p class="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-sm tabular-nums text-neutral-500 group-open:hidden dark:text-neutral-400">
+        <span><span class="font-semibold text-primary-700 dark:text-primary-300">{{ stats.fantasy_points|floatformat:1 }}</span> {% translate "FP" %}</span>
+        <span><span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ stats.points|floatformat:1 }}</span> {% translate "PTS" %}</span>
+        <span><span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ stats.rebounds|floatformat:1 }}</span> {% translate "REB" %}</span>
+        <span><span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ stats.assists|floatformat:1 }}</span> {% translate "AST" %}</span>
+      </p>
+      <p class="mt-1 hidden text-sm text-neutral-500 group-open:block dark:text-neutral-400">{% translate "Regular season, per game" %}</p>
     </div>
-    <div class="flex flex-wrap items-center gap-2">
-      {% if stats.team_abbreviation %}
-        <span class="badge badge-neutral" title="{% translate 'Team in that season' %}">
-          {{ stats.team_abbreviation }}{% if moved and current_team %} <span aria-hidden="true">→</span><span class="sr-only">{% translate "now" %}</span> {{ current_team }}{% endif %}
-        </span>
-      {% endif %}
-      <span class="badge badge-neutral">{% blocktranslate with age=stats.age %}Age {{ age }}{% endblocktranslate %}</span>
-    </div>
-  </div>
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition group-hover:text-tertiary-700 dark:border-neutral-700 dark:text-neutral-400 dark:group-hover:text-neutral-100" aria-hidden="true">
+      <svg class="h-4 w-4 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+    </span>
+  </summary>
 
   {# --- The four headline averages ----------------------------------------- #}
   {% translate "Fantasy points" as fp_label %}
@@ -56,7 +71,7 @@
   </dl>
 
   {# --- Everything else, in three groups ------------------------------------ #}
-  <div class="grid gap-x-8 gap-y-6 p-5 sm:p-6 md:grid-cols-3">
+  <div class="grid gap-x-8 gap-y-10 p-5 sm:p-6 md:grid-cols-3">
 
     <div>
       <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Shooting" %}</h3>
@@ -138,6 +153,7 @@
       <p>{% blocktranslate count counter=regulars with games=min_games %}Ranks compare {{ counter }} player with at least {{ games }} games.{% plural %}Ranks compare {{ counter }} players with at least {{ games }} games.{% endblocktranslate %} {% translate "Source: NBA.com." %}</p>
     {% endif %}
   </div>
+</details>
 </section>
 {% elif newest_season %}
 <section id="season-stats" class="card scroll-mt-24 flex items-center gap-4 px-5 py-4 sm:px-6">

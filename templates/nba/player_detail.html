@@ -1,5 +1,5 @@
 {% extends "app.html" %}
-{% load i18n money %}
+{% load i18n money season_stats_tags %}
 
 {% block title %}{{ player.full_name }} · {{ SITE_NAME }}{% endblock %}
 {% block page_title %}{{ player.full_name }}{% endblock %}
@@ -225,6 +225,8 @@
   </div>
 
   {% include "fantasy/partials/player_roster_options.html" %}
+
+  {% player_season_stats player %}
 
   {% include "nba/partials/notes.html" %}
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 21:16+0200\n"
+"POT-Creation-Date: 2026-10-13 21:44+0200\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -77,7 +77,7 @@ msgstr "Coach"
 #: templates/fantasy/partials/player_picker.html:97
 #: templates/fantasy/partials/roster_panel.html:5
 #: templates/nba/partials/player_table.html:4
-#: templates/nba/player_compare.html:97 templates/nba/player_detail.html:261
+#: templates/nba/player_compare.html:97 templates/nba/player_detail.html:263
 #: templates/nba/player_list.html:73
 #: templates/nba/season_stats_import.html:127 templates/nba/team_list.html:23
 msgid "Team"
@@ -1161,6 +1161,18 @@ msgstr "%(count)d Spieler für %(season)s importiert."
 msgid "The preview was discarded. Nothing was saved."
 msgstr "Die Vorschau wurde verworfen. Es wurde nichts gespeichert."
 
+#: apps/nba/templatetags/season_stats_tags.py:57
+msgid "Field goals"
+msgstr "Würfe aus dem Feld"
+
+#: apps/nba/templatetags/season_stats_tags.py:63
+msgid "3-pointers"
+msgstr "Dreier"
+
+#: apps/nba/templatetags/season_stats_tags.py:69
+msgid "Free throws"
+msgstr "Freiwürfe"
+
 #: apps/nba/views.py:375
 msgid ""
 "The injury report was already updated today. The next update can be invoked "
@@ -1241,7 +1253,7 @@ msgstr "Höchster Wert"
 msgid "Total"
 msgstr "Gesamt"
 
-#: apps/nba/views.py:798
+#: apps/nba/views.py:798 templates/nba/partials/season_stats_card.html:29
 msgid "Fantasy points"
 msgstr "Fantasy-Punkte"
 
@@ -1769,7 +1781,9 @@ msgstr "Tage"
 msgid "Hours"
 msgstr "Stunden"
 
-#: templates/core/dashboard.html:47 templates/nba/season_stats_import.html:129
+#: templates/core/dashboard.html:47
+#: templates/nba/partials/season_stats_card.html:111
+#: templates/nba/season_stats_import.html:129
 msgid "Minutes"
 msgstr "Minuten"
 
@@ -2161,21 +2175,23 @@ msgstr "Wert"
 #: templates/fantasy/partials/roster_panel.html:9
 #: templates/nba/partials/player_table.html:8
 #: templates/nba/partials/scatter_chart.html:102
-#: templates/nba/player_compare.html:101 templates/nba/player_detail.html:264
+#: templates/nba/partials/season_stats_card.html:42
+#: templates/nba/player_compare.html:101 templates/nba/player_detail.html:266
 #: templates/nba/season_stats_import.html:130
 msgid "Points"
 msgstr "Punkte"
 
 #: templates/fantasy/partials/roster_panel.html:10
 #: templates/nba/partials/player_table.html:9
-#: templates/nba/player_compare.html:102 templates/nba/player_detail.html:265
+#: templates/nba/player_compare.html:102 templates/nba/player_detail.html:267
 msgid "Avg/game"
 msgstr "Ø/Spiel"
 
 #: templates/fantasy/partials/roster_panel.html:11
 #: templates/nba/partials/player_table.html:10
+#: templates/nba/partials/season_stats_card.html:107
 #: templates/nba/player_compare.html:103 templates/nba/player_detail.html:211
-#: templates/nba/player_detail.html:266
+#: templates/nba/player_detail.html:268
 msgid "Games"
 msgstr "Spiele"
 
@@ -2440,7 +2456,7 @@ msgid "Sort"
 msgstr "Sortieren"
 
 #: templates/fantasy/partials/squad_cards.html:43
-#: templates/nba/player_detail.html:263 templates/nba/team_list.html:29
+#: templates/nba/player_detail.html:265 templates/nba/team_list.html:29
 msgid "Salary"
 msgstr "Gehalt"
 
@@ -2951,7 +2967,7 @@ msgstr "Status"
 msgid "Signings"
 msgstr "Transferphase"
 
-#: templates/fantasy/season_list.html:30 templates/nba/player_detail.html:233
+#: templates/fantasy/season_list.html:30 templates/nba/player_detail.html:235
 msgid "Snapshots"
 msgstr "Snapshots"
 
@@ -3363,6 +3379,155 @@ msgstr ""
 "Steigerungen der Fantasy-Punkte pro Spiel über die letzten "
 "aufeinanderfolgenden Snapshots (bis zu den letzten 10 Vergleichen)"
 
+#: templates/nba/partials/season_stats_card.html:14
+#: templates/nba/season_stats_upload.html:20
+msgid "Official NBA stats"
+msgstr "Offizielle NBA-Statistiken"
+
+#: templates/nba/partials/season_stats_card.html:15
+#, python-format
+msgid "Season %(season)s"
+msgstr "Saison %(season)s"
+
+#: templates/nba/partials/season_stats_card.html:16
+msgid "Regular season, per game"
+msgstr "Hauptrunde, pro Spiel"
+
+#: templates/nba/partials/season_stats_card.html:20
+msgid "Team in that season"
+msgstr "Team in dieser Saison"
+
+#: templates/nba/partials/season_stats_card.html:21
+msgid "now"
+msgstr "jetzt"
+
+#: templates/nba/partials/season_stats_card.html:24
+#, python-format
+msgid "Age %(age)s"
+msgstr "%(age)s Jahre"
+
+#: templates/nba/partials/season_stats_card.html:30
+msgid ""
+"Fantasy points as NBA.com counts them: points + 1.2 × rebounds + 1.5 × "
+"assists + 3 × steals + 3 × blocks − turnovers. The official game scores "
+"differently, so this is a guide to last season, not a forecast of points "
+"here."
+msgstr ""
+"Fantasy-Punkte nach NBA.com: Punkte + 1,2 × Rebounds + 1,5 × Assists + 3 × "
+"Steals + 3 × Blocks − Ballverluste. Das offizielle Spiel wertet anders, das "
+"hier zeigt also die letzte Saison und ist keine Prognose für die Punkte im "
+"Spiel."
+
+#: templates/nba/partials/season_stats_card.html:38
+#: templates/nba/partials/season_stats_card.html:44
+#: templates/nba/partials/season_stats_card.html:49
+#: templates/nba/partials/season_stats_card.html:54
+#, python-format
+msgid "#%(rank)s in the league"
+msgstr "Platz %(rank)s der Liga"
+
+#: templates/nba/partials/season_stats_card.html:47
+#: templates/nba/season_stats_import.html:131
+msgid "Rebounds"
+msgstr "Rebounds"
+
+#: templates/nba/partials/season_stats_card.html:52
+#: templates/nba/season_stats_import.html:132
+msgid "Assists"
+msgstr "Assists"
+
+#: templates/nba/partials/season_stats_card.html:62
+msgid "Shooting"
+msgstr "Würfe"
+
+#: templates/nba/partials/season_stats_card.html:74
+#, python-format
+msgid "%(made)s of %(attempted)s per game"
+msgstr "%(made)s von %(attempted)s pro Spiel"
+
+#: templates/nba/partials/season_stats_card.html:82
+msgid "Rebounds & defense"
+msgstr "Rebounds & Defense"
+
+#: templates/nba/partials/season_stats_card.html:85
+msgid "Offensive rebounds"
+msgstr "Offensiv-Rebounds"
+
+#: templates/nba/partials/season_stats_card.html:89
+msgid "Defensive rebounds"
+msgstr "Defensiv-Rebounds"
+
+#: templates/nba/partials/season_stats_card.html:93
+msgid "Steals"
+msgstr "Steals"
+
+#: templates/nba/partials/season_stats_card.html:97
+msgid "Blocks"
+msgstr "Blocks"
+
+#: templates/nba/partials/season_stats_card.html:104
+msgid "On the court"
+msgstr "Auf dem Feld"
+
+#: templates/nba/partials/season_stats_card.html:115
+msgid "Turnovers"
+msgstr "Ballverluste"
+
+#: templates/nba/partials/season_stats_card.html:119
+msgid "Personal fouls"
+msgstr "Persönliche Fouls"
+
+#: templates/nba/partials/season_stats_card.html:123
+msgid "Wins and losses of the team in the games played"
+msgstr "Siege und Niederlagen des Teams in den gespielten Spielen"
+
+#: templates/nba/partials/season_stats_card.html:123
+msgid "Team record"
+msgstr "Teambilanz"
+
+#: templates/nba/partials/season_stats_card.html:135
+#, python-format
+msgid ""
+"Only %(counter)s game played, so these averages say little and are not "
+"ranked."
+msgid_plural ""
+"Only %(counter)s games played, so these averages say little and are not "
+"ranked."
+msgstr[0] ""
+"Nur %(counter)s Spiel, die Durchschnittswerte sagen daher wenig und werden "
+"nicht gerankt."
+msgstr[1] ""
+"Nur %(counter)s Spiele, die Durchschnittswerte sagen daher wenig und werden "
+"nicht gerankt."
+
+#: templates/nba/partials/season_stats_card.html:138
+#, python-format
+msgid "Ranks compare %(counter)s player with at least %(games)s games."
+msgid_plural ""
+"Ranks compare %(counter)s players with at least %(games)s games."
+msgstr[0] ""
+"Die Platzierungen vergleichen %(counter)s Spieler mit mindestens %(games)s "
+"Spielen."
+msgstr[1] ""
+"Die Platzierungen vergleichen %(counter)s Spieler mit mindestens %(games)s "
+"Spielen."
+
+#: templates/nba/partials/season_stats_card.html:138
+msgid "Source: NBA.com."
+msgstr "Quelle: NBA.com."
+
+#: templates/nba/partials/season_stats_card.html:148
+#, python-format
+msgid "No official stats for %(season)s"
+msgstr "Keine offiziellen Statistiken für %(season)s"
+
+#: templates/nba/partials/season_stats_card.html:149
+msgid ""
+"Rookies and players who did not appear in the NBA that season have none."
+msgstr ""
+"Rookies und Spieler, die in dieser Saison nicht in der NBA gespielt haben, "
+"haben keine."
+
 #: templates/nba/partials/season_stats_status.html:6
 msgid "Preview open"
 msgstr "Vorschau offen"
@@ -3485,7 +3650,7 @@ msgstr "Aktuelles Gehalt"
 msgid "since %(date)s"
 msgstr "seit %(date)s"
 
-#: templates/nba/player_detail.html:235
+#: templates/nba/player_detail.html:237
 msgid ""
 "One row per read, the newest on top, each with the change from the read "
 "below it. The time is shown because the source can be read more than once a "
@@ -3495,24 +3660,24 @@ msgstr ""
 "darunterliegenden Auswertung. Die Zeit wird angezeigt, weil die Quelle mehr "
 "als einmal täglich gelesen werden kann."
 
-#: templates/nba/player_detail.html:241
+#: templates/nba/player_detail.html:243
 msgid "Points per game across the season"
 msgstr "Punkte pro Spiel im Saisonverlauf"
 
-#: templates/nba/player_detail.html:248
+#: templates/nba/player_detail.html:250
 msgid "A trend line needs at least two snapshots with games played."
 msgstr ""
 "Eine Trendlinie benötigt mindestens zwei Snapshots mit gespielten Partien."
 
-#: templates/nba/player_detail.html:260
+#: templates/nba/player_detail.html:262
 msgid "As of"
 msgstr "Stand"
 
-#: templates/nba/player_detail.html:262
+#: templates/nba/player_detail.html:264
 msgid "Pos."
 msgstr "Pos."
 
-#: templates/nba/player_detail.html:311
+#: templates/nba/player_detail.html:313
 #, python-format
 msgid ""
 "%(snapshot_count)s snapshot. Points and games are season totals, so they "
@@ -3527,12 +3692,12 @@ msgstr[1] ""
 "%(snapshot_count)s Snapshots. Punkte und Spiele sind Saisonwerte und steigen"
 " daher von Snapshot zu Snapshot."
 
-#: templates/nba/player_detail.html:316
+#: templates/nba/player_detail.html:318
 #, python-format
 msgid "No snapshots on record for %(name)s yet."
 msgstr "Für %(name)s sind noch keine Snapshots erfasst."
 
-#: templates/nba/player_detail.html:319
+#: templates/nba/player_detail.html:321
 msgid "Snapshots come from the basketball.de import."
 msgstr ""
 "Snapshots kommen aus dem Import von basketball.de.Snapshots stammen aus dem "
@@ -3674,16 +3839,8 @@ msgid "PTS"
 msgstr "PKT"
 
 #: templates/nba/season_stats_import.html:131
-msgid "Rebounds"
-msgstr "Rebounds"
-
-#: templates/nba/season_stats_import.html:131
 msgid "REB"
 msgstr "REB"
-
-#: templates/nba/season_stats_import.html:132
-msgid "Assists"
-msgstr "Assists"
 
 #: templates/nba/season_stats_import.html:132
 msgid "AST"
@@ -3801,10 +3958,6 @@ msgstr[1] "%(counter)s Spieler importieren"
 #: templates/nba/season_stats_import.html:246
 msgid "Upload a file"
 msgstr "Datei hochladen"
-
-#: templates/nba/season_stats_upload.html:20
-msgid "Official NBA stats"
-msgstr "Offizielle NBA-Statistiken"
 
 #: templates/nba/season_stats_upload.html:21
 msgid "Upload a season"

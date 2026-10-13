@@ -1,0 +1,152 @@
+{% load i18n %}
+{% comment %}
+  The player's official per-game averages for the newest stored NBA season.
+  Rendered by {% player_season_stats player %} (apps/nba/templatetags/
+  season_stats_tags.py); its context: stats, ranks, regulars, min_games,
+  few_games, moved, current_team, shooting -- or stats=None and newest_season.
+{% endcomment %}
+{% if stats %}
+<section id="season-stats" class="card scroll-mt-24 overflow-hidden" aria-labelledby="season-stats-heading">
+
+  {# --- Heading: which season, and what the averages stand on ------------ #}
+  <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 border-b border-neutral-200 px-5 py-4 sm:px-6 dark:border-neutral-800">
+    <div class="min-w-0">
+      <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Official NBA stats" %}</p>
+      <h2 id="season-stats-heading" class="mt-1 text-base font-semibold">{% blocktranslate with season=stats.season %}Season {{ season }}{% endblocktranslate %}</h2>
+      <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "Regular season, per game" %}</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      {% if stats.team_abbreviation %}
+        <span class="badge badge-neutral" title="{% translate 'Team in that season' %}">
+          {{ stats.team_abbreviation }}{% if moved and current_team %} <span aria-hidden="true">→</span><span class="sr-only">{% translate "now" %}</span> {{ current_team }}{% endif %}
+        </span>
+      {% endif %}
+      <span class="badge badge-neutral">{% blocktranslate with age=stats.age %}Age {{ age }}{% endblocktranslate %}</span>
+    </div>
+  </div>
+
+  {# --- The four headline averages ----------------------------------------- #}
+  {% translate "Fantasy points" as fp_label %}
+  {% translate "Fantasy points as NBA.com counts them: points + 1.2 × rebounds + 1.5 × assists + 3 × steals + 3 × blocks − turnovers. The official game scores differently, so this is a guide to last season, not a forecast of points here." as fp_help %}
+  <dl class="grid grid-cols-2 gap-px bg-neutral-200 sm:grid-cols-4 dark:bg-neutral-800">
+    <div class="bg-primary-50/60 p-4 sm:p-5 dark:bg-primary-500/10">
+      <dt class="flex items-center gap-1 text-xs font-medium text-primary-800 dark:text-primary-200">
+        {{ fp_label }} {% include "partials/info_popover.html" with text=fp_help label=fp_label %}
+      </dt>
+      <dd class="mt-1 text-2xl font-bold tabular-nums text-primary-700 sm:text-3xl dark:text-primary-300">{{ stats.fantasy_points|floatformat:1 }}</dd>
+      {% if ranks.fantasy_points %}
+        <dd class="mt-0.5 text-xs tabular-nums text-primary-800/80 dark:text-primary-200/80">{% blocktranslate with rank=ranks.fantasy_points %}#{{ rank }} in the league{% endblocktranslate %}</dd>
+      {% endif %}
+    </div>
+    <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">
+      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Points" %}</dt>
+      <dd class="mt-1 text-2xl font-bold tabular-nums sm:text-3xl">{{ stats.points|floatformat:1 }}</dd>
+      {% if ranks.points %}<dd class="mt-0.5 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">{% blocktranslate with rank=ranks.points %}#{{ rank }} in the league{% endblocktranslate %}</dd>{% endif %}
+    </div>
+    <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">
+      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Rebounds" %}</dt>
+      <dd class="mt-1 text-2xl font-bold tabular-nums sm:text-3xl">{{ stats.rebounds|floatformat:1 }}</dd>
+      {% if ranks.rebounds %}<dd class="mt-0.5 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">{% blocktranslate with rank=ranks.rebounds %}#{{ rank }} in the league{% endblocktranslate %}</dd>{% endif %}
+    </div>
+    <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">
+      <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Assists" %}</dt>
+      <dd class="mt-1 text-2xl font-bold tabular-nums sm:text-3xl">{{ stats.assists|floatformat:1 }}</dd>
+      {% if ranks.assists %}<dd class="mt-0.5 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">{% blocktranslate with rank=ranks.assists %}#{{ rank }} in the league{% endblocktranslate %}</dd>{% endif %}
+    </div>
+  </dl>
+
+  {# --- Everything else, in three groups ------------------------------------ #}
+  <div class="grid gap-x-8 gap-y-6 p-5 sm:p-6 md:grid-cols-3">
+
+    <div>
+      <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Shooting" %}</h3>
+      <ul class="mt-3 space-y-4">
+        {% for shot in shooting %}
+          <li>
+            <div class="flex items-baseline justify-between gap-3 text-sm">
+              <span class="text-neutral-600 dark:text-neutral-300">{{ shot.label }}</span>
+              <span class="font-semibold tabular-nums">{{ shot.pct|floatformat:1 }}%</span>
+            </div>
+            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800" aria-hidden="true">
+              <div class="h-full rounded-full bg-primary-500 dark:bg-primary-400" style="width: {{ shot.pct|floatformat:0 }}%"></div>
+            </div>
+            <p class="mt-1 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+              {% blocktranslate with made=shot.made|floatformat:1 attempted=shot.attempted|floatformat:1 %}{{ made }} of {{ attempted }} per game{% endblocktranslate %}
+            </p>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Rebounds & defense" %}</h3>
+      <dl class="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
+        <div class="flex items-baseline justify-between gap-4 py-2 first:pt-0">
+          <dt class="text-neutral-600 dark:text-neutral-300">{% translate "Offensive rebounds" %}</dt>
+          <dd class="whitespace-nowrap font-semibold tabular-nums">{{ stats.offensive_rebounds|floatformat:1 }}</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4 py-2">
+          <dt class="text-neutral-600 dark:text-neutral-300">{% translate "Defensive rebounds" %}</dt>
+          <dd class="whitespace-nowrap font-semibold tabular-nums">{{ stats.defensive_rebounds|floatformat:1 }}</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4 py-2">
+          <dt class="text-neutral-600 dark:text-neutral-300">{% translate "Steals" %}</dt>
+          <dd class="whitespace-nowrap font-semibold tabular-nums">{{ stats.steals|floatformat:1 }}</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4 py-2 last:pb-0">
+          <dt class="text-neutral-600 dark:text-neutral-300">{% translate "Blocks" %}</dt>
+          <dd class="whitespace-nowrap font-semibold tabular-nums">{{ stats.blocks|floatformat:1 }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div>
+      <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "On the court" %}</h3>
+      <dl class="mt-3 divide-y divide-neutral-100 text-sm dark:divide-neutral-800">
+        <div class="flex items-baseline justify-between gap-4 py-2 first:pt-0">
+          <dt class="text-neutral-600 dark:text-neutral-300">{% translate "Games" %}</dt>
+          <dd class="whitespace-nowrap font-semibold tabular-nums">{{ stats.games_played }}</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4 py-2">
+          <dt class="text-neutral-600 dark:text-neutral-300">{% translate "Minutes" %}</dt>
+          <dd class="whitespace-nowrap font-semibold tabular-nums">{{ stats.minutes|floatformat:1 }}</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4 py-2">
+          <dt class="text-neutral-600 dark:text-neutral-300">{% translate "Turnovers" %}</dt>
+          <dd class="whitespace-nowrap font-semibold tabular-nums">{{ stats.turnovers|floatformat:1 }}</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4 py-2">
+          <dt class="text-neutral-600 dark:text-neutral-300">{% translate "Personal fouls" %}</dt>
+          <dd class="whitespace-nowrap font-semibold tabular-nums">{{ stats.personal_fouls|floatformat:1 }}</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4 py-2 last:pb-0">
+          <dt class="text-neutral-600 dark:text-neutral-300" title="{% translate 'Wins and losses of the team in the games played' %}">{% translate "Team record" %}</dt>
+          <dd class="whitespace-nowrap font-semibold tabular-nums">{{ stats.wins }}–{{ stats.losses }}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  {# --- How far the numbers carry ------------------------------------------ #}
+  <div class="border-t border-neutral-200 px-5 py-3 text-xs text-neutral-500 sm:px-6 dark:border-neutral-800 dark:text-neutral-400">
+    {% if few_games %}
+      <p class="flex items-start gap-2 text-amber-700 dark:text-amber-300">
+        <svg class="mt-px h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <span>{% blocktranslate count counter=stats.games_played %}Only {{ counter }} game played, so these averages say little and are not ranked.{% plural %}Only {{ counter }} games played, so these averages say little and are not ranked.{% endblocktranslate %}</span>
+      </p>
+    {% else %}
+      <p>{% blocktranslate count counter=regulars with games=min_games %}Ranks compare {{ counter }} player with at least {{ games }} games.{% plural %}Ranks compare {{ counter }} players with at least {{ games }} games.{% endblocktranslate %} {% translate "Source: NBA.com." %}</p>
+    {% endif %}
+  </div>
+</section>
+{% elif newest_season %}
+<section id="season-stats" class="card scroll-mt-24 flex items-center gap-4 px-5 py-4 sm:px-6">
+  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500" aria-hidden="true">
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg>
+  </span>
+  <div class="min-w-0">
+    <h2 class="text-sm font-semibold">{% blocktranslate with season=newest_season %}No official stats for {{ season }}{% endblocktranslate %}</h2>
+    <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% translate "Rookies and players who did not appear in the NBA that season have none." %}</p>
+  </div>
+</section>
+{% endif %}

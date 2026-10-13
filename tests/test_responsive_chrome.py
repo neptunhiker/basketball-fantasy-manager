@@ -18,7 +18,9 @@ COMMENT = re.compile(r"\{#.*?#\}")
 # A label the small screen hides, leaving whatever icon sits beside it.
 HIDDEN_LABEL = re.compile(r'<span class="hidden sm:(?:inline|block|flex)[^"]*">')
 CLICKABLE_OPEN = re.compile(r"<(?:button|a)\b[^>]*>", re.S)
-NEGATIVE_VERTICAL_MARGIN = re.compile(r'class="[^"]*?(-m[bt]-[\w.[\]]+|-my-[\w.[\]]+)')
+# The minus must start the utility (`-mt-2`, `sm:-mt-2`), so `scroll-mt-24` --
+# a scroll margin, not a negative one -- is not mistaken for it.
+NEGATIVE_VERTICAL_MARGIN = re.compile(r'class="[^"]*?(?<![\w-])(-m[bt]-[\w.[\]]+|-my-[\w.[\]]+)')
 
 
 def _templates():

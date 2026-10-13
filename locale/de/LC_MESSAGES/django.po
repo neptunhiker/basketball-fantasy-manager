@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 20:44+0200\n"
+"POT-Creation-Date: 2026-10-13 20:47+0200\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -937,7 +937,7 @@ msgstr ""
 "Es sind keine NBA-Teams in der Datenbank. Führe zuerst `manage.py "
 "seed_teams` aus."
 
-#: apps/nba/importer.py:105
+#: apps/nba/importer.py:105 apps/nba/season_stats.py:415
 msgid "Unexpected error. The details are in the server log."
 msgstr "Unerwarteter Fehler. Die Details stehen im Server-Log."
 
@@ -1051,53 +1051,91 @@ msgstr "Verworfen"
 msgid "Expired"
 msgstr "Abgelaufen"
 
-#: apps/nba/season_stats.py:131
+#: apps/nba/season_stats.py:142
 msgid "The file is larger than 2 MB."
 msgstr "Die Datei ist größer als 2 MB."
 
-#: apps/nba/season_stats.py:136
+#: apps/nba/season_stats.py:147
 msgid "The file is not UTF-8 encoded. Please export it again as “CSV UTF-8”."
 msgstr ""
 "Die Datei ist nicht UTF-8-kodiert. Bitte exportiere sie erneut als „CSV "
 "UTF-8“."
 
-#: apps/nba/season_stats.py:147
+#: apps/nba/season_stats.py:158
 msgid "The file is empty."
 msgstr "Die Datei ist leer."
 
-#: apps/nba/season_stats.py:157
+#: apps/nba/season_stats.py:168
 #, python-format
 msgid "These columns are missing: %(columns)s."
 msgstr "Diese Spalten fehlen: %(columns)s."
 
-#: apps/nba/season_stats.py:164
+#: apps/nba/season_stats.py:175
 #, python-format
 msgid "The file has more than %(limit)d players."
 msgstr "Die Datei enthält mehr als %(limit)d Spieler."
 
-#: apps/nba/season_stats.py:189
+#: apps/nba/season_stats.py:200
 #, python-format
 msgid "Line %(line)d: the player name is empty."
 msgstr "Zeile %(line)d: Der Spielername ist leer."
 
-#: apps/nba/season_stats.py:202
+#: apps/nba/season_stats.py:213
 #, python-format
 msgid "Line %(line)d (%(name)s): “%(value)s” is not a valid %(column)s."
 msgstr ""
 "Zeile %(line)d (%(name)s): „%(value)s“ ist kein gültiger Wert für "
 "%(column)s."
 
-#: apps/nba/season_stats.py:233
+#: apps/nba/season_stats.py:244
 #, python-format
 msgid ""
 "Line %(line)d (%(name)s): the player appears more than once in the file."
 msgstr ""
 "Zeile %(line)d (%(name)s): Der Spieler kommt mehrmals in der Datei vor."
 
-#: apps/nba/season_stats.py:281
+#: apps/nba/season_stats.py:294
 #, python-format
 msgid "%(row)s: also matched by another line, %(player)s"
 msgstr "%(row)s: auch von einer anderen Zeile zugeordnet, %(player)s"
+
+#: apps/nba/season_stats.py:315
+msgid "Use the format YYYY-YY, for example 2025-26."
+msgstr "Bitte im Format JJJJ-JJ angeben, zum Beispiel 2025-26."
+
+#: apps/nba/season_stats.py:338
+msgid "The file has no players."
+msgstr "Die Datei enthält keine Spieler."
+
+#: apps/nba/season_stats.py:366
+#, python-format
+msgid "%(player)s is not in the file; their %(season)s stats will be removed."
+msgstr ""
+"%(player)s ist nicht in der Datei; die Statistiken für %(season)s werden "
+"entfernt."
+
+#: apps/nba/season_stats.py:403
+msgid "No line of this file matched a player, so there is nothing to import."
+msgstr ""
+"Keine Zeile dieser Datei passt zu einem Spieler, daher gibt es nichts zu "
+"importieren."
+
+#: apps/nba/season_stats.py:419
+msgid "This preview has expired. Please upload the file again."
+msgstr "Diese Vorschau ist abgelaufen. Bitte lade die Datei erneut hoch."
+
+#: apps/nba/season_stats.py:442
+msgid "Only the person who uploaded the file can import it."
+msgstr "Nur wer die Datei hochgeladen hat, kann sie importieren."
+
+#: apps/nba/season_stats.py:444
+msgid "This preview has already been closed."
+msgstr "Diese Vorschau ist bereits abgeschlossen."
+
+#: apps/nba/season_stats.py:468
+#, python-format
+msgid "%(player)s was deleted after the preview and was left out."
+msgstr "%(player)s wurde nach der Vorschau gelöscht und ausgelassen."
 
 #: apps/nba/views.py:375
 msgid ""

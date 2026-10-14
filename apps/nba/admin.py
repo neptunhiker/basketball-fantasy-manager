@@ -112,7 +112,7 @@ class PlayerSeasonStatsAdmin(admin.ModelAdmin):
         "points",
         "rebounds",
         "assists",
-        "fantasy_points",
+        "game_fantasy_points",
     ]
     list_filter = ["season"]
     search_fields = ["player__first_name", "player__last_name", "source_name"]

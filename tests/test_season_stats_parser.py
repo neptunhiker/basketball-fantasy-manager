@@ -67,7 +67,7 @@ def test_the_exported_format_is_read():
 def test_ignored_columns_are_not_read():
     values = parse_season_stats(stats_file(LUKA)).rows[0].values
 
-    assert len(values) == 24
+    assert len(values) == 25, "24 read from the file, plus the calculated score"
     assert not {"hsfp", "dd2", "td3", "plus_minus"} & set(values)
 
 

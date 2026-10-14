@@ -611,6 +611,10 @@ class PlayerSeasonStats(TimeStampedModel):
     # NBA.com fantasy points: PTS + 1.2 REB + 1.5 AST + 3 STL + 3 BLK - TOV.
     # Not the official game's scoring, which comes from basketball.de.
     fantasy_points = _per_game("Fantasy points (NBA.com)")
+    # This game's fantasy points per game, worked out from the averages above
+    # when the file is read: see apps.nba.season_stats.game_fantasy_points.
+    # Two decimals because of the 0.5 factors; negative is possible.
+    game_fantasy_points = models.DecimalField("Fantasy points", max_digits=5, decimal_places=2)
 
     class Meta:
         ordering = ["-season", "player__last_name", "player__first_name"]

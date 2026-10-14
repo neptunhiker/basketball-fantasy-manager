@@ -36,6 +36,7 @@ STAT_DEFAULTS = {
     "blocks": Decimal("0.5"),
     "personal_fouls": Decimal("2.4"),
     "fantasy_points": Decimal("57.7"),
+    "game_fantasy_points": Decimal("41.55"),
 }
 
 

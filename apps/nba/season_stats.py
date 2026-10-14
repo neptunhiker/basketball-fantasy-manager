@@ -64,7 +64,10 @@ NAME_COLUMN = "PLAYER"
 TEAM_COLUMN = "TEAM"
 REQUIRED_COLUMNS = (NAME_COLUMN, TEAM_COLUMN, *COLUMNS)
 
-STAT_FIELDS = tuple(model_field for model_field, _kind, _bound in COLUMNS.values())
+STAT_FIELDS = (
+    *(model_field for model_field, _kind, _bound in COLUMNS.values()),
+    "game_fantasy_points",
+)
 
 # The file's spelling -> ours, for players the file calls by a nickname or
 # writes family name first. Both sides go through `name_key`, so accents,
@@ -218,7 +221,41 @@ def _parse_record(line, record, position, decimal_comma):
                 "column": column,
             }
         values[model_field] = int(value) if kind == INTEGER else value.quantize(Decimal("0.1"))
+    values["game_fantasy_points"] = game_fantasy_points(values)
     return StatsRow(line=line, name=name, team=team, values=values), None
+
+
+def game_fantasy_points(values):
+    """Fantasy points per game by this game's rules, from per-game averages.
+
+    The scoring printed on the roster rules page: points + rebounds
+    + 1.5 x assists + 2 x steals + 2 x blocks - 2 x turnovers - 0.5 x missed
+    field goals - 0.5 x missed free throws - 0.5 x personal fouls. The formula
+    is linear, so on averages it gives the average, give or take the file's
+    rounding to one decimal. A miss is never below zero: rounded averages can
+    show a few tenths more made than attempted. The result may be negative.
+
+    `values` holds the model field names, as `_parse_record` builds them.
+    The data migration 0015 keeps a frozen copy of this formula.
+    """
+    missed_field_goals = max(
+        values["field_goals_attempted"] - values["field_goals_made"], Decimal(0)
+    )
+    missed_free_throws = max(
+        values["free_throws_attempted"] - values["free_throws_made"], Decimal(0)
+    )
+    points = (
+        values["points"]
+        + values["rebounds"]
+        + Decimal("1.5") * values["assists"]
+        + 2 * values["steals"]
+        + 2 * values["blocks"]
+        - 2 * values["turnovers"]
+        - Decimal("0.5") * missed_field_goals
+        - Decimal("0.5") * missed_free_throws
+        - Decimal("0.5") * values["personal_fouls"]
+    )
+    return points.quantize(Decimal("0.01"))
 
 
 def _number(raw):

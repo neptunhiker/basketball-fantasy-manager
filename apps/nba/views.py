@@ -37,12 +37,12 @@ from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
 from apps.fantasy.views import player_roster_options
 
 from . import charts, stats
-from .stats import DESCENDING_FIRST
 from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
 from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
 from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
+from .stats import DESCENDING_FIRST
 
 
 def with_expected_salary(qs):
@@ -211,9 +211,10 @@ class PlayerListView(LoginRequiredMixin, ListView):
             qs = qs.filter(is_watched=True)
 
         roster_id = self.request.GET.get("roster", "").strip()
-        if roster_id and Roster.objects.filter(
-            id=roster_id, manager__user=self.request.user
-        ).exists():
+        if (
+            roster_id
+            and Roster.objects.filter(id=roster_id, manager__user=self.request.user).exists()
+        ):
             qs = qs.filter(
                 roster_memberships__roster_id=roster_id,
                 roster_memberships__removed_at__isnull=True,
@@ -314,14 +315,20 @@ class PlayerListView(LoginRequiredMixin, ListView):
         context["active_filter_count"] = sum(
             1
             for key in (
-                "position", "team", "injury_status", "roster", "max_salary", "min_games",
-                "inactive", "watchlist",
+                "position",
+                "team",
+                "injury_status",
+                "roster",
+                "max_salary",
+                "min_games",
+                "inactive",
+                "watchlist",
             )
             if self.request.GET.get(key, "").strip()
         )
-        context["rosters"] = Roster.objects.filter(
-            manager__user=self.request.user
-        ).select_related("manager", "season")
+        context["rosters"] = Roster.objects.filter(manager__user=self.request.user).select_related(
+            "manager", "season"
+        )
         context["salary_fp_chart"] = charts.scatter_chart(
             (
                 player.full_name,
@@ -372,11 +379,16 @@ class InjuryRefreshView(LoginRequiredMixin, View):
             summary = sync_injuries()
         except DailyApiLimitExceeded:
             context = {
-                "injury_refresh_error": _("The injury report was already updated today. The next update can be invoked tomorrow.")
+                "injury_refresh_error": _(
+                    "The injury report was already updated today. "
+                    "The next update can be invoked tomorrow."
+                )
             }
         except NbaApiError:
             context = {
-                "injury_refresh_error": _("The injury report could not be updated. Please try again tomorrow.")
+                "injury_refresh_error": _(
+                    "The injury report could not be updated. Please try again tomorrow."
+                )
             }
         else:
             context = {
@@ -489,7 +501,11 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
     context_object_name = "players"
 
     def get_queryset(self):
-        qs = Player.objects.filter(is_active=True).select_related("team").order_by("last_name", "first_name")
+        qs = (
+            Player.objects.filter(is_active=True)
+            .select_related("team")
+            .order_by("last_name", "first_name")
+        )
         query = self.request.GET.get("q", "").strip()
         if query:
             for term in query.split():
@@ -525,9 +541,7 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
         if self.request.user.is_authenticated:
             qs = qs.annotate(
                 is_watched=Exists(
-                    WatchlistEntry.objects.filter(
-                        user=self.request.user, player=OuterRef("pk")
-                    )
+                    WatchlistEntry.objects.filter(user=self.request.user, player=OuterRef("pk"))
                 )
             )
 
@@ -535,7 +549,9 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
 
         selected_players = list(qs)
         selected_by_slug = {player.slug: player for player in selected_players}
-        ordered_selected = [selected_by_slug[slug] for slug in selected_slugs if slug in selected_by_slug]
+        ordered_selected = [
+            selected_by_slug[slug] for slug in selected_slugs if slug in selected_by_slug
+        ]
 
         selected_player_items = []
         for player in ordered_selected:
@@ -602,7 +618,7 @@ class PlayerCompareModalView(LoginRequiredMixin, View):
 
         matching_players = []
         for player in players_list:
-            add_query = urlencode([("player", s) for s in selected_slugs + [player.slug]])
+            add_query = urlencode([("player", s) for s in [*selected_slugs, player.slug]])
             matching_players.append(
                 {
                     "player": player,
@@ -735,13 +751,17 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         return sort, direction == "desc"
 
     def _players(self):
-        qs = self.object.players.filter(is_active=True).select_related("team").prefetch_related(
-            Prefetch("snapshots", queryset=PlayerSnapshot.objects.order_by("-as_of")),
-            Prefetch(
-                "injuries",
-                queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
-                to_attr="injury_history",
-            ),
+        qs = (
+            self.object.players.filter(is_active=True)
+            .select_related("team")
+            .prefetch_related(
+                Prefetch("snapshots", queryset=PlayerSnapshot.objects.order_by("-as_of")),
+                Prefetch(
+                    "injuries",
+                    queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
+                    to_attr="injury_history",
+                ),
+            )
         )
         qs = qs.annotate(note_count=my_note_count(self.request.user))
 
@@ -783,7 +803,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         context["players"] = players
         context["cards"] = [
             _card(
-            _("Salaries"),
+                _("Salaries"),
                 "money",
                 [
                     (_("Average"), salary["avg"]),
@@ -985,8 +1005,9 @@ def with_note_urls(notes, kind):
     notes = list(notes)
     for note in notes:
         args = (
-            [note.player.slug, note.pk] if kind == "player" else
-            [note.team.abbreviation.lower(), note.pk]
+            [note.player.slug, note.pk]
+            if kind == "player"
+            else [note.team.abbreviation.lower(), note.pk]
         )
         note.edit_url = reverse(f"nba:{kind}-note-edit", args=args)
         note.delete_url = reverse(f"nba:{kind}-note-delete", args=args)

@@ -15,6 +15,7 @@ from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
+from django.db.models import Max, OuterRef, Subquery
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -507,3 +508,39 @@ def _write(run):
     SeasonStatsImport.objects.filter(
         season=run.season, status=SeasonStatsImport.Status.PREVIEWED
     ).exclude(pk=run.pk).update(status=SeasonStatsImport.Status.EXPIRED, payload=[])
+
+
+# --- reading stored seasons -----------------------------------------------------------
+
+# Below this many games a per-game average says little: the player page does
+# not rank such a season, and the players list can filter them out.
+MIN_GAMES = 20
+
+
+def newest_season():
+    """The newest season with stored stats, e.g. "2025-26", or None.
+
+    Labels sort correctly as text, so the maximum is the newest season.
+    """
+    return PlayerSeasonStats.objects.aggregate(newest=Max("season"))["newest"]
+
+
+def short_season(label):
+    """`2025-26` -> `25/26`, for column headers."""
+    return f"{label[2:4]}/{label[5:7]}" if label else ""
+
+
+def with_last_season(qs, season):
+    """Annotate `last_season_fp` and `last_season_games` from `season`'s stats.
+
+    Two correlated subqueries, each one index lookup on (player, season), so a
+    list stays a single query however many players it shows. Players without
+    a line get None. With no season the queryset comes back untouched.
+    """
+    if season is None:
+        return qs
+    line = PlayerSeasonStats.objects.filter(player=OuterRef("pk"), season=season)
+    return qs.annotate(
+        last_season_fp=Subquery(line.values("fantasy_points")[:1]),
+        last_season_games=Subquery(line.values("games_played")[:1]),
+    )

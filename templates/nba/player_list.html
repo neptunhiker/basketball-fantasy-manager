@@ -123,6 +123,13 @@
                  class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
           {% translate "At least 6 games" %}
         </label>
+        {% if last_season %}
+          <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <input type="checkbox" name="last_min_games" value="1" {% if request.GET.last_min_games == "1" %}checked{% endif %}
+                   class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
+            {% blocktranslate with games=last_season_min_games season=last_season_short %}At least {{ games }} games in {{ season }}{% endblocktranslate %}
+          </label>
+        {% endif %}
         {% if not watchlist_page %}
           <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
             <input type="checkbox" name="watchlist" value="1" {% if watchlist_only %}checked{% endif %}

@@ -41,6 +41,7 @@ from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
 from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
 from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote
+from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
 from .stats import DESCENDING_FIRST
 
@@ -80,6 +81,28 @@ def with_expected_salary(qs):
             output_field=DecimalField(max_digits=20, decimal_places=2),
         )
     )
+
+
+def resolve_sort(request, sort_fields, last_season):
+    """The sort key and direction a player list asked for, or its default.
+
+    Avg/game is the default -- except before tip-off, while nobody has points
+    this season yet and last season's fantasy points are the one figure that
+    ranks players at all. A sort picked by the user always wins; `last_fp` is
+    only a sort while a season is stored.
+    """
+    allowed = set(sort_fields) - ({"last_fp"} if last_season is None else set())
+    sort = request.GET.get("sort")
+    if sort not in allowed:
+        preseason = (
+            last_season is not None
+            and not Player.objects.filter(current_fp_per_game__isnull=False).exists()
+        )
+        sort = "last_fp" if preseason else "avg"
+    direction = request.GET.get("dir")
+    if direction is None:
+        return sort, sort in DESCENDING_FIRST
+    return sort, direction == "desc"
 
 
 def my_note_count(user):
@@ -185,9 +208,8 @@ class PlayerListView(LoginRequiredMixin, ListView):
         "avg": [F("current_fp_per_game")],
         "games": [F("current_games_played")],
         "hotness": [],
+        "last_fp": [F("last_season_fp")],
     }
-    # Best scorers first: what a manager scans the list for.
-    DEFAULT_SORT = "avg"
 
     def get_queryset(self):
         qs = Player.objects.select_related("team").prefetch_related(
@@ -260,6 +282,10 @@ class PlayerListView(LoginRequiredMixin, ListView):
         if self.request.GET.get("min_games") == "6":
             qs = qs.filter(current_games_played__gte=6)
 
+        qs = with_last_season(qs, self._last_season())
+        if self._last_season() and self.request.GET.get("last_min_games") == "1":
+            qs = qs.filter(last_season_games__gte=MIN_GAMES)
+
         try:
             max_salary = Decimal(self.request.GET.get("max_salary", ""))
         except InvalidOperation:
@@ -294,13 +320,16 @@ class PlayerListView(LoginRequiredMixin, ListView):
         return qs.order_by(*order_fields)
 
     def _sort_params(self):
-        sort = self.request.GET.get("sort", self.DEFAULT_SORT)
-        if sort not in self.SORT_FIELDS:
-            sort = self.DEFAULT_SORT
-        direction = self.request.GET.get("dir")
-        if direction is None:
-            return sort, sort in DESCENDING_FIRST
-        return sort, direction == "desc"
+        # Asked twice per request (queryset and context); the default may cost
+        # a query, so it is worked out once.
+        if not hasattr(self, "_sort"):
+            self._sort = resolve_sort(self.request, self.SORT_FIELDS, self._last_season())
+        return self._sort
+
+    def _last_season(self):
+        if not hasattr(self, "_season"):
+            self._season = newest_season()
+        return self._season
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -323,6 +352,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
                 "min_games",
                 "inactive",
                 "watchlist",
+                "last_min_games",
             )
             if self.request.GET.get(key, "").strip()
         )
@@ -350,6 +380,9 @@ class PlayerListView(LoginRequiredMixin, ListView):
             for player in self.object_list
         )
         sort, descending = self._sort_params()
+        context["last_season"] = self._last_season()
+        context["last_season_short"] = short_season(self._last_season())
+        context["last_season_min_games"] = MIN_GAMES
         context["current_sort"] = sort
         context["current_dir"] = "desc" if descending else "asc"
         context["can_import_from_bbde"] = can_import_from_bbde(self.request.user)
@@ -716,8 +749,8 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         "avg": [F("current_fp_per_game")],
         "games": [F("current_games_played")],
         "hotness": [],
+        "last_fp": [F("last_season_fp")],
     }
-    DEFAULT_SORT = "avg"
 
     def get_object(self, queryset=None):
         # Looked up by abbreviation, case-insensitively, so both /teams/lal/
@@ -742,13 +775,16 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         )
 
     def _sort_params(self):
-        sort = self.request.GET.get("sort", self.DEFAULT_SORT)
-        if sort not in self.SORT_FIELDS:
-            sort = self.DEFAULT_SORT
-        direction = self.request.GET.get("dir")
-        if direction is None:
-            return sort, sort in DESCENDING_FIRST
-        return sort, direction == "desc"
+        # Asked twice per request (queryset and context); the default may cost
+        # a query, so it is worked out once.
+        if not hasattr(self, "_sort"):
+            self._sort = resolve_sort(self.request, self.SORT_FIELDS, self._last_season())
+        return self._sort
+
+    def _last_season(self):
+        if not hasattr(self, "_season"):
+            self._season = newest_season()
+        return self._season
 
     def _players(self):
         qs = (
@@ -764,6 +800,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
             )
         )
         qs = qs.annotate(note_count=my_note_count(self.request.user))
+        qs = with_last_season(qs, self._last_season())
 
         qs = with_expected_salary(qs)
 
@@ -861,6 +898,9 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
             for player in players
         )
         sort, descending = self._sort_params()
+        context["last_season"] = self._last_season()
+        context["last_season_short"] = short_season(self._last_season())
+        context["last_season_min_games"] = MIN_GAMES
         context["current_sort"] = sort
         context["current_dir"] = "desc" if descending else "asc"
         context["notes"] = with_note_urls(

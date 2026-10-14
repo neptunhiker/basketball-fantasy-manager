@@ -8,12 +8,13 @@ from django import template
 from django.utils.translation import gettext_lazy
 
 from apps.nba.models import PlayerSeasonStats
+from apps.nba.season_stats import MIN_GAMES
 
 register = template.Library()
 
-# Below this many games a per-game average says little, and a player who
-# appeared twice could top every ranking. Ranks only count players above it.
-MIN_GAMES_FOR_RANK = 20
+# A player who appeared twice could top every ranking, so ranks only count
+# players with a real season behind them.
+MIN_GAMES_FOR_RANK = MIN_GAMES
 
 # The figures that get a league rank on the card, best first.
 RANKED = ("fantasy_points", "points", "rebounds", "assists")

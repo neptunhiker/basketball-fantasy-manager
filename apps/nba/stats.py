@@ -66,7 +66,7 @@ def scoring_rate(players):
 # one of these headers, and a sort with no direction given, goes high-first.
 # Names, teams and positions read A-Z instead.
 DESCENDING_FIRST = frozenset(
-    {"salary", "expected", "difference", "points", "avg", "games", "hotness"}
+    {"salary", "expected", "difference", "points", "avg", "games", "hotness", "last_fp"}
 )
 
 

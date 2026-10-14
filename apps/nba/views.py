@@ -96,7 +96,7 @@ def resolve_sort(request, sort_fields, last_season):
     if sort not in allowed:
         preseason = (
             last_season is not None
-            and not Player.objects.filter(current_fp_per_game__isnull=False).exists()
+            and not Player.objects.filter(current_games_played__gt=0).exists()
         )
         sort = "last_fp" if preseason else "avg"
     direction = request.GET.get("dir")

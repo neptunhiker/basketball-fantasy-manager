@@ -87,9 +87,18 @@ def test_before_tip_off_the_list_sorts_by_last_season(signed_in, league):
 
 
 def test_once_the_season_has_points_avg_is_the_default_again(signed_in, league):
-    Player.objects.filter(pk=league["bench"].pk).update(current_fp_per_game=Decimal("20"))
+    Player.objects.filter(pk=league["bench"].pk).update(
+        current_fp_per_game=Decimal("20"), current_games_played=3
+    )
 
     assert signed_in.get(LIST).context["current_sort"] == "avg"
+
+
+def test_an_import_before_tip_off_does_not_end_the_preseason_default(signed_in, league):
+    # basketball.de lists everyone at 0.00 points and no games until tip-off.
+    Player.objects.update(current_total_fp=Decimal("0.00"), current_games_played=0)
+
+    assert signed_in.get(LIST).context["current_sort"] == "last_fp"
 
 
 def test_a_chosen_sort_always_wins(signed_in, league):

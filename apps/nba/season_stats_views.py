@@ -146,7 +146,7 @@ class SeasonStatsImportView(SuperuserRequiredMixin, DetailView):
             is_uploader=run.triggered_by_id == self.request.user.pk,
             expires_at=run.created_at + PREVIEW_LIFETIME,
             matched_percent=round(100 * run.matched / run.rows) if run.rows else 0,
-            sample=sorted(lines, key=lambda line: line["fantasy_points"], reverse=True)[
+            sample=sorted(lines, key=lambda line: line["game_fantasy_points"], reverse=True)[
                 :SAMPLE_SIZE
             ],
             renamed=sorted(
@@ -157,7 +157,7 @@ class SeasonStatsImportView(SuperuserRequiredMixin, DetailView):
 
 
 # What the sample table shows of each line.
-SHOWN = ("games_played", "minutes", "points", "rebounds", "assists", "fantasy_points")
+SHOWN = ("games_played", "minutes", "points", "rebounds", "assists", "game_fantasy_points")
 
 
 def _stat_lines(run):

@@ -32,8 +32,9 @@ PER_GAME = "per_game"
 PERCENTAGE = "percentage"
 
 # CSV header -> (model field, kind, upper bound). Columns are found by name, so
-# the order in the file does not matter and anything not listed here (HSFP,
-# DD2, TD3, +/- ...) is ignored.
+# the order in the file does not matter and anything not listed here (TFP,
+# HSFP, DD2, TD3, +/- ...) is ignored. Fantasy points are not read from the
+# file: they are worked out by this game's rules (`game_fantasy_points`).
 COLUMNS = {
     "AGE": ("age", INTEGER, 50),
     "GP": ("games_played", INTEGER, 82),
@@ -58,7 +59,6 @@ COLUMNS = {
     "STL": ("steals", PER_GAME, 99),
     "BLK": ("blocks", PER_GAME, 99),
     "PF": ("personal_fouls", PER_GAME, 99),
-    "TFP": ("fantasy_points", PER_GAME, 199),
 }
 NAME_COLUMN = "PLAYER"
 TEAM_COLUMN = "TEAM"
@@ -578,6 +578,6 @@ def with_last_season(qs, season):
         return qs
     line = PlayerSeasonStats.objects.filter(player=OuterRef("pk"), season=season)
     return qs.annotate(
-        last_season_fp=Subquery(line.values("fantasy_points")[:1]),
+        last_season_fp=Subquery(line.values("game_fantasy_points")[:1]),
         last_season_games=Subquery(line.values("games_played")[:1]),
     )

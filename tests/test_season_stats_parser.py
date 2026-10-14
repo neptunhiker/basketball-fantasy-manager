@@ -61,14 +61,14 @@ def test_the_exported_format_is_read():
     assert luka.values["games_played"] == 64
     assert luka.values["points"] == Decimal("33.5")
     assert luka.values["field_goal_pct"] == Decimal("47.6")
-    assert luka.values["fantasy_points"] == Decimal("57.7")
+    assert luka.values["game_fantasy_points"] == Decimal("41.55")
 
 
 def test_ignored_columns_are_not_read():
     values = parse_season_stats(stats_file(LUKA)).rows[0].values
 
-    assert len(values) == 25, "24 read from the file, plus the calculated score"
-    assert not {"hsfp", "dd2", "td3", "plus_minus"} & set(values)
+    assert len(values) == 24, "23 read from the file, plus the calculated score"
+    assert not {"fantasy_points", "hsfp", "dd2", "td3", "plus_minus"} & set(values)
 
 
 def test_columns_are_found_by_name_not_position():
@@ -109,9 +109,9 @@ def test_a_file_that_is_not_utf8_is_rejected():
 
 
 def test_a_missing_column_rejects_the_file():
-    header = HEADER.replace("TFP;", "").replace("3P%;", "")
+    header = HEADER.replace("FT%;", "").replace("3P%;", "")
 
-    with pytest.raises(SeasonStatsFileError, match="3P%, TFP"):
+    with pytest.raises(SeasonStatsFileError, match="3P%, FT%"):
         parse_season_stats(stats_file(header=header))
 
 

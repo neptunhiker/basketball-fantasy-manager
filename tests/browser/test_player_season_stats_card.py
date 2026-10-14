@@ -23,7 +23,7 @@ def stored(game):
             player,
             team=player.team.abbreviation,
             points=Decimal(30) - Decimal(index) / 2,
-            fantasy_points=Decimal(55) - Decimal(index),
+            game_fantasy_points=Decimal(55) - Decimal(index),
         )
     return players
 

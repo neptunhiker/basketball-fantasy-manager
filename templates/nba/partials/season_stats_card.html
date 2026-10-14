@@ -28,7 +28,7 @@
       </div>
       {# Closed: the four numbers people open the card for. Open: what they mean. #}
       <p class="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-sm tabular-nums text-neutral-500 group-open:hidden dark:text-neutral-400">
-        <span><span class="font-semibold text-primary-700 dark:text-primary-300">{{ stats.fantasy_points|floatformat:1 }}</span> {% translate "FP" %}</span>
+        <span><span class="font-semibold text-primary-700 dark:text-primary-300">{{ stats.game_fantasy_points|floatformat:1 }}</span> {% translate "FP" %}</span>
         <span><span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ stats.points|floatformat:1 }}</span> {% translate "PTS" %}</span>
         <span><span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ stats.rebounds|floatformat:1 }}</span> {% translate "REB" %}</span>
         <span><span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ stats.assists|floatformat:1 }}</span> {% translate "AST" %}</span>
@@ -48,9 +48,9 @@
       <dt class="flex items-center gap-1 text-xs font-medium text-primary-800 dark:text-primary-200">
         {{ fp_label }} {% include "partials/info_popover.html" with text=fp_help label=fp_label %}
       </dt>
-      <dd class="mt-1 text-2xl font-bold tabular-nums text-primary-700 sm:text-3xl dark:text-primary-300">{{ stats.fantasy_points|floatformat:1 }}</dd>
-      {% if ranks.fantasy_points %}
-        <dd class="mt-0.5 text-xs tabular-nums text-primary-800/80 dark:text-primary-200/80">{% blocktranslate with rank=ranks.fantasy_points %}#{{ rank }} in the league{% endblocktranslate %}</dd>
+      <dd class="mt-1 text-2xl font-bold tabular-nums text-primary-700 sm:text-3xl dark:text-primary-300">{{ stats.game_fantasy_points|floatformat:1 }}</dd>
+      {% if ranks.game_fantasy_points %}
+        <dd class="mt-0.5 text-xs tabular-nums text-primary-800/80 dark:text-primary-200/80">{% blocktranslate with rank=ranks.game_fantasy_points %}#{{ rank }} in the league{% endblocktranslate %}</dd>
       {% endif %}
     </div>
     <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">

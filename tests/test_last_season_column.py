@@ -44,10 +44,10 @@ def league(teams):
     bench = player("Bench Player", teams["BOS"])
     rookie = player("Rookie Player", teams["BOS"])
     fluke = player("Fluke Player", teams["BOS"])
-    stats_for(star, fantasy_points=Decimal("55.0"))
-    stats_for(solid, fantasy_points=Decimal("40.0"))
-    stats_for(bench, fantasy_points=Decimal("12.0"))
-    stats_for(fluke, fantasy_points=Decimal("70.0"), games_played=3)
+    stats_for(star, game_fantasy_points=Decimal("55.0"))
+    stats_for(solid, game_fantasy_points=Decimal("40.0"))
+    stats_for(bench, game_fantasy_points=Decimal("12.0"))
+    stats_for(fluke, game_fantasy_points=Decimal("70.0"), games_played=3)
     return {"star": star, "solid": solid, "bench": bench, "rookie": rookie, "fluke": fluke}
 
 
@@ -114,7 +114,7 @@ def test_low_first_keeps_players_without_a_line_last(signed_in, league):
 
 
 def test_only_the_newest_season_counts(signed_in, league):
-    stats_for(league["bench"], season="2024-25", fantasy_points=Decimal("99.0"))
+    stats_for(league["bench"], season="2024-25", game_fantasy_points=Decimal("99.0"))
 
     response = signed_in.get(LIST, {"sort": "last_fp"})
 

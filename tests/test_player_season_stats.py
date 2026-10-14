@@ -35,7 +35,6 @@ STAT_DEFAULTS = {
     "steals": Decimal("1.6"),
     "blocks": Decimal("0.5"),
     "personal_fouls": Decimal("2.4"),
-    "fantasy_points": Decimal("57.7"),
     "game_fantasy_points": Decimal("41.55"),
 }
 
@@ -91,13 +90,15 @@ def test_the_newest_season_is_shown(luka):
 
 def test_ranks_count_regulars_with_more(luka):
     stats_for(luka)
-    someone("Better Scorer", points=Decimal("40.0"), fantasy_points=Decimal("50.0"))
-    someone("Fluke Night", games_played=2, points=Decimal("60.0"), fantasy_points=Decimal("90.0"))
+    someone("Better Scorer", points=Decimal("40.0"), game_fantasy_points=Decimal("35.0"))
+    someone(
+        "Fluke Night", games_played=2, points=Decimal("60.0"), game_fantasy_points=Decimal("90.0")
+    )
 
     card = player_season_stats(luka)
 
     assert card["ranks"]["points"] == 2
-    assert card["ranks"]["fantasy_points"] == 1, "two games do not outrank a season"
+    assert card["ranks"]["game_fantasy_points"] == 1, "two games do not outrank a season"
     assert card["regulars"] == 2
     assert card["few_games"] is False
 
@@ -153,7 +154,7 @@ def test_the_card_shows_on_the_player_page(signed_in, luka):
 
     assert 'id="season-stats"' in page
     assert "Season 2025-26" in page
-    assert "57.7" in page
+    assert "41.6" in page, "41.55, shown with one decimal"
     assert "47.6%" in page
     assert "10.8 of 22.8 per game" in page
     assert "43\u201321" in page

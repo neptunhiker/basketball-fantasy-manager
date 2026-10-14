@@ -117,7 +117,7 @@ def test_confirming_writes_every_matched_line(luka, bam, user):
     assert (stats.age, stats.games_played, stats.wins, stats.losses) == (27, 64, 43, 21)
     assert stats.points == Decimal("33.5")
     assert stats.three_pct == Decimal("36.6")
-    assert stats.fantasy_points == Decimal("57.7")
+    assert stats.game_fantasy_points == Decimal("41.55")
     assert stats_of(bam).team_abbreviation == "MIA"
 
 

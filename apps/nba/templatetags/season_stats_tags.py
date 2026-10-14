@@ -17,7 +17,7 @@ register = template.Library()
 MIN_GAMES_FOR_RANK = MIN_GAMES
 
 # The figures that get a league rank on the card, best first.
-RANKED = ("fantasy_points", "points", "rebounds", "assists")
+RANKED = ("game_fantasy_points", "points", "rebounds", "assists")
 
 
 @register.inclusion_tag("nba/partials/season_stats_card.html")

@@ -192,7 +192,7 @@ def test_the_preview_shows_counts_sample_and_lines_to_check(admin_client, superu
     assert response.status_code == 200
     assert "Nothing has been saved yet" in page
     assert "Luka Doncic" in page
-    assert "57.7" in page
+    assert "41.6" in page
     assert "Kyle Lowry (PHI)" in page
     assert "Matched under another name" in page
     assert "GG Jackson" in page

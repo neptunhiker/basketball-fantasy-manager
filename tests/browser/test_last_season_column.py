@@ -22,7 +22,7 @@ def stored(game):
         stats_for(
             player,
             team=player.team.abbreviation,
-            fantasy_points=Decimal(55) - Decimal(index) * Decimal("1.3"),
+            game_fantasy_points=Decimal(55) - Decimal(index) * Decimal("1.3"),
             games_played=4 if index == 5 else 60,
         )
     return players

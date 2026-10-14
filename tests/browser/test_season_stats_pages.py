@@ -23,7 +23,6 @@ def season_file(game):
             player.team.abbreviation,
             GP=60 - index,
             PTS=f"{30 - index * 0.5:.1f}",
-            TFP=f"{55 - index * 0.9:.1f}",
         )
         for index, player in enumerate(game["players"][:30])
     ]

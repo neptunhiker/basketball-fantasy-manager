@@ -8,7 +8,7 @@ import pytest
 
 from apps.nba.season_stats import game_fantasy_points, parse_season_stats
 
-from .test_season_stats_parser import LUKA, line, stats_file
+from .test_season_stats_parser import HEADER, LUKA, line, stats_file
 
 # Dončić's 2025-26 line, as the parser reads it.
 LUKA_VALUES = {
@@ -87,3 +87,13 @@ def test_the_migration_uses_the_same_formula():
     frozen = migration.game_fantasy_points(SimpleNamespace(**LUKA_VALUES))
 
     assert frozen == game_fantasy_points(LUKA_VALUES)
+
+
+def test_a_file_without_tfp_imports():
+    header = HEADER.replace("TFP;", "")
+    luka = LUKA.replace(";57.7;", ";")
+
+    parsed = parse_season_stats(stats_file(luka, header=header))
+
+    assert parsed.problems == []
+    assert parsed.rows[0].values["game_fantasy_points"] == Decimal("41.55")

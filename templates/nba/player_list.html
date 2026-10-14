@@ -43,8 +43,10 @@
         hx-push-url="true"
         hx-indicator="#player-indicator">
 
-    <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto_auto]">
-      <div class="flex gap-2">
+    {# Below `xl` the search takes a row of its own and the five filters share #}
+    {# the next; squeezed into one row with them it shrank to an empty box. #}
+    <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-5 xl:grid-cols-[1fr_auto_auto_auto_auto_auto]">
+      <div class="flex gap-2 sm:col-span-2 md:col-span-5 xl:col-span-1">
         <label for="player-search" class="sr-only">{% translate "Search by name" %}</label>
         <input type="search" id="player-search" name="q" value="{{ request.GET.q|default:'' }}"
                placeholder="{% translate 'Search by name' %}…"

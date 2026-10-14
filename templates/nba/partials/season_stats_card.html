@@ -42,7 +42,7 @@
 
   {# --- The four headline averages ----------------------------------------- #}
   {% translate "Fantasy points" as fp_label %}
-  {% translate "Fantasy points as NBA.com counts them: points + 1.2 × rebounds + 1.5 × assists + 3 × steals + 3 × blocks − turnovers. The official game scores differently, so this is a guide to last season, not a forecast of points here." as fp_help %}
+  {% translate "Fantasy points per game by this game's rules: points + rebounds + 1.5 × assists + 2 × steals + 2 × blocks − 2 × turnovers − 0.5 × missed field goals − 0.5 × missed free throws − 0.5 × personal fouls. Worked out from last season's per-game averages, so it can differ from the real figure by a few tenths." as fp_help %}
   <dl class="grid grid-cols-2 gap-px bg-neutral-200 sm:grid-cols-4 dark:bg-neutral-800">
     <div class="bg-primary-50/60 p-4 sm:p-5 dark:bg-primary-500/10">
       <dt class="flex items-center gap-1 text-xs font-medium text-primary-800 dark:text-primary-200">
@@ -150,7 +150,7 @@
         <span>{% blocktranslate count counter=stats.games_played %}Only {{ counter }} game played, so these averages say little and are not ranked.{% plural %}Only {{ counter }} games played, so these averages say little and are not ranked.{% endblocktranslate %}</span>
       </p>
     {% else %}
-      <p>{% blocktranslate count counter=regulars with games=min_games %}Ranks compare {{ counter }} player with at least {{ games }} games.{% plural %}Ranks compare {{ counter }} players with at least {{ games }} games.{% endblocktranslate %} {% translate "Source: NBA.com." %}</p>
+      <p>{% blocktranslate count counter=regulars with games=min_games %}Ranks compare {{ counter }} player with at least {{ games }} games.{% plural %}Ranks compare {{ counter }} players with at least {{ games }} games.{% endblocktranslate %} {% translate "Stats from NBA.com, fantasy points by this game's rules." %}</p>
     {% endif %}
   </div>
 </details>

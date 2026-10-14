@@ -14,7 +14,7 @@
 {% translate "Watchlist" as watchlist_label %}
 {% if last_season %}
   {% blocktranslate with season=last_season_short asvar last_fp_label %}FP {{ season }}{% endblocktranslate %}
-  {% blocktranslate with season=last_season games=last_season_min_games asvar last_fp_help %}Fantasy points per game in the {{ season }} regular season, as NBA.com counts them: points + 1.2 × rebounds + 1.5 × assists + 3 × steals + 3 × blocks − turnovers. This game scores differently, so read it as a guide, not a forecast. Grey: fewer than {{ games }} games.{% endblocktranslate %}
+  {% blocktranslate with season=last_season games=last_season_min_games asvar last_fp_help %}Fantasy points per game in the {{ season }} regular season, by this game's rules: points + rebounds + 1.5 × assists + 2 × steals + 2 × blocks − 2 × turnovers − 0.5 × missed field goals − 0.5 × missed free throws − 0.5 × personal fouls. Worked out from per-game averages, so it can differ from the real figure by a few tenths. Grey: fewer than {{ games }} games.{% endblocktranslate %}
 {% endif %}
 {% translate "Salary compared with points per game" as salary_chart_label %}
 {% translate "Points per game" as points_per_game_label %}
@@ -194,7 +194,7 @@
     <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
       <strong class="font-medium">{{ value_label }}:</strong> {% translate "expected salary for his points per game minus actual salary — + means a bargain." %}
       <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his points per game rose over the last weeks." %}
-      {% if last_season %}<strong class="ml-2 font-medium">{{ last_fp_label }}:</strong> {% translate "fantasy points per game last season (NBA.com)." %}{% endif %}
+      {% if last_season %}<strong class="ml-2 font-medium">{{ last_fp_label }}:</strong> {% translate "fantasy points per game last season, by this game's rules." %}{% endif %}
     </p>
 
     {% if is_paginated %}

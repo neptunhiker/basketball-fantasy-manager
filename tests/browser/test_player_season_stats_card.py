@@ -71,6 +71,8 @@ def test_the_fantasy_points_explanation_opens_on_a_phone(game, stored, open_page
     expect(tip).to_be_visible()
     box = tip.bounding_box()
     assert box["x"] >= 0 and box["x"] + box["width"] <= page.viewport_size["width"]
+    # The text wraps inside the box instead of running past its edge.
+    assert tip.evaluate("el => el.scrollWidth <= el.clientWidth")
     shot(page, FOLDER, "fp-help-phone")
 
 

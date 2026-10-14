@@ -166,7 +166,7 @@ def test_the_column_shows_values_games_and_gaps(signed_in, league):
     assert ">55.0<" in page
     assert "3 G" in page, "a short season shows its game count"
     assert "Only 3 games last season" in page
-    assert "fantasy points per game last season (NBA.com)." in page
+    assert "fantasy points per game last season, by this game" in page
 
 
 def test_the_watchlist_has_the_column_too(signed_in, user, league):

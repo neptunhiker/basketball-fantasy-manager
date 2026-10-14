@@ -21,6 +21,8 @@ PAD_LEFT = 46
 PAD_RIGHT = 14
 PAD_TOP = 12
 PAD_BOTTOM = 26
+# Extra height under a scatter chart for its x-axis title.
+AXIS_TITLE_ROOM = 14
 
 TICK_STEPS = (Decimal("1"), Decimal("2"), Decimal("5"), Decimal("10"))
 
@@ -259,7 +261,10 @@ def scatter_chart(points, x_ticks=5, y_ticks=5):
             {"y": y_of(value), "value": value} for value in tick_values(y_low, y_high, y_step)
         ],
         "width": WIDTH,
-        "height": HEIGHT,
+        # Room under the tick labels for the axis title, which otherwise
+        # ran into the first ticks.
+        "height": HEIGHT + AXIS_TITLE_ROOM,
+        "title_bottom": HEIGHT + AXIS_TITLE_ROOM - 2,
         "plot_left": PAD_LEFT,
         "plot_right": WIDTH - PAD_RIGHT,
         "plot_top": PAD_TOP,

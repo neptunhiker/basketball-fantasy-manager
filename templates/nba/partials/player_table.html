@@ -31,18 +31,64 @@
     <svg class="h-4 w-4 transition" :class="chartOpen && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
   </button>
   <div id="player-chart" x-show="chartOpen" x-cloak class="border-b border-neutral-200 px-4 pb-4 pt-5 md:!block dark:border-neutral-800">
-    <div class="mb-2">
-      <h2 class="text-sm font-semibold">{% translate "Points per game and salary" %}</h2>
-      <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-        {% translate "Players with both figures recorded are shown." %}
-      </p>
+    {# Two charts, one shown: this season's points, or last season's against #}
+    {# this season's salary. `chartView` sits on the page's card, so the #}
+    {# choice survives every filter swap. #}
+    <div class="mb-3 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+      <div class="min-w-0">
+        <div x-show="chartView !== 'last'" {% if default_chart_view == "last" %}x-cloak{% endif %}>
+          <h2 class="text-sm font-semibold">{% translate "Points per game and salary" %}</h2>
+          <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+            {% translate "Players with both figures recorded are shown." %}
+          </p>
+        </div>
+        {% if last_season %}
+          <div x-show="chartView === 'last'" {% if default_chart_view != "last" %}x-cloak{% endif %}>
+            <h2 class="text-sm font-semibold">{% blocktranslate with season=last_season_short %}Fantasy points {{ season }} and salary{% endblocktranslate %}</h2>
+            <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+              {% blocktranslate with season=last_season_short %}This season's salary against fantasy points per game in {{ season }}.{% endblocktranslate %}
+            </p>
+          </div>
+        {% endif %}
+      </div>
+      {% if last_season %}
+        <div class="inline-flex shrink-0 rounded-lg border border-neutral-200 bg-neutral-100 p-0.5 dark:border-neutral-700 dark:bg-neutral-800"
+             role="group" aria-label="{% translate 'Season shown in the chart' %}">
+          <button type="button" @click="chartView = 'current'"
+                  :aria-pressed="(chartView !== 'last').toString()"
+                  aria-pressed="{% if default_chart_view == 'last' %}false{% else %}true{% endif %}"
+                  :class="chartView !== 'last' ? 'bg-white text-tertiary-700 shadow-sm dark:bg-neutral-900 dark:text-neutral-100' : 'text-neutral-500 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:text-neutral-100'"
+                  class="rounded-md px-3 py-1.5 text-xs font-semibold transition max-sm:min-h-10 max-sm:px-4">{% translate "This season" %}</button>
+          <button type="button" @click="chartView = 'last'"
+                  :aria-pressed="(chartView === 'last').toString()"
+                  aria-pressed="{% if default_chart_view == 'last' %}true{% else %}false{% endif %}"
+                  :class="chartView === 'last' ? 'bg-white text-tertiary-700 shadow-sm dark:bg-neutral-900 dark:text-neutral-100' : 'text-neutral-500 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:text-neutral-100'"
+                  class="rounded-md px-3 py-1.5 text-xs font-semibold tabular-nums transition max-sm:min-h-10 max-sm:px-4">{{ last_season_short }}</button>
+        </div>
+      {% endif %}
     </div>
-    {% if salary_fp_chart %}
-      {% include "nba/partials/scatter_chart.html" with chart=salary_fp_chart chart_id="salary-fp" chart_label=salary_chart_label x_axis_label=points_per_game_label y_axis_label=salary_axis_label %}
-    {% else %}
-      <p class="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
-        {% translate "The comparison appears when players have points per game and salary recorded." %}
-      </p>
+
+    <div x-show="chartView !== 'last'" {% if default_chart_view == "last" %}x-cloak{% endif %}>
+      {% if salary_fp_chart %}
+        {% include "nba/partials/scatter_chart.html" with chart=salary_fp_chart chart_id="salary-fp" chart_label=salary_chart_label x_axis_label=points_per_game_label y_axis_label=salary_axis_label %}
+      {% else %}
+        <p class="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+          {% translate "The comparison appears when players have points per game and salary recorded." %}
+        </p>
+      {% endif %}
+    </div>
+    {% if last_season %}
+      {% blocktranslate with season=last_season_short asvar last_chart_label %}Salary compared with fantasy points per game in {{ season }}{% endblocktranslate %}
+      {% blocktranslate with season=last_season_short asvar last_axis_label %}Fantasy points per game {{ season }}{% endblocktranslate %}
+      <div x-show="chartView === 'last'" {% if default_chart_view != "last" %}x-cloak{% endif %}>
+        {% if last_season_chart %}
+          {% include "nba/partials/scatter_chart.html" with chart=last_season_chart chart_id="salary-fp-last" chart_label=last_chart_label x_axis_label=last_axis_label y_axis_label=salary_axis_label variant="last" %}
+        {% else %}
+          <p class="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+            {% blocktranslate with season=last_season_short %}None of these players has stats for {{ season }}.{% endblocktranslate %}
+          </p>
+        {% endif %}
+      </div>
     {% endif %}
   </div>
 

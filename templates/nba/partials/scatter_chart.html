@@ -1,9 +1,14 @@
 {% load i18n l10n %}
+{% comment %}
+  Context: chart, chart_id, chart_label, x_axis_label, y_axis_label; with
+  variant="last" the details describe last season's fantasy points against
+  this season's salary, without the rows only this season has.
+{% endcomment %}
 <div x-data="{ selected: null, select(point) { this.selected = point.dataset } }"
   class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] md:items-stretch">
   <div class="min-w-0">
     <svg viewBox="0 0 {{ chart.width|unlocalize }} {{ chart.height|unlocalize }}"
-      class="h-64 w-full"
+      class="h-auto w-full md:h-64"
       role="img"
       aria-label="{{ chart_label }}">
   <g class="text-neutral-300 dark:text-neutral-700">
@@ -28,7 +33,7 @@
       <text x="{{ tick.x|unlocalize }}" y="{{ chart.label_bottom|unlocalize }}"
             text-anchor="middle">{{ tick.value|floatformat:"-2g" }}</text>
     {% endfor %}
-    <text x="{{ chart.plot_left|unlocalize }}" y="{{ chart.height|unlocalize }}"
+    <text x="{{ chart.plot_left|unlocalize }}" y="{{ chart.title_bottom|unlocalize }}"
           text-anchor="start" font-size="11">{{ x_axis_label }}</text>
     <text x="{{ chart.plot_left|unlocalize }}" y="10"
           text-anchor="start" font-size="11">{{ y_axis_label }}</text>
@@ -69,7 +74,7 @@
     </svg>
   </div>
 
-  <aside class="flex min-h-64 flex-col justify-center border-t border-neutral-200 pt-4 dark:border-neutral-800 md:border-l md:border-t-0 md:pl-4 md:pt-0"
+  <aside class="flex flex-col md:min-h-64 justify-center border-t border-neutral-200 pt-4 dark:border-neutral-800 md:border-l md:border-t-0 md:pl-4 md:pt-0"
          aria-live="polite">
     <div x-show="!selected" class="text-sm text-neutral-500 dark:text-neutral-400">
       <p class="font-medium text-neutral-700 dark:text-neutral-200">{% translate "Player details" %}</p>
@@ -83,7 +88,7 @@
       </h3>
       <dl class="mt-4 space-y-3 text-sm">
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Points per game" %}</dt>
+          <dt class="text-neutral-500 dark:text-neutral-400">{% if variant == "last" %}{{ x_axis_label }}{% else %}{% translate "Points per game" %}{% endif %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white"><span x-text="selected?.ppg"></span></dd>
         </div>
         <div class="flex items-baseline justify-between gap-4">
@@ -98,20 +103,24 @@
           <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Value" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white">$<span x-text="selected?.difference"></span>M</dd>
         </div>
+        {% if variant != "last" %}
         <div class="flex items-baseline justify-between gap-4">
           <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Points" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white" x-text="selected?.totalFp || '–'"></dd>
         </div>
+        {% endif %}
         <div class="flex items-baseline justify-between gap-4">
           <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Games played" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white" x-text="selected?.gamesPlayed || '–'"></dd>
         </div>
+        {% if variant != "last" %}
         <div class="flex items-baseline justify-between gap-4">
           <dt class="text-neutral-500 dark:text-neutral-400" title="{% translate 'Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)' %}">{% translate "Hotness" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white"
               title="{% translate 'Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)' %}"
               x-text="selected?.hotness || '–'"></dd>
         </div>
+        {% endif %}
       </dl>
     </div>
   </aside>

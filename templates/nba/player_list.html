@@ -7,7 +7,7 @@
 {% block content %}
 {# `chartOpen` lives here, outside the part filters swap, so a chart opened on #}
 {# a phone stays open while filtering. From `md` the chart always shows. #}
-<div class="card overflow-hidden" x-data="{ chartOpen: false }">
+<div class="card overflow-hidden" x-data="{ chartOpen: false, chartView: '{{ default_chart_view|default:'current' }}' }">
   {# Phones: the title first, the buttons in a wrapping row below it. #}
   <div class="flex flex-col gap-3 border-b border-neutral-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
     <div>

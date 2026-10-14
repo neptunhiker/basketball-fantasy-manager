@@ -40,7 +40,7 @@ from . import charts, stats
 from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
 from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
-from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote
+from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote, predict_salary
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
 from .stats import DESCENDING_FIRST
@@ -83,26 +83,86 @@ def with_expected_salary(qs):
     )
 
 
-def resolve_sort(request, sort_fields, last_season):
+def before_tip_off():
+    """True while nobody has played a game this season yet."""
+    return not Player.objects.filter(current_games_played__gt=0).exists()
+
+
+def resolve_sort(request, sort_fields, last_season, preseason):
     """The sort key and direction a player list asked for, or its default.
 
-    Avg/game is the default -- except before tip-off, while nobody has points
-    this season yet and last season's fantasy points are the one figure that
-    ranks players at all. A sort picked by the user always wins; `last_fp` is
-    only a sort while a season is stored.
+    Avg/game is the default -- except before tip-off (`preseason`), while
+    nobody has points this season yet and last season's fantasy points are
+    the one figure that ranks players at all. A sort picked by the user always
+    wins; `last_fp` is only a sort while a season is stored.
     """
     allowed = set(sort_fields) - ({"last_fp"} if last_season is None else set())
     sort = request.GET.get("sort")
     if sort not in allowed:
-        preseason = (
-            last_season is not None
-            and not Player.objects.filter(current_games_played__gt=0).exists()
-        )
-        sort = "last_fp" if preseason else "avg"
+        sort = "last_fp" if last_season is not None and preseason else "avg"
     direction = request.GET.get("dir")
     if direction is None:
         return sort, sort in DESCENDING_FIRST
     return sort, direction == "desc"
+
+
+def salary_charts(players, last_season):
+    """The two salary scatter charts for a list of players.
+
+    `salary_fp_chart`: this season's points per game against salary.
+    `last_season_chart`: last season's fantasy points per game against this
+    season's salary -- there is no salary for last season, and the question
+    is who is cheap now for what he produced then. Expected salary and Value
+    use the same salary formula, which is fair because last season's points
+    are worked out by this game's rules. None while no season is stored.
+    """
+    players = list(players)
+    current = charts.scatter_chart(
+        (
+            player.full_name,
+            player.current_fp_per_game,
+            _millions(player.current_salary),
+            player.predicted_salary,
+            {
+                "detail_url": reverse("nba:player-detail", args=[player.slug]),
+                "total_fp": player.current_total_fp,
+                "games_played": player.current_games_played,
+                "difference": _difference(player.predicted_salary, player.current_salary),
+                "hotness": player.hotness_score(),
+            },
+        )
+        for player in players
+    )
+    if last_season is None:
+        return {"salary_fp_chart": current, "last_season_chart": None}
+    last = []
+    for player in players:
+        points = getattr(player, "last_season_fp", None)
+        expected = predict_salary(points) if points is not None else None
+        last.append(
+            (
+                player.full_name,
+                points,
+                _millions(player.current_salary),
+                expected,
+                {
+                    "detail_url": reverse("nba:player-detail", args=[player.slug]),
+                    "games_played": getattr(player, "last_season_games", None),
+                    "difference": _difference(expected, player.current_salary),
+                },
+            )
+        )
+    return {"salary_fp_chart": current, "last_season_chart": charts.scatter_chart(last)}
+
+
+def _millions(amount):
+    return amount / 1_000_000 if amount is not None else None
+
+
+def _difference(expected_millions, salary):
+    if expected_millions is None or salary is None:
+        return None
+    return expected_millions - salary / 1_000_000
 
 
 def my_note_count(user):
@@ -323,8 +383,15 @@ class PlayerListView(LoginRequiredMixin, ListView):
         # Asked twice per request (queryset and context); the default may cost
         # a query, so it is worked out once.
         if not hasattr(self, "_sort"):
-            self._sort = resolve_sort(self.request, self.SORT_FIELDS, self._last_season())
+            self._sort = resolve_sort(
+                self.request, self.SORT_FIELDS, self._last_season(), self._preseason()
+            )
         return self._sort
+
+    def _preseason(self):
+        if not hasattr(self, "_before_tip_off"):
+            self._before_tip_off = self._last_season() is not None and before_tip_off()
+        return self._before_tip_off
 
     def _last_season(self):
         if not hasattr(self, "_season"):
@@ -359,30 +426,14 @@ class PlayerListView(LoginRequiredMixin, ListView):
         context["rosters"] = Roster.objects.filter(manager__user=self.request.user).select_related(
             "manager", "season"
         )
-        context["salary_fp_chart"] = charts.scatter_chart(
-            (
-                player.full_name,
-                player.current_fp_per_game,
-                player.current_salary / 1_000_000 if player.current_salary is not None else None,
-                player.predicted_salary,
-                {
-                    "detail_url": reverse("nba:player-detail", args=[player.slug]),
-                    "total_fp": player.current_total_fp,
-                    "games_played": player.current_games_played,
-                    "difference": (
-                        player.predicted_salary - player.current_salary / 1_000_000
-                        if player.predicted_salary is not None and player.current_salary is not None
-                        else None
-                    ),
-                    "hotness": player.hotness_score(),
-                },
-            )
-            for player in self.object_list
-        )
+        context.update(salary_charts(self.object_list, self._last_season()))
         sort, descending = self._sort_params()
         context["last_season"] = self._last_season()
         context["last_season_short"] = short_season(self._last_season())
         context["last_season_min_games"] = MIN_GAMES
+        # The chart opens on the season the list is about: last season's
+        # before tip-off, this season's once games are played.
+        context["default_chart_view"] = "last" if self._preseason() else "current"
         context["current_sort"] = sort
         context["current_dir"] = "desc" if descending else "asc"
         context["can_import_from_bbde"] = can_import_from_bbde(self.request.user)
@@ -778,8 +829,15 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         # Asked twice per request (queryset and context); the default may cost
         # a query, so it is worked out once.
         if not hasattr(self, "_sort"):
-            self._sort = resolve_sort(self.request, self.SORT_FIELDS, self._last_season())
+            self._sort = resolve_sort(
+                self.request, self.SORT_FIELDS, self._last_season(), self._preseason()
+            )
         return self._sort
+
+    def _preseason(self):
+        if not hasattr(self, "_before_tip_off"):
+            self._before_tip_off = self._last_season() is not None and before_tip_off()
+        return self._before_tip_off
 
     def _last_season(self):
         if not hasattr(self, "_season"):
@@ -877,30 +935,14 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         ]
 
         context["inactive_count"] = self.object.players.filter(is_active=False).count()
-        context["salary_fp_chart"] = charts.scatter_chart(
-            (
-                player.full_name,
-                player.current_fp_per_game,
-                player.current_salary / 1_000_000 if player.current_salary is not None else None,
-                player.predicted_salary,
-                {
-                    "detail_url": reverse("nba:player-detail", args=[player.slug]),
-                    "total_fp": player.current_total_fp,
-                    "games_played": player.current_games_played,
-                    "difference": (
-                        player.predicted_salary - player.current_salary / 1_000_000
-                        if player.predicted_salary is not None and player.current_salary is not None
-                        else None
-                    ),
-                    "hotness": player.hotness_score(),
-                },
-            )
-            for player in players
-        )
+        context.update(salary_charts(players, self._last_season()))
         sort, descending = self._sort_params()
         context["last_season"] = self._last_season()
         context["last_season_short"] = short_season(self._last_season())
         context["last_season_min_games"] = MIN_GAMES
+        # The chart opens on the season the list is about: last season's
+        # before tip-off, this season's once games are played.
+        context["default_chart_view"] = "last" if self._preseason() else "current"
         context["current_sort"] = sort
         context["current_dir"] = "desc" if descending else "asc"
         context["notes"] = with_note_urls(

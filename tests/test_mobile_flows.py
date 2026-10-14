@@ -56,7 +56,7 @@ def test_the_filter_button_counts_active_filters(signed_in, db):
 def test_the_chart_folds_on_phones_and_keeps_its_state_outside_the_swap(signed_in, db):
     body = signed_in.get(reverse("nba:player-list")).text
 
-    assert 'x-data="{ chartOpen: false }"' in body
+    assert 'x-data="{ chartOpen: false, chartView: ' in body
     assert 'id="player-chart" x-show="chartOpen"' in body
     assert "md:!block" in body
     # The state sits on the card, outside #player-table, which filters replace.
@@ -72,7 +72,7 @@ def test_the_team_page_gives_its_chart_a_state_too(signed_in, db):
 
     body = signed_in.get(reverse("nba:team-detail", args=["mia"])).text
 
-    assert 'x-data="{ chartOpen: false }"' in body
+    assert 'x-data="{ chartOpen: false, chartView: ' in body
     assert 'id="player-chart"' in body
 
 

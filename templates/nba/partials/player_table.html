@@ -269,7 +269,15 @@
       {% if watchlist_page %}
         <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "Your watchlist is empty." %}</p>
         <a href="{% url 'nba:player-list' %}" class="btn btn-primary mt-6">{% translate "Browse players" %}</a>
-      {% elif request.GET.q or request.GET.position or request.GET.team or request.GET.injury_status or request.GET.roster or request.GET.max_salary or request.GET.min_games or request.GET.watchlist or request.GET.last_min_games %}
+      {% elif kicklist_empty %}
+        <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400">
+          {% include "nba/partials/kick_icon.html" with filled=False icon_class="h-6 w-6" %}
+        </span>
+        <p class="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-200">{% translate "Your kick list is empty." %}</p>
+        <p class="mx-auto mt-1 max-w-sm text-sm text-neutral-500 dark:text-neutral-400">
+          {% translate "Mark players you want to trade away or keep clear of with the thumbs-down on their page or in your roster." %}
+        </p>
+      {% elif request.GET.q or request.GET.position or request.GET.team or request.GET.injury_status or request.GET.roster or request.GET.max_salary or request.GET.min_games or request.GET.watchlist or request.GET.kicklist or request.GET.last_min_games %}
         <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "Nothing matches those filters." %}</p>
       {% else %}
         <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "No players yet." %}</p>

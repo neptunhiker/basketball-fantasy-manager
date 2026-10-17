@@ -282,10 +282,11 @@ class PlayerListView(LoginRequiredMixin, ListView):
 
         qs = services.with_player_marks(qs, self.request.user)
         qs = qs.annotate(note_count=my_note_count(self.request.user))
-        watchlist_only = self.request.GET.get("watchlist") == "1" or getattr(
-            self, "watchlist_page", False
-        )
-        if watchlist_only:
+        # A player is starred or kicked, never both, so the two filters cannot
+        # combine: the kick list wins if both arrive.
+        if self._kicklist_only():
+            qs = qs.filter(is_kicked=True)
+        elif self._watchlist_only():
             qs = qs.filter(is_watched=True)
 
         roster_id = self.request.GET.get("roster", "").strip()
@@ -394,11 +395,28 @@ class PlayerListView(LoginRequiredMixin, ListView):
             self._season = newest_season()
         return self._season
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["watchlist_only"] = self.request.GET.get("watchlist") == "1" or getattr(
+    def _watchlist_only(self):
+        return self.request.GET.get("watchlist") == "1" or getattr(self, "watchlist_page", False)
+
+    def _kicklist_only(self):
+        # Not on the Watchlist page, which is stars by definition.
+        return self.request.GET.get("kicklist") == "1" and not getattr(
             self, "watchlist_page", False
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["kicklist_only"] = self._kicklist_only()
+        # Why a kick-list-only table came up empty: no kick marks at all, or
+        # none that match the other filters.
+        context["kicklist_empty"] = (
+            context["kicklist_only"]
+            and not context["players"]
+            and not WatchlistEntry.objects.filter(
+                user=self.request.user, stance=WatchlistEntry.Stance.KICK
+            ).exists()
+        )
+        context["watchlist_only"] = self._watchlist_only() and not context["kicklist_only"]
         context["watchlist_page"] = getattr(self, "watchlist_page", False)
         context["positions"] = Player.Position.choices
         context["teams"] = Team.objects.order_by("name")
@@ -415,6 +433,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
                 "min_games",
                 "inactive",
                 "watchlist",
+                "kicklist",
                 "last_min_games",
             )
             if self.request.GET.get(key, "").strip()

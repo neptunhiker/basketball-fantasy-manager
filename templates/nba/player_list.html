@@ -37,7 +37,7 @@
   <form class="border-b border-neutral-200 p-4 dark:border-neutral-800"
         x-data="{ filtersOpen: false }"
         hx-get="{{ request.path }}"
-        hx-trigger="input changed delay:300ms from:input[type=search], input changed delay:300ms from:input[type=number], change from:select, change from:input[type=checkbox], search"
+        hx-trigger="input changed delay:300ms from:input[type=search], input changed delay:300ms from:input[type=number], change from:select, change delay:10ms from:input[type=checkbox], search"
         hx-target="#player-table"
         hx-swap="outerHTML"
         hx-push-url="true"
@@ -133,10 +133,20 @@
           </label>
         {% endif %}
         {% if not watchlist_page %}
+          {# A player is starred or kicked, never both: ticking one unticks the #}
+          {# other. The checkboxes' request waits 10ms (see hx-trigger), so it #}
+          {# always reads the box this unticked. #}
           <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
             <input type="checkbox" name="watchlist" value="1" {% if watchlist_only %}checked{% endif %}
+                   x-ref="watchedOnly" @change="if ($el.checked) $refs.kickedOnly.checked = false"
                    class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
             {% translate "Watched only" %}
+          </label>
+          <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <input type="checkbox" name="kicklist" value="1" {% if kicklist_only %}checked{% endif %}
+                   x-ref="kickedOnly" @change="if ($el.checked) $refs.watchedOnly.checked = false"
+                   class="rounded border-neutral-300 text-rose-500 accent-rose-500 focus:ring-rose-500/30 dark:border-neutral-700 dark:bg-neutral-900">
+            {% translate "Kick list only" %}
           </label>
         {% endif %}
       </div>

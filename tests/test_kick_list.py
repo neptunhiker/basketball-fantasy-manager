@@ -370,3 +370,82 @@ def test_the_incoming_list_marks_kicked_players_without_a_toggle(signed_in, user
     assert "On your kick list" in response.text
     # The rows there are buttons already: no toggle nested inside them.
     assert "from kick list" not in response.text
+
+
+# --- the Players page filter ------------------------------------------------------------
+
+
+def players(client, **params):
+    return client.get(reverse("nba:player-list"), params)
+
+
+def test_the_kick_list_filter_keeps_only_kicked_players(signed_in, user, market):
+    services.add_to_kick_list(user, market["Bee"])
+    services.add_to_kick_list(user, market["Dog"])
+    services.add_to_watchlist(user, market["Ant"])
+
+    response = players(signed_in, kicklist="1")
+
+    assert names(response.context["players"]) == ["Bee", "Dog"]
+    assert response.context["kicklist_only"] is True
+    assert response.context["active_filter_count"] == 1
+    assert 'name="kicklist" value="1" checked' in response.text
+
+
+def test_the_kick_list_filter_combines_with_the_others(signed_in, user, market):
+    services.add_to_kick_list(user, market["Bee"])
+    services.add_to_kick_list(user, market["Dog"])
+
+    assert names(players(signed_in, kicklist="1", position="G").context["players"]) == ["Dog"]
+
+
+def test_the_kick_list_wins_over_the_watchlist(signed_in, user, market):
+    services.add_to_kick_list(user, market["Bee"])
+    services.add_to_watchlist(user, market["Ant"])
+
+    response = players(signed_in, kicklist="1", watchlist="1")
+
+    assert names(response.context["players"]) == ["Bee"]
+    assert response.context["watchlist_only"] is False
+
+
+def test_an_empty_kick_list_says_how_to_fill_it(signed_in, market):
+    response = players(signed_in, kicklist="1")
+
+    assert response.context["kicklist_empty"] is True
+    assert "Your kick list is empty." in response.text
+
+
+def test_a_kick_list_filtered_to_nothing_says_so(signed_in, user, market):
+    services.add_to_kick_list(user, market["Bee"])
+
+    response = players(signed_in, kicklist="1", position="C")
+
+    assert response.context["kicklist_empty"] is False
+    assert "Nothing matches those filters." in response.text
+
+
+def test_the_watchlist_page_has_no_kick_list_filter(signed_in, user, market):
+    services.add_to_kick_list(user, market["Bee"])
+    services.add_to_watchlist(user, market["Ant"])
+
+    response = signed_in.get(reverse("nba:watchlist"), {"kicklist": "1"})
+
+    assert names(response.context["players"]) == ["Ant"]
+    assert 'name="kicklist"' not in response.text
+
+
+def test_the_kick_list_speaks_german(signed_in, user, roster, market):
+    user.language = "de"
+    user.save(update_fields=["language"])
+    services.buy(roster, market["Ant"], market["Ant"].current_salary)
+    services.add_to_kick_list(user, market["Ant"])
+
+    squad = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk])).text
+    page = signed_in.get(reverse("nba:player-detail", args=[market["Bee"].slug])).text
+    empty = players(signed_in, kicklist="1", position="C").text
+
+    assert "P Ant von der Abschussliste nehmen" in squad
+    assert "Abschusskandidat" in squad
+    assert "P Bee auf die Abschussliste setzen" in page
+    assert "Nur Abschussliste" in empty

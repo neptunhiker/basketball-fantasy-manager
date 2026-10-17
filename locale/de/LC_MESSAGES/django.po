@@ -4238,3 +4238,51 @@ msgstr "Zum hellen Design wechseln"
 #: templates/partials/theme_toggle.html:3
 msgid "Switch to dark theme"
 msgstr "Zum dunklen Design wechseln"
+
+#: apps/fantasy/models.py:436
+msgid "Kick list"
+msgstr "Abschussliste"
+
+#: templates/fantasy/partials/roster_panel.html:280
+#: templates/fantasy/partials/squad_cards.html:38
+msgid "Kick candidate"
+msgstr "Abschusskandidat"
+
+#: templates/nba/partials/kick_button.html:7
+msgid "Remove from kick list"
+msgstr "Von der Abschussliste nehmen"
+
+#: templates/nba/partials/kick_button.html:8
+msgid "Add to kick list"
+msgstr "Auf die Abschussliste setzen"
+
+#: templates/nba/partials/kick_button.html:9
+#, python-format
+msgid "Remove %(name)s from kick list"
+msgstr "%(name)s von der Abschussliste nehmen"
+
+#: templates/nba/partials/kick_button.html:10
+#, python-format
+msgid "Add %(name)s to kick list"
+msgstr "%(name)s auf die Abschussliste setzen"
+
+#: templates/fantasy/partials/trade_body.html:78
+#: templates/nba/partials/kick_marker.html:4
+msgid "On your kick list"
+msgstr "Auf deiner Abschussliste"
+
+#: templates/nba/partials/player_table.html:276
+msgid "Your kick list is empty."
+msgstr "Deine Abschussliste ist leer."
+
+#: templates/nba/partials/player_table.html:278
+msgid ""
+"Mark players you want to trade away or keep clear of with the thumbs-down on "
+"their page or in your roster."
+msgstr ""
+"Markiere Spieler, die du abgeben oder meiden willst, mit dem Daumen nach "
+"unten – auf ihrer Seite oder in deinem Kader."
+
+#: templates/nba/player_list.html:149
+msgid "Kick list only"
+msgstr "Nur Abschussliste"

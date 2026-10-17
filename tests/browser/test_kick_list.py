@@ -118,3 +118,53 @@ def test_the_players_list_shows_the_kick_mark_in_the_star_slot(game, open_page, 
     page.get_by_role("button", name=f"Add {player.full_name} to watchlist").wait_for(timeout=3000)
     assert not WatchlistEntry.objects.filter(user=game["user"], player=player).exists()
     assert page_overflow(page) == 0
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+def test_the_kick_list_filter_on_the_players_page(game, open_page, size):
+    from apps.fantasy import services
+
+    kicked = [game["players"][20], game["players"][21]]
+    for player in kicked:
+        services.add_to_kick_list(game["user"], player)
+    page = open_page(game["user"], reverse("nba:player-list"), size=size)
+
+    if size == "phone":
+        page.get_by_role("button", name="Filters").click()
+    # Starting from "Watched only", which the kick filter must untick.
+    watched = page.get_by_label("Watched only")
+    watched.check()
+    page.wait_for_function("document.querySelectorAll('#player-table tbody tr').length === 1")
+    kick = page.get_by_label("Kick list only")
+    kick.check()
+    page.wait_for_function("document.querySelectorAll('#player-table tbody tr').length === 2")
+
+    assert not watched.is_checked()
+    for player in kicked:
+        assert page.get_by_role("button", name=f"Remove {player.full_name} from kick list").count()
+    assert "kicklist=1" in page.url and "watchlist" not in page.url
+    assert page_overflow(page) == 0
+    shot(page, "kick-list", f"players-filter-{size}")
+
+
+def test_an_empty_kick_list_explains_itself(game, open_page):
+    page = open_page(game["user"], reverse("nba:player-list") + "?kicklist=1", size="phone")
+
+    assert page.get_by_text("Your kick list is empty.").is_visible()
+    assert page_overflow(page) == 0
+    close_up(page.locator("#player-table"), "players-empty-phone")
+
+
+@pytest.mark.parametrize("size", ["phone", "desktop"])
+def test_the_squad_in_german(game, open_page, size):
+    from apps.fantasy import services
+
+    game["user"].language = "de"
+    game["user"].save(update_fields=["language"])
+    services.add_to_kick_list(game["user"], game["players"][1])
+    page = open_page(game["user"], build_path(game), size=size, dark=True)
+
+    assert page.get_by_text("Abschusskandidat").locator("visible=true").count() == 1
+    assert page_overflow(page) == 0
+    rows = page.locator("li:has([data-kicked]), tr:has([data-kicked])").locator("visible=true")
+    close_up(rows.locator("xpath=..").first, f"squad-{size}-german")

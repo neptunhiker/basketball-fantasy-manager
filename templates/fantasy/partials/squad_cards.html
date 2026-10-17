@@ -37,7 +37,7 @@
               </p>
               <span class="badge badge-kick mt-1 hidden group-has-[[data-kicked]]/card:inline-flex">{% translate "Kick candidate" %}</span>
             </div>
-            <div class="-mr-2 -mt-1 flex shrink-0 items-center gap-1">
+            <div class="-mr-2 flex shrink-0 items-center gap-1">
               {% include "nba/partials/injury_status.html" with player=player id_suffix="-card" %}
               {% include "nba/partials/player_marks.html" with marks="kick" is_kicked=player.is_kicked %}
             </div>

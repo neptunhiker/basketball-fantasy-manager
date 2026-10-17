@@ -157,7 +157,7 @@
           {% for player in players %}
             <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
               <td class="px-4 py-3 text-center max-md:sticky max-md:left-0 max-md:z-[1] max-md:px-1 max-md:bg-white max-md:dark:bg-neutral-900">
-                {% include "nba/partials/watchlist_button.html" with is_watched=player.is_watched remove_row=watchlist_only %}
+                {% include "nba/partials/player_marks.html" with is_watched=player.is_watched is_kicked=player.is_kicked remove_row=watchlist_only %}
               </td>
               <td class="px-4 py-3 font-medium max-md:sticky max-md:left-12 max-md:z-[1] max-md:min-w-[8.5rem] max-md:pl-1 max-md:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-md:bg-white max-md:dark:bg-neutral-900 max-md:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">
                 <a href="{% url 'nba:player-detail' player.slug %}"

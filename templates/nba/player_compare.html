@@ -114,7 +114,7 @@
               {% with player=item.player %}{% blocktranslate with name=player.full_name asvar remove_label %}Remove {{ name }}{% endblocktranslate %}
                 <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
                   <td class="px-4 py-3 text-center">
-                    {% include "nba/partials/watchlist_button.html" with is_watched=player.is_watched remove_row=False %}
+                    {% include "nba/partials/player_marks.html" with is_watched=player.is_watched is_kicked=player.is_kicked remove_row=False %}
                   </td>
                   <td class="px-4 py-3 font-medium">
                     <a href="{% url 'nba:player-detail' player.slug %}"

@@ -53,6 +53,11 @@ urlpatterns = [
         name="watchlist-toggle",
     ),
     path(
+        "players/<slug:slug>/kick/",
+        views.KickToggleView.as_view(),
+        name="kick-toggle",
+    ),
+    path(
         "players/<slug:slug>/notes/<uuid:note_pk>/edit/",
         views.PlayerNoteEditView.as_view(),
         name="player-note-edit",

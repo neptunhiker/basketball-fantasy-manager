@@ -118,7 +118,7 @@
           <li class="flex items-center gap-3 py-2.5 pl-2 pr-4 {% if signings_open and not player.affordable %}opacity-55{% endif %}">
             {# The star refreshes this list when pressed (watchlist-changed), #}
             {# so the chip's count and a filtered list follow it. #}
-            <span class="-mr-1 shrink-0">{% include "nba/partials/watchlist_button.html" with is_watched=player.is_watched %}</span>
+            <span class="-mr-1 shrink-0">{% include "nba/partials/player_marks.html" with is_watched=player.is_watched is_kicked=player.is_kicked %}</span>
             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
               {{ player.position }}
             </span>

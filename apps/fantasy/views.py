@@ -798,6 +798,23 @@ def _watched_by(user):
     )
 
 
+def _mark_kicked(user, players):
+    """Set `is_kicked` on each player from the viewer's kick list, in one query.
+
+    For lists that are already loaded (the squad, the trade dialog's outgoing
+    side), where an `Exists()` annotation would mean loading them again.
+    """
+    kicked = set(
+        WatchlistEntry.objects.filter(
+            user=user,
+            player__in=[player.pk for player in players],
+            stance=WatchlistEntry.Stance.KICK,
+        ).values_list("player_id", flat=True)
+    )
+    for player in players:
+        player.is_kicked = player.pk in kicked
+
+
 def _watchlist_context(roster, user, filters):
     """The chip's count, and -- only when the filtered list comes up empty --
     whether that is because the watchlist itself is empty."""
@@ -937,6 +954,7 @@ def _build_context(request, roster):
             )
         else:
             player.salary_difference_amount = None
+    _mark_kicked(request.user, [membership.player for membership in memberships])
     current_sort, current_dir, memberships = _sort_roster_memberships(request, memberships)
     trading_allowed = roster.season.trading_allowed
     if not trading_allowed:

@@ -1,0 +1,25 @@
+{% comment %}
+  Every mark the viewer has set on one player, as one swap unit. Star and kick
+  mark share a row (see `WatchlistEntry.stance`), so pressing either can change
+  both; each toggle therefore redraws this whole element.
+
+  `marks` picks the shape:
+    star  one slot for long lists: the star, or -- for a kicked player -- the
+          filled kick button in its place, which lifts the kick mark and brings
+          the star back. Same width either way, so sticky columns stay put.
+    kick  the kick button alone (the roster's own players)
+    both  star and kick button side by side (the player page)
+
+  `data-kicked` lets the row around it react without a redraw: the squad tints
+  kicked players with `has-[[data-kicked]]:`.
+{% endcomment %}
+{% with marks=marks|default:"star" %}
+  <span data-player-marks class="inline-flex items-center gap-1"{% if is_kicked %} data-kicked{% endif %}>
+    {% if marks == "both" or marks == "star" and not is_kicked %}
+      {% include "nba/partials/watchlist_button.html" %}
+    {% endif %}
+    {% if marks != "star" or is_kicked %}
+      {% include "nba/partials/kick_button.html" %}
+    {% endif %}
+  </span>
+{% endwith %}

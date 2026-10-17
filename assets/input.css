@@ -292,6 +292,11 @@
     @apply bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300;
   }
 
+  /* A player on the viewer's kick list: trade him away, or don't buy him. */
+  .badge-kick {
+    @apply bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300;
+  }
+
   /* The one place the brand gradient appears: thin accents, never fills. */
   /* Modal — chrome only. The shell lives in templates/partials/modal.html and
      every modal extends it, so these classes are the single place its look is

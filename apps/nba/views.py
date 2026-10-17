@@ -730,32 +730,82 @@ class PlayerCompareModalView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
+MARK_SHAPES = {"star", "kick", "both"}
+
+
+def _player_stance(user, player):
+    """The viewer's mark on one player: "watch", "kick" or None."""
+    return (
+        WatchlistEntry.objects.filter(user=user, player=player)
+        .values_list("stance", flat=True)
+        .first()
+    )
+
+
+def _marks_response(request, player, stance, events):
+    """Redraw every mark on the player, in the shape the page asked for.
+
+    Star and kick mark live on one row, so either toggle can change both: the
+    whole `player_marks.html` goes back, not just the pressed button.
+    """
+    marks = request.GET.get("marks")
+    response = render(
+        request,
+        "nba/partials/player_marks.html",
+        {
+            "player": player,
+            "marks": marks if marks in MARK_SHAPES else "star",
+            "is_watched": stance == WatchlistEntry.Stance.WATCH,
+            "is_kicked": stance == WatchlistEntry.Stance.KICK,
+        },
+    )
+    response["HX-Trigger"] = ", ".join(events)
+    return response
+
+
 class WatchlistToggleView(LoginRequiredMixin, View):
     def post(self, request, slug):
         player = get_object_or_404(Player, slug=slug)
-        entry = WatchlistEntry.objects.filter(
-            user=request.user, player=player, stance=WatchlistEntry.Stance.WATCH
-        ).first()
-        if entry is None:
-            services.add_to_watchlist(request.user, player)
-        else:
+        was = _player_stance(request.user, player)
+        if was == WatchlistEntry.Stance.WATCH:
             services.remove_from_watchlist(request.user, player)
+            stance = None
+        else:
+            services.add_to_watchlist(request.user, player)
+            stance = WatchlistEntry.Stance.WATCH
 
-        if entry is not None and request.GET.get("remove_row") == "1":
+        if stance is None and request.GET.get("remove_row") == "1":
             return HttpResponse("")
 
-        response = render(
-            request,
-            "nba/partials/watchlist_button.html",
-            {
-                "player": player,
-                "is_watched": entry is None,
-            },
-        )
         # For lists filtered by the watchlist (the roster page's market): they
         # refresh themselves on this event, so the row and the count follow.
-        response["HX-Trigger"] = "watchlist-changed"
-        return response
+        events = ["watchlist-changed"]
+        if was == WatchlistEntry.Stance.KICK:
+            events.append("kicklist-changed")
+        return _marks_response(request, player, stance, events)
+
+
+class KickToggleView(LoginRequiredMixin, View):
+    """Put a player on the viewer's kick list, or take him off it.
+
+    Kicking a starred player lifts the star, so the market (which counts and
+    filters stars) is told to refresh only when that happened.
+    """
+
+    def post(self, request, slug):
+        player = get_object_or_404(Player, slug=slug)
+        was = _player_stance(request.user, player)
+        if was == WatchlistEntry.Stance.KICK:
+            services.remove_from_kick_list(request.user, player)
+            stance = None
+        else:
+            services.add_to_kick_list(request.user, player)
+            stance = WatchlistEntry.Stance.KICK
+
+        events = ["kicklist-changed"]
+        if was == WatchlistEntry.Stance.WATCH:
+            events.append("watchlist-changed")
+        return _marks_response(request, player, stance, events)
 
 
 def _card(title, unit, rows, footnote=""):
@@ -1031,9 +1081,9 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
             rows.append({"snapshot": snapshot, **changes})
 
         context["rows"] = rows
-        context["is_watched"] = WatchlistEntry.objects.filter(
-            user=self.request.user, player=self.object, stance=WatchlistEntry.Stance.WATCH
-        ).exists()
+        stance = _player_stance(self.request.user, self.object)
+        context["is_watched"] = stance == WatchlistEntry.Stance.WATCH
+        context["is_kicked"] = stance == WatchlistEntry.Stance.KICK
         latest_injury = self.object.injuries.order_by("-observed_at", "-created_at").first()
         context["latest_injury"] = latest_injury
         context["is_injured"] = bool(

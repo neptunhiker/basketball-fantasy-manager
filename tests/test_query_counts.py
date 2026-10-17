@@ -108,7 +108,9 @@ def test_the_build_page_costs_the_same_whatever_the_squad_holds(signed_in, roste
         services.buy(roster, player, player.current_salary)
     full = cost(lambda: signed_in.get(build_url(roster)))
 
-    assert full == empty + 2, f"{empty} queries with no squad, {full} with twelve"
+    # A fixed few more for a non-empty squad, one of them the viewer's kick
+    # marks on its players -- never one per player.
+    assert full == empty + 3, f"{empty} queries with no squad, {full} with twelve"
 
 
 def test_a_signing_costs_the_same_whatever_the_market_holds(signed_in, roster):

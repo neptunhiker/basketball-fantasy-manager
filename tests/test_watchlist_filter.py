@@ -139,7 +139,7 @@ def test_every_row_has_a_star_toggle(signed_in, user, roster, market):
     body = build(signed_in, roster).text
 
     for player in market.values():
-        assert f'hx-post="{reverse("nba:watchlist-toggle", args=[player.slug])}"' in body
+        assert f'hx-post="{reverse("nba:watchlist-toggle", args=[player.slug])}?marks=star"' in body
     assert "Remove P Ant from watchlist" in body
     assert "Add P Bee to watchlist" in body
     assert "watchlist-changed from:body" in body

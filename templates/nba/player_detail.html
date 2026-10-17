@@ -21,12 +21,12 @@
             title="{{ player.get_position_display }}">
         {{ player.position }}
       </span>
-      <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-2">
+      {# Wide enough for the name and its marks; on a phone the buttons on #}
+      {# the right wrap to a line of their own rather than squeeze it. #}
+      <div class="min-w-[11rem] flex-1">
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
           <h2 class="text-xl font-bold tracking-tight">{{ player.full_name }}</h2>
-          <span id="watchlist-button">
-            {% include "nba/partials/watchlist_button.html" %}
-          </span>
+          {% include "nba/partials/player_marks.html" with marks="both" %}
         </div>
         <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
           {{ player.get_position_display }}
@@ -40,7 +40,7 @@
           {% if not player.is_active %}<span class="badge badge-neutral ml-1">{% translate "Inactive" %}</span>{% endif %}
         </p>
       </div>
-      <div class="flex shrink-0 items-center gap-2">
+      <div class="flex shrink-0 items-center gap-2 max-sm:w-full">
         <div x-data="{ open: false }">
           <button type="button" @click="open = true"
                   class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition

@@ -1,0 +1,20 @@
+{% load i18n %}
+{% comment %}
+  The kick toggle: "trade him away" for a player on the roster, "don't buy
+  him" for one who isn't. Swaps the surrounding `player_marks.html`, since
+  kicking a starred player lifts the star.
+{% endcomment %}
+{% translate "Remove from kick list" as remove_kick_label %}
+{% translate "Add to kick list" as add_kick_label %}
+{% blocktranslate with name=player.full_name asvar remove_kick_aria %}Remove {{ name }} from kick list{% endblocktranslate %}
+{% blocktranslate with name=player.full_name asvar add_kick_aria %}Add {{ name }} to kick list{% endblocktranslate %}
+<button type="button"
+        hx-post="{% url 'nba:kick-toggle' player.slug %}?marks={{ marks|default:'kick' }}"
+        hx-swap="outerHTML"
+        hx-target="closest [data-player-marks]"
+        class="inline-flex h-10 w-10 sm:h-8 sm:w-8 items-center justify-center rounded-lg transition focus:outline-none focus:ring-2 focus:ring-rose-500/40 {% if is_kicked %}text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10{% else %}text-neutral-300 hover:bg-rose-50 hover:text-rose-600 dark:text-neutral-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400{% endif %}"
+        aria-label="{% if is_kicked %}{{ remove_kick_aria }}{% else %}{{ add_kick_aria }}{% endif %}"
+        aria-pressed="{% if is_kicked %}true{% else %}false{% endif %}"
+        title="{% if is_kicked %}{{ remove_kick_label }}{% else %}{{ add_kick_label }}{% endif %}">
+  {% include "nba/partials/kick_icon.html" with filled=is_kicked %}
+</button>

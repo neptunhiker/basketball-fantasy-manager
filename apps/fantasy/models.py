@@ -423,7 +423,17 @@ class Manager(TimeStampedModel):
 
 
 class WatchlistEntry(TimeStampedModel):
-    """A private, persistent player watch entry owned by one account."""
+    """A private, persistent opinion about one player, owned by one account.
+
+    Either a star (`watch`: worth signing) or a kick mark (`kick`: trade him
+    away if he is on the roster, don't buy him if he isn't). One row per
+    account and player, so the two can never be set at once: marking one
+    replaces the other.
+    """
+
+    class Stance(models.TextChoices):
+        WATCH = "watch", _("Watchlist")
+        KICK = "kick", _("Kick list")
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -436,6 +446,12 @@ class WatchlistEntry(TimeStampedModel):
         verbose_name="Player",
         on_delete=models.PROTECT,
         related_name="watchlist_entries",
+    )
+    stance = models.CharField(
+        "Stance",
+        max_length=8,
+        choices=Stance.choices,
+        default=Stance.WATCH,
     )
 
     class Meta:

@@ -284,6 +284,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
         watched = WatchlistEntry.objects.filter(
             user=self.request.user,
             player_id=OuterRef("pk"),
+            stance=WatchlistEntry.Stance.WATCH,
         )
         qs = qs.annotate(is_watched=Exists(watched), note_count=my_note_count(self.request.user))
         watchlist_only = self.request.GET.get("watchlist") == "1" or getattr(
@@ -625,7 +626,11 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
         if self.request.user.is_authenticated:
             qs = qs.annotate(
                 is_watched=Exists(
-                    WatchlistEntry.objects.filter(user=self.request.user, player=OuterRef("pk"))
+                    WatchlistEntry.objects.filter(
+                        user=self.request.user,
+                        player=OuterRef("pk"),
+                        stance=WatchlistEntry.Stance.WATCH,
+                    )
                 )
             )
 
@@ -728,7 +733,9 @@ class PlayerCompareModalView(LoginRequiredMixin, View):
 class WatchlistToggleView(LoginRequiredMixin, View):
     def post(self, request, slug):
         player = get_object_or_404(Player, slug=slug)
-        entry = WatchlistEntry.objects.filter(user=request.user, player=player).first()
+        entry = WatchlistEntry.objects.filter(
+            user=request.user, player=player, stance=WatchlistEntry.Stance.WATCH
+        ).first()
         if entry is None:
             services.add_to_watchlist(request.user, player)
         else:
@@ -1025,7 +1032,7 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
 
         context["rows"] = rows
         context["is_watched"] = WatchlistEntry.objects.filter(
-            user=self.request.user, player=self.object
+            user=self.request.user, player=self.object, stance=WatchlistEntry.Stance.WATCH
         ).exists()
         latest_injury = self.object.injuries.order_by("-observed_at", "-created_at").first()
         context["latest_injury"] = latest_injury

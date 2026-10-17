@@ -792,7 +792,10 @@ def _market(roster):
 
 
 def _watched_by(user):
-    return WatchlistEntry.objects.filter(user=user, player=OuterRef("pk"))
+    """The viewer's star on the outer player, for `Exists()`."""
+    return WatchlistEntry.objects.filter(
+        user=user, player=OuterRef("pk"), stance=WatchlistEntry.Stance.WATCH
+    )
 
 
 def _watchlist_context(roster, user, filters):
@@ -804,7 +807,9 @@ def _watchlist_context(roster, user, filters):
         "watchlist_empty": (
             filters["watchlist"]
             and count == 0
-            and not WatchlistEntry.objects.filter(user=user).exists()
+            and not WatchlistEntry.objects.filter(
+                user=user, stance=WatchlistEntry.Stance.WATCH
+            ).exists()
         ),
     }
 

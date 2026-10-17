@@ -603,11 +603,44 @@ def amount_paid_for(roster, player):
     return player.current_salary or Decimal("0")
 
 
+def set_player_stance(user, player, stance):
+    """Star or kick-mark one player for this account, replacing the other mark.
+
+    One row per account and player, so switching a star to a kick mark (or
+    back) is a single write rather than a delete and an insert.
+    """
+    return WatchlistEntry.objects.update_or_create(
+        user=user, player=player, defaults={"stance": stance}
+    )
+
+
+def clear_player_stance(user, player, stance):
+    """Remove this account's mark for the player, but only if it is `stance`.
+
+    Un-starring a player must not lift a kick mark set elsewhere, and the
+    other way round.
+    """
+    return WatchlistEntry.objects.filter(user=user, player=player, stance=stance).delete()
+
+
 def add_to_watchlist(user, player):
-    """Add one player to this account's private watchlist idempotently."""
-    return WatchlistEntry.objects.get_or_create(user=user, player=player)
+    """Add one player to this account's private watchlist idempotently.
+
+    A kick mark on the player is replaced by the star.
+    """
+    return set_player_stance(user, player, WatchlistEntry.Stance.WATCH)
 
 
 def remove_from_watchlist(user, player):
-    """Remove only this account's entry for the player."""
-    return WatchlistEntry.objects.filter(user=user, player=player).delete()
+    """Remove only this account's star for the player."""
+    return clear_player_stance(user, player, WatchlistEntry.Stance.WATCH)
+
+
+def add_to_kick_list(user, player):
+    """Kick-mark one player for this account idempotently, replacing a star."""
+    return set_player_stance(user, player, WatchlistEntry.Stance.KICK)
+
+
+def remove_from_kick_list(user, player):
+    """Remove only this account's kick mark for the player."""
+    return clear_player_stance(user, player, WatchlistEntry.Stance.KICK)

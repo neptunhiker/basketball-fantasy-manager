@@ -6,7 +6,6 @@ from django.db.models import (
     Case,
     Count,
     DecimalField,
-    Exists,
     ExpressionWrapper,
     F,
     IntegerField,
@@ -281,12 +280,8 @@ class PlayerListView(LoginRequiredMixin, ListView):
             ),
         )
 
-        watched = WatchlistEntry.objects.filter(
-            user=self.request.user,
-            player_id=OuterRef("pk"),
-            stance=WatchlistEntry.Stance.WATCH,
-        )
-        qs = qs.annotate(is_watched=Exists(watched), note_count=my_note_count(self.request.user))
+        qs = services.with_player_marks(qs, self.request.user)
+        qs = qs.annotate(note_count=my_note_count(self.request.user))
         watchlist_only = self.request.GET.get("watchlist") == "1" or getattr(
             self, "watchlist_page", False
         )
@@ -624,15 +619,7 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
             )
         )
         if self.request.user.is_authenticated:
-            qs = qs.annotate(
-                is_watched=Exists(
-                    WatchlistEntry.objects.filter(
-                        user=self.request.user,
-                        player=OuterRef("pk"),
-                        stance=WatchlistEntry.Stance.WATCH,
-                    )
-                )
-            )
+            qs = services.with_player_marks(qs, self.request.user)
 
         qs = with_expected_salary(qs)
 
@@ -914,6 +901,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
                 ),
             )
         )
+        qs = services.with_player_marks(qs, self.request.user)
         qs = qs.annotate(note_count=my_note_count(self.request.user))
         qs = with_last_season(qs, self._last_season())
 

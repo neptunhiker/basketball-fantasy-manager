@@ -14,6 +14,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Exists, OuterRef
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -601,6 +602,23 @@ def amount_paid_for(roster, player):
     if arrival is not None and arrival.price_in is not None:
         return arrival.price_in
     return player.current_salary or Decimal("0")
+
+
+def with_player_marks(players, user):
+    """Annotate `is_watched` and `is_kicked`: the viewer's marks on each player.
+
+    Two `Exists()` subqueries, so a whole list costs no extra query.
+    """
+
+    def marked(stance):
+        return Exists(
+            WatchlistEntry.objects.filter(user=user, player=OuterRef("pk"), stance=stance)
+        )
+
+    return players.annotate(
+        is_watched=marked(WatchlistEntry.Stance.WATCH),
+        is_kicked=marked(WatchlistEntry.Stance.KICK),
+    )
 
 
 def set_player_stance(user, player, stance):

@@ -850,7 +850,9 @@ def _available_players(roster, filters, user, budget=None):
     """
     budget = roster.cash if budget is None else budget
     qs = (
-        _market(roster)
+        # The viewer's marks, not the roster owner's: the two are the same
+        # person today, and the star is about who is looking.
+        services.with_player_marks(_market(roster), user)
         .select_related("team")
         .annotate(
             # Django templates cannot compare with <=, so affordability is
@@ -858,9 +860,6 @@ def _available_players(roster, filters, user, budget=None):
             affordable=ExpressionWrapper(
                 Q(current_salary__lte=budget), output_field=BooleanField()
             ),
-            # The viewer's watchlist, not the roster owner's: the two are the
-            # same person today, and the star is about who is looking.
-            is_watched=Exists(_watched_by(user)),
         )
         .order_by("-current_salary", "last_name")
     )
@@ -1302,6 +1301,10 @@ class RosterTradeView(OwnRosterMixin, View):
         # the modal reads the squad once rather than once per figure.
         memberships = roster.current_memberships
         on_roster = {membership.player_id for membership in memberships}
+        # The viewer's kick candidates first: the trade starts where they
+        # already decided. Stable, so each group keeps the roster's order.
+        _mark_kicked(request.user, [membership.player for membership in memberships])
+        memberships = sorted(memberships, key=lambda membership: not membership.player.is_kicked)
 
         # Both sides are checked against the roster as it is right now, so the
         # modal can never offer a trade the service layer would refuse.

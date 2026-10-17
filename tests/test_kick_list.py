@@ -276,3 +276,97 @@ def test_another_accounts_kick_marks_stay_private(signed_in, user, roster, marke
     response = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk]))
 
     assert not response.context["memberships"][0].player.is_kicked
+
+
+# --- lists: one slot, the star or the kick mark ------------------------------------------
+
+
+def test_the_market_shows_a_kicked_player_by_his_kick_mark(signed_in, user, roster, market):
+    services.add_to_kick_list(user, market["Bee"])
+
+    response = build(signed_in, roster)
+
+    bee = next(p for p in response.context["available"] if p.last_name == "Bee")
+    assert bee.is_kicked
+    assert "Remove P Bee from kick list" in response.text
+    assert "Add P Bee to watchlist" not in response.text
+    # Everyone else keeps the star, and nobody gets a second button.
+    assert "Add P Ant to watchlist" in response.text
+    assert "Add P Ant to kick list" not in response.text
+
+
+def test_the_players_list_marks_kicked_players(signed_in, user, market):
+    services.add_to_kick_list(user, market["Bee"])
+
+    response = signed_in.get(reverse("nba:player-list"))
+
+    kicked = {p.last_name for p in response.context["players"] if p.is_kicked}
+    assert kicked == {"Bee"}
+    assert "Remove P Bee from kick list" in response.text
+
+
+def test_the_team_page_shows_the_viewers_marks(signed_in, user, market):
+    from apps.nba.models import Team
+
+    team = Team.objects.order_by("name").first()
+    Player.objects.filter(pk__in=[market["Ant"].pk, market["Bee"].pk]).update(team=team)
+    services.add_to_watchlist(user, market["Ant"])
+    services.add_to_kick_list(user, market["Bee"])
+
+    body = signed_in.get(reverse("nba:team-detail", args=[team.abbreviation.lower()])).text
+
+    assert "Remove P Ant from watchlist" in body
+    assert "Remove P Bee from kick list" in body
+
+
+def test_the_compare_page_shows_the_viewers_marks(signed_in, user, market):
+    services.add_to_kick_list(user, market["Bee"])
+
+    response = signed_in.get(
+        reverse("nba:player-compare"), {"player": [market["Ant"].slug, market["Bee"].slug]}
+    )
+
+    assert "Remove P Bee from kick list" in response.text
+
+
+# --- the trade dialog ---------------------------------------------------------------------
+
+
+def trade(client, roster, **params):
+    return client.get(reverse("fantasy:roster-trade", args=[roster.pk]), params)
+
+
+def test_kick_candidates_lead_the_list_of_players_going_out(signed_in, user, roster, market):
+    for name in ("Ant", "Bee", "Cat"):
+        services.buy(roster, market[name], market[name].current_salary)
+    services.add_to_kick_list(user, market["Cat"])
+
+    response = trade(signed_in, roster)
+
+    out = [m.player.last_name for m in response.context["memberships"]]
+    assert out[0] == "Cat"
+    assert sorted(out[1:]) == ["Ant", "Bee"]
+    assert "On your kick list" in response.text
+
+
+def test_without_kick_marks_the_order_stays(signed_in, user, roster, market):
+    for name in ("Ant", "Bee", "Cat"):
+        services.buy(roster, market[name], market[name].current_salary)
+    before = [m.player.last_name for m in roster.current_memberships]
+
+    response = trade(signed_in, roster)
+
+    assert [m.player.last_name for m in response.context["memberships"]] == before
+
+
+def test_the_incoming_list_marks_kicked_players_without_a_toggle(signed_in, user, roster, market):
+    services.buy(roster, market["Ant"], market["Ant"].current_salary)
+    services.add_to_kick_list(user, market["Dog"])
+
+    response = trade(signed_in, roster, out=market["Ant"].pk)
+
+    dog = next(p for p in response.context["available"] if p.last_name == "Dog")
+    assert dog.is_kicked
+    assert "On your kick list" in response.text
+    # The rows there are buttons already: no toggle nested inside them.
+    assert "from kick list" not in response.text

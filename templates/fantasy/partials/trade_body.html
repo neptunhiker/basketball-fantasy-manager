@@ -66,6 +66,8 @@
                         class="flex w-full items-center gap-2.5 border-l-2 px-3 py-2 text-left transition
                           {% if preview.player_out.pk == membership.player.pk %}
                             border-primary-500 bg-primary-50 dark:bg-primary-500/10
+                          {% elif membership.player.is_kicked %}
+                            border-rose-400 bg-rose-50/50 hover:bg-rose-50 dark:bg-rose-500/[0.06] dark:hover:bg-rose-500/10
                           {% else %}
                             border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/60
                           {% endif %}">
@@ -73,7 +75,11 @@
                     {{ membership.player.position }}
                   </span>
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate text-sm font-medium">{{ membership.player.full_name }}</span>
+                    <span class="flex items-center gap-1 text-sm font-medium">
+                      <span class="truncate">{{ membership.player.full_name }}</span>
+                      {# A marker, not the toggle: this whole row is already a button. #}
+                      {% if membership.player.is_kicked %}{% include "nba/partials/kick_marker.html" %}{% endif %}
+                    </span>
                     {% if membership.player.team %}
                       <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
                         {{ membership.player.team.abbreviation }}
@@ -172,6 +178,8 @@
                         <svg class="h-3.5 w-3.5 shrink-0 text-primary-500 dark:text-primary-300" fill="currentColor" viewBox="0 0 24 24" role="img" aria-label="{% translate 'On your watchlist' %}">
                           <path d="m12 3.8 2.5 5.1 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8L12 3.8Z"/>
                         </svg>
+                      {% elif player.is_kicked %}
+                        {% include "nba/partials/kick_marker.html" %}
                       {% endif %}
                     </span>
                     <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">

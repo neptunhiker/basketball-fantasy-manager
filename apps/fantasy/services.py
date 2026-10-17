@@ -21,6 +21,7 @@ from apps.core.dates import local_moment
 from apps.core.templatetags.money import millions
 
 from .models import (
+    ROSTER_ICON_CHOICES,
     ROSTER_SIZE,
     TRADE_BUY_PRICE,
     TRADE_SELL_PRICE,
@@ -28,7 +29,6 @@ from .models import (
     PlayerSnapshot,
     Roster,
     RosterPlayer,
-    ROSTER_ICON_CHOICES,
     Transaction,
     WatchlistEntry,
     position_shortfalls,
@@ -42,8 +42,8 @@ def _lock(roster):
     Also the moment any free trades that have fallen due are paid out, so a
     trade decision is never made against a count that is a week behind.
     """
-    locked = Roster.objects.select_related("season").select_for_update(of=("self",)).get(
-        pk=roster.pk
+    locked = (
+        Roster.objects.select_related("season").select_for_update(of=("self",)).get(pk=roster.pk)
     )
     _pay_due_grants(locked, timezone.now())
     return locked
@@ -120,9 +120,11 @@ def pay_due_trade_grants(rosters, now=None):
         if all(grant.key in received for grant in schedules[roster.season_id]):
             continue
         with transaction.atomic():
-            locked = Roster.objects.select_related("season").select_for_update(
-                of=("self",)
-            ).get(pk=roster.pk)
+            locked = (
+                Roster.objects.select_related("season")
+                .select_for_update(of=("self",))
+                .get(pk=roster.pk)
+            )
             total += _pay_due_grants(locked, now)
         roster.trades_available = locked.trades_available
     return total
@@ -150,9 +152,12 @@ def _require_transactions(season):
         )
     if season.signings_close_at is None:
         raise ValidationError(_("Buying and releasing are not currently allowed."))
-    raise ValidationError(_("Signings closed on %(date)s. Trades only from here.") % {
-        "date": local_moment(season.signings_close_at),
-    })
+    raise ValidationError(
+        _("Signings closed on %(date)s. Trades only from here.")
+        % {
+            "date": local_moment(season.signings_close_at),
+        }
+    )
 
 
 @transaction.atomic
@@ -176,9 +181,7 @@ def buy(roster, player, price, occurred_at=None, note=""):
     if _open_membership(locked, player):
         raise ValidationError(_("%(player)s is already on the roster.") % {"player": player})
     if locked.player_count >= ROSTER_SIZE:
-        raise ValidationError(
-            _("The roster is full at %(size)d players.") % {"size": ROSTER_SIZE}
-        )
+        raise ValidationError(_("The roster is full at %(size)d players.") % {"size": ROSTER_SIZE})
 
     RosterPlayer.objects.create(roster=locked, player=player, added_at=occurred_at)
     locked.cash -= price
@@ -303,9 +306,7 @@ def trade_market_closed_reason(season):
 def next_trade_grant(season, now=None):
     """The next free trade(s) still to come this season, or None."""
     now = now or timezone.now()
-    return next(
-        (grant for grant in season.trade_grant_schedule() if grant.granted_at > now), None
-    )
+    return next((grant for grant in season.trade_grant_schedule() if grant.granted_at > now), None)
 
 
 def _require_trade_market(season):
@@ -493,6 +494,7 @@ def default_roster_name(manager, season):
     `manager` may be None, which is the state of anyone about to build their
     first roster: no profile means no rosters, so every name is free.
     """
+
     def name(index):
         return _("Roster %(number)d") % {"number": index}
 

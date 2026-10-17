@@ -24,8 +24,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import number_format
 from django.utils.translation import gettext as _
-from django.utils.translation import ngettext
 from django.utils.translation import gettext_lazy as _lazy
+from django.utils.translation import ngettext
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
@@ -47,8 +47,8 @@ from . import services
 from .forms import SeasonForm, TradeGrantForm
 from .models import (
     MINIMUM_BY_POSITION,
-    ROSTER_SIZE,
     ROSTER_ICON_CHOICES,
+    ROSTER_SIZE,
     TRADE_BUY_PRICE,
     TRADE_SELL_PRICE,
     Manager,
@@ -946,8 +946,8 @@ def _build_context(request, roster):
         trade_unavailable_reason = ""
 
     # Buying and selling trades has its own window inside the trading period.
-    market_closed_reason = (
-        trade_unavailable_reason or services.trade_market_closed_reason(roster.season)
+    market_closed_reason = trade_unavailable_reason or services.trade_market_closed_reason(
+        roster.season
     )
     can_buy_trade = not market_closed_reason and roster.cash >= TRADE_BUY_PRICE
     if market_closed_reason:
@@ -1291,9 +1291,7 @@ class RosterTradeView(OwnRosterMixin, View):
 
         preview = services.trade_preview(roster, player_out, player_in)
         filters = _picker_filters(request)
-        available = _available_players(
-            roster, filters, request.user, budget=preview["budget"]
-        )[:60]
+        available = _available_players(roster, filters, request.user, budget=preview["budget"])[:60]
         # Carried through every link inside the dialog, so a trade started on a
         # player page still knows where to go when it is executed.
         return_query = "&return_to=player" if request.GET.get("return_to") == "player" else ""
@@ -1383,9 +1381,7 @@ class RosterTradeView(OwnRosterMixin, View):
         player_out, player_in = preview["player_out"], preview["player_in"]
         for player in (player_out, player_in):
             if player.current_salary is None:
-                raise ValidationError(
-                    _("No salary on record for %(player)s.") % {"player": player}
-                )
+                raise ValidationError(_("No salary on record for %(player)s.") % {"player": player})
         # The prices are read off the players here, never taken from the
         # request: a client that could name both prices could trade anyone for
         # anyone and bank the difference.

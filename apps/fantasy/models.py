@@ -26,13 +26,13 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import gettext_noop, ngettext
 from django.db import models
 from django.db.models import F, Prefetch, Q
 from django.db.models.functions import NullIf
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_noop, ngettext
 
 from apps.core.models import TimeStampedModel
 from apps.core.templatetags.money import exact
@@ -124,7 +124,10 @@ class Season(TimeStampedModel):
         "Signings open",
         null=True,
         blank=True,
-        help_text="Before this moment rosters cannot be created and players cannot be signed. Leave empty to open immediately.",
+        help_text=(
+            "Before this moment rosters cannot be created and players cannot be signed. "
+            "Leave empty to open immediately."
+        ),
     )
     signings_close_at = models.DateTimeField(
         "Signings close",
@@ -172,8 +175,7 @@ class Season(TimeStampedModel):
         null=True,
         blank=True,
         help_text=(
-            "After this moment trades can no longer be bought or sold. "
-            "Leave empty for no limit."
+            "After this moment trades can no longer be bought or sold. Leave empty for no limit."
         ),
     )
 
@@ -222,9 +224,7 @@ class Season(TimeStampedModel):
             return True
         if self.signings_open_at and now < self.signings_open_at:
             return False
-        if self.signings_close_at and now >= self.signings_close_at:
-            return False
-        return True
+        return not (self.signings_close_at and now >= self.signings_close_at)
 
     @property
     def trade_market_open(self):
@@ -308,13 +308,21 @@ class Season(TimeStampedModel):
         season_close = timezone.make_aware(dt.datetime.combine(self.ends_on, dt.time.max))
         if self.signings_open_at and self.signings_close_at:
             if self.signings_open_at >= self.signings_close_at:
-                raise ValidationError({"signings_close_at": _("Signings must close after they open.")})
+                raise ValidationError(
+                    {"signings_close_at": _("Signings must close after they open.")}
+                )
             if self.signings_close_at >= season_open:
-                raise ValidationError({"signings_close_at": _("Signings must close before the season starts.")})
+                raise ValidationError(
+                    {"signings_close_at": _("Signings must close before the season starts.")}
+                )
         if self.signings_open_at and self.signings_open_at >= season_open:
-            raise ValidationError({"signings_open_at": _("Signings must open before the season starts.")})
+            raise ValidationError(
+                {"signings_open_at": _("Signings must open before the season starts.")}
+            )
         if self.signings_close_at and self.signings_close_at > season_close:
-            raise ValidationError({"signings_close_at": _("Signings cannot close after the season ends.")})
+            raise ValidationError(
+                {"signings_close_at": _("Signings cannot close after the season ends.")}
+            )
 
     @property
     def timing(self):
@@ -484,9 +492,7 @@ class Roster(TimeStampedModel):
     # alter what a past purchase cost, and the salary cap enforces itself here:
     # you cannot buy what you cannot afford. Starts at `starting_cash`.
     cash = models.DecimalField("Cash", max_digits=12, decimal_places=2)
-    trades_available = models.PositiveIntegerField(
-        "Available trades", default=STARTING_TRADES
-    )
+    trades_available = models.PositiveIntegerField("Available trades", default=STARTING_TRADES)
 
     class Meta:
         ordering = ["name"]
@@ -751,9 +757,7 @@ class Transaction(TimeStampedModel):
         Roster, verbose_name="Roster", on_delete=models.CASCADE, related_name="transactions"
     )
     occurred_at = models.DateTimeField("Occurred at")
-    kind = models.CharField(
-        "Kind", max_length=20, choices=Kind.choices, blank=True
-    )
+    kind = models.CharField("Kind", max_length=20, choices=Kind.choices, blank=True)
     player_in = models.ForeignKey(
         Player,
         verbose_name="Player in",

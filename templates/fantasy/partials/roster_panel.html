@@ -58,7 +58,7 @@
     {# cells in a two-column grid would leave an empty fourth, and an empty #}
     {# cell in this hairline trick is not a gap but a block of the border #}
     {# colour -- so the third cell spans both tracks instead. #}
-    <div class="grid grid-cols-2 gap-px bg-neutral-200 sm:grid-cols-5 dark:bg-neutral-800">
+    <div class="grid grid-cols-2 gap-px bg-neutral-200 lg:grid-cols-4 dark:bg-neutral-800">
 
       {# Cash is the largest thing on the page on purpose: it is the number #}
       {# every decision on this screen is measured against. #}
@@ -78,13 +78,17 @@
            title="{{ roster.squad_value|exact }}">
           {{ roster.squad_value|millions }}
         </p>
-        {# Roster value plus cash: the official game's team value, which is #}
-        {# also the roster's personal salary cap. #}
-        <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400"
-           title="{% translate 'Roster value plus cash: your personal salary cap.' %}">
-          {% translate "Team value" %}
-          <span class="font-medium tabular-nums text-tertiary-700 dark:text-neutral-200">{{ roster.team_value|millions }}</span>
-        </p>
+        {# The squad priced by its output instead of its salaries, and how #}
+        {# far that is from what it costs: the roster's "Value" column, summed. #}
+        <div class="mt-2 rounded-lg bg-primary-50 px-2.5 py-2 dark:bg-primary-500/10"
+             title="{% translate 'Sum of expected salaries for points per game. Players without games count at their actual salary.' %}">
+          <p class="text-xs text-primary-700 dark:text-primary-300">{% translate "Estimated value" %}</p>
+          <div class="mt-0.5 flex flex-wrap items-baseline gap-x-2">
+            <span class="text-sm font-semibold tabular-nums text-tertiary-700 dark:text-neutral-100"
+                  title="{{ roster.estimated_squad_value|exact }}">{{ roster.estimated_squad_value|millions }}</span>
+            <span class="text-xs tabular-nums">{% include "nba/partials/value.html" with amount=roster.estimated_value_difference %}</span>
+          </div>
+        </div>
       </div>
 
       <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">
@@ -103,7 +107,7 @@
 
       <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900" aria-label="{% translate "Players by position" %}">
         <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Positions" %}</p>
-        <div class="mt-1 flex items-baseline justify-between gap-2">
+        <div class="mt-1 flex items-baseline justify-between gap-2 sm:justify-start sm:gap-8 lg:justify-between lg:gap-2">
           {% for position in progress %}
             <span class="text-center">
               <span class="block text-[0.65rem] font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
@@ -116,54 +120,63 @@
         </div>
       </div>
 
-      <div class="col-span-2 bg-white p-4 sm:col-span-1 sm:p-5 dark:bg-neutral-900">
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Available Trades" %}</p>
-        <div class="mt-0.5 flex flex-wrap items-center justify-between gap-2">
-          <p class="text-2xl font-bold tabular-nums sm:text-3xl {% if roster.trades_available == 0 %}text-amber-600 dark:text-amber-400{% endif %}">
-            {{ roster.trades_available }}
-          </p>
-          <div class="flex items-center gap-1.5">
-            <button type="button"
-                    {% if can_buy_trade %}
-                      hx-get="{% url 'fantasy:roster-buy-trade' roster.pk %}"
-                      hx-target="#modal-root"
-                      hx-swap="innerHTML"
-                    {% else %}
-                      disabled
-                      aria-describedby="trade-market-note"
-                    {% endif %}
-                    class="btn btn-secondary !px-2 !py-1 text-xs {% if not can_buy_trade %}opacity-50 cursor-not-allowed{% endif %}">
-              {% translate "Buy ($1.5M)" %}
-            </button>
-            <button type="button"
-                    {% if can_sell_trade %}
-                      hx-get="{% url 'fantasy:roster-sell-trade' roster.pk %}"
-                      hx-target="#modal-root"
-                      hx-swap="innerHTML"
-                    {% else %}
-                      disabled
-                      aria-describedby="trade-market-note"
-                    {% endif %}
-                    class="btn btn-ghost !px-2 !py-1 text-xs {% if not can_sell_trade %}opacity-50 cursor-not-allowed{% endif %}">
-              {% translate "Sell (+$1.0M)" %}
-            </button>
-          </div>
-        </div>
-        {# Why buying/selling is closed, in words -- a tooltip never reaches a #}
-        {# phone. "Not enough cash" / "no trades" are already plain from the #}
-        {# figures, so only the reasons the figures cannot show are written. #}
-        {% if trade_market_note %}
-          <p id="trade-market-note" class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">{{ trade_market_note }}</p>
-        {% endif %}
-        {# When the next free trade arrives, so 0 is not a dead end. #}
-        {% if next_trade_grant %}
-          <p class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-            {% blocktranslate with label=next_trade_grant.label date=next_trade_grant.granted_at|date:"SHORT_DATETIME_FORMAT" trades=next_trade_grant.trades %}Next: {{ label }} · {{ date }} (+{{ trades }}){% endblocktranslate %}
-            · <a href="{% url 'fantasy:roster-rules' roster.pk %}#trades" class="underline hover:text-primary-600 dark:hover:text-primary-300">{% translate "Trade calendar" %}</a>
-          </p>
-        {% endif %}
+      {# A strip of its own: the count, the two actions and the schedule #}
+      {# need more width than a grid cell gives, and stacked in a narrow #}
+      {# column they made the whole row of figures as tall as the schedule. #}
+    </div>
+
+    <div class="flex flex-col gap-4 border-t border-neutral-200 bg-neutral-50/60 p-4 sm:p-5 md:flex-row md:items-center md:gap-6 dark:border-neutral-800 dark:bg-neutral-900/60">
+      <div class="flex items-center gap-3 md:shrink-0">
+        <p class="text-3xl font-bold tabular-nums {% if roster.trades_available == 0 %}text-amber-600 dark:text-amber-400{% endif %}">
+          {{ roster.trades_available }}
+        </p>
+        <p class="text-xs leading-tight text-neutral-500 dark:text-neutral-400">{% translate "Available Trades" %}</p>
       </div>
 
+      <div class="grid grid-cols-1 gap-2 min-[26rem]:grid-cols-2 sm:flex sm:shrink-0">
+        <button type="button"
+                {% if can_buy_trade %}
+                  hx-get="{% url 'fantasy:roster-buy-trade' roster.pk %}"
+                  hx-target="#modal-root"
+                  hx-swap="innerHTML"
+                {% else %}
+                  disabled
+                  aria-describedby="trade-market-note"
+                {% endif %}
+                class="btn btn-secondary text-xs sm:whitespace-nowrap {% if not can_buy_trade %}opacity-50 cursor-not-allowed{% endif %}">
+          {% translate "Buy ($1.5M)" %}
+        </button>
+        <button type="button"
+                {% if can_sell_trade %}
+                  hx-get="{% url 'fantasy:roster-sell-trade' roster.pk %}"
+                  hx-target="#modal-root"
+                  hx-swap="innerHTML"
+                {% else %}
+                  disabled
+                  aria-describedby="trade-market-note"
+                {% endif %}
+                class="btn btn-ghost text-xs sm:whitespace-nowrap {% if not can_sell_trade %}opacity-50 cursor-not-allowed{% endif %}">
+          {% translate "Sell (+$1.0M)" %}
+        </button>
+      </div>
+
+      {# Why buying/selling is closed, in words -- a tooltip never reaches a #}
+      {# phone. "Not enough cash" / "no trades" are already plain from the #}
+      {# figures, so only the reasons the figures cannot show are written. #}
+      {# When the next free trade arrives, so 0 is not a dead end. #}
+      {% if trade_market_note or next_trade_grant %}
+        <div class="min-w-0 space-y-1 text-xs text-neutral-500 md:flex-1 md:border-l md:border-neutral-200 md:pl-6 dark:text-neutral-400 md:dark:border-neutral-800">
+          {% if trade_market_note %}
+            <p id="trade-market-note">{{ trade_market_note }}</p>
+          {% endif %}
+          {% if next_trade_grant %}
+            <p>
+              {% blocktranslate with label=next_trade_grant.label date=next_trade_grant.granted_at|date:"SHORT_DATETIME_FORMAT" trades=next_trade_grant.trades %}Next: {{ label }} · {{ date }} (+{{ trades }}){% endblocktranslate %}
+              · <a href="{% url 'fantasy:roster-rules' roster.pk %}#trades" class="underline hover:text-primary-600 dark:hover:text-primary-300">{% translate "Trade calendar" %}</a>
+            </p>
+          {% endif %}
+        </div>
+      {% endif %}
     </div>
 
     {# The signing deadline, where signing decisions are made. Relative time #}
@@ -217,8 +230,23 @@
 
     <div class="flex items-center justify-between border-t border-neutral-200 px-4 py-3 dark:border-neutral-800 sm:px-5">
       <p class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Your roster" %}</p>
-      <p class="text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate count count=memberships|length %}{{ count }} player{% plural %}{{ count }} players{% endblocktranslate %}</p>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">
+        {% blocktranslate count count=memberships|length %}{{ count }} player{% plural %}{{ count }} players{% endblocktranslate %}
+        {# Always shown, so "0 injured" reads as a clean bill of health #}
+        {# rather than a figure that is missing. #}
+        · <span class="{% if injured_players %}font-medium text-red-700 dark:text-red-300{% endif %}">{% blocktranslate count count=injured_players|length %}{{ count }} injured{% plural %}{{ count }} injured{% endblocktranslate %}</span>
+      </p>
     </div>
+
+    {# Who is out, by name, without scanning the table's Injury column. Each #}
+    {# chip opens the same injury dialog as the row's own status button. #}
+    {% if injured_players %}
+      <div class="flex flex-wrap items-center gap-2 border-t border-neutral-200 px-4 py-2.5 sm:px-5 dark:border-neutral-800">
+        {% for player in injured_players %}
+          {% include "nba/partials/injury_status.html" with player=player id_suffix="-injured" show_name=True %}
+        {% endfor %}
+      </div>
+    {% endif %}
 
     {% if memberships %}
       {% include "fantasy/partials/squad_cards.html" %}

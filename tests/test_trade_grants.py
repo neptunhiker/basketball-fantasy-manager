@@ -16,7 +16,7 @@ from django.utils import timezone
 
 from apps.fantasy import services
 from apps.fantasy.models import Roster, Season, TradeGrant, Transaction
-from apps.nba.models import Player
+from apps.nba.models import Player, predict_salary
 
 BERLIN = ZoneInfo("Europe/Berlin")
 
@@ -309,16 +309,23 @@ def test_the_rules_page_shows_the_trade_calendar_team_value_and_scoring(signed_i
     assert "$63.00M" in body
 
 
-def test_the_roster_panel_shows_team_value(signed_in, manager, running_season):
+def test_the_roster_panel_shows_the_estimated_value(signed_in, manager, running_season):
     roster = Roster.objects.create(manager=manager, season=running_season, name="R")
-    player = Player.objects.create(last_name="P", position="G", current_salary=5_000_000)
-    services.buy(roster, player, Decimal("5000000"))
-    Player.objects.filter(pk=player.pk).update(current_salary=6_000_000)  # a salary rise
+    scorer = Player.objects.create(
+        last_name="S", position="G", current_salary=5_000_000, current_fp_per_game=Decimal("30")
+    )
+    rookie = Player.objects.create(last_name="N", position="F", current_salary=2_000_000)
+    services.buy(roster, scorer, Decimal("5000000"))
+    services.buy(roster, rookie, Decimal("2000000"))
 
     response = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk]))
 
-    # 58M cash + 6M at today's price.
-    assert "$64.00M" in response.content.decode()
+    # The scorer at his expected salary; the rookie, with no games, at his price.
+    estimate = predict_salary(Decimal("30")) * Decimal("1000000") + Decimal("2000000")
+    roster = response.context["roster"]
+    assert roster.estimated_squad_value == estimate
+    assert roster.estimated_value_difference == estimate - Decimal("7000000")
+    assert "Estimated value" in response.content.decode()
 
 
 # --- staff: the season's grants -----------------------------------------------------

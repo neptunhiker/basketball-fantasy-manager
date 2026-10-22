@@ -12,7 +12,9 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.urls import reverse
+from django.utils import timezone
 
+from apps.core.dates import local_date
 from apps.fantasy import services
 from apps.fantasy.models import Roster, Season, Transaction
 from apps.nba.models import Player
@@ -27,8 +29,10 @@ STARTING_CASH = Decimal("60000000")
 def season(db):
     return Season.objects.create(
         label="2026-27",
-        starts_on=dt.date(2026, 10, 20),
-        ends_on=dt.date(2027, 4, 11),
+        # Relative to today: these tests need a season that has not started,
+        # and a fixed date passed on 20 October 2026, failing them all.
+        starts_on=timezone.localdate() + dt.timedelta(days=30),
+        ends_on=timezone.localdate() + dt.timedelta(days=200),
         is_current=True,
         # The budget these tests' arithmetic was written against.
         starting_cash=Decimal("60000000"),
@@ -402,17 +406,17 @@ def test_buying_and_selling_trades_via_views(signed_in, roster):
 
 def test_trade_buttons_disabled_when_season_not_live(signed_in, roster, season):
     # Set signing dates so transactions_allowed is True but trading_allowed is False (season hasn't started)
-    season.starts_on = dt.date(2026, 10, 20)
-    season.ends_on = dt.date(2027, 4, 11)
-    season.signings_open_at = dt.datetime(2026, 9, 1, 0, 0, tzinfo=dt.UTC)
-    season.signings_close_at = dt.datetime(2026, 9, 20, 0, 0, tzinfo=dt.UTC)
+    now = timezone.now()
+    season.signings_open_at = now - dt.timedelta(days=20)
+    season.signings_close_at = now - dt.timedelta(days=1)
     season.save()
 
     url = reverse("fantasy:roster-build", args=[roster.pk])
     body = signed_in.get(url).content.decode()
 
     # Check tooltip on disabled buttons
-    assert "Trades become available when the season starts on 20 October 2026." in body
+    starts = local_date(season.season_open_at)
+    assert f"Trades become available when the season starts on {starts}." in body
     assert "disabled" in body
 
 

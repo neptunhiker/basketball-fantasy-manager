@@ -40,8 +40,10 @@ def season(db):
     """Signings open, because null is the state every season starts in."""
     return Season.objects.create(
         label="2026-27",
-        starts_on=dt.date(2026, 10, 20),
-        ends_on=dt.date(2027, 4, 11),
+        # Relative to today: these tests need a season that has not started,
+        # and a fixed date passed on 20 October 2026, failing them all.
+        starts_on=timezone.localdate() + dt.timedelta(days=30),
+        ends_on=timezone.localdate() + dt.timedelta(days=200),
         is_current=True,
         # The budget these tests' arithmetic was written against.
         starting_cash=Decimal("60000000"),

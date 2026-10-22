@@ -671,6 +671,28 @@ class Roster(TimeStampedModel):
         )
 
     @property
+    def estimated_squad_value(self):
+        """What the squad would cost if each player were priced by his output.
+
+        The expected salary for his points per game, the same figure as the
+        squad's "Expected salary" column. A player with no games yet has no
+        expected salary, so his actual price stands in: leaving him out would
+        read as the squad losing value just for signing him.
+        """
+        total = Decimal("0")
+        for player in self.current_squad:
+            if player.predicted_salary is not None:
+                total += player.predicted_salary * Decimal("1000000")
+            elif player.current_salary:
+                total += player.current_salary
+        return total
+
+    @property
+    def estimated_value_difference(self):
+        """Estimated minus actual squad value: plus means a bargain squad."""
+        return self.estimated_squad_value - self.squad_value
+
+    @property
     def team_value(self):
         """Squad value plus cash: the official game's "individual salary cap".
 

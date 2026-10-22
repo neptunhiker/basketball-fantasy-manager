@@ -1899,7 +1899,7 @@ msgstr "Cash"
 
 #: templates/fantasy/manager_detail.html:56
 #: templates/fantasy/manager_list.html:87
-#: templates/fantasy/partials/roster_panel.html:85
+#: templates/fantasy/partials/roster_panel.html:92
 #: templates/fantasy/roster_list.html:80
 #: templates/fantasy/roster_rules.html:145
 msgid "Team value"
@@ -2251,7 +2251,7 @@ msgstr "Manager:"
 msgid "Roster value"
 msgstr "Kaderwert"
 
-#: templates/fantasy/partials/roster_panel.html:84
+#: templates/fantasy/partials/roster_panel.html:91
 msgid "Roster value plus cash: your personal salary cap."
 msgstr "Kaderwert plus Cash: dein persönlicher Salary Cap."
 
@@ -4286,3 +4286,15 @@ msgstr ""
 #: templates/nba/player_list.html:149
 msgid "Kick list only"
 msgstr "Nur Abschussliste"
+
+#: templates/fantasy/partials/roster_panel.html:91
+msgid ""
+"Sum of expected salaries for points per game. Players without games count "
+"at their actual salary."
+msgstr ""
+"Summe der erwarteten Gehälter nach Punkten pro Spiel. Spieler ohne Einsatz "
+"zählen mit ihrem tatsächlichen Gehalt."
+
+#: templates/fantasy/partials/roster_panel.html:92
+msgid "Estimated value"
+msgstr "Geschätzter Wert"

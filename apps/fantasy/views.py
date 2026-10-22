@@ -995,6 +995,8 @@ def _build_context(request, roster):
         "available": _available_players(roster, filters, request.user)[:100],
         **_watchlist_context(roster, request.user, filters),
         "memberships": memberships,
+        # Injuries come prefetched with the squad, so this costs no query.
+        "injured_players": [m.player for m in memberships if m.player.is_injured],
         "current_sort": current_sort,
         "current_dir": current_dir,
         # The phone cards' "Sort by" list: the table's columns, in its order.

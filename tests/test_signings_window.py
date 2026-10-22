@@ -26,7 +26,7 @@ from django.utils import timezone
 
 from apps.fantasy import services
 from apps.fantasy.models import ROSTER_SIZE, Manager, Roster, Season
-from apps.nba.models import Player
+from apps.nba.models import Player, PlayerInjury
 
 pytestmark = pytest.mark.django_db
 
@@ -295,6 +295,20 @@ def test_the_create_button_goes_away_once_signings_close(signed_in, season, mana
 
 
 # --- the build page ----------------------------------------------------------
+
+
+def test_the_build_page_names_the_injured_players(signed_in, roster):
+    hurt = make_player("Hurt")
+    fit = make_player("Fit")
+    services.buy(roster, hurt, hurt.current_salary)
+    services.buy(roster, fit, fit.current_salary)
+    PlayerInjury.objects.create(player=hurt, observed_at=timezone.now(), status="Out")
+
+    response = signed_in.get(build_url(roster))
+
+    assert response.context["injured_players"] == [hurt]
+    assert "1 injured" in response.content.decode()
+    assert f'aria-labelledby="injury-modal-title-{hurt.pk}-injured"' in response.content.decode()
 
 
 def test_release_disappears_once_selling_is_closed(signed_in, roster, season):

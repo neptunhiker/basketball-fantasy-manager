@@ -195,8 +195,37 @@ def test_scatter_chart_carries_player_metadata():
 
 
 def test_scatter_chart_colors_by_games_played_threshold():
-    green = charts.scatter_chart([("Green", Decimal("10"), Decimal("20"), Decimal("18"), {"games_played": 6})])
-    red = charts.scatter_chart([("Red", Decimal("10"), Decimal("20"), Decimal("18"), {"games_played": 5})])
+    green = charts.scatter_chart(
+        [("Green", Decimal("10"), Decimal("20"), Decimal("18"), {"games_played": 6})]
+    )
+    red = charts.scatter_chart(
+        [("Red", Decimal("10"), Decimal("20"), Decimal("18"), {"games_played": 5})]
+    )
 
     assert green["dots"][0]["color"] == charts.NEON_GREEN
     assert red["dots"][0]["color"] == charts.NEON_RED
+
+
+def test_scatter_chart_draws_the_curve_across_the_whole_x_axis():
+    chart = charts.scatter_chart(
+        [("Low", Decimal("10"), Decimal("20")), ("High", Decimal("30"), Decimal("60"))],
+        curve=lambda x: x * 2,
+    )
+
+    points = [tuple(map(float, pair.split(","))) for pair in chart["curve_points"].split()]
+    assert len(points) == charts.CURVE_SAMPLES
+    assert points[0][0] == chart["plot_left"]
+    assert points[-1][0] == chart["plot_right"]
+    # A rising curve climbs the drawing, where y grows downwards.
+    assert points[0][1] > points[-1][1]
+
+
+def test_scatter_chart_axes_ignore_the_curve():
+    """The curve is a reference line; the axes are fitted to the players."""
+    points = [("Low", Decimal("10"), Decimal("20")), ("High", Decimal("30"), Decimal("60"))]
+
+    with_curve = charts.scatter_chart(points, curve=lambda x: x * 100)
+    without = charts.scatter_chart(points)
+
+    assert with_curve["y_high"] == without["y_high"]
+    assert without["curve_points"] is None

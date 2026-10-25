@@ -4298,3 +4298,31 @@ msgstr ""
 #: templates/fantasy/partials/roster_panel.html:92
 msgid "Estimated value"
 msgstr "Geschätzter Wert"
+
+#: templates/nba/partials/scatter_chart.html:90
+msgid "Fair value"
+msgstr "Fairer Wert"
+
+#: templates/nba/partials/scatter_chart.html:95
+msgid "6+ games"
+msgstr "6+ Spiele"
+
+#: templates/nba/partials/scatter_chart.html:99
+msgid "Fewer than 6 games"
+msgstr "Weniger als 6 Spiele"
+
+#: templates/fantasy/partials/squad_chart.html:11
+msgid "Your squad: points per game and salary"
+msgstr "Dein Kader: Punkte pro Spiel und Gehalt"
+
+#: templates/fantasy/partials/squad_chart.html:13
+msgid "Below the fair-value line is a bargain, above it is overpaid."
+msgstr "Unter der Linie des fairen Werts ist ein Schnäppchen, darüber ist überbezahlt."
+
+#: templates/fantasy/partials/squad_chart.html:19
+msgid ""
+"The comparison appears when players on this squad have points per game and "
+"salary recorded."
+msgstr ""
+"Der Vergleich erscheint, sobald Spieler in diesem Kader Punkte pro Spiel und "
+"ein Gehalt haben."

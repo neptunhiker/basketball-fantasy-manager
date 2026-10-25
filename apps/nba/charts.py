@@ -26,6 +26,10 @@ AXIS_TITLE_ROOM = 14
 
 TICK_STEPS = (Decimal("1"), Decimal("2"), Decimal("5"), Decimal("10"))
 
+# How many points the fair-value curve is drawn through. Enough that a quartic
+# looks smooth at the chart's width, few enough to keep the markup small.
+CURVE_SAMPLES = 64
+
 # How far the hover readout sits from its dot, and how close to an edge a dot
 # has to be before the readout is anchored inwards instead of centred.
 LABEL_OFFSET = 14
@@ -194,12 +198,17 @@ def games_played_color(games_played):
     return NEON_RED
 
 
-def scatter_chart(points, x_ticks=5, y_ticks=5):
+def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None):
     """Plot measured `(label, x, y[, expected_salary[, metadata]])` points.
 
     Missing x or y values are omitted. The returned geometry is deliberately
     unit-agnostic so callers can choose display units before handing data to
     the reusable scatter-chart template.
+
+    `curve`, a function from an x value to a y value in the same units, is
+    drawn across the whole x axis as `curve_points`. The axes are still set by
+    the dots alone -- the curve is a reference, not data, and must not squash
+    the players into a corner -- so the template clips whatever leaves the plot.
     """
     measured = []
     for point in points:
@@ -244,6 +253,14 @@ def scatter_chart(points, x_ticks=5, y_ticks=5):
         for label, x_value, y_value, expected_salary, metadata in measured
     ]
 
+    curve_points = None
+    if curve is not None:
+        step = (x_high - x_low) / (CURVE_SAMPLES - 1)
+        curve_points = " ".join(
+            f"{x_of(x_value)},{y_of(Decimal(curve(x_value)))}"
+            for x_value in (x_low + step * index for index in range(CURVE_SAMPLES))
+        )
+
     def tick_values(low, high, step):
         values = []
         value = low
@@ -254,6 +271,7 @@ def scatter_chart(points, x_ticks=5, y_ticks=5):
 
     return {
         "dots": dots,
+        "curve_points": curve_points,
         "x_ticks": [
             {"x": x_of(value), "value": value} for value in tick_values(x_low, x_high, x_step)
         ],
@@ -269,8 +287,13 @@ def scatter_chart(points, x_ticks=5, y_ticks=5):
         "plot_right": WIDTH - PAD_RIGHT,
         "plot_top": PAD_TOP,
         "plot_bottom": HEIGHT - PAD_BOTTOM,
+        "plot_width": plot_width,
+        "plot_height": plot_height,
         "label_right": PAD_LEFT - 8,
         "label_bottom": HEIGHT - 8,
+        # The dot colours, for the legend, so they are not copied into markup.
+        "color_enough_games": NEON_GREEN,
+        "color_few_games": NEON_RED,
         "x_low": x_low,
         "x_high": x_high,
         "y_low": y_low,

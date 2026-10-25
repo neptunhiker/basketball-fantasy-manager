@@ -41,6 +41,7 @@ from apps.core.views import (
     TypedConfirmView,
 )
 from apps.nba.models import Player, Team
+from apps.nba.salary_charts import salary_charts
 from apps.nba.stats import DESCENDING_FIRST
 
 from . import services
@@ -997,6 +998,8 @@ def _build_context(request, roster):
         "memberships": memberships,
         # Injuries come prefetched with the squad, so this costs no query.
         "injured_players": [m.player for m in memberships if m.player.is_injured],
+        # This season only: the squad is judged on what it scores now.
+        "squad_chart": salary_charts([m.player for m in memberships], None)["salary_fp_chart"],
         "current_sort": current_sort,
         "current_dir": current_dir,
         # The phone cards' "Sort by" list: the table's columns, in its order.

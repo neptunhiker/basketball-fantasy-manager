@@ -1,0 +1,23 @@
+{% load i18n %}
+{# The squad against the fair-value curve: who on this team is paid less #}
+{# than his points are worth, and who more. Its own swap target, out of #}
+{# band in every buy, sell and trade (`build_update.html`), so a signing #}
+{# moves its dot onto the chart in the same response that lists him. #}
+{% translate "Salary compared with points per game" as chart_label %}
+{% translate "Points per game" as x_axis_label %}
+{% translate "Salary ($ millions)" as y_axis_label %}
+<div id="squad-chart" class="card px-4 pb-4 pt-5" {% if oob %}hx-swap-oob="outerHTML"{% endif %}>
+  <div class="mb-3">
+    <h2 class="text-sm font-semibold">{% translate "Your squad: points per game and salary" %}</h2>
+    <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+      {% translate "Below the fair-value line is a bargain, above it is overpaid." %}
+    </p>
+  </div>
+  {% if squad_chart %}
+    {% include "nba/partials/scatter_chart.html" with chart=squad_chart chart_id="squad-fp" %}
+  {% else %}
+    <p class="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+      {% translate "The comparison appears when players on this squad have points per game and salary recorded." %}
+    </p>
+  {% endif %}
+</div>

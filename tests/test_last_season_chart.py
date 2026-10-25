@@ -9,8 +9,9 @@ from django.urls import reverse
 
 from apps.nba.charts import NEON_GREEN, NEON_RED
 from apps.nba.models import Player, Team, predict_salary
+from apps.nba.salary_charts import salary_charts
 from apps.nba.season_stats import with_last_season
-from apps.nba.views import salary_charts, with_expected_salary
+from apps.nba.views import with_expected_salary
 
 from .test_player_season_stats import stats_for
 

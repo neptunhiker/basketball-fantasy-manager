@@ -15,6 +15,7 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 "NBA injuries synchronized: "
                 f"{summary['created']} created, {summary['updated']} updated, "
-                f"{summary['unmatched']} unmatched, {summary['ambiguous']} ambiguous."
+                f"{summary['recovered']} recovered, {summary['unmatched']} unmatched, "
+                f"{summary['ambiguous']} ambiguous."
             )
         )

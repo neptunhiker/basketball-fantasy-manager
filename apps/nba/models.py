@@ -19,6 +19,9 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
 
+# Injury report statuses that mean the player can play, compared casefolded.
+HEALTHY_INJURY_STATUSES = frozenset({"healthy", "available", "returned", "cleared"})
+
 
 def predict_salary(fantasy_points_per_game: float | Decimal) -> Decimal:
     """Return the expected salary in millions for a fantasy scoring rate."""
@@ -204,10 +207,7 @@ class Player(TimeStampedModel):
     @property
     def is_injured(self):
         latest = self.latest_injury
-        return bool(
-            latest
-            and latest.status.casefold() not in {"healthy", "available", "returned", "cleared"}
-        )
+        return bool(latest and latest.status.casefold() not in HEALTHY_INJURY_STATUSES)
 
     def hotness_score(self):
         """Return how often the player's FP/game has improved recently.

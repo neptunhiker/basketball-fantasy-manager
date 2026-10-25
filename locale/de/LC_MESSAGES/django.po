@@ -1191,10 +1191,10 @@ msgstr ""
 #, python-format
 msgid ""
 "Injury report updated: %(created)d created, %(updated)d updated, "
-"%(unmatched)d unmatched."
+"%(recovered)d recovered, %(unmatched)d unmatched."
 msgstr ""
 "Verletzungsbericht aktualisiert: %(created)d erstellt, %(updated)d "
-"aktualisiert, %(unmatched)d nicht zugeordnet."
+"aktualisiert, %(recovered)d wieder fit, %(unmatched)d nicht zugeordnet."
 
 #: apps/nba/views.py:552
 msgid "This basketball.de account has not been activated yet."

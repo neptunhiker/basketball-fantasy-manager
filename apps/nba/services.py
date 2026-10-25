@@ -10,14 +10,17 @@ from urllib.request import Request, urlopen
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import OuterRef, Subquery
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 
-from .models import NbaApiUsage, Player, PlayerInjury
+from .models import HEALTHY_INJURY_STATUSES, NbaApiUsage, Player, PlayerInjury
 
 logger = logging.getLogger(__name__)
 
 PROVIDER = "api-basketball-nba"
+# Written for a player who has dropped out of the feed; one of HEALTHY_INJURY_STATUSES.
+RECOVERED_STATUS = "Healthy"
 
 
 class NbaApiError(RuntimeError):
@@ -102,8 +105,7 @@ def _reserve_api_call(now=None):
     daily_limit = min(settings.RAPID_API_DAILY_LIMIT, 1)
     if usage.request_count >= daily_limit:
         raise DailyApiLimitExceeded(
-            f"The {PROVIDER} daily limit of {daily_limit} "
-            "requests has been reached."
+            f"The {PROVIDER} daily limit of {daily_limit} requests has been reached."
         )
     usage.request_count += 1
     usage.save(update_fields=["request_count", "updated_at"])
@@ -221,9 +223,8 @@ def parse_injuries(payload):
                 long_comment=_text(record.get("longComment")),
                 headline=_text(note.get("headline")),
                 headline_source=_text(note.get("source")),
-                feed_player_name=_text(athlete.get("displayName")) or " ".join(
-                    part for part in (first_name, last_name) if part
-                ),
+                feed_player_name=_text(athlete.get("displayName"))
+                or " ".join(part for part in (first_name, last_name) if part),
                 feed_team_id=str(team.get("id") or ""),
                 feed_team_name=_text(team.get("name")),
                 raw_payload=record,
@@ -248,14 +249,56 @@ def _match_players(injuries):
     return matches
 
 
+def _mark_recovered(injuries, reported_player_ids, observed_at):
+    """Write a healthy report for each injured player the feed no longer lists.
+
+    The feed only lists players who are hurt right now, so dropping out of it
+    is the only sign of a recovery. A player whose name is still in the feed
+    stays injured even when that entry could not be matched (a team code that
+    differs, a trade not imported yet): absent from the feed, not unmatched.
+    """
+    feed_names = {
+        (normalize_name(injury.first_name), normalize_name(injury.last_name)) for injury in injuries
+    }
+    latest_status = Subquery(
+        PlayerInjury.objects.filter(player_id=OuterRef("pk"))
+        .order_by("-observed_at", "-created_at")
+        .values("status")[:1]
+    )
+    players = (
+        Player.objects.annotate(latest_injury_status=latest_status)
+        .filter(latest_injury_status__isnull=False)
+        .exclude(pk__in=reported_player_ids)
+    )
+    recovered = [
+        player
+        for player in players
+        if player.latest_injury_status.casefold() not in HEALTHY_INJURY_STATUSES
+        and (normalize_name(player.first_name), normalize_name(player.last_name)) not in feed_names
+    ]
+    PlayerInjury.objects.bulk_create(
+        PlayerInjury(
+            player=player,
+            provider=PROVIDER,
+            observed_at=observed_at,
+            status=RECOVERED_STATUS,
+            feed_player_name=f"{player.first_name} {player.last_name}".strip(),
+        )
+        for player in recovered
+    )
+    return len(recovered)
+
+
 @transaction.atomic
 def sync_injuries(payload=None, observed_at=None):
     """Fetch, match and persist injury records; return an auditable summary."""
     observed_at = observed_at or timezone.now()
     payload = fetch_injuries() if payload is None else payload
-    summary = {"created": 0, "updated": 0, "unmatched": 0, "ambiguous": 0}
+    summary = {"created": 0, "updated": 0, "recovered": 0, "unmatched": 0, "ambiguous": 0}
+    injuries = parse_injuries(payload)
+    reported_player_ids = set()
 
-    for injury, candidates in _match_players(parse_injuries(payload)):
+    for injury, candidates in _match_players(injuries):
         if not candidates:
             summary["unmatched"] += 1
             logger.warning(
@@ -315,5 +358,11 @@ def sync_injuries(payload=None, observed_at=None):
         else:
             PlayerInjury.objects.create(provider=PROVIDER, provider_injury_id="", **defaults)
             created = True
+        reported_player_ids.add(candidates[0].pk)
         summary["created" if created else "updated"] += 1
+
+    # An empty feed is far more likely a provider glitch than a league with no
+    # injuries; trusting it would declare every injured player healthy at once.
+    if injuries:
+        summary["recovered"] = _mark_recovered(injuries, reported_player_ids, observed_at)
     return summary

@@ -84,9 +84,7 @@ def test_player_list_requires_login(client, db):
     assert response.status_code == 302
 
 
-def test_player_list_uses_the_saved_language_for_full_and_htmx_responses(
-    signed_in, roster, user
-):
+def test_player_list_uses_the_saved_language_for_full_and_htmx_responses(signed_in, roster, user):
     user.language = "de"
     user.save(update_fields=["language"])
 
@@ -186,15 +184,16 @@ def test_injury_refresh_runs_the_sync_and_returns_an_inline_confirmation(
 ):
     monkeypatch.setattr(
         "apps.nba.views.sync_injuries",
-        lambda: {"created": 2, "updated": 1, "unmatched": 0, "ambiguous": 0},
+        lambda: {"created": 2, "updated": 1, "recovered": 3, "unmatched": 0, "ambiguous": 0},
     )
 
-    response = signed_in.post(
-        reverse("nba:injury-refresh"), HTTP_HX_REQUEST="true"
-    )
+    response = signed_in.post(reverse("nba:injury-refresh"), HTTP_HX_REQUEST="true")
 
     assert response.status_code == 200
-    assert "Injury report updated: 2 created, 1 updated, 0 unmatched." in response.content.decode()
+    assert (
+        "Injury report updated: 2 created, 1 updated, 3 recovered, 0 unmatched."
+        in response.content.decode()
+    )
 
 
 def test_injury_refresh_shows_the_daily_limit_message(signed_in, roster, monkeypatch):
@@ -203,9 +202,7 @@ def test_injury_refresh_shows_the_daily_limit_message(signed_in, roster, monkeyp
 
     monkeypatch.setattr("apps.nba.views.sync_injuries", raise_limit)
 
-    response = signed_in.post(
-        reverse("nba:injury-refresh"), HTTP_HX_REQUEST="true"
-    )
+    response = signed_in.post(reverse("nba:injury-refresh"), HTTP_HX_REQUEST="true")
 
     assert response.status_code == 200
     assert "The next update can be invoked tomorrow." in response.content.decode()
@@ -265,7 +262,7 @@ def test_compare_page_empty_state_and_modal_trigger(signed_in, roster):
     body = response.content.decode()
     assert "No players selected yet" in body
     assert reverse("nba:player-compare-modal") in body
-    assert "hx-target=\"#modal-root\"" in body
+    assert 'hx-target="#modal-root"' in body
 
 
 def test_compare_page_selected_players_removal_link(signed_in, roster):
@@ -367,9 +364,7 @@ def test_hotness_is_sortable(signed_in, roster):
             )
 
     ascending = signed_in.get(reverse("nba:player-list"), {"sort": "hotness", "dir": "asc"})
-    descending = signed_in.get(
-        reverse("nba:player-list"), {"sort": "hotness", "dir": "desc"}
-    )
+    descending = signed_in.get(reverse("nba:player-list"), {"sort": "hotness", "dir": "desc"})
 
     assert [player.full_name for player in ascending.context["players"][:3]] == [
         "LeBron James",
@@ -393,9 +388,7 @@ def test_predict_salary_matches_formula_and_floor():
 def test_player_predicted_salary_uses_current_points_per_game(db):
     from apps.nba.models import Player
 
-    player = Player(
-        first_name="Expected", last_name="Salary", position=Player.Position.GUARD
-    )
+    player = Player(first_name="Expected", last_name="Salary", position=Player.Position.GUARD)
 
     assert player.predicted_salary is None
 
@@ -447,9 +440,7 @@ def test_scatter_chart_uses_the_filtered_players(signed_in, roster):
 
     response = signed_in.get(reverse("nba:player-list"), {"team": "BOS"})
 
-    assert [dot["label"] for dot in response.context["salary_fp_chart"]["dots"]] == [
-        "Jayson Tatum"
-    ]
+    assert [dot["label"] for dot in response.context["salary_fp_chart"]["dots"]] == ["Jayson Tatum"]
     dot = response.context["salary_fp_chart"]["dots"][0]
     assert dot["detail_url"] == reverse(
         "nba:player-detail", args=[Player.objects.get(last_name="Tatum").slug]
@@ -507,9 +498,7 @@ def test_player_list_displays_hotness_score(signed_in, roster):
     assert "1 of 2" in body  # too few comparisons for a label
 
 
-def test_player_table_uses_team_abbreviations_and_right_aligns_non_name_columns(
-    signed_in, roster
-):
+def test_player_table_uses_team_abbreviations_and_right_aligns_non_name_columns(signed_in, roster):
     body = signed_in.get(reverse("nba:player-list")).content.decode()
 
     assert "LAL" in body

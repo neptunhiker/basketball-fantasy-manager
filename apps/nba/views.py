@@ -39,7 +39,16 @@ from . import charts, stats
 from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
 from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
-from .models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote, predict_salary
+from .models import (
+    HEALTHY_INJURY_STATUSES,
+    ImportRun,
+    Player,
+    PlayerInjury,
+    PlayerNote,
+    Team,
+    TeamNote,
+    predict_salary,
+)
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
 from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
 from .stats import DESCENDING_FIRST
@@ -324,17 +333,14 @@ class PlayerListView(LoginRequiredMixin, ListView):
             )
             qs = qs.annotate(latest_injury_status=latest_injury_status)
             if injury_status == "injured":
-                for healthy_state in ("healthy", "available", "returned", "cleared"):
+                for healthy_state in HEALTHY_INJURY_STATUSES:
                     qs = qs.exclude(latest_injury_status__iexact=healthy_state)
                 qs = qs.exclude(latest_injury_status__isnull=True)
             else:
-                qs = qs.filter(
-                    Q(latest_injury_status__isnull=True)
-                    | Q(latest_injury_status__iexact="healthy")
-                    | Q(latest_injury_status__iexact="available")
-                    | Q(latest_injury_status__iexact="returned")
-                    | Q(latest_injury_status__iexact="cleared")
-                )
+                healthy = Q(latest_injury_status__isnull=True)
+                for healthy_state in HEALTHY_INJURY_STATUSES:
+                    healthy |= Q(latest_injury_status__iexact=healthy_state)
+                qs = qs.filter(healthy)
 
         if self.request.GET.get("min_games") == "6":
             qs = qs.filter(current_games_played__gte=6)
@@ -493,7 +499,7 @@ class InjuryRefreshView(LoginRequiredMixin, View):
             context = {
                 "injury_refresh_success": _(
                     "Injury report updated: %(created)d created, %(updated)d updated, "
-                    "%(unmatched)d unmatched."
+                    "%(recovered)d recovered, %(unmatched)d unmatched."
                 )
                 % summary
             }

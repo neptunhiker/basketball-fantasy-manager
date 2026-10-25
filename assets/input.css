@@ -216,6 +216,16 @@
     opacity: 1;
   }
 
+  /* The scatter chart's name tag: the card's own colour behind the text, so
+     a name stays readable over gridlines, the curve and other dots. */
+  .chart-readout-bg {
+    flood-color: var(--color-white);
+
+    @variant dark {
+      flood-color: var(--color-neutral-900);
+    }
+  }
+
   /* Buttons — compose as `btn btn-primary`. Tailwind v4 cannot @apply a class
      defined in the same layer, so the variants only add colour. */
   /* At least 40px tall on phones, whatever padding a compact button asks for:

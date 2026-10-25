@@ -35,6 +35,16 @@ CURVE_SAMPLES = 64
 LABEL_OFFSET = 14
 LABEL_INSET = 40
 
+# A scatter chart's hover name always sits above its dot, so the plot starts
+# this far below the top of the drawing: room for the name of a player whose
+# salary is exactly the axis maximum.
+SCATTER_LABEL_ROOM = 16
+# Roughly how wide one character of an 11px semibold name is. Only used to
+# decide when a name would run off a side of the drawing, so an estimate is
+# enough -- a little generous, so a wide name turns inwards a bit early
+# rather than a bit late.
+LABEL_CHAR_WIDTH = 7
+
 
 def _nice_step(span, ticks):
     """A round number to step the axis by: 1, 2, 5, 10, 20, 50 and so on.
@@ -230,14 +240,24 @@ def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None):
 
     x_low, x_high, x_step = _bounds([point[1] for point in measured], x_ticks)
     y_low, y_high, y_step = _bounds([point[2] for point in measured], y_ticks)
+    plot_top = PAD_TOP + SCATTER_LABEL_ROOM
     plot_width = WIDTH - PAD_LEFT - PAD_RIGHT
-    plot_height = HEIGHT - PAD_TOP - PAD_BOTTOM
+    plot_height = HEIGHT - plot_top - PAD_BOTTOM
 
     def x_of(value):
         return round(PAD_LEFT + plot_width * float((value - x_low) / (x_high - x_low)), 2)
 
     def y_of(value):
-        return round(PAD_TOP + plot_height * float((y_high - value) / (y_high - y_low)), 2)
+        return round(plot_top + plot_height * float((y_high - value) / (y_high - y_low)), 2)
+
+    def label_anchor(x, label):
+        """Centred over the dot, unless that would cut the name off at a side."""
+        half = len(label) * LABEL_CHAR_WIDTH / 2
+        if x - half < 0:
+            return "start"
+        if x + half > WIDTH:
+            return "end"
+        return "middle"
 
     dots = [
         {
@@ -248,6 +268,7 @@ def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None):
             "y_value": y_value,
             "expected_salary": expected_salary,
             "color": games_played_color(metadata.get("games_played")),
+            "label_anchor": label_anchor(x_of(x_value), label),
             **metadata,
         }
         for label, x_value, y_value, expected_salary, metadata in measured
@@ -285,7 +306,7 @@ def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None):
         "title_bottom": HEIGHT + AXIS_TITLE_ROOM - 2,
         "plot_left": PAD_LEFT,
         "plot_right": WIDTH - PAD_RIGHT,
-        "plot_top": PAD_TOP,
+        "plot_top": plot_top,
         "plot_bottom": HEIGHT - PAD_BOTTOM,
         "plot_width": plot_width,
         "plot_height": plot_height,

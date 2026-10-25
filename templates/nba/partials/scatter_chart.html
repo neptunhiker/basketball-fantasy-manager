@@ -4,7 +4,7 @@
   variant="last" the details describe last season's fantasy points against
   this season's salary, without the rows only this season has.
 {% endcomment %}
-<div x-data="{ selected: null, select(point) { this.selected = point.dataset } }"
+<div x-data="{ selected: null, hovered: null, select(point) { this.selected = this.hovered = point.dataset } }"
   class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] md:items-stretch">
   <div class="min-w-0">
     <svg viewBox="0 0 {{ chart.width|unlocalize }} {{ chart.height|unlocalize }}"
@@ -39,6 +39,14 @@
           text-anchor="start" font-size="11">{{ y_axis_label }}</text>
   </g>
 
+  {# The hover name's background: a box in the card's colour, sized to the #}
+  {# text by the filter itself, so no width has to be guessed at. The #}
+  {# region is relative to the name -- a few pixels either side of it. #}
+  <filter id="{{ chart_id }}-label-bg" x="-0.06" y="-0.12" width="1.12" height="1.24">
+    <feFlood class="chart-readout-bg" result="background" />
+    <feComposite in="SourceGraphic" in2="background" operator="over" />
+  </filter>
+
   {% if chart.curve_points %}
     {# Fair value: the salary formula across the axis, clipped to the plot because the axes follow the dots, not the curve. #}
     <clipPath id="{{ chart_id }}-plot">
@@ -67,21 +75,31 @@
           data-games-played="{{ dot.games_played|default:'–' }}"
           data-difference="{{ dot.difference|floatformat:'2g' }}"
           data-hotness="{{ dot.hotness|default:'–' }}"
+          data-x="{{ dot.x|unlocalize }}"
+          data-y="{{ dot.y|unlocalize }}"
+          data-anchor="{{ dot.label_anchor }}"
           @mouseenter="select($el)"
-          @focus="select($el)" />
+          @focus="select($el)"
+          @mouseleave="hovered = null"
+          @blur="hovered = null" />
         <circle class="chart-halo"
                 cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="10"
                 fill="{{ dot.color|default:'#a1a1aa' }}" />
         <circle class="chart-dot"
           cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="3"
           fill="{{ dot.color|default:'#a1a1aa' }}" stroke="#ffffff" stroke-width="1.5" />
-        <text class="chart-readout fill-neutral-900 stroke-white dark:fill-white dark:stroke-neutral-900"
-              x="{{ dot.x|unlocalize }}" y="{{ dot.y|unlocalize }}"
-              text-anchor="middle" dy="-12" font-size="11" font-weight="600"
-              paint-order="stroke" stroke-width="4">{{ dot.label }}</text>
       </g>
     {% endfor %}
     </g>
+    {# One name tag for the whole chart, drawn after every dot: SVG paints in #}
+    {# document order, so a tag inside each dot's group was covered by the #}
+    {# dots that came after it. #}
+    <text x-show="hovered" x-cloak pointer-events="none"
+          class="fill-neutral-900 dark:fill-white"
+          :x="hovered?.x" :y="hovered?.y" :text-anchor="hovered?.anchor"
+          dy="-12" font-size="11" font-weight="600"
+          filter="url(#{{ chart_id }}-label-bg)"
+          x-text="hovered?.label"></text>
     </svg>
     <ul class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
       {% if chart.curve_points %}

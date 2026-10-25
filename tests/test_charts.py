@@ -229,3 +229,27 @@ def test_scatter_chart_axes_ignore_the_curve():
 
     assert with_curve["y_high"] == without["y_high"]
     assert without["curve_points"] is None
+
+
+def test_scatter_chart_leaves_room_above_the_top_dot_for_its_name():
+    """A salary exactly on the axis maximum still has its name inside the drawing."""
+    chart = charts.scatter_chart(
+        [("Cheap", Decimal("10"), Decimal("2")), ("Top", Decimal("30"), Decimal("6"))]
+    )
+
+    top = chart["dots"][1]
+    assert chart["y_high"] == Decimal("6")
+    assert top["y"] == chart["plot_top"]
+    assert top["y"] >= charts.PAD_TOP + charts.SCATTER_LABEL_ROOM
+
+
+def test_scatter_chart_turns_names_inwards_at_the_sides():
+    chart = charts.scatter_chart(
+        [
+            ("A Very Long Player Name", Decimal("0"), Decimal("1")),
+            ("Mid", Decimal("20"), Decimal("2")),
+            ("Another Very Long Player Name", Decimal("40"), Decimal("3")),
+        ]
+    )
+
+    assert [dot["label_anchor"] for dot in chart["dots"]] == ["start", "middle", "end"]

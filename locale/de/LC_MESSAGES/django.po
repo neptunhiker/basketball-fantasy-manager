@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 21:13+0200\n"
+"POT-Creation-Date: 2026-10-26 21:06+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -77,9 +77,9 @@ msgstr "Coach"
 #: templates/fantasy/partials/player_picker.html:97
 #: templates/fantasy/partials/roster_panel.html:5
 #: templates/nba/partials/player_table.html:4
-#: templates/nba/player_compare.html:97 templates/nba/player_detail.html:263
-#: templates/nba/player_list.html:75
-#: templates/nba/season_stats_import.html:127 templates/nba/team_list.html:23
+#: templates/nba/player_compare.html:97 templates/nba/player_detail.html:268
+#: templates/nba/player_list.html:75 templates/nba/season_stats_import.html:127
+#: templates/nba/team_list.html:23
 msgid "Team"
 msgstr "Team"
 
@@ -90,8 +90,8 @@ msgstr "Administration"
 
 #: apps/accounts/models.py:33 templates/accounts/partials/user_table.html:36
 #: templates/accounts/user_detail.html:36
-#: templates/fantasy/partials/roster_panel.html:319
-#: templates/nba/partials/player_table.html:228
+#: templates/fantasy/partials/roster_panel.html:367
+#: templates/nba/partials/player_table.html:235
 #: templates/nba/player_compare.html:165
 msgid "Active"
 msgstr "Aktiv"
@@ -245,7 +245,7 @@ msgstr "Bestätigen"
 #: templates/accounts/password_change.html:16
 #: templates/fantasy/partials/roster_create.html:63
 #: templates/fantasy/partials/roster_no_profile.html:10
-#: templates/fantasy/partials/trade_body.html:301
+#: templates/fantasy/partials/trade_body.html:309
 #: templates/nba/partials/bbde_import_modal.html:83
 #: templates/nba/partials/note_edit.html:16
 #: templates/partials/modal_confirm.html:59
@@ -282,11 +282,11 @@ msgstr "Die Saison, mit der die App arbeitet"
 
 #: apps/fantasy/forms.py:41
 msgid ""
-"Only one season can hold this. Ticking it here takes it off whichever season"
-" has it now."
+"Only one season can hold this. Ticking it here takes it off whichever season "
+"has it now."
 msgstr ""
-"Nur eine Saison kann dies haben. Wenn du es hier aktivierst, wird es von der"
-" aktuell markierten Saison entfernt."
+"Nur eine Saison kann dies haben. Wenn du es hier aktivierst, wird es von der "
+"aktuell markierten Saison entfernt."
 
 #: apps/fantasy/forms.py:95
 msgid "Label"
@@ -357,8 +357,8 @@ msgstr "In Dollar, z. B. 63000000. Gilt für alle ab jetzt erstellten Kader."
 
 #: apps/fantasy/forms.py:121
 msgid ""
-"The first weekly free trade, e.g. a Sunday at 22:00. Another follows every 7"
-" days until the season ends. Leave empty for none."
+"The first weekly free trade, e.g. a Sunday at 22:00. Another follows every 7 "
+"days until the season ends. Leave empty for none."
 msgstr ""
 "Der erste wöchentliche Gratis-Trade, z. B. ein Sonntag um 22:00 Uhr. Danach "
 "folgt alle 7 Tage einer, bis die Saison endet. Leer lassen für keine."
@@ -384,7 +384,7 @@ msgstr ""
 msgid "A season has to end after it starts."
 msgstr "Eine Saison muss nach ihrem Beginn enden."
 
-#: apps/fantasy/forms.py:166 apps/fantasy/models.py:311
+#: apps/fantasy/forms.py:166 apps/fantasy/models.py:312
 msgid "Signings must close after they open."
 msgstr "Die Transferphase muss nach ihrem Beginn enden."
 
@@ -522,146 +522,155 @@ msgstr "Beendet"
 msgid "Weekly trade"
 msgstr "Wöchentlicher Trade"
 
-#: apps/fantasy/models.py:313
+#: apps/fantasy/models.py:316
 msgid "Signings must close before the season starts."
 msgstr "Die Transferphase muss vor Saisonbeginn enden."
 
-#: apps/fantasy/models.py:315
+#: apps/fantasy/models.py:320
 msgid "Signings must open before the season starts."
 msgstr "Die Transferphase muss vor Saisonbeginn beginnen."
 
-#: apps/fantasy/models.py:317
+#: apps/fantasy/models.py:324
 msgid "Signings cannot close after the season ends."
 msgstr "Die Transferphase kann nicht nach Saisonende enden."
 
-#: apps/fantasy/models.py:603
+#: apps/fantasy/models.py:435 templates/app.html:98
+#: templates/nba/partials/player_table.html:15
+#: templates/nba/player_compare.html:93 templates/nba/player_list.html:4
+#: templates/nba/player_list.html:5
+msgid "Watchlist"
+msgstr "Watchlist"
+
+#: apps/fantasy/models.py:436
+msgid "Kick list"
+msgstr "Abschussliste"
+
+#: apps/fantasy/models.py:625
 #, python-format
 msgid "%(count)d more player"
 msgid_plural "%(count)d more players"
 msgstr[0] "%(count)d weiterer Spieler"
 msgstr[1] "%(count)d weitere Spieler"
 
-#: apps/fantasy/models.py:608
+#: apps/fantasy/models.py:630
 #, python-format
 msgid "%(count)d player too many"
 msgid_plural "%(count)d players too many"
 msgstr[0] "%(count)d Spieler zu viel"
 msgstr[1] "%(count)d Spieler zu viel"
 
-#: apps/fantasy/models.py:742
+#: apps/fantasy/models.py:786
 msgid "Buy"
 msgstr "Kauf"
 
-#: apps/fantasy/models.py:743
+#: apps/fantasy/models.py:787
 msgid "Sell"
 msgstr "Verkauf"
 
-#: apps/fantasy/models.py:744 templates/fantasy/partials/squad_cards.html:66
-#: templates/fantasy/partials/squad_cards.html:68
+#: apps/fantasy/models.py:788 templates/fantasy/partials/squad_cards.html:80
+#: templates/fantasy/partials/squad_cards.html:82
 #: templates/fantasy/roster_build.html:40
 #: templates/fantasy/roster_build.html:48
-#: templates/fantasy/roster_build.html:59
-#: templates/fantasy/trade_modal.html:10
+#: templates/fantasy/roster_build.html:59 templates/fantasy/trade_modal.html:10
 msgid "Trade"
 msgstr "Trade"
 
-#: apps/fantasy/models.py:745
+#: apps/fantasy/models.py:789
 msgid "Buy Trade"
 msgstr "Trade gekauft"
 
-#: apps/fantasy/models.py:746
+#: apps/fantasy/models.py:790
 msgid "Sell Trade"
 msgstr "Trade verkauft"
 
-#: apps/fantasy/models.py:747
+#: apps/fantasy/models.py:791
 msgid "Trade granted"
 msgstr "Trade erhalten"
 
-#: apps/fantasy/models.py:883
+#: apps/fantasy/models.py:925
 msgid "A transaction has to move at least one player."
 msgstr "Eine Transaktion muss mindestens einen Spieler bewegen."
 
-#: apps/fantasy/models.py:885 apps/fantasy/services.py:250
+#: apps/fantasy/models.py:927 apps/fantasy/services.py:254
 msgid "The player in and the player out cannot be the same."
-msgstr ""
-"Der eingehende und der ausgehende Spieler dürfen nicht identisch sein."
+msgstr "Der eingehende und der ausgehende Spieler dürfen nicht identisch sein."
 
-#: apps/fantasy/models.py:891
+#: apps/fantasy/models.py:933
 #, python-format
 msgid ""
 "Cash flow %(delta)s does not match the prices: out (%(out)s) minus in "
 "(%(in)s) is %(implied)s."
 msgstr ""
-"Der Cashflow %(delta)s passt nicht zu den Preisen: raus (%(out)s) minus rein"
-" (%(in)s) ergibt %(implied)s."
+"Der Cashflow %(delta)s passt nicht zu den Preisen: raus (%(out)s) minus rein "
+"(%(in)s) ergibt %(implied)s."
 
-#: apps/fantasy/services.py:149 apps/fantasy/services.py:526
+#: apps/fantasy/services.py:152 apps/fantasy/services.py:529
 #, python-format
 msgid "Signings open on %(date)s."
 msgstr "Die Transferphase beginnt am %(date)s."
 
-#: apps/fantasy/services.py:152
+#: apps/fantasy/services.py:155
 msgid "Buying and releasing are not currently allowed."
 msgstr "Kaufen und Freigeben sind derzeit nicht erlaubt."
 
-#: apps/fantasy/services.py:153
+#: apps/fantasy/services.py:157
 #, python-format
 msgid "Signings closed on %(date)s. Trades only from here."
 msgstr ""
 "Die Transferphase endete am %(date)s. Ab jetzt sind nur noch Trades möglich."
 
-#: apps/fantasy/services.py:170
+#: apps/fantasy/services.py:176
 msgid "A purchase price cannot be negative."
 msgstr "Ein Kaufpreis darf nicht negativ sein."
 
-#: apps/fantasy/services.py:173 apps/fantasy/services.py:260
+#: apps/fantasy/services.py:179 apps/fantasy/services.py:264
 #, python-format
 msgid "Not enough cash: %(available)s available, %(needed)s needed."
 msgstr "Nicht genug Cash: %(available)s verfügbar, %(needed)s nötig."
 
-#: apps/fantasy/services.py:177 apps/fantasy/services.py:255
+#: apps/fantasy/services.py:183 apps/fantasy/services.py:259
 #, python-format
 msgid "%(player)s is already on the roster."
 msgstr "%(player)s ist bereits im Kader."
 
-#: apps/fantasy/services.py:180
+#: apps/fantasy/services.py:185
 #, python-format
 msgid "The roster is full at %(size)d players."
 msgstr "Der Kader ist mit %(size)d Spielern voll."
 
-#: apps/fantasy/services.py:208
+#: apps/fantasy/services.py:212
 msgid "A sale price cannot be negative."
 msgstr "Ein Verkaufspreis darf nicht negativ sein."
 
-#: apps/fantasy/services.py:211 apps/fantasy/services.py:253
+#: apps/fantasy/services.py:215 apps/fantasy/services.py:257
 #, python-format
 msgid "%(player)s is not on the roster."
 msgstr "%(player)s ist nicht im Kader."
 
-#: apps/fantasy/services.py:244
+#: apps/fantasy/services.py:248
 msgid "Trades are only allowed while the season is running."
 msgstr "Trades sind nur während der laufenden Saison erlaubt."
 
-#: apps/fantasy/services.py:247 apps/fantasy/views.py:1345
-#: templates/fantasy/partials/trade_body.html:259
+#: apps/fantasy/services.py:251 apps/fantasy/views.py:1377
+#: templates/fantasy/partials/trade_body.html:267
 msgid "No trades available for this roster."
 msgstr "Für diesen Kader sind keine Trades verfügbar."
 
-#: apps/fantasy/services.py:293
+#: apps/fantasy/services.py:297
 msgid "Trades are only allowed while the season is live."
 msgstr "Trades sind nur während der aktiven Saison erlaubt."
 
-#: apps/fantasy/services.py:295
+#: apps/fantasy/services.py:299
 #, python-format
 msgid "Trades can be bought and sold from %(date)s."
 msgstr "Trades können ab %(date)s gekauft und verkauft werden."
 
-#: apps/fantasy/services.py:298
+#: apps/fantasy/services.py:302
 #, python-format
 msgid "Buying and selling trades closed on %(date)s."
 msgstr "Der Kauf und Verkauf von Trades endete am %(date)s."
 
-#: apps/fantasy/services.py:326
+#: apps/fantasy/services.py:328
 #, python-format
 msgid ""
 "Not enough cash: %(available)s available, %(needed)s needed to buy a trade."
@@ -669,35 +678,35 @@ msgstr ""
 "Nicht genug Cash: %(available)s verfügbar, %(needed)s nötig, um einen Trade "
 "zu kaufen."
 
-#: apps/fantasy/services.py:353
+#: apps/fantasy/services.py:355
 msgid "No trades available to sell."
 msgstr "Keine Trades zum Verkaufen verfügbar."
 
-#: apps/fantasy/services.py:497
+#: apps/fantasy/services.py:500
 #, python-format
 msgid "Roster %(number)d"
 msgstr "Kader %(number)d"
 
-#: apps/fantasy/services.py:522 apps/fantasy/views.py:688
+#: apps/fantasy/services.py:525 apps/fantasy/views.py:689
 msgid "Pick one of the available roster icons."
 msgstr "Wähle eines der verfügbaren Kader-Icons."
 
-#: apps/fantasy/services.py:528
+#: apps/fantasy/services.py:531
 msgid "A new roster cannot be created outside the signing window."
 msgstr "Außerhalb der Transferphase kann kein neuer Kader erstellt werden."
 
-#: apps/fantasy/views.py:229 apps/fantasy/views.py:471
+#: apps/fantasy/views.py:230 apps/fantasy/views.py:472
 #: templates/fantasy/partials/season_trade_grants.html:65
 #: templates/partials/modal.html:59
 msgid "Close"
 msgstr "Schließen"
 
-#: apps/fantasy/views.py:236
+#: apps/fantasy/views.py:237
 #, python-format
 msgid ""
-"%(season)s still holds %(count)d roster. Delete it first -- a roster's whole"
-" transaction history hangs off its season, and the database will not let the"
-" season go while it exists."
+"%(season)s still holds %(count)d roster. Delete it first -- a roster's whole "
+"transaction history hangs off its season, and the database will not let the "
+"season go while it exists."
 msgid_plural ""
 "%(season)s still holds %(count)d rosters. Delete those first -- a roster's "
 "whole transaction history hangs off its season, and the database will not "
@@ -711,7 +720,7 @@ msgstr[1] ""
 "Transaktionsverlauf eines Kaders hängt an seiner Saison, und die Datenbank "
 "lässt die Saison nicht los, solange sie existieren."
 
-#: apps/fantasy/views.py:246
+#: apps/fantasy/views.py:247
 #, python-format
 msgid ""
 "%(season)s holds %(count)s imported price and no rosters. Deleting the "
@@ -719,18 +728,18 @@ msgid ""
 "rebuild."
 msgid_plural ""
 "%(season)s holds %(count)s imported prices and no rosters. Deleting the "
-"season deletes every one of them -- the entire salary history for that year,"
-" which nothing can rebuild."
+"season deletes every one of them -- the entire salary history for that year, "
+"which nothing can rebuild."
 msgstr[0] ""
 "%(season)s enthält %(count)s importierten Preis und keine Kader. Wer die "
-"Saison löscht, löscht ihn mit – den Gehaltsverlauf dieses Jahres, den nichts"
-" wiederherstellen kann."
+"Saison löscht, löscht ihn mit – den Gehaltsverlauf dieses Jahres, den nichts "
+"wiederherstellen kann."
 msgstr[1] ""
 "%(season)s enthält %(count)s importierte Preise und keine Kader. Wer die "
 "Saison löscht, löscht sie alle mit – den gesamten Gehaltsverlauf dieses "
 "Jahres, den nichts wiederherstellen kann."
 
-#: apps/fantasy/views.py:255
+#: apps/fantasy/views.py:256
 #, python-format
 msgid ""
 "%(season)s holds no rosters and no prices, so nothing goes with it. The "
@@ -739,19 +748,19 @@ msgstr ""
 "%(season)s enthält keine Kader und keine Preise, es geht also nichts mit "
 "verloren. Die Saison selbst ist danach aber endgültig weg."
 
-#: apps/fantasy/views.py:277
+#: apps/fantasy/views.py:278
 #, python-format
 msgid "%(season)s has a roster in it now, so it cannot be deleted."
 msgstr ""
 "%(season)s enthält inzwischen einen Kader und kann daher nicht gelöscht "
 "werden."
 
-#: apps/fantasy/views.py:397
+#: apps/fantasy/views.py:398
 #, python-format
 msgid "You already have a profile called \"%(name)s\"."
 msgstr "Du hast bereits ein Profil namens „%(name)s“."
 
-#: apps/fantasy/views.py:479
+#: apps/fantasy/views.py:480
 #, python-format
 msgid ""
 "\"%(name)s\" still plays %(rosters)s. Delete or rename those first -- "
@@ -762,83 +771,83 @@ msgstr ""
 "sonst würden sie samt ihrem gesamten Transaktionsverlauf mit dem Profil "
 "entfernt."
 
-#: apps/fantasy/views.py:484
+#: apps/fantasy/views.py:485
 #, python-format
 msgid ""
 "\"%(name)s\" plays no rosters, so nothing else goes with it. The handle is "
 "gone for good, though."
 msgstr ""
-"„%(name)s“ spielt keine Kader, es geht also nichts weiter verloren. Der Name"
-" ist danach aber endgültig weg."
+"„%(name)s“ spielt keine Kader, es geht also nichts weiter verloren. Der Name "
+"ist danach aber endgültig weg."
 
-#: apps/fantasy/views.py:644
+#: apps/fantasy/views.py:645
 msgid "Pick one of your manager profiles."
 msgstr "Wähle eines deiner Managerprofile."
 
-#: apps/fantasy/views.py:662
+#: apps/fantasy/views.py:663
 #, python-format
 msgid "%(manager)s already has a roster called \"%(name)s\" this season."
 msgstr ""
 "%(manager)s hat in dieser Saison bereits einen Kader namens „%(name)s“."
 
-#: apps/fantasy/views.py:666
+#: apps/fantasy/views.py:667
 #, python-format
 msgid "You already have a roster called \"%(name)s\" this season."
 msgstr "Du hast in dieser Saison bereits einen Kader namens „%(name)s“."
 
-#: apps/fantasy/views.py:941
+#: apps/fantasy/views.py:966
 #, python-format
 msgid "Trades become available when the season starts on %(date)s."
 msgstr "Trades sind ab dem Saisonstart am %(date)s möglich."
 
-#: apps/fantasy/views.py:944
+#: apps/fantasy/views.py:969
 msgid "The season has ended. Trading is closed."
 msgstr "Die Saison ist beendet. Trades sind geschlossen."
 
-#: apps/fantasy/views.py:956
+#: apps/fantasy/views.py:981
 #, python-format
 msgid "Not enough cash (%(price)s needed)"
 msgstr "Nicht genug Cash (%(price)s nötig)"
 
-#: apps/fantasy/views.py:966
+#: apps/fantasy/views.py:991
 msgid "No trades available to sell"
 msgstr "Keine Trades zum Verkaufen verfügbar"
 
-#: apps/fantasy/views.py:1057 apps/fantasy/views.py:1387
+#: apps/fantasy/views.py:1087 apps/fantasy/views.py:1418
 #, python-format
 msgid "No salary on record for %(player)s."
 msgstr "Für %(player)s ist kein Gehalt erfasst."
 
 # UX round 2: guidance while building a roster
-#: apps/fantasy/views.py:1061
+#: apps/fantasy/views.py:1091
 #, python-format
 msgid "%(name)s signed for %(price)s."
 msgstr "%(name)s für %(price)s verpflichtet."
 
-#: apps/fantasy/views.py:1071
+#: apps/fantasy/views.py:1101
 #, python-format
 msgid "%(name)s released, %(price)s back."
 msgstr "%(name)s entlassen, %(price)s zurück."
 
-#: apps/fantasy/views.py:1106
+#: apps/fantasy/views.py:1136
 msgid "No salary on record yet."
 msgstr "Noch kein Gehalt erfasst."
 
-#: apps/fantasy/views.py:1108
+#: apps/fantasy/views.py:1138
 msgid "Roster is full."
 msgstr "Der Kader ist voll."
 
-#: apps/fantasy/views.py:1110
+#: apps/fantasy/views.py:1140
 #, python-format
 msgid "Not enough cash (%(cash)s left)."
 msgstr "Nicht genug Cash (noch %(cash)s)."
 
-#: apps/fantasy/views.py:1145
+#: apps/fantasy/views.py:1175
 #, python-format
 msgid "%(message)s Roster: %(roster)s."
 msgstr "%(message)s Kader: %(roster)s."
 
-#: apps/fantasy/views.py:1162
+#: apps/fantasy/views.py:1192
 #, python-format
 msgid ""
 "Do you really want to buy 1 extra trade for %(price)s cash? Your cash "
@@ -847,44 +856,44 @@ msgstr ""
 "Möchtest du wirklich 1 zusätzlichen Trade für %(price)s Cash kaufen? Dein "
 "Cash sinkt von %(before)s auf %(after)s."
 
-#: apps/fantasy/views.py:1173
+#: apps/fantasy/views.py:1203
 #, python-format
 msgid "Trade bought for %(price)s."
 msgstr "Trade für %(price)s gekauft."
 
-#: apps/fantasy/views.py:1194
+#: apps/fantasy/views.py:1224
 #, python-format
 msgid ""
-"Do you really want to sell 1 trade for %(price)s cash? Your available trades"
-" will decrease from %(trades)d to %(trades_after)d, and your cash balance "
+"Do you really want to sell 1 trade for %(price)s cash? Your available trades "
+"will decrease from %(trades)d to %(trades_after)d, and your cash balance "
 "will increase from %(before)s to %(after)s."
 msgstr ""
-"Möchtest du wirklich 1 Trade für %(price)s Cash verkaufen? Deine verfügbaren"
-" Trades sinken von %(trades)d auf %(trades_after)d, und dein Cash steigt von"
-" %(before)s auf %(after)s."
+"Möchtest du wirklich 1 Trade für %(price)s Cash verkaufen? Deine verfügbaren "
+"Trades sinken von %(trades)d auf %(trades_after)d, und dein Cash steigt von "
+"%(before)s auf %(after)s."
 
-#: apps/fantasy/views.py:1208
+#: apps/fantasy/views.py:1238
 #, python-format
 msgid "Trade sold for %(price)s."
 msgstr "Trade für %(price)s verkauft."
 
-#: apps/fantasy/views.py:1347 templates/fantasy/partials/trade_body.html:285
+#: apps/fantasy/views.py:1379 templates/fantasy/partials/trade_body.html:293
 msgid "Pick a player to send out and one to bring in."
 msgstr "Wähle einen Spieler, der geht, und einen, der kommt."
 
-#: apps/fantasy/views.py:1363
+#: apps/fantasy/views.py:1395
 #, python-format
 msgid "Trade done: %(out)s out, %(in)s in."
 msgstr "Trade durchgeführt: %(out)s raus, %(in)s rein."
 
-#: apps/fantasy/views.py:1420
+#: apps/fantasy/views.py:1450
 #, python-format
 msgid ""
 "\"%(name)s\" will be deleted along with its %(count)d player and its entire "
 "transaction history. This cannot be undone."
 msgid_plural ""
-"\"%(name)s\" will be deleted along with its %(count)d players and its entire"
-" transaction history. This cannot be undone."
+"\"%(name)s\" will be deleted along with its %(count)d players and its entire "
+"transaction history. This cannot be undone."
 msgstr[0] ""
 "„%(name)s“ wird mit seinem %(count)d Spieler und dem gesamten "
 "Transaktionsverlauf gelöscht. Das kann nicht rückgängig gemacht werden."
@@ -910,8 +919,7 @@ msgstr "Nur du kannst diese Notiz sehen."
 #: apps/nba/forms.py:39
 msgid "Keep a private note about this team's rotation, matchups, or trends."
 msgstr ""
-"Führe eine private Notiz zur Rotation, den Matchups oder Trends dieses "
-"Teams."
+"Führe eine private Notiz zur Rotation, den Matchups oder Trends dieses Teams."
 
 # basketball.de player import
 #: apps/nba/forms.py:54
@@ -922,11 +930,11 @@ msgstr "basketball.de-Benutzername"
 msgid "basketball.de password"
 msgstr "basketball.de-Passwort"
 
-#: apps/nba/importer.py:78 apps/nba/views.py:556
+#: apps/nba/importer.py:78 apps/nba/views.py:564
 msgid "There is no current season to import into."
 msgstr "Es gibt keine aktuelle Saison, in die importiert werden kann."
 
-#: apps/nba/importer.py:83 apps/nba/views.py:558
+#: apps/nba/importer.py:83 apps/nba/views.py:566
 msgid "Another import is still running. Please try again shortly."
 msgstr "Es läuft bereits ein Import. Bitte versuche es gleich noch einmal."
 
@@ -969,87 +977,87 @@ msgid ""
 "Only %(rows)d rows were read, against %(previous)d last time, so no player "
 "was marked inactive."
 msgstr ""
-"Es wurden nur %(rows)d Zeilen gelesen (beim letzten Mal %(previous)d), daher"
-" wurde kein Spieler als inaktiv markiert."
+"Es wurden nur %(rows)d Zeilen gelesen (beim letzten Mal %(previous)d), daher "
+"wurde kein Spieler als inaktiv markiert."
 
-#: apps/nba/models.py:48
+#: apps/nba/models.py:71
 msgid "Eastern Conference"
 msgstr "Eastern Conference"
 
-#: apps/nba/models.py:49
+#: apps/nba/models.py:72
 msgid "Western Conference"
 msgstr "Western Conference"
 
-#: apps/nba/models.py:52
+#: apps/nba/models.py:75
 msgid "Atlantic"
 msgstr "Atlantic"
 
-#: apps/nba/models.py:53
+#: apps/nba/models.py:76
 msgid "Central"
 msgstr "Central"
 
-#: apps/nba/models.py:54
+#: apps/nba/models.py:77
 msgid "Southeast"
 msgstr "Southeast"
 
-#: apps/nba/models.py:55
+#: apps/nba/models.py:78
 msgid "Northwest"
 msgstr "Northwest"
 
-#: apps/nba/models.py:56
+#: apps/nba/models.py:79
 msgid "Pacific"
 msgstr "Pacific"
 
-#: apps/nba/models.py:57
+#: apps/nba/models.py:80
 msgid "Southwest"
 msgstr "Southwest"
 
-#: apps/nba/models.py:85
+#: apps/nba/models.py:108
 msgid "Guard"
 msgstr "Guard"
 
-#: apps/nba/models.py:86
+#: apps/nba/models.py:109
 msgid "Forward"
 msgstr "Forward"
 
-#: apps/nba/models.py:87
+#: apps/nba/models.py:110
 msgid "Center"
 msgstr "Center"
 
-#: apps/nba/models.py:428 apps/nba/models.py:510
+#: apps/nba/models.py:475 apps/nba/models.py:557
 msgid "Web"
 msgstr "Web"
 
-#: apps/nba/models.py:429 apps/nba/models.py:511
+#: apps/nba/models.py:476 apps/nba/models.py:558
 #: templates/nba/season_stats_upload.html:197
 msgid "Command"
 msgstr "Befehl"
 
-#: apps/nba/models.py:432
+#: apps/nba/models.py:479
 msgid "Running"
 msgstr "Läuft"
 
-#: apps/nba/models.py:433
+#: apps/nba/models.py:480
 msgid "Succeeded"
 msgstr "Erfolgreich"
 
-#: apps/nba/models.py:434 apps/nba/models.py:518
+#: apps/nba/models.py:481 apps/nba/models.py:565
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
-#: apps/nba/models.py:514
+#: apps/nba/models.py:561
 msgid "Previewed"
 msgstr "Vorschau"
 
-#: apps/nba/models.py:515 templates/nba/partials/season_stats_status.html:4
+#: apps/nba/models.py:562 templates/nba/partials/season_stats_status.html:4
 msgid "Imported"
 msgstr "Importiert"
 
-#: apps/nba/models.py:516
+#: apps/nba/models.py:563
 msgid "Discarded"
 msgstr "Verworfen"
 
-#: apps/nba/models.py:517
+#: apps/nba/models.py:564
 msgid "Expired"
 msgstr "Abgelaufen"
 
@@ -1086,8 +1094,7 @@ msgstr "Zeile %(line)d: Der Spielername ist leer."
 #, python-format
 msgid "Line %(line)d (%(name)s): “%(value)s” is not a valid %(column)s."
 msgstr ""
-"Zeile %(line)d (%(name)s): „%(value)s“ ist kein gültiger Wert für "
-"%(column)s."
+"Zeile %(line)d (%(name)s): „%(value)s“ ist kein gültiger Wert für %(column)s."
 
 #: apps/nba/season_stats.py:282
 #, python-format
@@ -1161,6 +1168,32 @@ msgstr "%(count)d Spieler für %(season)s importiert."
 msgid "The preview was discarded. Nothing was saved."
 msgstr "Die Vorschau wurde verworfen. Es wurde nichts gespeichert."
 
+#: apps/nba/templatetags/player_stats.py:33
+msgid "today"
+msgstr "heute"
+
+#: apps/nba/templatetags/player_stats.py:35
+msgid "tomorrow"
+msgstr "morgen"
+
+#: apps/nba/templatetags/player_stats.py:37
+msgid "yesterday"
+msgstr "gestern"
+
+#: apps/nba/templatetags/player_stats.py:39
+#, python-format
+msgid "in %(count)d day"
+msgid_plural "in %(count)d days"
+msgstr[0] "in %(count)d Tag"
+msgstr[1] "in %(count)d Tagen"
+
+#: apps/nba/templatetags/player_stats.py:40
+#, python-format
+msgid "%(count)d day ago"
+msgid_plural "%(count)d days ago"
+msgstr[0] "vor %(count)d Tag"
+msgstr[1] "vor %(count)d Tagen"
+
 #: apps/nba/templatetags/season_stats_tags.py:58
 msgid "Field goals"
 msgstr "Würfe aus dem Feld"
@@ -1173,7 +1206,7 @@ msgstr "Dreier"
 msgid "Free throws"
 msgstr "Freiwürfe"
 
-#: apps/nba/views.py:467
+#: apps/nba/views.py:475
 msgid ""
 "The injury report was already updated today. The next update can be invoked "
 "tomorrow."
@@ -1181,13 +1214,13 @@ msgstr ""
 "Der Verletzungsbericht wurde heute bereits aktualisiert. Das nächste Update "
 "kann morgen gestartet werden."
 
-#: apps/nba/views.py:474
+#: apps/nba/views.py:482
 msgid "The injury report could not be updated. Please try again tomorrow."
 msgstr ""
 "Der Verletzungsbericht konnte nicht aktualisiert werden. Bitte versuche es "
 "morgen erneut."
 
-#: apps/nba/views.py:480
+#: apps/nba/views.py:488
 #, python-format
 msgid ""
 "Injury report updated: %(created)d created, %(updated)d updated, "
@@ -1196,17 +1229,17 @@ msgstr ""
 "Verletzungsbericht aktualisiert: %(created)d erstellt, %(updated)d "
 "aktualisiert, %(recovered)d wieder fit, %(unmatched)d nicht zugeordnet."
 
-#: apps/nba/views.py:552
+#: apps/nba/views.py:560
 msgid "This basketball.de account has not been activated yet."
 msgstr "Dieses basketball.de-Konto ist noch nicht aktiviert."
 
-#: apps/nba/views.py:554
+#: apps/nba/views.py:562
 msgid "basketball.de did not accept this username and password."
 msgstr ""
 "basketball.de hat diesen Benutzernamen und dieses Passwort nicht akzeptiert."
 
 # UX fixes, round 1
-#: apps/nba/views.py:561
+#: apps/nba/views.py:569
 msgid ""
 "There are no NBA teams in the database yet. Ask an administrator to run "
 "manage.py seed_teams first."
@@ -1214,12 +1247,12 @@ msgstr ""
 "Es sind noch keine NBA-Teams in der Datenbank. Bitte eine Administratorin "
 "oder einen Administrator, zuerst manage.py seed_teams auszuführen."
 
-#: apps/nba/views.py:564
+#: apps/nba/views.py:572
 #, python-format
 msgid "The import failed: %(reason)s"
 msgstr "Der Import ist fehlgeschlagen: %(reason)s"
 
-#: apps/nba/views.py:775
+#: apps/nba/views.py:831
 #, python-format
 msgid "From %(n)d of %(total)d player. No value on record for the rest."
 msgid_plural ""
@@ -1229,99 +1262,105 @@ msgstr[0] ""
 msgstr[1] ""
 "Aus %(n)d von %(total)d Spielern. Für den Rest ist kein Wert erfasst."
 
-#: apps/nba/views.py:901
+#: apps/nba/views.py:961
 msgid "Salaries"
 msgstr "Gehälter"
 
-#: apps/nba/views.py:904
+#: apps/nba/views.py:964
 msgid "Average"
 msgstr "Durchschnitt"
 
-#: apps/nba/views.py:905
+#: apps/nba/views.py:965
 msgid "Median"
 msgstr "Median"
 
-#: apps/nba/views.py:906
+#: apps/nba/views.py:966
 msgid "Lowest"
 msgstr "Niedrigster Wert"
 
-#: apps/nba/views.py:907
+#: apps/nba/views.py:967
 msgid "Highest"
 msgstr "Höchster Wert"
 
-#: apps/nba/views.py:908
+#: apps/nba/views.py:968
 msgid "Total"
 msgstr "Gesamt"
 
-#: apps/nba/views.py:913 templates/nba/partials/season_stats_card.html:44
+#: apps/nba/views.py:973 templates/nba/partials/season_stats_card.html:44
 msgid "Fantasy points"
 msgstr "Fantasy-Punkte"
 
-#: apps/nba/views.py:916
+#: apps/nba/views.py:976
 msgid "Avg per game"
 msgstr "Durchschnitt pro Spiel"
 
-#: apps/nba/views.py:917
+#: apps/nba/views.py:977
 msgid "Median per game"
 msgstr "Median pro Spiel"
 
-#: apps/nba/views.py:918
+#: apps/nba/views.py:978
 msgid "Fewest per game"
 msgstr "Wenigste pro Spiel"
 
-#: apps/nba/views.py:919
+#: apps/nba/views.py:979
 msgid "Most per game"
 msgstr "Meiste pro Spiel"
 
-#: apps/nba/views.py:920 templates/nba/player_detail.html:205
+#: apps/nba/views.py:980 templates/nba/player_detail.html:210
 msgid "Points total"
 msgstr "Punkte gesamt"
 
-#: apps/nba/views.py:923
+#: apps/nba/views.py:983
 msgid "Team per game"
 msgstr "Team pro Spiel"
 
-#: apps/nba/views.py:928
+#: apps/nba/views.py:988
 msgid "Player health"
 msgstr "Spielergesundheit"
 
-#: apps/nba/views.py:931 templates/nba/partials/injury_status.html:3
+#: apps/nba/views.py:991 templates/nba/partials/injury_status.html:3
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:90
 msgid "Healthy"
 msgstr "Gesund"
 
-#: apps/nba/views.py:932 templates/nba/partials/injury_status.html:2
+#: apps/nba/views.py:992 templates/nba/partials/injury_status.html:4
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:91 templates/nba/team_list.html:30
+msgid "Day-to-day"
+msgstr "Angeschlagen"
+
+#: apps/nba/views.py:993 templates/nba/partials/injury_status.html:2
+#: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
+#: templates/nba/player_list.html:92 templates/nba/team_list.html:31
 msgid "Injured"
 msgstr "Verletzt"
 
-#: apps/nba/views.py:956
+#: apps/nba/views.py:1017
 msgid "Only you can see these notes. They are for your own team context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Teamkontext gedacht."
 
-#: apps/nba/views.py:959
+#: apps/nba/views.py:1020
 msgid "No private notes yet. Save one to remember your take on this team."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Teams festzuhalten."
 
-#: apps/nba/views.py:1053
+#: apps/nba/views.py:1110
 msgid "Only you can see these notes. They are for your own player context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Spielerkontext gedacht."
 
-#: apps/nba/views.py:1056
+#: apps/nba/views.py:1113
 msgid "No private notes yet. Save one to remember your take on this player."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Spielers festzuhalten."
 
-#: apps/nba/views.py:1164
+#: apps/nba/views.py:1221
 msgid "The note will be removed for good. This cannot be undone."
 msgstr ""
 "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."
@@ -1399,8 +1438,8 @@ msgid ""
 "The link is valid for three days. If this was not you, you can ignore this "
 "email -- your password stays as it is."
 msgstr ""
-"Der Link ist drei Tage gültig. Wenn du das nicht warst, kannst du diese "
-"E-Mail ignorieren -- dein Passwort bleibt unverändert."
+"Der Link ist drei Tage gültig. Wenn du das nicht warst, kannst du diese E-"
+"Mail ignorieren -- dein Passwort bleibt unverändert."
 
 #: templates/accounts/email/password_reset_body.txt:9
 msgid "Best,"
@@ -1483,10 +1522,10 @@ msgstr "Person"
 
 #: templates/accounts/partials/user_table.html:10
 #: templates/accounts/user_detail.html:31
-#: templates/fantasy/partials/roster_panel.html:266
-#: templates/nba/partials/injury_status.html:56
-#: templates/nba/partials/player_table.html:153
-#: templates/nba/player_compare.html:106 templates/nba/player_detail.html:94
+#: templates/fantasy/partials/roster_panel.html:305
+#: templates/nba/partials/injury_status.html:63
+#: templates/nba/partials/player_table.html:157
+#: templates/nba/player_compare.html:106 templates/nba/player_detail.html:99
 #: templates/nba/season_stats_upload.html:187
 msgid "Status"
 msgstr "Status"
@@ -1528,13 +1567,13 @@ msgid "Page %(page)s of %(pages)s"
 msgstr "Seite %(page)s von %(pages)s"
 
 #: templates/accounts/partials/user_table.html:76
-#: templates/nba/partials/player_table.html:254
+#: templates/nba/partials/player_table.html:261
 msgid "Previous"
 msgstr "Zurück"
 
 #: templates/accounts/partials/user_table.html:80
 #: templates/fantasy/roster_rules.html:112
-#: templates/nba/partials/player_table.html:258
+#: templates/nba/partials/player_table.html:265
 msgid "Next"
 msgstr "Weiter"
 
@@ -1548,8 +1587,7 @@ msgid "Nobody on the team yet."
 msgstr "Noch niemand im Team."
 
 #: templates/accounts/password_change.html:4
-#: templates/accounts/password_change.html:5
-#: templates/accounts/profile.html:55
+#: templates/accounts/password_change.html:5 templates/accounts/profile.html:55
 msgid "Change password"
 msgstr "Passwort ändern"
 
@@ -1602,8 +1640,8 @@ msgstr "Passwort speichern"
 #: templates/accounts/password_reset_confirm.html:17
 msgid "This link has already been used or has expired. Request a new one."
 msgstr ""
-"Dieser Link wurde bereits verwendet oder ist abgelaufen. Fordere einen neuen"
-" an."
+"Dieser Link wurde bereits verwendet oder ist abgelaufen. Fordere einen neuen "
+"an."
 
 #: templates/accounts/password_reset_confirm.html:19
 msgid "Request a new link"
@@ -1633,8 +1671,8 @@ msgstr "Profil"
 msgid ""
 "No name yet — the app falls back to your email address until you set one."
 msgstr ""
-"Noch kein Name — bis du einen Namen festlegst, verwendet die App deine "
-"E-Mail-Adresse."
+"Noch kein Name — bis du einen Namen festlegst, verwendet die App deine E-"
+"Mail-Adresse."
 
 #: templates/accounts/profile.html:38
 msgid "Save changes"
@@ -1644,8 +1682,7 @@ msgstr "Änderungen speichern"
 msgid "Member since"
 msgstr "Mitglied seit"
 
-#: templates/accounts/user_detail.html:9
-#: templates/accounts/user_detail.html:14
+#: templates/accounts/user_detail.html:9 templates/accounts/user_detail.html:14
 msgid "Back to team"
 msgstr "Zurück zum Team"
 
@@ -1698,7 +1735,7 @@ msgstr "Nach E-Mail-Adresse suchen"
 #: templates/accounts/user_list.html:46
 #: templates/fantasy/partials/player_picker.html:108
 #: templates/nba/player_compare_modal.html:27
-#: templates/nba/player_list.html:143
+#: templates/nba/player_list.html:191
 msgid "Searching"
 msgstr "Suche läuft"
 
@@ -1718,17 +1755,11 @@ msgstr "Teams"
 
 #: templates/app.html:88 templates/fantasy/manager_detail.html:60
 #: templates/fantasy/manager_list.html:91
-#: templates/fantasy/partials/roster_panel.html:91
+#: templates/fantasy/partials/roster_panel.html:96
 #: templates/fantasy/roster_list.html:72 templates/nba/player_list.html:4
 #: templates/nba/player_list.html:5 templates/nba/team_list.html:25
 msgid "Players"
 msgstr "Spieler"
-
-#: templates/app.html:98 templates/nba/partials/player_table.html:14
-#: templates/nba/player_compare.html:93 templates/nba/player_list.html:4
-#: templates/nba/player_list.html:5
-msgid "Watchlist"
-msgstr "Watchlist"
 
 #: templates/app.html:108 templates/fantasy/roster_list.html:4
 #: templates/fantasy/roster_list.html:5 templates/fantasy/season_list.html:29
@@ -1878,7 +1909,7 @@ msgstr[1] "%(count)s Kader"
 
 #: templates/fantasy/manager_detail.html:42
 #: templates/fantasy/manager_list.html:74
-#: templates/fantasy/partials/roster_panel.html:28
+#: templates/fantasy/partials/roster_panel.html:29
 #: templates/fantasy/roster_build.html:14
 #: templates/fantasy/roster_history.html:20
 #: templates/fantasy/roster_history.html:42
@@ -1892,15 +1923,13 @@ msgstr "Kader-Icon %(icon)s"
 #: templates/fantasy/partials/history_cards.html:31
 #: templates/fantasy/partials/player_picker.html:34
 #: templates/fantasy/partials/player_roster_options.html:14
-#: templates/fantasy/partials/roster_panel.html:66
+#: templates/fantasy/partials/roster_panel.html:67
 #: templates/fantasy/roster_list.html:76
 msgid "Cash"
 msgstr "Cash"
 
 #: templates/fantasy/manager_detail.html:56
-#: templates/fantasy/manager_list.html:87
-#: templates/fantasy/partials/roster_panel.html:92
-#: templates/fantasy/roster_list.html:80
+#: templates/fantasy/manager_list.html:87 templates/fantasy/roster_list.html:80
 #: templates/fantasy/roster_rules.html:145
 msgid "Team value"
 msgstr "Teamwert"
@@ -1960,14 +1989,14 @@ msgstr "Zu den Saisons"
 
 #: templates/fantasy/no_season.html:19
 msgid ""
-"An administrator still needs to start the season. Until then you can already"
-" look around the players."
+"An administrator still needs to start the season. Until then you can already "
+"look around the players."
 msgstr ""
 "Die Saison muss noch von der Administration gestartet werden. Bis dahin "
 "kannst du dich schon bei den Spielern umsehen."
 
 #: templates/fantasy/no_season.html:21
-#: templates/nba/partials/player_table.html:271
+#: templates/nba/partials/player_table.html:278
 msgid "Browse players"
 msgstr "Spieler durchsuchen"
 
@@ -1997,15 +2026,15 @@ msgstr[1] "Ø pro freiem Platz (%(slots)s frei)"
 
 #: templates/fantasy/partials/player_picker.html:81
 #: templates/fantasy/partials/player_picker.html:83
-#: templates/fantasy/partials/trade_body.html:128
-#: templates/fantasy/partials/trade_body.html:130
+#: templates/fantasy/partials/trade_body.html:134
+#: templates/fantasy/partials/trade_body.html:136
 #: templates/nba/player_list.html:50 templates/nba/player_list.html:52
 msgid "Search by name"
 msgstr "Nach Namen suchen"
 
 #: templates/fantasy/partials/player_picker.html:87
 #: templates/fantasy/partials/roster_panel.html:4
-#: templates/fantasy/partials/trade_body.html:132
+#: templates/fantasy/partials/trade_body.html:138
 #: templates/nba/partials/player_table.html:3
 #: templates/nba/player_compare.html:96 templates/nba/player_list.html:64
 msgid "Position"
@@ -2022,11 +2051,11 @@ msgid "All teams"
 msgstr "Alle Teams"
 
 #: templates/fantasy/partials/player_picker.html:134
-#: templates/fantasy/partials/roster_panel.html:290
-#: templates/fantasy/partials/squad_cards.html:34
-#: templates/fantasy/partials/trade_body.html:178
+#: templates/fantasy/partials/roster_panel.html:335
+#: templates/fantasy/partials/squad_cards.html:35
+#: templates/fantasy/partials/trade_body.html:186
 #: templates/nba/partials/compare_transposed.html:42
-#: templates/nba/partials/player_table.html:182
+#: templates/nba/partials/player_table.html:186
 #: templates/nba/player_compare.html:136 templates/nba/player_detail.html:38
 msgid "Free Agent"
 msgstr "Free Agent"
@@ -2075,13 +2104,13 @@ msgid "Closed"
 msgstr "Geschlossen"
 
 #: templates/fantasy/partials/player_picker.html:183
-#: templates/fantasy/partials/trade_body.html:200
-#: templates/nba/partials/player_table.html:273
+#: templates/fantasy/partials/trade_body.html:208
+#: templates/nba/partials/player_table.html:288
 msgid "Nothing matches those filters."
 msgstr "Keine Ergebnisse für diese Filter."
 
 #: templates/fantasy/partials/player_picker.html:185
-#: templates/fantasy/partials/trade_body.html:202
+#: templates/fantasy/partials/trade_body.html:210
 msgid "No players with a salary on record."
 msgstr "Keine Spieler mit erfasstem Gehalt."
 
@@ -2110,7 +2139,7 @@ msgid "Trade in…"
 msgstr "Per Trade holen …"
 
 #: templates/fantasy/partials/player_roster_options.html:42
-#: templates/fantasy/partials/roster_panel.html:200
+#: templates/fantasy/partials/roster_panel.html:214
 #: templates/fantasy/roster_list.html:50
 msgid "No roster changes are available in this phase."
 msgstr "In dieser Phase sind keine Kaderänderungen möglich."
@@ -2152,60 +2181,65 @@ msgstr "Spieler"
 
 #: templates/fantasy/partials/roster_panel.html:6
 #: templates/nba/partials/player_table.html:5
-#: templates/nba/partials/scatter_chart.html:95
+#: templates/nba/partials/scatter_chart.html:140
 #: templates/nba/player_compare.html:98
 msgid "Actual salary"
 msgstr "Aktuelles Gehalt"
 
 #: templates/fantasy/partials/roster_panel.html:7
 #: templates/nba/partials/player_table.html:6
-#: templates/nba/partials/scatter_chart.html:99
-#: templates/nba/player_compare.html:99 templates/nba/player_detail.html:185
+#: templates/nba/partials/scatter_chart.html:144
+#: templates/nba/player_compare.html:99 templates/nba/player_detail.html:190
 msgid "Expected salary"
 msgstr "Erwartetes Gehalt"
 
 #: templates/fantasy/partials/roster_panel.html:8
-#: templates/fantasy/partials/squad_cards.html:47
+#: templates/fantasy/partials/squad_cards.html:61
 #: templates/nba/partials/player_table.html:7
-#: templates/nba/partials/scatter_chart.html:103
-#: templates/nba/player_compare.html:100 templates/nba/player_detail.html:166
+#: templates/nba/partials/scatter_chart.html:148
+#: templates/nba/player_compare.html:100 templates/nba/player_detail.html:171
 msgid "Value"
 msgstr "Wert"
 
 #: templates/fantasy/partials/roster_panel.html:9
 #: templates/nba/partials/player_table.html:8
-#: templates/nba/partials/scatter_chart.html:108
+#: templates/nba/partials/scatter_chart.html:153
 #: templates/nba/partials/season_stats_card.html:57
-#: templates/nba/player_compare.html:101 templates/nba/player_detail.html:266
+#: templates/nba/player_compare.html:101 templates/nba/player_detail.html:271
 #: templates/nba/season_stats_import.html:130
 msgid "Points"
 msgstr "Punkte"
 
 #: templates/fantasy/partials/roster_panel.html:10
 #: templates/nba/partials/player_table.html:9
-#: templates/nba/player_compare.html:102 templates/nba/player_detail.html:267
+#: templates/nba/player_compare.html:102 templates/nba/player_detail.html:272
 msgid "Avg/game"
 msgstr "Ø/Spiel"
 
 #: templates/fantasy/partials/roster_panel.html:11
 #: templates/nba/partials/player_table.html:10
 #: templates/nba/partials/season_stats_card.html:122
-#: templates/nba/player_compare.html:103 templates/nba/player_detail.html:211
-#: templates/nba/player_detail.html:268
+#: templates/nba/player_compare.html:103 templates/nba/player_detail.html:216
+#: templates/nba/player_detail.html:273
 msgid "Games"
 msgstr "Spiele"
 
 #: templates/fantasy/partials/roster_panel.html:12
-#: templates/fantasy/partials/squad_cards.html:55
+#: templates/fantasy/partials/squad_cards.html:69
 #: templates/nba/partials/player_table.html:11
-#: templates/nba/partials/scatter_chart.html:118
-#: templates/nba/player_compare.html:104 templates/nba/player_detail.html:167
+#: templates/nba/partials/scatter_chart.html:163
+#: templates/nba/player_compare.html:104 templates/nba/player_detail.html:172
 msgid "Hotness"
 msgstr "Hotness"
 
 #: templates/fantasy/partials/roster_panel.html:13
 #: templates/nba/partials/player_table.html:12
-#: templates/nba/player_detail.html:168
+msgid "Return"
+msgstr "Rückkehr"
+
+#: templates/fantasy/partials/roster_panel.html:14
+#: templates/nba/partials/player_table.html:13
+#: templates/nba/player_detail.html:173
 msgid ""
 "Value is the salary we would expect for his points per game, minus what he "
 "actually costs. A plus means a bargain, a minus means he is overpaid."
@@ -2214,9 +2248,9 @@ msgstr ""
 "das, was er tatsächlich kostet. Ein Plus bedeutet ein Schnäppchen, ein "
 "Minus, dass er überbezahlt ist."
 
-#: templates/fantasy/partials/roster_panel.html:14
-#: templates/nba/partials/player_table.html:13
-#: templates/nba/player_detail.html:169
+#: templates/fantasy/partials/roster_panel.html:15
+#: templates/nba/partials/player_table.html:14
+#: templates/nba/player_detail.html:174
 msgid ""
 "Hotness says how often his points per game rose from one weekly snapshot to "
 "the next (up to the last 10 comparisons). Hot: rising at least 6 times in "
@@ -2228,86 +2262,94 @@ msgstr ""
 "Hot: mindestens 6 von 10 gestiegen. Cold: höchstens 4 von 10. Bei weniger "
 "als 3 Vergleichen wird nur die Anzahl gezeigt."
 
-#: templates/fantasy/partials/roster_panel.html:36
+#: templates/fantasy/partials/roster_panel.html:37
 #: templates/fantasy/roster_list.html:44
 msgid "Complete"
 msgstr "Vollständig"
 
-#: templates/fantasy/partials/roster_panel.html:38
+#: templates/fantasy/partials/roster_panel.html:39
 #: templates/fantasy/roster_list.html:46
 msgid "Building"
 msgstr "Im Aufbau"
 
-#: templates/fantasy/partials/roster_panel.html:40
+#: templates/fantasy/partials/roster_panel.html:41
 #: templates/fantasy/roster_list.html:49
 msgid "Short"
 msgstr "Unvollständig"
 
-#: templates/fantasy/partials/roster_panel.html:44
+#: templates/fantasy/partials/roster_panel.html:45
 msgid "Manager:"
 msgstr "Manager:"
 
-#: templates/fantasy/partials/roster_panel.html:76
+#: templates/fantasy/partials/roster_panel.html:77
 msgid "Roster value"
 msgstr "Kaderwert"
 
-#: templates/fantasy/partials/roster_panel.html:91
-msgid "Roster value plus cash: your personal salary cap."
-msgstr "Kaderwert plus Cash: dein persönlicher Salary Cap."
+#: templates/fantasy/partials/roster_panel.html:85
+msgid ""
+"Sum of expected salaries for points per game. Players without games count at "
+"their actual salary."
+msgstr ""
+"Summe der erwarteten Gehälter nach Punkten pro Spiel. Spieler ohne Einsatz "
+"zählen mit ihrem tatsächlichen Gehalt."
 
-#: templates/fantasy/partials/roster_panel.html:104
+#: templates/fantasy/partials/roster_panel.html:86
+msgid "Estimated value"
+msgstr "Geschätzter Wert"
+
+#: templates/fantasy/partials/roster_panel.html:109
 msgid "Players by position"
 msgstr "Spieler nach Position"
 
-#: templates/fantasy/partials/roster_panel.html:105
+#: templates/fantasy/partials/roster_panel.html:110
 msgid "Positions"
 msgstr "Positionen"
 
-#: templates/fantasy/partials/roster_panel.html:120
+#: templates/fantasy/partials/roster_panel.html:134
 msgid "Available Trades"
 msgstr "Verfügbare Trades"
 
-#: templates/fantasy/partials/roster_panel.html:136
+#: templates/fantasy/partials/roster_panel.html:148
 msgid "Buy ($1.5M)"
 msgstr "Kaufen (1,5 Mio. $)"
 
-#: templates/fantasy/partials/roster_panel.html:148
+#: templates/fantasy/partials/roster_panel.html:160
 msgid "Sell (+$1.0M)"
 msgstr "Verkaufen (+1,0 Mio. $)"
 
-#: templates/fantasy/partials/roster_panel.html:161
+#: templates/fantasy/partials/roster_panel.html:175
 #, python-format
 msgid "Next: %(label)s · %(date)s (+%(trades)s)"
 msgstr "Nächster: %(label)s · %(date)s (+%(trades)s)"
 
-#: templates/fantasy/partials/roster_panel.html:162
+#: templates/fantasy/partials/roster_panel.html:176
 msgid "Trade calendar"
 msgstr "Trade-Kalender"
 
-#: templates/fantasy/partials/roster_panel.html:174
+#: templates/fantasy/partials/roster_panel.html:188
 #, python-format
 msgid "Signings close in %(when)s (%(date)s)."
 msgstr "Die Transferphase schließt in %(when)s (%(date)s)."
 
-#: templates/fantasy/partials/roster_panel.html:178
+#: templates/fantasy/partials/roster_panel.html:192
 #, python-format
 msgid "Signings open in %(when)s (%(date)s)."
 msgstr "Die Transferphase öffnet in %(when)s (%(date)s)."
 
-#: templates/fantasy/partials/roster_panel.html:186
+#: templates/fantasy/partials/roster_panel.html:200
 msgid "Every minimum met. This roster is ready to play."
 msgstr "Alle Mindestanforderungen erfüllt. Dieser Kader ist spielbereit."
 
-#: templates/fantasy/partials/roster_panel.html:190
+#: templates/fantasy/partials/roster_panel.html:204
 msgid "Still needed:"
 msgstr "Noch benötigt:"
 
-#: templates/fantasy/partials/roster_panel.html:196
+#: templates/fantasy/partials/roster_panel.html:210
 #, python-format
 msgid "Short of %(missing)s."
 msgstr "Es fehlen %(missing)s."
 
-#: templates/fantasy/partials/roster_panel.html:198
+#: templates/fantasy/partials/roster_panel.html:212
 msgid ""
 "Signings are closed — trades can still change the shape of this roster, but "
 "not its size."
@@ -2315,86 +2357,107 @@ msgstr ""
 "Die Transferphase ist geschlossen — Trades können die Zusammensetzung, aber "
 "nicht die Größe dieses Kaders ändern."
 
-#: templates/fantasy/partials/roster_panel.html:211
+#: templates/fantasy/partials/roster_panel.html:225
 msgid "No trades available — buy one for $1.5M."
 msgstr "Keine Trades verfügbar — kaufe einen für 1,5 Mio. $."
 
-#: templates/fantasy/partials/roster_panel.html:213
-#: templates/fantasy/partials/squad_cards.html:86
-#: templates/fantasy/partials/trade_body.html:285
+#: templates/fantasy/partials/roster_panel.html:227
+#: templates/fantasy/partials/squad_cards.html:100
+#: templates/fantasy/partials/trade_body.html:293
 msgid "No trades available."
 msgstr "Keine Trades verfügbar."
 
-#: templates/fantasy/partials/roster_panel.html:219
+#: templates/fantasy/partials/roster_panel.html:233
 msgid "Your roster"
 msgstr "Dein Kader"
 
-#: templates/fantasy/partials/roster_panel.html:220
+#: templates/fantasy/partials/roster_panel.html:235
 #, python-format
 msgid "%(count)s player"
 msgid_plural "%(count)s players"
 msgstr[0] "%(count)s Spieler"
 msgstr[1] "%(count)s Spieler"
 
-#: templates/fantasy/partials/roster_panel.html:265
-#: templates/nba/partials/injury_status.html:79
-#: templates/nba/partials/player_table.html:152
-#: templates/nba/player_compare.html:105 templates/nba/player_detail.html:117
+#: templates/fantasy/partials/roster_panel.html:238
+#: templates/nba/team_list.html:57
+#, python-format
+msgid "%(count)s injured"
+msgid_plural "%(count)s injured"
+msgstr[0] "%(count)s verletzt"
+msgstr[1] "%(count)s verletzt"
+
+#: templates/fantasy/partials/roster_panel.html:240
+#: templates/nba/team_list.html:58
+#, python-format
+msgid "%(count)s day-to-day"
+msgid_plural "%(count)s day-to-day"
+msgstr[0] "%(count)s angeschlagen"
+msgstr[1] "%(count)s angeschlagen"
+
+#: templates/fantasy/partials/roster_panel.html:304
+#: templates/nba/partials/injury_status.html:86
+#: templates/nba/partials/player_table.html:156
+#: templates/nba/player_compare.html:105 templates/nba/player_detail.html:122
 msgid "Injury"
 msgstr "Verletzung"
 
-#: templates/fantasy/partials/roster_panel.html:267
+#: templates/fantasy/partials/roster_panel.html:306
 #: templates/fantasy/season_list.html:33
 msgid "Actions"
 msgstr "Aktionen"
 
-#: templates/fantasy/partials/roster_panel.html:296
-#: templates/nba/partials/player_table.html:204
+#: templates/fantasy/partials/roster_panel.html:319
+#: templates/fantasy/partials/squad_cards.html:47
+msgid "Kick candidate"
+msgstr "Abschusskandidat"
+
+#: templates/fantasy/partials/roster_panel.html:341
+#: templates/nba/partials/player_table.html:208
 msgid "Based on current points per game"
 msgstr "Basierend auf den aktuellen Punkten pro Spiel"
 
-#: templates/fantasy/partials/roster_panel.html:321
-#: templates/fantasy/partials/squad_cards.html:35
-#: templates/nba/partials/player_table.html:230
+#: templates/fantasy/partials/roster_panel.html:369
+#: templates/fantasy/partials/squad_cards.html:36
+#: templates/nba/partials/player_table.html:237
 #: templates/nba/player_compare.html:167 templates/nba/player_detail.html:40
 msgid "Inactive"
 msgstr "Inaktiv"
 
-#: templates/fantasy/partials/roster_panel.html:333
+#: templates/fantasy/partials/roster_panel.html:381
 #, python-format
 msgid "Trade %(name)s"
 msgstr "%(name)s traden"
 
-#: templates/fantasy/partials/roster_panel.html:342
+#: templates/fantasy/partials/roster_panel.html:390
 msgid "No trades available"
 msgstr "Keine Trades verfügbar"
 
-#: templates/fantasy/partials/roster_panel.html:343
+#: templates/fantasy/partials/roster_panel.html:391
 #, python-format
 msgid "Trade %(name)s (No trades available)"
 msgstr "%(name)s traden (keine Trades verfügbar)"
 
-#: templates/fantasy/partials/roster_panel.html:354
+#: templates/fantasy/partials/roster_panel.html:402
 #, python-format
 msgid "Trade %(name)s (%(reason)s)"
 msgstr "%(name)s traden (%(reason)s)"
 
-#: templates/fantasy/partials/roster_panel.html:367
+#: templates/fantasy/partials/roster_panel.html:415
 #, python-format
 msgid "Release %(name)s"
 msgstr "%(name)s entlassen"
 
 # Mobile, phase 2
-#: templates/fantasy/partials/roster_panel.html:368
-#: templates/fantasy/partials/squad_cards.html:76
+#: templates/fantasy/partials/roster_panel.html:416
+#: templates/fantasy/partials/squad_cards.html:90
 msgid "Release"
 msgstr "Entlassen"
 
-#: templates/fantasy/partials/roster_panel.html:381
+#: templates/fantasy/partials/roster_panel.html:429
 msgid "No players picked yet. Sign one from the list below."
 msgstr "Noch keine Spieler ausgewählt. Verpflichte einen aus der Liste unten."
 
-#: templates/fantasy/partials/roster_panel.html:383
+#: templates/fantasy/partials/roster_panel.html:431
 msgid "No players on this roster."
 msgstr "Keine Spieler in diesem Kader."
 
@@ -2405,11 +2468,11 @@ msgstr "Gratis-Trades · %(season)s"
 
 #: templates/fantasy/partials/season_trade_grants.html:12
 msgid ""
-"Every roster of the season receives these trades automatically when the date"
-" passes."
+"Every roster of the season receives these trades automatically when the date "
+"passes."
 msgstr ""
-"Jeder Kader der Saison erhält diese Trades automatisch, sobald der Zeitpunkt"
-" erreicht ist."
+"Jeder Kader der Saison erhält diese Trades automatisch, sobald der Zeitpunkt "
+"erreicht ist."
 
 #: templates/fantasy/partials/season_trade_grants.html:30
 #: templates/nba/player_compare.html:108
@@ -2426,8 +2489,8 @@ msgid ""
 "Plus weekly: %(per_week)s every 7 days from %(date)s (%(weeks)s payout this "
 "season)."
 msgid_plural ""
-"Plus weekly: %(per_week)s every 7 days from %(date)s (%(weeks)s payouts this"
-" season)."
+"Plus weekly: %(per_week)s every 7 days from %(date)s (%(weeks)s payouts this "
+"season)."
 msgstr[0] ""
 "Dazu wöchentlich: %(per_week)s alle 7 Tage ab %(date)s (%(weeks)s "
 "Ausschüttung in dieser Saison)."
@@ -2455,20 +2518,64 @@ msgstr "Sortieren nach"
 msgid "Sort"
 msgstr "Sortieren"
 
-#: templates/fantasy/partials/squad_cards.html:43
-#: templates/nba/player_detail.html:265 templates/nba/team_list.html:29
+#: templates/fantasy/partials/squad_cards.html:41
+#, python-format
+msgid "Back %(date)s"
+msgstr "Zurück am %(date)s"
+
+#: templates/fantasy/partials/squad_cards.html:45
+msgid "Return date unknown"
+msgstr "Rückkehr unbekannt"
+
+#: templates/fantasy/partials/squad_cards.html:57
+#: templates/nba/player_detail.html:270 templates/nba/team_list.html:29
 msgid "Salary"
 msgstr "Gehalt"
 
-#: templates/fantasy/partials/squad_cards.html:51
+#: templates/fantasy/partials/squad_cards.html:65
 #: templates/nba/team_list.html:27
 msgid "FP/G"
 msgstr "FP/G"
 
-#: templates/fantasy/partials/squad_cards.html:87
+#: templates/fantasy/partials/squad_cards.html:101
 msgid "Signings are closed, so players cannot be released."
 msgstr ""
 "Die Transferphase ist vorbei, daher können keine Spieler entlassen werden."
+
+#: templates/fantasy/partials/squad_chart.html:6
+#: templates/nba/partials/player_table.html:20
+msgid "Salary compared with points per game"
+msgstr "Gehalt im Vergleich zu Punkten pro Spiel"
+
+#: templates/fantasy/partials/squad_chart.html:7
+#: templates/nba/partials/player_table.html:21
+#: templates/nba/partials/scatter_chart.html:136
+#: templates/nba/player_detail.html:204
+msgid "Points per game"
+msgstr "Punkte pro Spiel"
+
+#: templates/fantasy/partials/squad_chart.html:8
+#: templates/nba/partials/player_table.html:22
+msgid "Salary ($ millions)"
+msgstr "Gehalt (Mio. $)"
+
+#: templates/fantasy/partials/squad_chart.html:11
+msgid "Your squad: points per game and salary"
+msgstr "Dein Kader: Punkte pro Spiel und Gehalt"
+
+#: templates/fantasy/partials/squad_chart.html:13
+msgid "Below the fair-value line is a bargain, above it is overpaid."
+msgstr ""
+"Unter der Linie des fairen Werts ist ein Schnäppchen, darüber ist "
+"überbezahlt."
+
+#: templates/fantasy/partials/squad_chart.html:20
+msgid ""
+"The comparison appears when players on this squad have points per game and "
+"salary recorded."
+msgstr ""
+"Der Vergleich erscheint, sobald Spieler in diesem Kader Punkte pro Spiel und "
+"ein Gehalt haben."
 
 #: templates/fantasy/partials/trade_body.html:22
 msgid ""
@@ -2493,7 +2600,7 @@ msgid "Coming in: %(name)s. Now choose who makes room."
 msgstr "Neu dabei: %(name)s. Wähle jetzt, wer Platz macht."
 
 #: templates/fantasy/partials/trade_body.html:48
-#: templates/fantasy/partials/trade_body.html:213
+#: templates/fantasy/partials/trade_body.html:221
 #: templates/fantasy/roster_history.html:120
 msgid "Player out"
 msgstr "Spieler raus"
@@ -2505,55 +2612,55 @@ msgid_plural "%(count)s on the roster"
 msgstr[0] "%(count)s im Kader"
 msgstr[1] "%(count)s im Kader"
 
-#: templates/fantasy/partials/trade_body.html:94
+#: templates/fantasy/partials/trade_body.html:100
 msgid "Nobody on the roster yet to send out."
 msgstr "Noch niemand im Kader zum Tauschen."
 
-#: templates/fantasy/partials/trade_body.html:109
+#: templates/fantasy/partials/trade_body.html:115
 #, python-format
 msgid "Change player out (%(name)s)"
 msgstr "Abgebenden Spieler ändern (%(name)s)"
 
-#: templates/fantasy/partials/trade_body.html:114
-#: templates/fantasy/partials/trade_body.html:226
+#: templates/fantasy/partials/trade_body.html:120
+#: templates/fantasy/partials/trade_body.html:234
 #: templates/fantasy/roster_history.html:121
 msgid "Player in"
 msgstr "Spieler rein"
 
-#: templates/fantasy/partials/trade_body.html:119
+#: templates/fantasy/partials/trade_body.html:125
 msgid "Budget"
 msgstr "Budget"
 
-#: templates/fantasy/partials/trade_body.html:135
+#: templates/fantasy/partials/trade_body.html:141
 msgid "All pos."
 msgstr "Alle Pos."
 
-#: templates/fantasy/partials/trade_body.html:172
+#: templates/fantasy/partials/trade_body.html:178
 msgid "On your watchlist"
 msgstr "Auf deiner Watchlist"
 
-#: templates/fantasy/partials/trade_body.html:182
+#: templates/fantasy/partials/trade_body.html:190
 #, python-format
 msgid "leaves %(left)s"
 msgstr "lässt %(left)s übrig"
 
-#: templates/fantasy/partials/trade_body.html:221
-#: templates/fantasy/partials/trade_body.html:234
+#: templates/fantasy/partials/trade_body.html:229
+#: templates/fantasy/partials/trade_body.html:242
 msgid "not chosen"
 msgstr "nicht ausgewählt"
 
-#: templates/fantasy/partials/trade_body.html:239
+#: templates/fantasy/partials/trade_body.html:247
 #: templates/fantasy/roster_history.html:122
 msgid "Cash flow"
 msgstr "Cashflow"
 
-#: templates/fantasy/partials/trade_body.html:249
-#: templates/fantasy/partials/trade_body.html:297
+#: templates/fantasy/partials/trade_body.html:257
+#: templates/fantasy/partials/trade_body.html:305
 #: templates/fantasy/roster_history.html:123
 msgid "Cash after"
 msgstr "Cash danach"
 
-#: templates/fantasy/partials/trade_body.html:261
+#: templates/fantasy/partials/trade_body.html:269
 #, python-format
 msgid ""
 "Close this dialog and buy one for %(price)s in the Available Trades box."
@@ -2561,27 +2668,27 @@ msgstr ""
 "Schließe diesen Dialog und kaufe einen für %(price)s im Feld „Verfügbare "
 "Trades“."
 
-#: templates/fantasy/partials/trade_body.html:264
+#: templates/fantasy/partials/trade_body.html:272
 #, python-format
 msgid "Next free trade: %(label)s on %(date)s (+%(trades)s)."
 msgid_plural "Next free trades: %(label)s on %(date)s (+%(trades)s)."
 msgstr[0] "Nächster Gratis-Trade: %(label)s am %(date)s (+%(trades)s)."
 msgstr[1] "Nächste Gratis-Trades: %(label)s am %(date)s (+%(trades)s)."
 
-#: templates/fantasy/partials/trade_body.html:266
+#: templates/fantasy/partials/trade_body.html:274
 msgid "See the trade calendar"
 msgstr "Zum Trade-Kalender"
 
-#: templates/fantasy/partials/trade_body.html:270
+#: templates/fantasy/partials/trade_body.html:278
 #, python-format
 msgid ""
 "Not enough cash: %(name)s costs more than the %(budget)s that your cash and "
 "the outgoing player make up together."
 msgstr ""
-"Nicht genug Cash: %(name)s kostet mehr als die %(budget)s, die dein Cash und"
-" der ausgehende Spieler zusammen ergeben."
+"Nicht genug Cash: %(name)s kostet mehr als die %(budget)s, die dein Cash und "
+"der ausgehende Spieler zusammen ergeben."
 
-#: templates/fantasy/partials/trade_body.html:276
+#: templates/fantasy/partials/trade_body.html:284
 #, python-format
 msgid ""
 "Afterwards you would be short: %(gaps)s. The trade still goes through — the "
@@ -2590,12 +2697,12 @@ msgstr ""
 "Danach würde dir fehlen: %(gaps)s. Der Trade ist trotzdem möglich – der "
 "Kader ist dann nur nicht mehr vollständig."
 
-#: templates/fantasy/partials/trade_body.html:285
+#: templates/fantasy/partials/trade_body.html:293
 msgid "Not enough cash for this trade."
 msgstr "Nicht genug Cash für diesen Trade."
 
-#: templates/fantasy/partials/trade_body.html:309
-#: templates/fantasy/partials/trade_body.html:313
+#: templates/fantasy/partials/trade_body.html:317
+#: templates/fantasy/partials/trade_body.html:321
 msgid "Execute trade"
 msgstr "Trade ausführen"
 
@@ -2615,8 +2722,8 @@ msgid ""
 "None of your watched players can be added: they are on this roster already "
 "or have no salary on record."
 msgstr ""
-"Keiner deiner Watchlist-Spieler kann hinzugefügt werden: Sie sind bereits im"
-" Kader oder haben kein erfasstes Gehalt."
+"Keiner deiner Watchlist-Spieler kann hinzugefügt werden: Sie sind bereits im "
+"Kader oder haben kein erfasstes Gehalt."
 
 #: templates/fantasy/partials/watchlist_empty.html:8
 msgid "None of your watched players match those filters."
@@ -2642,8 +2749,7 @@ msgstr "Verlauf"
 msgid "Rules"
 msgstr "Regeln"
 
-#: templates/fantasy/roster_build.html:84
-#: templates/fantasy/roster_list.html:61
+#: templates/fantasy/roster_build.html:84 templates/fantasy/roster_list.html:61
 msgid "Delete roster"
 msgstr "Kader löschen"
 
@@ -2682,8 +2788,8 @@ msgid ""
 "The starting budget plus %(moves)s move adds up to exactly the %(cash)s the "
 "roster holds."
 msgid_plural ""
-"The starting budget plus all %(moves)s moves adds up to exactly the %(cash)s"
-" the roster holds."
+"The starting budget plus all %(moves)s moves adds up to exactly the %(cash)s "
+"the roster holds."
 msgstr[0] ""
 "Das Startbudget plus %(moves)s Transaktion ergibt genau die %(cash)s, die "
 "der Kader hält."
@@ -2709,8 +2815,8 @@ msgid_plural ""
 "%(counter)s moves were recorded before the individual prices were kept — "
 "those rows show the net cash flow only."
 msgstr[0] ""
-"%(counter)s Transaktion wurde erfasst, bevor Einzelpreise gespeichert wurden"
-" – diese Zeile zeigt nur den Netto-Cashflow."
+"%(counter)s Transaktion wurde erfasst, bevor Einzelpreise gespeichert wurden "
+"– diese Zeile zeigt nur den Netto-Cashflow."
 msgstr[1] ""
 "%(counter)s Transaktionen wurden erfasst, bevor Einzelpreise gespeichert "
 "wurden – diese Zeilen zeigen nur den Netto-Cashflow."
@@ -2771,8 +2877,8 @@ msgstr "Keine Kaderänderungen bis zum Saisonbeginn"
 
 #: templates/fantasy/roster_list.html:113
 msgid ""
-"Put 15 players together inside the budget and compare who is worth what they"
-" cost."
+"Put 15 players together inside the budget and compare who is worth what they "
+"cost."
 msgstr ""
 "Stelle 15 Spieler innerhalb des Budgets zusammen und vergleiche, wer seinen "
 "Preis wert ist."
@@ -2957,22 +3063,19 @@ msgstr "Neue Saison"
 msgid "Dates"
 msgstr "Daten"
 
-#: templates/fantasy/season_list.html:27
-#: templates/fantasy/season_list.html:131
+#: templates/fantasy/season_list.html:27 templates/fantasy/season_list.html:131
 msgid "State"
 msgstr "Status"
 
-#: templates/fantasy/season_list.html:28
-#: templates/fantasy/season_list.html:132
+#: templates/fantasy/season_list.html:28 templates/fantasy/season_list.html:132
 msgid "Signings"
 msgstr "Transferphase"
 
-#: templates/fantasy/season_list.html:30 templates/nba/player_detail.html:235
+#: templates/fantasy/season_list.html:30 templates/nba/player_detail.html:240
 msgid "Snapshots"
 msgstr "Snapshots"
 
-#: templates/fantasy/season_list.html:45
-#: templates/fantasy/season_list.html:130
+#: templates/fantasy/season_list.html:45 templates/fantasy/season_list.html:130
 msgid "Current"
 msgstr "Aktuell"
 
@@ -3029,8 +3132,8 @@ msgstr "Noch keine Saisons."
 
 #: templates/fantasy/season_list.html:138
 msgid ""
-"Without a season there is nothing to build a roster in and nothing to import"
-" into."
+"Without a season there is nothing to build a roster in and nothing to import "
+"into."
 msgstr ""
 "Ohne Saison gibt es nichts, in dem ein Kader aufgebaut werden kann, und "
 "keinen Ort für Importe."
@@ -3181,65 +3284,88 @@ msgstr "Verletzungen aktualisieren"
 msgid "The next update can be invoked tomorrow."
 msgstr "Das nächste Update kann morgen gestartet werden."
 
-#: templates/nba/partials/injury_status.html:4
-#: templates/nba/player_detail.html:69 templates/nba/player_detail.html:76
+#: templates/nba/partials/injury_status.html:5
+#: templates/nba/player_detail.html:74 templates/nba/player_detail.html:81
 msgid "Close injury details"
 msgstr "Verletzungsdetails schließen"
 
-#: templates/nba/partials/injury_status.html:42
-#: templates/nba/player_detail.html:81
+#: templates/nba/partials/injury_status.html:49
+#: templates/nba/player_detail.html:86
 msgid "Injury Status"
 msgstr "Verletzungsstatus"
 
-#: templates/nba/partials/injury_status.html:43
-#: templates/nba/player_detail.html:82
+#: templates/nba/partials/injury_status.html:50
+#: templates/nba/player_detail.html:87
 msgid "Latest injury report"
 msgstr "Aktueller Verletzungsbericht"
 
-#: templates/nba/partials/injury_status.html:46
-#: templates/nba/player_detail.html:85
+#: templates/nba/partials/injury_status.html:53
+#: templates/nba/player_detail.html:90
 msgid "Last API request:"
 msgstr "Letzte API-Anfrage:"
 
-#: templates/nba/partials/injury_status.html:61
-#: templates/nba/player_detail.html:99
+#: templates/nba/partials/injury_status.html:68
+#: templates/nba/player_detail.html:104
 msgid "Fantasy status"
 msgstr "Fantasy-Status"
 
-#: templates/nba/partials/injury_status.html:67
-#: templates/nba/player_detail.html:105
+#: templates/nba/partials/injury_status.html:74
+#: templates/nba/player_detail.html:110
 msgid "Report type"
 msgstr "Berichtstyp"
 
-#: templates/nba/partials/injury_status.html:73
-#: templates/nba/player_detail.html:111
+#: templates/nba/partials/injury_status.html:80
+#: templates/nba/player_detail.html:116
 msgid "Player status"
 msgstr "Spielerstatus"
 
-#: templates/nba/partials/injury_status.html:87
-#: templates/nba/player_detail.html:125
+#: templates/nba/partials/injury_status.html:94
+#: templates/nba/partials/return_date.html:11
+#: templates/nba/player_detail.html:130 templates/nba/player_list.html:126
 msgid "Expected return"
 msgstr "Voraussichtliche Rückkehr"
 
-#: templates/nba/partials/injury_status.html:92
-#: templates/nba/player_detail.html:130
+#: templates/nba/partials/injury_status.html:99
+#: templates/nba/player_detail.html:135
 msgid "Observed"
 msgstr "Beobachtet"
 
-#: templates/nba/partials/injury_status.html:97
-#: templates/nba/player_detail.html:135
+#: templates/nba/partials/injury_status.html:104
+#: templates/nba/player_detail.html:140
 msgid "Reported"
 msgstr "Gemeldet"
 
-#: templates/nba/partials/injury_status.html:103
-#: templates/nba/player_detail.html:141
+#: templates/nba/partials/injury_status.html:110
+#: templates/nba/player_detail.html:146
 msgid "Source"
 msgstr "Quelle"
 
-#: templates/nba/partials/injury_status.html:116
-#: templates/nba/player_detail.html:154
+#: templates/nba/partials/injury_status.html:123
+#: templates/nba/player_detail.html:159
 msgid "No injury report has been recorded for this player."
 msgstr "Für diesen Spieler wurde noch kein Verletzungsbericht erfasst."
+
+#: templates/nba/partials/kick_button.html:7
+msgid "Remove from kick list"
+msgstr "Von der Abschussliste nehmen"
+
+#: templates/nba/partials/kick_button.html:8
+msgid "Add to kick list"
+msgstr "Auf die Abschussliste setzen"
+
+#: templates/nba/partials/kick_button.html:9
+#, python-format
+msgid "Remove %(name)s from kick list"
+msgstr "%(name)s von der Abschussliste nehmen"
+
+#: templates/nba/partials/kick_button.html:10
+#, python-format
+msgid "Add %(name)s to kick list"
+msgstr "%(name)s auf die Abschussliste setzen"
+
+#: templates/nba/partials/kick_marker.html:4
+msgid "On your kick list"
+msgstr "Auf deiner Abschussliste"
 
 #: templates/nba/partials/note.html:8
 #, python-format
@@ -3278,113 +3404,98 @@ msgstr "Bitte korrigiere die Notiz und versuche es erneut."
 msgid "Save note"
 msgstr "Notiz speichern"
 
-#: templates/nba/partials/player_table.html:16
+#: templates/nba/partials/player_table.html:17
 #, python-format
 msgid "FP %(season)s"
 msgstr "FP %(season)s"
 
-#: templates/nba/partials/player_table.html:17
+#: templates/nba/partials/player_table.html:18
 #, python-format
 msgid ""
 "Fantasy points per game in the %(season)s regular season, by this game's "
 "rules: points + rebounds + 1.5 × assists + 2 × steals + 2 × blocks − 2 × "
 "turnovers − 0.5 × missed field goals − 0.5 × missed free throws − 0.5 × "
-"personal fouls. Worked out from per-game averages, so it can differ from the"
-" real figure by a few tenths. Grey: fewer than %(games)s games."
+"personal fouls. Worked out from per-game averages, so it can differ from the "
+"real figure by a few tenths. Grey: fewer than %(games)s games."
 msgstr ""
-"Fantasy-Punkte pro Spiel in der Hauptrunde %(season)s nach den Regeln dieses"
-" Spiels: Punkte + Rebounds + 1,5 × Assists + 2 × Steals + 2 × Blocks − 2 × "
+"Fantasy-Punkte pro Spiel in der Hauptrunde %(season)s nach den Regeln dieses "
+"Spiels: Punkte + Rebounds + 1,5 × Assists + 2 × Steals + 2 × Blocks − 2 × "
 "Ballverluste − 0,5 × vergebene Würfe aus dem Feld − 0,5 × vergebene "
 "Freiwürfe − 0,5 × persönliche Fouls. Aus Durchschnittswerten pro Spiel "
 "berechnet, kann also um einige Zehntel vom echten Wert abweichen. Grau: "
 "weniger als %(games)s Spiele."
 
-#: templates/nba/partials/player_table.html:19
-msgid "Salary compared with points per game"
-msgstr "Gehalt im Vergleich zu Punkten pro Spiel"
-
-#: templates/nba/partials/player_table.html:20
-#: templates/nba/partials/scatter_chart.html:91
-#: templates/nba/player_detail.html:199
-msgid "Points per game"
-msgstr "Punkte pro Spiel"
-
-#: templates/nba/partials/player_table.html:21
-msgid "Salary ($ millions)"
-msgstr "Gehalt (Mio. $)"
-
-#: templates/nba/partials/player_table.html:22
+#: templates/nba/partials/player_table.html:23
 msgid "Show chart"
 msgstr "Diagramm anzeigen"
 
-#: templates/nba/partials/player_table.html:23
+#: templates/nba/partials/player_table.html:24
 msgid "Hide chart"
 msgstr "Diagramm ausblenden"
 
-#: templates/nba/partials/player_table.html:40
+#: templates/nba/partials/player_table.html:41
 msgid "Points per game and salary"
 msgstr "Punkte pro Spiel und Gehalt"
 
-#: templates/nba/partials/player_table.html:42
+#: templates/nba/partials/player_table.html:43
 msgid "Players with both figures recorded are shown."
 msgstr "Angezeigt werden Spieler, für die beide Werte erfasst sind."
 
-#: templates/nba/partials/player_table.html:47
+#: templates/nba/partials/player_table.html:48
 #, python-format
 msgid "Fantasy points %(season)s and salary"
 msgstr "Fantasy-Punkte %(season)s und Gehalt"
 
-#: templates/nba/partials/player_table.html:49
+#: templates/nba/partials/player_table.html:50
 #, python-format
 msgid "This season's salary against fantasy points per game in %(season)s."
 msgstr ""
 "Gehalt dieser Saison im Vergleich zu den Fantasy-Punkten pro Spiel in "
 "%(season)s."
 
-#: templates/nba/partials/player_table.html:56
+#: templates/nba/partials/player_table.html:57
 msgid "Season shown in the chart"
 msgstr "Im Diagramm gezeigte Saison"
 
-#: templates/nba/partials/player_table.html:61
+#: templates/nba/partials/player_table.html:62
 msgid "This season"
 msgstr "Diese Saison"
 
-#: templates/nba/partials/player_table.html:76
+#: templates/nba/partials/player_table.html:77
 msgid ""
-"The comparison appears when players have points per game and salary "
-"recorded."
+"The comparison appears when players have points per game and salary recorded."
 msgstr ""
 "Der Vergleich erscheint, sobald für Spieler Punkte pro Spiel und Gehalt "
 "erfasst sind."
 
-#: templates/nba/partials/player_table.html:81
+#: templates/nba/partials/player_table.html:82
 #, python-format
 msgid "Salary compared with fantasy points per game in %(season)s"
 msgstr "Gehalt im Vergleich zu den Fantasy-Punkten pro Spiel in %(season)s"
 
-#: templates/nba/partials/player_table.html:82
+#: templates/nba/partials/player_table.html:83
 #, python-format
 msgid "Fantasy points per game %(season)s"
 msgstr "Fantasy-Punkte pro Spiel %(season)s"
 
-#: templates/nba/partials/player_table.html:88
+#: templates/nba/partials/player_table.html:89
 #, python-format
 msgid "None of these players has stats for %(season)s."
 msgstr "Keiner dieser Spieler hat Statistiken für %(season)s."
 
-#: templates/nba/partials/player_table.html:192
+#: templates/nba/partials/player_table.html:196
 #, python-format
 msgid "Only %(counter)s game last season"
 msgid_plural "Only %(counter)s games last season"
 msgstr[0] "Nur %(counter)s Spiel in der letzten Saison"
 msgstr[1] "Nur %(counter)s Spiele in der letzten Saison"
 
-#: templates/nba/partials/player_table.html:194
+#: templates/nba/partials/player_table.html:198
 #, python-format
 msgid "%(games)s G"
 msgstr "%(games)s Sp."
 
-#: templates/nba/partials/player_table.html:241
+#: templates/nba/partials/player_table.html:248
 msgid ""
 "expected salary for his points per game minus actual salary — + means a "
 "bargain."
@@ -3392,63 +3503,99 @@ msgstr ""
 "erwartetes Gehalt für seine Punkte pro Spiel minus tatsächliches Gehalt – + "
 "bedeutet ein Schnäppchen."
 
-#: templates/nba/partials/player_table.html:242
+#: templates/nba/partials/player_table.html:249
 msgid "how often his points per game rose over the last weeks."
 msgstr "wie oft seine Punkte pro Spiel in den letzten Wochen gestiegen sind."
 
-#: templates/nba/partials/player_table.html:243
+#: templates/nba/partials/player_table.html:250
 msgid "fantasy points per game last season, by this game's rules."
 msgstr ""
 "Fantasy-Punkte pro Spiel in der letzten Saison, nach den Regeln dieses "
 "Spiels."
 
-#: templates/nba/partials/player_table.html:249
+#: templates/nba/partials/player_table.html:256
 #, python-format
 msgid "%(count)s players · page %(page)s of %(pages)s"
 msgstr "%(count)s Spieler · Seite %(page)s von %(pages)s"
 
-#: templates/nba/partials/player_table.html:264
+#: templates/nba/partials/player_table.html:271
 #, python-format
 msgid "%(player_count)s player"
 msgid_plural "%(player_count)s players"
 msgstr[0] "%(player_count)s Spieler"
 msgstr[1] "%(player_count)s Spieler"
 
-#: templates/nba/partials/player_table.html:270
+#: templates/nba/partials/player_table.html:277
 msgid "Your watchlist is empty."
 msgstr "Deine Beobachtungsliste ist leer."
 
-#: templates/nba/partials/player_table.html:275
+#: templates/nba/partials/player_table.html:283
+msgid "Your kick list is empty."
+msgstr "Deine Abschussliste ist leer."
+
+#: templates/nba/partials/player_table.html:285
+msgid ""
+"Mark players you want to trade away or keep clear of with the thumbs-down on "
+"their page or in your roster."
+msgstr ""
+"Markiere Spieler, die du abgeben oder meiden willst, mit dem Daumen nach "
+"unten – auf ihrer Seite oder in deinem Kader."
+
+#: templates/nba/partials/player_table.html:290
 msgid "No players yet."
 msgstr "Noch keine Spieler."
 
-#: templates/nba/partials/player_table.html:277
+#: templates/nba/partials/player_table.html:292
 #: templates/nba/team_detail.html:49
 msgid "Players come from the basketball.de import."
 msgstr ""
 "Spieler kommen aus dem Import von basketball.de.Spieler stammen aus dem "
 "basketball.de-Import, der noch nicht verfügbar ist."
 
-#: templates/nba/partials/scatter_chart.html:80
+#: templates/nba/partials/return_date.html:17
+msgid "The injury report gives no return date."
+msgstr "Der Verletzungsbericht nennt kein Rückkehrdatum."
+
+#: templates/nba/partials/return_date.html:17
+msgid "unknown"
+msgstr "unbekannt"
+
+#: templates/nba/partials/return_date.html:19
+msgid "Not injured"
+msgstr "Nicht verletzt"
+
+#: templates/nba/partials/scatter_chart.html:108
+msgid "Fair value"
+msgstr "Fairer Wert"
+
+#: templates/nba/partials/scatter_chart.html:113
+msgid "6+ games"
+msgstr "6+ Spiele"
+
+#: templates/nba/partials/scatter_chart.html:117
+msgid "Fewer than 6 games"
+msgstr "Weniger als 6 Spiele"
+
+#: templates/nba/partials/scatter_chart.html:125
 msgid "Player details"
 msgstr "Spielerdetails"
 
-#: templates/nba/partials/scatter_chart.html:81
+#: templates/nba/partials/scatter_chart.html:126
 msgid "Hover over a point or focus it to inspect the player."
 msgstr ""
 "Bewege den Mauszeiger über einen Punkt oder fokussiere ihn, um den Spieler "
 "zu prüfen."
 
-#: templates/nba/partials/scatter_chart.html:113
+#: templates/nba/partials/scatter_chart.html:158
 #: templates/nba/season_stats_import.html:128
 msgid "Games played"
 msgstr "Gespielte Spiele"
 
-#: templates/nba/partials/scatter_chart.html:118
-#: templates/nba/partials/scatter_chart.html:120
+#: templates/nba/partials/scatter_chart.html:163
+#: templates/nba/partials/scatter_chart.html:165
 msgid ""
-"Increases in fantasy points per game across consecutive recent snapshots (up"
-" to the last 10 comparisons)"
+"Increases in fantasy points per game across consecutive recent snapshots (up "
+"to the last 10 comparisons)"
 msgstr ""
 "Steigerungen der Fantasy-Punkte pro Spiel über die letzten "
 "aufeinanderfolgenden Snapshots (bis zu den letzten 10 Vergleichen)"
@@ -3503,14 +3650,14 @@ msgstr "Hauptrunde, pro Spiel"
 #: templates/nba/partials/season_stats_card.html:45
 msgid ""
 "Fantasy points per game by this game's rules: points + rebounds + 1.5 × "
-"assists + 2 × steals + 2 × blocks − 2 × turnovers − 0.5 × missed field goals"
-" − 0.5 × missed free throws − 0.5 × personal fouls. Worked out from last "
+"assists + 2 × steals + 2 × blocks − 2 × turnovers − 0.5 × missed field goals "
+"− 0.5 × missed free throws − 0.5 × personal fouls. Worked out from last "
 "season's per-game averages, so it can differ from the real figure by a few "
 "tenths."
 msgstr ""
 "Fantasy-Punkte pro Spiel nach den Regeln dieses Spiels: Punkte + Rebounds + "
-"1,5 × Assists + 2 × Steals + 2 × Blocks − 2 × Ballverluste − 0,5 × vergebene"
-" Würfe aus dem Feld − 0,5 × vergebene Freiwürfe − 0,5 × persönliche Fouls. "
+"1,5 × Assists + 2 × Steals + 2 × Blocks − 2 × Ballverluste − 0,5 × vergebene "
+"Würfe aus dem Feld − 0,5 × vergebene Freiwürfe − 0,5 × persönliche Fouls. "
 "Aus den Durchschnittswerten der letzten Saison berechnet, kann also um "
 "einige Zehntel vom echten Wert abweichen."
 
@@ -3599,8 +3746,7 @@ msgstr[1] ""
 #: templates/nba/partials/season_stats_card.html:153
 #, python-format
 msgid "Ranks compare %(counter)s player with at least %(games)s games."
-msgid_plural ""
-"Ranks compare %(counter)s players with at least %(games)s games."
+msgid_plural "Ranks compare %(counter)s players with at least %(games)s games."
 msgstr[0] ""
 "Die Platzierungen vergleichen %(counter)s Spieler mit mindestens %(games)s "
 "Spielen."
@@ -3610,8 +3756,7 @@ msgstr[1] ""
 
 #: templates/nba/partials/season_stats_card.html:153
 msgid "Stats from NBA.com, fantasy points by this game's rules."
-msgstr ""
-"Statistiken von NBA.com, Fantasy-Punkte nach den Regeln dieses Spiels."
+msgstr "Statistiken von NBA.com, Fantasy-Punkte nach den Regeln dieses Spiels."
 
 #: templates/nba/partials/season_stats_card.html:164
 #, python-format
@@ -3637,20 +3782,20 @@ msgstr "Noch keine Werte."
 msgid "The figures come from the newest snapshot."
 msgstr "Die Werte stammen aus dem neuesten Snapshot."
 
-#: templates/nba/partials/watchlist_button.html:2
+#: templates/nba/partials/watchlist_button.html:8
 msgid "Remove from watchlist"
 msgstr "Von Beobachtungsliste entfernen"
 
-#: templates/nba/partials/watchlist_button.html:3
+#: templates/nba/partials/watchlist_button.html:9
 msgid "Add to watchlist"
 msgstr "Zur Beobachtungsliste hinzufügen"
 
-#: templates/nba/partials/watchlist_button.html:4
+#: templates/nba/partials/watchlist_button.html:10
 #, python-format
 msgid "Remove %(name)s from watchlist"
 msgstr "%(name)s von der Beobachtungsliste entfernen"
 
-#: templates/nba/partials/watchlist_button.html:5
+#: templates/nba/partials/watchlist_button.html:11
 #, python-format
 msgid "Add %(name)s to watchlist"
 msgstr "%(name)s zur Beobachtungsliste hinzufügen"
@@ -3692,11 +3837,11 @@ msgstr "Noch keine Spieler ausgewählt"
 
 #: templates/nba/player_compare.html:198
 msgid ""
-"Add up to 5 players to compare their salaries, value and recent form side by"
-" side."
+"Add up to 5 players to compare their salaries, value and recent form side by "
+"side."
 msgstr ""
-"Füge bis zu 5 Spieler hinzu, um Gehalt, Wert und aktuelle Form nebeneinander"
-" zu vergleichen."
+"Füge bis zu 5 Spieler hinzu, um Gehalt, Wert und aktuelle Form nebeneinander "
+"zu vergleichen."
 
 #: templates/nba/player_compare_modal.html:4
 msgid "Add player to compare"
@@ -3705,8 +3850,8 @@ msgstr "Spieler zum Vergleich hinzufügen"
 #: templates/nba/player_compare_modal.html:9
 #, python-format
 msgid ""
-"Search for an active player to add to the comparison "
-"(%(selected)s/%(maximum)s selected)."
+"Search for an active player to add to the comparison (%(selected)s/"
+"%(maximum)s selected)."
 msgstr ""
 "Suche nach einem aktiven Spieler, den du zum Vergleich hinzufügen kannst "
 "(%(selected)s/%(maximum)s ausgewählt)."
@@ -3724,8 +3869,8 @@ msgstr ""
 "Du hast das Limit von %(maximum)s Spielern erreicht. Entferne zuerst einen "
 "Spieler aus dem Vergleich, um einen weiteren hinzuzufügen."
 
-#: templates/nba/player_detail.html:9 templates/nba/player_detail.html:162
-#: templates/nba/player_list.html:99 templates/nba/season_stats_upload.html:9
+#: templates/nba/player_detail.html:9 templates/nba/player_detail.html:167
+#: templates/nba/player_list.html:100 templates/nba/season_stats_upload.html:9
 msgid "All players"
 msgstr "Alle Spieler"
 
@@ -3734,20 +3879,20 @@ msgstr "Alle Spieler"
 msgid "Points per game for %(name)s"
 msgstr "Punkte pro Spiel für %(name)s"
 
-#: templates/nba/player_detail.html:160
+#: templates/nba/player_detail.html:165
 msgid "Compare"
 msgstr "Vergleichen"
 
-#: templates/nba/player_detail.html:172
+#: templates/nba/player_detail.html:177
 msgid "Current salary"
 msgstr "Aktuelles Gehalt"
 
-#: templates/nba/player_detail.html:180
+#: templates/nba/player_detail.html:185
 #, python-format
 msgid "since %(date)s"
 msgstr "seit %(date)s"
 
-#: templates/nba/player_detail.html:237
+#: templates/nba/player_detail.html:242
 msgid ""
 "One row per read, the newest on top, each with the change from the read "
 "below it. The time is shown because the source can be read more than once a "
@@ -3757,24 +3902,24 @@ msgstr ""
 "darunterliegenden Auswertung. Die Zeit wird angezeigt, weil die Quelle mehr "
 "als einmal täglich gelesen werden kann."
 
-#: templates/nba/player_detail.html:243
+#: templates/nba/player_detail.html:248
 msgid "Points per game across the season"
 msgstr "Punkte pro Spiel im Saisonverlauf"
 
-#: templates/nba/player_detail.html:250
+#: templates/nba/player_detail.html:255
 msgid "A trend line needs at least two snapshots with games played."
 msgstr ""
 "Eine Trendlinie benötigt mindestens zwei Snapshots mit gespielten Partien."
 
-#: templates/nba/player_detail.html:262
+#: templates/nba/player_detail.html:267
 msgid "As of"
 msgstr "Stand"
 
-#: templates/nba/player_detail.html:264
+#: templates/nba/player_detail.html:269
 msgid "Pos."
 msgstr "Pos."
 
-#: templates/nba/player_detail.html:313
+#: templates/nba/player_detail.html:318
 #, python-format
 msgid ""
 "%(snapshot_count)s snapshot. Points and games are season totals, so they "
@@ -3786,15 +3931,15 @@ msgstr[0] ""
 "%(snapshot_count)s Snapshot. Punkte und Spiele sind Saisonwerte und steigen "
 "daher von Snapshot zu Snapshot."
 msgstr[1] ""
-"%(snapshot_count)s Snapshots. Punkte und Spiele sind Saisonwerte und steigen"
-" daher von Snapshot zu Snapshot."
+"%(snapshot_count)s Snapshots. Punkte und Spiele sind Saisonwerte und steigen "
+"daher von Snapshot zu Snapshot."
 
-#: templates/nba/player_detail.html:318
+#: templates/nba/player_detail.html:323
 #, python-format
 msgid "No snapshots on record for %(name)s yet."
 msgstr "Für %(name)s sind noch keine Snapshots erfasst."
 
-#: templates/nba/player_detail.html:321
+#: templates/nba/player_detail.html:326
 msgid "Snapshots come from the basketball.de import."
 msgstr ""
 "Snapshots kommen aus dem Import von basketball.de.Snapshots stammen aus dem "
@@ -3821,34 +3966,58 @@ msgstr "Verletzungsstatus"
 msgid "All injury status"
 msgstr "Alle Verletzungsstatus"
 
-#: templates/nba/player_list.html:96
+#: templates/nba/player_list.html:97
 msgid "Roster"
 msgstr "Kader"
 
-#: templates/nba/player_list.html:107
+#: templates/nba/player_list.html:108
 msgid "Maximum salary in millions"
 msgstr "Maximales Gehalt in Millionen"
 
-#: templates/nba/player_list.html:110
+#: templates/nba/player_list.html:111
 msgid "Max salary ($M)"
 msgstr "Max. Gehalt (Mio. $)"
 
-#: templates/nba/player_list.html:121
+#: templates/nba/player_list.html:130
+msgid "Back from"
+msgstr "Rückkehr von"
+
+#: templates/nba/player_list.html:138
+msgid "Back by"
+msgstr "Rückkehr bis"
+
+#: templates/nba/player_list.html:138
+msgid "to"
+msgstr "bis"
+
+#: templates/nba/player_list.html:142 templates/nba/player_list.html:150
+msgid "Clear return dates"
+msgstr "Rückkehrdaten zurücksetzen"
+
+#: templates/nba/player_list.html:142
+msgid "Clear"
+msgstr "Zurücksetzen"
+
+#: templates/nba/player_list.html:159
 msgid "Include inactive players"
 msgstr "Inaktive Spieler einschließen"
 
-#: templates/nba/player_list.html:126
+#: templates/nba/player_list.html:164
 msgid "At least 6 games"
 msgstr "Mindestens 6 Spiele"
 
-#: templates/nba/player_list.html:132
+#: templates/nba/player_list.html:170
 #, python-format
 msgid "At least %(games)s games in %(season)s"
 msgstr "Mindestens %(games)s Spiele in %(season)s"
 
-#: templates/nba/player_list.html:139
+#: templates/nba/player_list.html:181
 msgid "Watched only"
 msgstr "Nur beobachtete"
+
+#: templates/nba/player_list.html:187
+msgid "Kick list only"
+msgstr "Nur Abschussliste"
 
 #: templates/nba/season_stats_import.html:4
 #: templates/nba/season_stats_import.html:5
@@ -4051,8 +4220,8 @@ msgstr "Saison hochladen"
 
 #: templates/nba/season_stats_upload.html:23
 msgid ""
-"Upload the per-game CSV export from NBA.com. You will see a preview of every"
-" change before anything is saved."
+"Upload the per-game CSV export from NBA.com. You will see a preview of every "
+"change before anything is saved."
 msgstr ""
 "Lade den CSV-Export der Durchschnittswerte pro Spiel von NBA.com hoch. Du "
 "siehst eine Vorschau aller Änderungen, bevor etwas gespeichert wird."
@@ -4114,8 +4283,8 @@ msgid ""
 "One line per player, with the column names in the first line. Semicolons or "
 "commas both work."
 msgstr ""
-"Eine Zeile pro Spieler, die Spaltennamen in der ersten Zeile. Semikolons und"
-" Kommas funktionieren beide."
+"Eine Zeile pro Spieler, die Spaltennamen in der ersten Zeile. Semikolons und "
+"Kommas funktionieren beide."
 
 #: templates/nba/season_stats_upload.html:128
 msgid "Columns are found by name:"
@@ -4133,8 +4302,7 @@ msgstr ""
 
 #: templates/nba/season_stats_upload.html:142
 msgid "Uploading a season again replaces it completely."
-msgstr ""
-"Wird eine Saison erneut hochgeladen, ersetzt sie die alte vollständig."
+msgstr "Wird eine Saison erneut hochgeladen, ersetzt sie die alte vollständig."
 
 #: templates/nba/season_stats_upload.html:152
 msgid "Recent uploads"
@@ -4203,18 +4371,11 @@ msgid_plural "%(team_count)s franchises"
 msgstr[0] "%(team_count)s Franchise"
 msgstr[1] "%(team_count)s Franchises"
 
-#: templates/nba/team_list.html:56
-#, python-format
-msgid "%(count)s injured"
-msgid_plural "%(count)s injured"
-msgstr[0] "%(count)s verletzt"
-msgstr[1] "%(count)s verletzt"
-
-#: templates/nba/team_list.html:75
+#: templates/nba/team_list.html:78
 msgid "No teams yet."
 msgstr "Noch keine Teams."
 
-#: templates/nba/team_list.html:78
+#: templates/nba/team_list.html:81
 msgid "Creates the 30 NBA franchises."
 msgstr "Erstellt die 30 NBA-Franchises."
 
@@ -4239,103 +4400,11 @@ msgstr "Zum hellen Design wechseln"
 msgid "Switch to dark theme"
 msgstr "Zum dunklen Design wechseln"
 
-#: apps/fantasy/models.py:436
-msgid "Kick list"
-msgstr "Abschussliste"
+#~ msgid "Expected return from"
+#~ msgstr "Voraussichtliche Rückkehr ab"
 
-#: templates/fantasy/partials/roster_panel.html:280
-#: templates/fantasy/partials/squad_cards.html:38
-msgid "Kick candidate"
-msgstr "Abschusskandidat"
+#~ msgid "Expected return by"
+#~ msgstr "Voraussichtliche Rückkehr bis"
 
-#: templates/nba/partials/kick_button.html:7
-msgid "Remove from kick list"
-msgstr "Von der Abschussliste nehmen"
-
-#: templates/nba/partials/kick_button.html:8
-msgid "Add to kick list"
-msgstr "Auf die Abschussliste setzen"
-
-#: templates/nba/partials/kick_button.html:9
-#, python-format
-msgid "Remove %(name)s from kick list"
-msgstr "%(name)s von der Abschussliste nehmen"
-
-#: templates/nba/partials/kick_button.html:10
-#, python-format
-msgid "Add %(name)s to kick list"
-msgstr "%(name)s auf die Abschussliste setzen"
-
-#: templates/fantasy/partials/trade_body.html:78
-#: templates/nba/partials/kick_marker.html:4
-msgid "On your kick list"
-msgstr "Auf deiner Abschussliste"
-
-#: templates/nba/partials/player_table.html:276
-msgid "Your kick list is empty."
-msgstr "Deine Abschussliste ist leer."
-
-#: templates/nba/partials/player_table.html:278
-msgid ""
-"Mark players you want to trade away or keep clear of with the thumbs-down on "
-"their page or in your roster."
-msgstr ""
-"Markiere Spieler, die du abgeben oder meiden willst, mit dem Daumen nach "
-"unten – auf ihrer Seite oder in deinem Kader."
-
-#: templates/nba/player_list.html:149
-msgid "Kick list only"
-msgstr "Nur Abschussliste"
-
-#: templates/fantasy/partials/roster_panel.html:91
-msgid ""
-"Sum of expected salaries for points per game. Players without games count "
-"at their actual salary."
-msgstr ""
-"Summe der erwarteten Gehälter nach Punkten pro Spiel. Spieler ohne Einsatz "
-"zählen mit ihrem tatsächlichen Gehalt."
-
-#: templates/fantasy/partials/roster_panel.html:92
-msgid "Estimated value"
-msgstr "Geschätzter Wert"
-
-#: templates/nba/partials/scatter_chart.html:90
-msgid "Fair value"
-msgstr "Fairer Wert"
-
-#: templates/nba/partials/scatter_chart.html:95
-msgid "6+ games"
-msgstr "6+ Spiele"
-
-#: templates/nba/partials/scatter_chart.html:99
-msgid "Fewer than 6 games"
-msgstr "Weniger als 6 Spiele"
-
-#: templates/fantasy/partials/squad_chart.html:11
-msgid "Your squad: points per game and salary"
-msgstr "Dein Kader: Punkte pro Spiel und Gehalt"
-
-#: templates/fantasy/partials/squad_chart.html:13
-msgid "Below the fair-value line is a bargain, above it is overpaid."
-msgstr "Unter der Linie des fairen Werts ist ein Schnäppchen, darüber ist überbezahlt."
-
-#: templates/fantasy/partials/squad_chart.html:19
-msgid ""
-"The comparison appears when players on this squad have points per game and "
-"salary recorded."
-msgstr ""
-"Der Vergleich erscheint, sobald Spieler in diesem Kader Punkte pro Spiel und "
-"ein Gehalt haben."
-
-#: apps/nba/views.py templates/nba/partials/injury_status.html
-#: templates/nba/player_detail.html templates/nba/player_list.html
-#: templates/nba/team_list.html
-msgid "Day-to-day"
-msgstr "Angeschlagen"
-
-#: templates/fantasy/partials/roster_panel.html templates/nba/team_list.html
-#, python-format
-msgid "%(count)s day-to-day"
-msgid_plural "%(count)s day-to-day"
-msgstr[0] "%(count)s angeschlagen"
-msgstr[1] "%(count)s angeschlagen"
+#~ msgid "Roster value plus cash: your personal salary cap."
+#~ msgstr "Kaderwert plus Cash: dein persönlicher Salary Cap."

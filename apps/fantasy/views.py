@@ -885,6 +885,7 @@ SQUAD_SORT_OPTIONS = [
     ("avg", _lazy("Avg/game")),
     ("games", _lazy("Games")),
     ("hotness", _lazy("Hotness")),
+    ("return", _lazy("Return")),
 ]
 
 ROSTER_SORT_FIELDS = {
@@ -898,6 +899,7 @@ ROSTER_SORT_FIELDS = {
     "avg": lambda player: player.current_fp_per_game,
     "games": lambda player: player.current_games_played,
     "hotness": lambda player: _hotness_value(player.hotness_score()),
+    "return": lambda player: player.expected_return,
 }
 
 

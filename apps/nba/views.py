@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import (
     Case,
     Count,
+    DateField,
     DecimalField,
     ExpressionWrapper,
     F,
@@ -22,6 +23,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import formats, timezone
+from django.utils.dateparse import parse_date
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
@@ -91,6 +93,37 @@ def with_expected_salary(qs):
             output_field=DecimalField(max_digits=20, decimal_places=2),
         )
     )
+
+
+def with_expected_return(qs):
+    """Annotate `latest_injury_status` and `expected_return_date`.
+
+    The database twin of `Player.expected_return`, so lists can sort and
+    filter by it: the newest report's return date, unless that report says the
+    player is healthy.
+    """
+    latest = PlayerInjury.objects.filter(player_id=OuterRef("pk")).order_by(
+        "-observed_at", "-created_at"
+    )
+    qs = qs.annotate(latest_injury_status=Subquery(latest.values("status")[:1]))
+    healthy = Q()
+    for healthy_state in HEALTHY_INJURY_STATUSES:
+        healthy |= Q(latest_injury_status__iexact=healthy_state)
+    return qs.annotate(
+        expected_return_date=Case(
+            When(healthy, then=Value(None)),
+            default=Subquery(latest.values("return_date")[:1]),
+            output_field=DateField(),
+        )
+    )
+
+
+def date_param(request, key):
+    """A YYYY-MM-DD query parameter as a date, or None if absent or invalid."""
+    try:
+        return parse_date(request.GET.get(key, "").strip())
+    except ValueError:
+        return None
 
 
 def before_tip_off():
@@ -221,6 +254,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
         "games": [F("current_games_played")],
         "hotness": [],
         "last_fp": [F("last_season_fp")],
+        "return": [F("expected_return_date")],
     }
 
     def get_queryset(self):
@@ -268,14 +302,9 @@ class PlayerListView(LoginRequiredMixin, ListView):
         if team := self.request.GET.get("team", "").strip():
             qs = qs.filter(team__abbreviation=team)
 
+        qs = with_expected_return(qs)
         injury_status = (self.request.GET.get("injury_status") or "").strip().lower()
         if injury_status in {"healthy", "day_to_day", "injured"}:
-            latest_injury_status = Subquery(
-                PlayerInjury.objects.filter(player_id=OuterRef("pk"))
-                .order_by("-observed_at", "-created_at")
-                .values("status")[:1]
-            )
-            qs = qs.annotate(latest_injury_status=latest_injury_status)
             day_to_day = Q()
             for day_to_day_state in DAY_TO_DAY_INJURY_STATUSES:
                 day_to_day |= Q(latest_injury_status__iexact=day_to_day_state)
@@ -290,6 +319,13 @@ class PlayerListView(LoginRequiredMixin, ListView):
                 for healthy_state in HEALTHY_INJURY_STATUSES:
                     healthy |= Q(latest_injury_status__iexact=healthy_state)
                 qs = qs.filter(healthy)
+
+        # Either bound alone is "back after" or "back by"; a player with no
+        # date -- healthy, or hurt with nothing reported -- matches neither.
+        if return_from := date_param(self.request, "return_from"):
+            qs = qs.filter(expected_return_date__gte=return_from)
+        if return_to := date_param(self.request, "return_to"):
+            qs = qs.filter(expected_return_date__lte=return_to)
 
         if self.request.GET.get("min_games") == "6":
             qs = qs.filter(current_games_played__gte=6)
@@ -390,6 +426,8 @@ class PlayerListView(LoginRequiredMixin, ListView):
                 "watchlist",
                 "kicklist",
                 "last_min_games",
+                "return_from",
+                "return_to",
             )
             if self.request.GET.get(key, "").strip()
         )
@@ -819,6 +857,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         "games": [F("current_games_played")],
         "hotness": [],
         "last_fp": [F("last_season_fp")],
+        "return": [F("expected_return_date")],
     }
 
     def get_object(self, queryset=None):
@@ -877,6 +916,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         )
         qs = services.with_player_marks(qs, self.request.user)
         qs = qs.annotate(note_count=my_note_count(self.request.user))
+        qs = with_expected_return(qs)
         qs = with_last_season(qs, self._last_season())
 
         qs = with_expected_salary(qs)

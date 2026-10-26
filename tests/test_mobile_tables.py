@@ -96,7 +96,8 @@ def test_the_players_table_keeps_names_in_view_and_drops_columns(signed_in, rost
     body = signed_in.get(reverse("nba:player-list")).text
 
     assert "max-md:sticky max-md:left-12" in body
-    assert body.count("hidden px-4 py-3 text-right font-medium md:table-cell") == 2
+    # Expected salary, points and expected return wait for a wider screen.
+    assert body.count("hidden px-4 py-3 text-right font-medium md:table-cell") == 3
 
 
 @pytest.mark.parametrize(

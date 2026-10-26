@@ -1,0 +1,21 @@
+{% load i18n player_stats %}
+{% comment %}
+Expected return for one player: the date, with how far off it is underneath.
+A date already gone by is greyed -- the report simply has not caught up.
+Healthy players show a dash, hurt ones without a date "unknown".
+Usage: {% include "nba/partials/return_date.html" with player=player %}
+{% endcomment %}
+{% with days=player.return_in_days %}
+  {% if player.expected_return %}
+    <time datetime="{{ player.expected_return|date:'Y-m-d' }}"
+          title="{% translate 'Expected return' %}: {{ player.expected_return|date:'DATE_FORMAT' }}"
+          class="inline-flex flex-col items-end whitespace-nowrap leading-tight {% if days < 0 %}text-neutral-400 dark:text-neutral-500{% endif %}">
+      <span class="tabular-nums {% if days >= 0 %}font-medium{% endif %}">{{ player.expected_return|short_month_day }}</span>
+      <span class="text-[0.7rem] {% if days >= 0 %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ days|days_until }}</span>
+    </time>
+  {% elif player.injury_state != "healthy" %}
+    <span class="text-xs text-neutral-400 dark:text-neutral-500" title="{% translate 'The injury report gives no return date.' %}">{% translate "unknown" %}</span>
+  {% else %}
+    <span class="text-neutral-400 dark:text-neutral-500" aria-label="{% translate 'Not injured' %}">–</span>
+  {% endif %}
+{% endwith %}

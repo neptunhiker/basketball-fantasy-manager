@@ -1,4 +1,4 @@
-{% load i18n money %}
+{% load i18n money player_stats %}
 {% comment %}
   The roster's players as cards, for phones (below `md`); the table takes over
   from there. Same `memberships` list and the same actions as the table, so the
@@ -35,6 +35,15 @@
                 {% if player.team %}{{ player.team.abbreviation }}{% else %}{% translate "Free Agent" %}{% endif %}
                 {% if not player.is_active %}· {% translate "Inactive" %}{% endif %}
               </p>
+              {# Only hurt players have something to come back from. #}
+              {% if player.expected_return %}
+                <p class="mt-0.5 text-xs {% if player.return_in_days < 0 %}text-neutral-400 dark:text-neutral-500{% elif player.is_injured %}text-red-700 dark:text-red-300{% else %}text-amber-700 dark:text-amber-300{% endif %}">
+                  <time datetime="{{ player.expected_return|date:'Y-m-d' }}">{% blocktranslate with date=player.expected_return|short_month_day %}Back {{ date }}{% endblocktranslate %}</time>
+                  <span class="text-neutral-500 dark:text-neutral-400">· {{ player.return_in_days|days_until }}</span>
+                </p>
+              {% elif player.injury_state != "healthy" %}
+                <p class="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{% translate "Return date unknown" %}</p>
+              {% endif %}
               <span class="badge badge-kick mt-1 hidden group-has-[[data-kicked]]/card:inline-flex">{% translate "Kick candidate" %}</span>
             </div>
             <div class="-mr-2 flex shrink-0 items-center gap-1">

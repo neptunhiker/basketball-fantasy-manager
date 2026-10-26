@@ -238,6 +238,24 @@ class Player(TimeStampedModel):
     def is_day_to_day(self):
         return self.injury_state == DAY_TO_DAY
 
+    @property
+    def expected_return(self):
+        """The date the latest report expects the player back, while hurt.
+
+        A healthy player has nothing to return from, so a date left on an old
+        report never leaks through once they are marked healthy again.
+        """
+        if self.injury_state == HEALTHY:
+            return None
+        return self.latest_injury.return_date
+
+    @property
+    def return_in_days(self):
+        """Days until `expected_return`; negative once that date has passed."""
+        if self.expected_return is None:
+            return None
+        return (self.expected_return - timezone.localdate()).days
+
     def hotness_score(self):
         """Return how often the player's FP/game has improved recently.
 

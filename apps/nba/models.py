@@ -21,6 +21,26 @@ from apps.core.models import TimeStampedModel
 
 # Injury report statuses that mean the player can play, compared casefolded.
 HEALTHY_INJURY_STATUSES = frozenset({"healthy", "available", "returned", "cleared"})
+# Hurt, but likely to play soon -- often the next game. Most of the feed is
+# this, so it is told apart from a player who is out rather than lumped in.
+DAY_TO_DAY_INJURY_STATUSES = frozenset({"day-to-day"})
+
+HEALTHY = "healthy"
+DAY_TO_DAY = "day_to_day"
+INJURED = "injured"
+
+
+def injury_state(status):
+    """`HEALTHY`, `DAY_TO_DAY` or `INJURED` for an injury report's status.
+
+    No report at all (`None`) is healthy: the feed only lists the hurt.
+    """
+    status = (status or "").casefold()
+    if not status or status in HEALTHY_INJURY_STATUSES:
+        return HEALTHY
+    if status in DAY_TO_DAY_INJURY_STATUSES:
+        return DAY_TO_DAY
+    return INJURED
 
 
 def predict_salary(fantasy_points_per_game: float | Decimal) -> Decimal:
@@ -205,9 +225,18 @@ class Player(TimeStampedModel):
         return injuries[0] if injuries else None
 
     @property
-    def is_injured(self):
+    def injury_state(self):
         latest = self.latest_injury
-        return bool(latest and latest.status.casefold() not in HEALTHY_INJURY_STATUSES)
+        return injury_state(latest.status if latest else None)
+
+    @property
+    def is_injured(self):
+        """Out, or anything else short of playing -- not day-to-day."""
+        return self.injury_state == INJURED
+
+    @property
+    def is_day_to_day(self):
+        return self.injury_state == DAY_TO_DAY
 
     def hotness_score(self):
         """Return how often the player's FP/game has improved recently.

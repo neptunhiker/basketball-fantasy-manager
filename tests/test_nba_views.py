@@ -143,6 +143,41 @@ def test_filter_by_injury_status(signed_in, roster):
     assert names(healthy_response) == {"Jayson Tatum", "Luka Dončić"}
 
 
+def test_day_to_day_is_its_own_injury_status(signed_in, roster):
+    from apps.nba.models import PlayerInjury
+
+    PlayerInjury.objects.create(
+        player=Player.objects.get(last_name="James"), observed_at=timezone.now(), status="Out"
+    )
+    PlayerInjury.objects.create(
+        player=Player.objects.get(last_name="Tatum"),
+        observed_at=timezone.now(),
+        status="Day-To-Day",
+    )
+
+    def listed(status):
+        return names(signed_in.get(reverse("nba:player-list"), {"injury_status": status}))
+
+    assert listed("injured") == {"LeBron James"}
+    assert listed("day_to_day") == {"Jayson Tatum"}
+    assert listed("healthy") == {"Luka Dončić"}
+
+
+def test_the_injury_badge_tells_day_to_day_from_injured(roster):
+    from django.template.loader import render_to_string
+
+    from apps.nba.models import PlayerInjury
+
+    tatum = Player.objects.get(last_name="Tatum")
+    PlayerInjury.objects.create(player=tatum, observed_at=timezone.now(), status="Day-To-Day")
+
+    assert tatum.is_day_to_day
+    assert not tatum.is_injured
+    body = render_to_string("nba/partials/injury_status.html", {"player": tatum})
+    assert 'title="Day-to-day"' in body
+    assert "bg-amber-50" in body
+
+
 def test_player_list_injury_status_shows_the_latest_api_request(signed_in, roster):
     usage = NbaApiUsage.objects.create(
         provider=PROVIDER,
@@ -179,12 +214,53 @@ def test_player_list_disables_injury_refresh_after_todays_call(signed_in, roster
     assert "The next update can be invoked tomorrow." in body
 
 
+def test_a_superuser_can_refresh_again_after_todays_first_call(client, password, roster):
+    from django.contrib.auth import get_user_model
+
+    admin = get_user_model().objects.create_superuser(email="admin@example.com", password=password)
+    client.login(email=admin.email, password=password)
+    NbaApiUsage.objects.create(provider=PROVIDER, usage_date=timezone.localdate(), request_count=4)
+
+    assert client.get(reverse("nba:player-list")).context["injury_refresh_available"] is True
+
+    NbaApiUsage.objects.filter(provider=PROVIDER).update(request_count=5)
+    assert client.get(reverse("nba:player-list")).context["injury_refresh_available"] is False
+
+
+def test_the_refresh_runs_with_the_callers_daily_limit(client, password, roster, monkeypatch):
+    from django.contrib.auth import get_user_model
+
+    calls = []
+    monkeypatch.setattr(
+        "apps.nba.views.sync_injuries",
+        lambda **kwargs: (
+            calls.append(kwargs["daily_limit"])
+            or {"created": 0, "updated": 0, "recovered": 0, "unmatched": 0, "ambiguous": 0}
+        ),
+    )
+    User = get_user_model()
+    regular = User.objects.create_user(email="fan@example.com", password=password)
+    admin = User.objects.create_superuser(email="admin@example.com", password=password)
+
+    for account in (regular, admin):
+        client.login(email=account.email, password=password)
+        client.post(reverse("nba:injury-refresh"), HTTP_HX_REQUEST="true")
+
+    assert calls == [1, 5]
+
+
 def test_injury_refresh_runs_the_sync_and_returns_an_inline_confirmation(
     signed_in, roster, monkeypatch
 ):
     monkeypatch.setattr(
         "apps.nba.views.sync_injuries",
-        lambda: {"created": 2, "updated": 1, "recovered": 3, "unmatched": 0, "ambiguous": 0},
+        lambda **kwargs: {
+            "created": 2,
+            "updated": 1,
+            "recovered": 3,
+            "unmatched": 0,
+            "ambiguous": 0,
+        },
     )
 
     response = signed_in.post(reverse("nba:injury-refresh"), HTTP_HX_REQUEST="true")
@@ -197,7 +273,7 @@ def test_injury_refresh_runs_the_sync_and_returns_an_inline_confirmation(
 
 
 def test_injury_refresh_shows_the_daily_limit_message(signed_in, roster, monkeypatch):
-    def raise_limit():
+    def raise_limit(**kwargs):
         raise DailyApiLimitExceeded("limit reached")
 
     monkeypatch.setattr("apps.nba.views.sync_injuries", raise_limit)

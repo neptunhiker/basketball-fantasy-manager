@@ -235,14 +235,21 @@
         {# Always shown, so "0 injured" reads as a clean bill of health #}
         {# rather than a figure that is missing. #}
         · <span class="{% if injured_players %}font-medium text-red-700 dark:text-red-300{% endif %}">{% blocktranslate count count=injured_players|length %}{{ count }} injured{% plural %}{{ count }} injured{% endblocktranslate %}</span>
+        {% if day_to_day_players %}
+          · <span class="font-medium text-amber-800 dark:text-amber-300">{% blocktranslate count count=day_to_day_players|length %}{{ count }} day-to-day{% plural %}{{ count }} day-to-day{% endblocktranslate %}</span>
+        {% endif %}
       </p>
     </div>
 
-    {# Who is out, by name, without scanning the table's Injury column. Each #}
-    {# chip opens the same injury dialog as the row's own status button. #}
-    {% if injured_players %}
+    {# Who is out, by name, without scanning the table's Injury column -- the #}
+    {# injured first, then the day-to-day in their own colour. Each chip #}
+    {# opens the same injury dialog as the row's own status button. #}
+    {% if injured_players or day_to_day_players %}
       <div class="flex flex-wrap items-center gap-2 border-t border-neutral-200 px-4 py-2.5 sm:px-5 dark:border-neutral-800">
         {% for player in injured_players %}
+          {% include "nba/partials/injury_status.html" with player=player id_suffix="-injured" show_name=True %}
+        {% endfor %}
+        {% for player in day_to_day_players %}
           {% include "nba/partials/injury_status.html" with player=player id_suffix="-injured" show_name=True %}
         {% endfor %}
       </div>

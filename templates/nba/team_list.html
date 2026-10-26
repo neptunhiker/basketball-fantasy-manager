@@ -27,6 +27,7 @@
               <a href="?sort=fpg" class="hover:text-primary-600 dark:hover:text-primary-400 {% if ranked %}text-primary-600 dark:text-primary-400{% endif %}">{% translate "FP/G" %}{% if ranked %} &#9660;{% endif %}</a>
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Salary" %}</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Day-to-day" %}</th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Injured" %}</th>
           </tr>
         </thead>
@@ -35,7 +36,7 @@
             {% if not ranked %}
               {% ifchanged team.division %}
                 <tr class="bg-neutral-50 dark:bg-neutral-800/40">
-                  <th colspan="5" scope="colgroup"
+                  <th colspan="6" scope="colgroup"
                       class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                     {{ team.get_conference_display }} · {{ team.get_division_display }}
                   </th>
@@ -54,6 +55,7 @@
                       <span class="block truncate font-medium group-hover:text-primary-600 group-hover:underline dark:group-hover:text-primary-400">{{ team.name }}</span>
                       {% if ranked %}<span class="block text-xs text-neutral-500 dark:text-neutral-400">{{ team.get_conference_display }} · {{ team.get_division_display }}</span>{% endif %}
                       {% if team.injured_count %}<span class="mt-0.5 inline-block text-xs text-red-700 sm:hidden dark:text-red-300">{% blocktranslate count count=team.injured_count %}{{ count }} injured{% plural %}{{ count }} injured{% endblocktranslate %}</span>{% endif %}
+                      {% if team.day_to_day_count %}<span class="mt-0.5 inline-block text-xs text-amber-800 sm:hidden dark:text-amber-300">{% blocktranslate count count=team.day_to_day_count %}{{ count }} day-to-day{% plural %}{{ count }} day-to-day{% endblocktranslate %}</span>{% endif %}
                     </span>
                   </a>
                   {% if team.note_count %}
@@ -64,6 +66,7 @@
               <td class="px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400">{{ team.active_players }}</td>
               <td class="px-4 py-3 text-right font-medium tabular-nums">{{ team.fp_per_game|floatformat:"2g"|default:"–" }}</td>
               <td class="px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400" title="{{ team.total_salary|exact }}">{{ team.total_salary|millions }}</td>
+              <td class="px-4 py-3 text-right tabular-nums {% if team.day_to_day_count %}text-amber-800 dark:text-amber-300{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">{{ team.day_to_day_count }}</td>
               <td class="px-4 py-3 text-right tabular-nums {% if team.injured_count %}text-red-700 dark:text-red-300{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">{{ team.injured_count }}</td>
             </tr>
           {% endfor %}

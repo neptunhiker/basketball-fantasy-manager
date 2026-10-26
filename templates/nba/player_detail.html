@@ -44,15 +44,20 @@
         <div x-data="{ open: false }">
           <button type="button" @click="open = true"
                   class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition
-                    {% if is_injured %}border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/20{% else %}border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20{% endif %}"
-                  aria-label="{% if is_injured %}{% translate 'Injured' %}{% else %}{% translate 'Healthy' %}{% endif %}"
-                  title="{% if is_injured %}{% translate 'Injured' %}{% else %}{% translate 'Healthy' %}{% endif %}"
+                    {% if injury_state == "injured" %}border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/20{% elif injury_state == "day_to_day" %}border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20{% else %}border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20{% endif %}"
+                  aria-label="{% if injury_state == "injured" %}{% translate 'Injured' %}{% elif injury_state == "day_to_day" %}{% translate 'Day-to-day' %}{% else %}{% translate 'Healthy' %}{% endif %}"
+                  title="{% if injury_state == "injured" %}{% translate 'Injured' %}{% elif injury_state == "day_to_day" %}{% translate 'Day-to-day' %}{% else %}{% translate 'Healthy' %}{% endif %}"
                   aria-haspopup="dialog" aria-expanded="false"
                   :aria-expanded="open.toString()">
-            {% if is_injured %}
+            {% if injury_state == "injured" %}
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m9 15 6-6m-8.5 8.5 3 3a2.1 2.1 0 0 0 3 0l8-8a2.1 2.1 0 0 0 0-3l-3-3a2.1 2.1 0 0 0-3 0l-8 8a2.1 2.1 0 0 0 0 3Z"/>
                 <path stroke-linecap="round" d="m7.5 7.5 9 9"/>
+              </svg>
+            {% elif injury_state == "day_to_day" %}
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5V12l3 2"/>
               </svg>
             {% else %}
               <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">

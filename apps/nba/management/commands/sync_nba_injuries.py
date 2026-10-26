@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from apps.nba.services import NbaApiError, sync_injuries
+from apps.nba.services import NbaApiError, daily_limit_for, sync_injuries
 
 
 class Command(BaseCommand):
@@ -8,7 +8,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            summary = sync_injuries()
+            summary = sync_injuries(daily_limit=daily_limit_for(None))
         except NbaApiError as exc:
             raise CommandError(str(exc)) from exc
         self.stdout.write(

@@ -140,7 +140,10 @@ RAPID_API_INJURIES_URL = env(
     default="https://api-basketball-nba.p.rapidapi.com/nba-injuries",
 )
 RAPID_API_TIMEOUT = env.int("RAPID_API_TIMEOUT", default=15)
+# Requests a day, on one shared tally: everyone may call while none has been
+# made today, a superuser until the second limit is reached.
 RAPID_API_DAILY_LIMIT = 1
+RAPID_API_SUPERUSER_DAILY_LIMIT = 5
 
 LOGGING = {
     "version": 1,

@@ -40,6 +40,7 @@ from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
 from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
 from .models import (
+    DAY_TO_DAY_INJURY_STATUSES,
     HEALTHY_INJURY_STATUSES,
     ImportRun,
     Player,
@@ -47,10 +48,11 @@ from .models import (
     PlayerNote,
     Team,
     TeamNote,
+    injury_state,
 )
 from .salary_charts import salary_charts
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
-from .services import DailyApiLimitExceeded, NbaApiError, sync_injuries
+from .services import DailyApiLimitExceeded, NbaApiError, daily_limit_for, sync_injuries
 from .stats import DESCENDING_FIRST
 
 
@@ -183,6 +185,7 @@ class TeamListView(LoginRequiredMixin, ListView):
                 else None
             )
             team.injured_count = sum(1 for player in team.active_roster if player.is_injured)
+            team.day_to_day_count = sum(1 for player in team.active_roster if player.is_day_to_day)
         if self.ranked:
             teams.sort(key=lambda team: (team.fp_per_game is None, -(team.fp_per_game or 0)))
         return teams
@@ -266,17 +269,22 @@ class PlayerListView(LoginRequiredMixin, ListView):
             qs = qs.filter(team__abbreviation=team)
 
         injury_status = (self.request.GET.get("injury_status") or "").strip().lower()
-        if injury_status in {"healthy", "injured"}:
+        if injury_status in {"healthy", "day_to_day", "injured"}:
             latest_injury_status = Subquery(
                 PlayerInjury.objects.filter(player_id=OuterRef("pk"))
                 .order_by("-observed_at", "-created_at")
                 .values("status")[:1]
             )
             qs = qs.annotate(latest_injury_status=latest_injury_status)
+            day_to_day = Q()
+            for day_to_day_state in DAY_TO_DAY_INJURY_STATUSES:
+                day_to_day |= Q(latest_injury_status__iexact=day_to_day_state)
             if injury_status == "injured":
                 for healthy_state in HEALTHY_INJURY_STATUSES:
                     qs = qs.exclude(latest_injury_status__iexact=healthy_state)
-                qs = qs.exclude(latest_injury_status__isnull=True)
+                qs = qs.exclude(latest_injury_status__isnull=True).exclude(day_to_day)
+            elif injury_status == "day_to_day":
+                qs = qs.filter(day_to_day)
             else:
                 healthy = Q(latest_injury_status__isnull=True)
                 for healthy_state in HEALTHY_INJURY_STATUSES:
@@ -422,7 +430,7 @@ class InjuryRefreshView(LoginRequiredMixin, View):
 
     def post(self, request):
         try:
-            summary = sync_injuries()
+            summary = sync_injuries(daily_limit=daily_limit_for(request.user))
         except DailyApiLimitExceeded:
             context = {
                 "injury_refresh_error": _(
@@ -905,6 +913,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         per_game = stats.summarise(player.current_fp_per_game for player in players)
         points = stats.summarise(player.current_total_fp for player in players)
         injured_count = sum(1 for player in players if player.is_injured)
+        day_to_day_count = sum(1 for player in players if player.is_day_to_day)
 
         context["players"] = players
         context["cards"] = [
@@ -939,7 +948,8 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
                 _("Player health"),
                 "count",
                 [
-                    (_("Healthy"), len(players) - injured_count),
+                    (_("Healthy"), len(players) - injured_count - day_to_day_count),
+                    (_("Day-to-day"), day_to_day_count),
                     (_("Injured"), injured_count),
                 ],
             ),
@@ -1040,11 +1050,7 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
         context["is_kicked"] = stance == WatchlistEntry.Stance.KICK
         latest_injury = self.object.injuries.order_by("-observed_at", "-created_at").first()
         context["latest_injury"] = latest_injury
-        context["is_injured"] = bool(
-            latest_injury
-            and latest_injury.status.casefold()
-            not in {"healthy", "available", "returned", "cleared"}
-        )
+        context["injury_state"] = injury_state(latest_injury.status if latest_injury else None)
         context["hotness_score"] = self.object.hotness_score()
         # Value: what his points per game would be worth, minus what he costs.
         predicted = self.object.predicted_salary

@@ -22,6 +22,17 @@ PROVIDER = "api-basketball-nba"
 # Written for a player who has dropped out of the feed; one of HEALTHY_INJURY_STATUSES.
 RECOVERED_STATUS = "Healthy"
 
+# The feed writes six teams with ESPN's codes, which are not ours. Without this
+# every injury on those teams went unmatched and was never stored.
+FEED_TEAM_CODES = {
+    "GS": "GSW",
+    "NY": "NYK",
+    "NO": "NOP",
+    "SA": "SAS",
+    "UTAH": "UTA",
+    "WSH": "WAS",
+}
+
 
 class NbaApiError(RuntimeError):
     """The provider could not return a usable response."""
@@ -64,12 +75,23 @@ class ParsedInjury:
     raw_payload: dict
 
 
-def fetch_injuries():
+def daily_limit_for(user=None):
+    """How many requests a day `user` may make, counted against one shared tally.
+
+    Superusers get the higher limit, and so does a caller with no user at all
+    -- the management command, whose operator already has the server.
+    """
+    if user is None or user.is_superuser:
+        return settings.RAPID_API_SUPERUSER_DAILY_LIMIT
+    return settings.RAPID_API_DAILY_LIMIT
+
+
+def fetch_injuries(daily_limit=None):
     """Fetch and decode the provider response, consuming one daily slot."""
     if not settings.RAPID_API_KEY:
         raise NbaApiError("RAPID_API_KEY is not configured.")
 
-    _reserve_api_call()
+    _reserve_api_call(daily_limit=daily_limit)
     request = Request(
         settings.RAPID_API_INJURIES_URL,
         headers={
@@ -94,7 +116,12 @@ def fetch_injuries():
 
 
 @transaction.atomic
-def _reserve_api_call(now=None):
+def _reserve_api_call(now=None, daily_limit=None):
+    """Count one request against today's tally, or refuse it.
+
+    One tally for everyone: a user on the lower limit is refused as soon as
+    anyone has called today, a superuser until the higher limit is used up.
+    """
     now = now or timezone.now()
     usage, _ = NbaApiUsage.objects.get_or_create(
         provider=PROVIDER,
@@ -102,7 +129,10 @@ def _reserve_api_call(now=None):
         defaults={"request_count": 0},
     )
     usage = NbaApiUsage.objects.select_for_update().get(pk=usage.pk)
-    daily_limit = min(settings.RAPID_API_DAILY_LIMIT, 1)
+    if daily_limit is None:
+        daily_limit = settings.RAPID_API_DAILY_LIMIT
+    # Never past the superuser limit, whatever a caller asks for.
+    daily_limit = min(daily_limit, settings.RAPID_API_SUPERUSER_DAILY_LIMIT)
     if usage.request_count >= daily_limit:
         raise DailyApiLimitExceeded(
             f"The {PROVIDER} daily limit of {daily_limit} requests has been reached."
@@ -237,11 +267,12 @@ def _match_players(injuries):
     players = list(Player.objects.select_related("team").filter(is_active=True))
     matches = []
     for injury in injuries:
+        team_code = FEED_TEAM_CODES.get(injury.team_abbreviation, injury.team_abbreviation)
         candidates = [
             player
             for player in players
             if player.team
-            and player.team.abbreviation == injury.team_abbreviation
+            and player.team.abbreviation == team_code
             and normalize_name(player.first_name) == normalize_name(injury.first_name)
             and normalize_name(player.last_name) == normalize_name(injury.last_name)
         ]
@@ -290,10 +321,14 @@ def _mark_recovered(injuries, reported_player_ids, observed_at):
 
 
 @transaction.atomic
-def sync_injuries(payload=None, observed_at=None):
-    """Fetch, match and persist injury records; return an auditable summary."""
+def sync_injuries(payload=None, observed_at=None, daily_limit=None):
+    """Fetch, match and persist injury records; return an auditable summary.
+
+    `daily_limit` is the caller's, from `daily_limit_for`; without one the
+    lower limit applies.
+    """
     observed_at = observed_at or timezone.now()
-    payload = fetch_injuries() if payload is None else payload
+    payload = fetch_injuries(daily_limit) if payload is None else payload
     summary = {"created": 0, "updated": 0, "recovered": 0, "unmatched": 0, "ambiguous": 0}
     injuries = parse_injuries(payload)
     reported_player_ids = set()

@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
+from django.conf import settings
 from django.test import override_settings
 from django.utils import timezone
 
@@ -9,6 +11,7 @@ from apps.nba.services import (
     RECOVERED_STATUS,
     DailyApiLimitExceeded,
     _reserve_api_call,
+    daily_limit_for,
     parse_injuries,
     sync_injuries,
 )
@@ -116,13 +119,66 @@ def test_api_usage_enforces_the_configured_daily_limit(db):
     assert usage.request_count == 1
 
 
-@override_settings(RAPID_API_DAILY_LIMIT=2)
-def test_api_usage_never_allows_more_than_one_daily_request(db):
+def test_a_superuser_may_call_five_times_a_day(db):
+    now = timezone.make_aware(datetime(2026, 9, 12, 9))
+    limit = daily_limit_for(SimpleNamespace(is_superuser=True))
+
+    for _ in range(5):
+        _reserve_api_call(now, daily_limit=limit)
+    with pytest.raises(DailyApiLimitExceeded):
+        _reserve_api_call(now, daily_limit=limit)
+
+
+def test_the_tally_is_shared_between_users_and_superusers(db):
+    """After anyone's call, only a superuser can call again that day."""
+    now = timezone.make_aware(datetime(2026, 9, 12, 9))
+    user_limit = daily_limit_for(SimpleNamespace(is_superuser=False))
+    superuser_limit = daily_limit_for(SimpleNamespace(is_superuser=True))
+
+    _reserve_api_call(now, daily_limit=superuser_limit)
+    with pytest.raises(DailyApiLimitExceeded):
+        _reserve_api_call(now, daily_limit=user_limit)
+    _reserve_api_call(now, daily_limit=superuser_limit)
+
+    assert NbaApiUsage.objects.get(usage_date=now.date()).request_count == 2
+
+
+def test_the_management_command_gets_the_superuser_limit():
+    assert daily_limit_for(None) == settings.RAPID_API_SUPERUSER_DAILY_LIMIT == 5
+
+
+@override_settings(RAPID_API_SUPERUSER_DAILY_LIMIT=2)
+def test_no_caller_may_go_past_the_superuser_limit(db):
     now = timezone.make_aware(datetime(2026, 9, 12, 9))
 
-    _reserve_api_call(now)
+    _reserve_api_call(now, daily_limit=10)
+    _reserve_api_call(now, daily_limit=10)
     with pytest.raises(DailyApiLimitExceeded):
-        _reserve_api_call(now)
+        _reserve_api_call(now, daily_limit=10)
+
+
+@pytest.mark.parametrize(
+    ("feed_code", "our_code"),
+    [("GS", "GSW"), ("NY", "NYK"), ("NO", "NOP"), ("SA", "SAS"), ("UTAH", "UTA"), ("WSH", "WAS")],
+)
+def test_sync_matches_teams_the_feed_writes_with_other_codes(
+    db, injury_payload, feed_code, our_code
+):
+    player = Player.objects.create(
+        first_name="Luka",
+        last_name="Doncic",
+        position=Player.Position.GUARD,
+        team=Team.objects.get(abbreviation=our_code),
+    )
+    group = injury_payload["response"][0]
+    group["team"]["abbreviation"] = feed_code
+    group["injuries"][0]["athlete"]["team"]["abbreviation"] = feed_code
+
+    summary = sync_injuries(injury_payload, FIRST_SYNC)
+
+    assert summary["created"] == 1
+    assert summary["unmatched"] == 0
+    assert PlayerInjury.objects.get(player=player).feed_team_abbreviation == feed_code
 
 
 def _injured_player(first_name, last_name, team_abbreviation="BOS"):

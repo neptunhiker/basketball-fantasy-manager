@@ -88,6 +88,7 @@
                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
           <option value="">{% translate "All injury status" %}</option>
           <option value="healthy" {% if request.GET.injury_status == 'healthy' %}selected{% endif %}>{% translate "Healthy" %}</option>
+          <option value="day_to_day" {% if request.GET.injury_status == 'day_to_day' %}selected{% endif %}>{% translate "Day-to-day" %}</option>
           <option value="injured" {% if request.GET.injury_status == 'injured' %}selected{% endif %}>{% translate "Injured" %}</option>
         </select>
       </div>

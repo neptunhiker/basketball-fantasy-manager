@@ -4326,3 +4326,16 @@ msgid ""
 msgstr ""
 "Der Vergleich erscheint, sobald Spieler in diesem Kader Punkte pro Spiel und "
 "ein Gehalt haben."
+
+#: apps/nba/views.py templates/nba/partials/injury_status.html
+#: templates/nba/player_detail.html templates/nba/player_list.html
+#: templates/nba/team_list.html
+msgid "Day-to-day"
+msgstr "Angeschlagen"
+
+#: templates/fantasy/partials/roster_panel.html templates/nba/team_list.html
+#, python-format
+msgid "%(count)s day-to-day"
+msgid_plural "%(count)s day-to-day"
+msgstr[0] "%(count)s angeschlagen"
+msgstr[1] "%(count)s angeschlagen"

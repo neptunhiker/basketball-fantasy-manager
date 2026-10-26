@@ -998,6 +998,7 @@ def _build_context(request, roster):
         "memberships": memberships,
         # Injuries come prefetched with the squad, so this costs no query.
         "injured_players": [m.player for m in memberships if m.player.is_injured],
+        "day_to_day_players": [m.player for m in memberships if m.player.is_day_to_day],
         # This season only: the squad is judged on what it scores now.
         "squad_chart": salary_charts([m.player for m in memberships], None)["salary_fp_chart"],
         "current_sort": current_sort,

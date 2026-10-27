@@ -4,16 +4,18 @@ The fixture is a real pull of the NBA feed (25 items from October 27, 2026).
 """
 
 import copy
+import datetime as dt
 import io
 import json
 from datetime import date
 from pathlib import Path
 
 import pytest
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.utils import timezone
+from django_q.models import Schedule
 
-from apps.nba import rotowire
+from apps.nba import rotowire, tasks
 from apps.nba.models import NbaApiUsage, Player, PlayerNews, Team
 from apps.nba.rotowire import (
     PROVIDER,
@@ -24,6 +26,7 @@ from apps.nba.rotowire import (
     sync_news,
 )
 from apps.nba.services import DailyApiLimitExceeded, NbaApiError
+from apps.nba.tasks import scheduled_rotowire_news_import
 
 FIXTURE = Path(__file__).parent / "fixtures" / "rotowire" / "news_nba.json"
 
@@ -401,3 +404,95 @@ def test_the_tally_is_separate_from_the_injury_feed(db):
     rotowire._reserve_api_call()
 
     assert NbaApiUsage.objects.get(provider=PROVIDER).request_count == 1
+
+
+# -- schedule, task and command --------------------------------------------------
+
+
+def test_the_schedule_exists_after_migrate(db):
+    schedule = Schedule.objects.get(func="apps.nba.tasks.scheduled_rotowire_news_import")
+
+    assert schedule.schedule_type == Schedule.CRON
+    assert schedule.cron == "0 */4 * * *"
+    assert schedule.repeats == -1
+    assert not schedule.args
+    assert not schedule.kwargs
+
+
+def test_the_first_run_waits_for_the_next_four_hour_mark():
+    from importlib import import_module
+
+    migration = import_module("apps.nba.migrations.0019_scheduled_rotowire_news_import")
+
+    next_run = migration.next_four_hour_mark()
+
+    assert next_run.hour % 4 == 0
+    assert (next_run.minute, next_run.second) == (0, 0)
+    assert dt.timedelta(0) < next_run - timezone.now() <= dt.timedelta(hours=4)
+
+
+def test_without_a_key_the_task_does_nothing(db, settings, monkeypatch):
+    settings.RAPID_API_KEY = ""
+    monkeypatch.setattr(tasks, "sync_news", pytest.fail)
+
+    assert scheduled_rotowire_news_import().startswith("skipped")
+
+
+def test_the_task_imports_and_reports(db, api_key, payload, monkeypatch):
+    monkeypatch.setattr(rotowire, "fetch_news", lambda: payload)
+
+    result = scheduled_rotowire_news_import()
+
+    assert result.startswith("25 items, 25 new")
+    assert PlayerNews.objects.count() == 25
+
+
+def test_the_task_warns_when_every_item_was_new(db, api_key, payload, monkeypatch, caplog):
+    older = copy.deepcopy(payload)
+    older["items"] = [payload["items"][0]]
+    sync_news(older)
+    newer = copy.deepcopy(payload)
+    newer["items"] = payload["items"][1:]
+    monkeypatch.setattr(rotowire, "fetch_news", lambda: newer)
+
+    scheduled_rotowire_news_import()
+
+    assert "some may have been missed" in caplog.text
+
+
+def test_the_task_does_not_warn_on_an_overlapping_pull(db, api_key, payload, monkeypatch, caplog):
+    sync_news(payload)
+    monkeypatch.setattr(rotowire, "fetch_news", lambda: payload)
+
+    scheduled_rotowire_news_import()
+
+    assert "some may have been missed" not in caplog.text
+
+
+def test_a_failed_request_fails_the_task(db, api_key, monkeypatch):
+    def broken():
+        raise NbaApiError("RotoWire API returned HTTP 503.")
+
+    monkeypatch.setattr(rotowire, "fetch_news", broken)
+
+    with pytest.raises(NbaApiError):
+        scheduled_rotowire_news_import()
+
+
+def test_the_command_imports_and_reports(db, payload, monkeypatch):
+    monkeypatch.setattr(rotowire, "fetch_news", lambda: payload)
+    out = io.StringIO()
+
+    call_command("import_rotowire_news", stdout=out)
+
+    assert "RotoWire news imported: 25 items, 25 new" in out.getvalue()
+
+
+def test_the_command_turns_an_api_error_into_a_command_error(db, monkeypatch):
+    def broken():
+        raise DailyApiLimitExceeded("The rotowire daily limit of 8 requests has been reached.")
+
+    monkeypatch.setattr(rotowire, "fetch_news", broken)
+
+    with pytest.raises(CommandError, match="daily limit"):
+        call_command("import_rotowire_news")

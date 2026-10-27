@@ -38,3 +38,6 @@ tmp/
 # Local player data exports, never committed
 Player Data *.xlsx
 ~$*.xlsx
+
+# Database dumps written by scripts/deploy.sh on the server
+backups/

@@ -25,7 +25,7 @@ and not a single value.
 | Access | Invitation only, no public sign-up |
 | Email | Resend via django-anymail |
 | Background jobs | Django-Q2 with Postgres as the broker |
-| Deployment | Fly.io, Docker, WhiteNoise for static files |
+| Deployment | Docker Compose on our own server (Fly.io config kept), WhiteNoise for static files |
 | Tooling | uv, ruff, pytest-django, pre-commit |
 
 ## Running it locally
@@ -269,6 +269,35 @@ from the password.
 
 Role and membership date are read-only there. `is_staff` is not a field on that
 form, so it cannot be granted to oneself.
+
+## Deploying to the server
+
+Staging and production run with Docker Compose (`docker-compose.deploy.yml`) on
+the `nba` host, each from its own clone with its own `.env`:
+`/srv/fantasy-manager/staging` and `/srv/fantasy-manager/prod`.
+
+From your laptop:
+
+```bash
+./scripts/ship.sh staging   # deploys origin/main to staging
+./scripts/ship.sh prod      # deploys exactly the commit staging is running
+```
+
+`ship.sh` fast-forwards the server clone and then runs `scripts/deploy.sh` there.
+The deploy builds the images and runs the migrations with the new image before
+starting the containers, so new code never meets the old schema. It then waits
+for the containers to be healthy and checks `/healthz`. Before migrating, a
+production deploy writes a `pg_dump` to `backups/` in the prod clone and keeps
+the 14 most recent dumps. Set `DEPLOY_HOST` to use an SSH host other than `nba`.
+
+The dumps drop and recreate every table, so a restore replaces the current data.
+Stop `web` and `worker` first, restore, then run `./scripts/ship.sh prod` again:
+
+```bash
+gunzip -c backups/<file>.sql.gz \
+  | docker compose -p fantasy-prod -f docker-compose.deploy.yml exec -T db \
+      sh -c 'psql -U "$POSTGRES_USER" "$POSTGRES_DB"'
+```
 
 ## Deploying to Fly.io
 

@@ -16,7 +16,9 @@ class PlayerNoteForm(StyledFormMixin, forms.ModelForm):
             "content": forms.Textarea(
                 attrs={
                     "rows": 4,
-                    "placeholder": _("Keep a private note about this player's role, minutes, matchup, or trend."),
+                    "placeholder": _(
+                        "Keep a private note about this player's role, minutes, matchup, or trend."
+                    ),
                 }
             )
         }
@@ -25,6 +27,7 @@ class PlayerNoteForm(StyledFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["content"].help_text = _("Only you can see this note.")
+
 
 class TeamNoteForm(StyledFormMixin, forms.ModelForm):
     """Private note a user keeps on a given team."""
@@ -36,7 +39,9 @@ class TeamNoteForm(StyledFormMixin, forms.ModelForm):
             "content": forms.Textarea(
                 attrs={
                     "rows": 4,
-                    "placeholder": _("Keep a private note about this team's rotation, matchups, or trends."),
+                    "placeholder": _(
+                        "Keep a private note about this team's rotation, matchups, or trends."
+                    ),
                 }
             )
         }

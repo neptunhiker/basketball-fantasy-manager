@@ -79,9 +79,7 @@ def import_bbde(
     if ImportRun.objects.filter(
         status=ImportRun.Status.RUNNING, started_at__gte=timezone.now() - RUNNING_TIMEOUT
     ).exists():
-        raise ImportAlreadyRunning(
-            _("Another import is still running. Please try again shortly.")
-        )
+        raise ImportAlreadyRunning(_("Another import is still running. Please try again shortly."))
 
     run = ImportRun.objects.create(
         triggered_by=triggered_by, source=source, season=season, dry_run=dry_run

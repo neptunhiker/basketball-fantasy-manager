@@ -565,8 +565,6 @@ class PlayerNews(TimeStampedModel):
     first_seen_at = models.DateTimeField("First seen at", default=timezone.now)
     feed_player_id = models.PositiveIntegerField("Feed player ID", null=True, blank=True)
     feed_player_name = models.CharField("Feed player name", max_length=160)
-    feed_first_name = models.CharField("Feed first name", max_length=64, blank=True)
-    feed_last_name = models.CharField("Feed last name", max_length=64, blank=True)
     feed_team_abbreviation = models.CharField("Feed team", max_length=8, blank=True)
     feed_position = models.CharField("Feed position", max_length=8, blank=True)
     raw_payload = models.JSONField("Raw provider payload", default=dict, blank=True)

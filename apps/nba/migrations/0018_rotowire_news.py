@@ -69,14 +69,6 @@ class Migration(migrations.Migration):
                     models.CharField(max_length=160, verbose_name="Feed player name"),
                 ),
                 (
-                    "feed_first_name",
-                    models.CharField(blank=True, max_length=64, verbose_name="Feed first name"),
-                ),
-                (
-                    "feed_last_name",
-                    models.CharField(blank=True, max_length=64, verbose_name="Feed last name"),
-                ),
-                (
                     "feed_team_abbreviation",
                     models.CharField(blank=True, max_length=8, verbose_name="Feed team"),
                 ),

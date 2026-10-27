@@ -10,6 +10,8 @@
 {% translate "Avg/game" as avg_game_label %}
 {% translate "Games" as games_label %}
 {% translate "Hotness" as hotness_label %}
+{% translate "Latest FP" as latest_fp_label %}
+{% translate "Latest FP is what a player scored between the two newest snapshots, with the change in his points per game beneath it. A dash means he did not play in between; 0.0 means he played and scored nothing." as latest_fp_help %}
 {% translate "Return" as return_label %}
 {% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
 {% translate "Hotness shows how often a player's points per game went up after his recent games. We look at his last 10 games: each time his season average rose after a game, that counts as a rise. Days without a game don't count. Hot: a rise in at least 6 of 10 games. Cold: 4 or fewer. Steady: in between. With fewer than 3 games to compare, only the count is shown." as hotness_help %}
@@ -259,7 +261,7 @@
     {% if memberships %}
       {% include "fantasy/partials/squad_cards.html" %}
       <div class="hidden overflow-x-auto md:block">
-        <table class="w-full min-w-[80rem] text-left text-sm">
+        <table class="w-full min-w-[86rem] text-left text-sm">
           <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
             <tr>
               <th scope="col" class="px-4 py-3 font-medium sm:px-5">
@@ -288,6 +290,12 @@
               </th>
               <th scope="col" class="px-4 py-3 text-right font-medium">
                 {% include "nba/partials/sort_header.html" with key="avg" label=avg_game_label align="right" first="desc" %}
+              </th>
+              <th scope="col" class="whitespace-nowrap px-4 py-3 text-right font-medium">
+                <span class="inline-flex items-center gap-1">
+                  {% include "nba/partials/sort_header.html" with key="latest" label=latest_fp_label align="right" first="desc" %}
+                  {% include "partials/info_popover.html" with text=latest_fp_help label=latest_fp_label %}
+                </span>
               </th>
               <th scope="col" class="px-4 py-3 text-right font-medium">
                 {% include "nba/partials/sort_header.html" with key="games" label=games_label align="right" first="desc" %}
@@ -349,6 +357,9 @@
                 </td>
                 <td class="px-4 py-3 text-right tabular-nums">
                   {{ membership.player.current_fp_per_game|floatformat:"2g"|default:"–" }}
+                </td>
+                <td class="px-4 py-3 text-right tabular-nums">
+                  {% include "nba/partials/latest_fp.html" with gain=membership.player.latest_fp_gain avg_change=membership.player.latest_avg_change %}
                 </td>
                 <td class="px-4 py-3 text-right tabular-nums">
                   {{ membership.player.current_games_played|default_if_none:"–" }}

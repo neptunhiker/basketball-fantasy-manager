@@ -1,0 +1,24 @@
+{% load i18n %}
+{% comment %}
+  Latest FP: the points a player scored between the two newest snapshots, with
+  how far that moved his season average beneath it. Context: `gain` and
+  `avg_change`, the two values `apps.nba.views.with_latest_fp_change` annotates
+  (Decimal or None).
+
+  None is "no game in between" and shows as a dash, kept visibly apart from a
+  player who played and scored 0.0. The points themselves are not colour-coded
+  -- every game adds something, and green on almost every row says nothing --
+  only a negative night is, and the average's move below carries the trend.
+{% endcomment %}
+{% if gain is None %}
+  <span class="text-neutral-400 dark:text-neutral-500" title="{% translate 'No game since the previous snapshot' %}">–<span class="sr-only"> {% translate "No game since the previous snapshot" %}</span></span>
+{% else %}
+  <span class="inline-flex flex-col items-end leading-tight">
+    <span class="font-semibold {% if gain < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-900 dark:text-neutral-100{% endif %}">{% if gain > 0 %}+{% endif %}{{ gain|floatformat:"1g" }}</span>
+    {% if avg_change is not None %}
+      <span class="mt-0.5 text-[0.7rem]" title="{% translate 'Change in points per game' %}">
+        {% include "nba/partials/change.html" with value=avg_change unit="points" %}<span class="sr-only"> {% translate "points per game" %}</span>
+      </span>
+    {% endif %}
+  </span>
+{% endif %}

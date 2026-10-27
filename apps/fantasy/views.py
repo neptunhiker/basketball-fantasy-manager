@@ -883,6 +883,7 @@ SQUAD_SORT_OPTIONS = [
     ("salary", _lazy("Actual salary")),
     ("difference", _lazy("Value")),
     ("avg", _lazy("Avg/game")),
+    ("latest", _lazy("Latest FP")),
     ("games", _lazy("Games")),
     ("hotness", _lazy("Hotness")),
     ("return", _lazy("Return")),
@@ -897,6 +898,7 @@ ROSTER_SORT_FIELDS = {
     "difference": lambda player: player.salary_difference_amount,
     "points": lambda player: player.current_total_fp,
     "avg": lambda player: player.current_fp_per_game,
+    "latest": lambda player: player.latest_fp_gain,
     "games": lambda player: player.current_games_played,
     "hotness": lambda player: _hotness_value(player.hotness_score()),
     "return": lambda player: player.expected_return,
@@ -956,6 +958,12 @@ def _build_context(request, roster):
             )
         else:
             player.salary_difference_amount = None
+        # The same two names `apps.nba.views.with_latest_fp_change` annotates,
+        # so the shared column template reads either. Snapshots come prefetched
+        # with the squad, so this costs no query.
+        change = player.latest_fp_change() or {}
+        player.latest_fp_gain = change.get("fp")
+        player.latest_avg_change = change.get("fp_per_game")
     _mark_kicked(request.user, [membership.player for membership in memberships])
     current_sort, current_dir, memberships = _sort_roster_memberships(request, memberships)
     trading_allowed = roster.season.trading_allowed

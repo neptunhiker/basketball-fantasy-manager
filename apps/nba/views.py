@@ -53,6 +53,7 @@ from .models import (
     Team,
     TeamNote,
     injury_state,
+    latest_fp_change,
 )
 from .salary_charts import salary_charts
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
@@ -99,6 +100,43 @@ def with_expected_salary(qs):
             F("predicted_salary_amount") - F("current_salary"),
             output_field=DecimalField(max_digits=20, decimal_places=2),
         )
+    )
+
+
+def with_latest_fp_change(qs):
+    """Annotate `latest_fp_gain` and `latest_avg_change` (both Decimal or None).
+
+    The database twin of `apps.nba.models.latest_fp_change`, so lists can sort
+    by it. The newest snapshot is mirrored on the `current_*` columns, so only
+    the one before it -- within the same season -- has to be looked up. Both are
+    NULL when there is no such snapshot, or when no game was played in between.
+    """
+    newest = PlayerSnapshot.objects.filter(player_id=OuterRef("pk")).order_by("-as_of")
+    previous = PlayerSnapshot.objects.filter(
+        player_id=OuterRef("pk"), season_id=OuterRef("latest_snapshot_season")
+    ).order_by("-as_of")[1:2]
+    points = DecimalField(max_digits=8, decimal_places=2)
+    qs = qs.annotate(
+        latest_snapshot_season=Subquery(newest.values("season_id")[:1]),
+    ).annotate(
+        previous_total_fp=Subquery(previous.values("total_fp"), output_field=points),
+        previous_fp_per_game=Subquery(previous.values("fp_per_game"), output_field=points),
+        previous_games_played=Subquery(previous.values("games_played")),
+    )
+    played = Q(current_games_played__gt=F("previous_games_played"))
+    return qs.annotate(
+        latest_fp_gain=Case(
+            When(played, then=F("current_total_fp") - F("previous_total_fp")),
+            default=None,
+            output_field=points,
+        ),
+        # NULL arithmetic does the rest: an average that did not exist before
+        # his first game leaves nothing to compare against.
+        latest_avg_change=Case(
+            When(played, then=F("current_fp_per_game") - F("previous_fp_per_game")),
+            default=None,
+            output_field=points,
+        ),
     )
 
 
@@ -258,6 +296,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
         "difference": [F("salary_difference_amount")],
         "points": [F("current_total_fp")],
         "avg": [F("current_fp_per_game")],
+        "latest": [F("latest_fp_gain")],
         "games": [F("current_games_played")],
         "hotness": [],
         "last_fp": [F("last_season_fp")],
@@ -349,6 +388,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
             qs = qs.filter(current_salary__lte=max_salary * 1_000_000)
 
         qs = with_expected_salary(qs)
+        qs = with_latest_fp_change(qs)
 
         sort, descending = self._sort_params()
         if sort == "hotness":
@@ -865,6 +905,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         "difference": [F("salary_difference_amount")],
         "points": [F("current_total_fp")],
         "avg": [F("current_fp_per_game")],
+        "latest": [F("latest_fp_gain")],
         "games": [F("current_games_played")],
         "hotness": [],
         "last_fp": [F("last_season_fp")],
@@ -931,6 +972,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         qs = with_last_season(qs, self._last_season())
 
         qs = with_expected_salary(qs)
+        qs = with_latest_fp_change(qs)
 
         sort, descending = self._sort_params()
         if sort == "hotness":
@@ -1103,6 +1145,11 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
         context["latest_injury"] = latest_injury
         context["injury_state"] = injury_state(latest_injury.status if latest_injury else None)
         context["hotness_score"] = self.object.hotness_score()
+        # The day of the read it is compared against, in local time: the tile
+        # says "since 26 Oct", and a read just after midnight is the next day.
+        if latest_change := latest_fp_change(snapshots):
+            latest_change["previous_on"] = timezone.localdate(latest_change["previous_as_of"])
+        context["latest_change"] = latest_change
         # Value: what his points per game would be worth, minus what he costs.
         predicted = self.object.predicted_salary
         context["salary_difference_amount"] = (

@@ -9,6 +9,8 @@
 {% translate "Avg/game" as avg_game_label %}
 {% translate "Games" as games_label %}
 {% translate "Hotness" as hotness_label %}
+{% translate "Latest FP" as latest_fp_label %}
+{% translate "Latest FP is what a player scored between the two newest snapshots, with the change in his points per game beneath it. A dash means he did not play in between; 0.0 means he played and scored nothing." as latest_fp_help %}
 {% translate "Return" as return_label %}
 {% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
 {% translate "Hotness shows how often a player's points per game went up after his recent games. We look at his last 10 games: each time his season average rose after a game, that counts as a rise. Days without a game don't count. Hot: a rise in at least 6 of 10 games. Cold: 4 or fewer. Steady: in between. With fewer than 3 games to compare, only the count is shown." as hotness_help %}
@@ -141,6 +143,12 @@
             <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="avg" label=avg_game_label align="right" first="desc" %}
             </th>
+            <th scope="col" class="whitespace-nowrap px-4 py-3 text-right font-medium">
+              <span class="inline-flex items-center gap-1">
+                {% include "nba/partials/sort_header.html" with key="latest" label=latest_fp_label align="right" first="desc" %}
+                {% include "partials/info_popover.html" with text=latest_fp_help label=latest_fp_label %}
+              </span>
+            </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="games" label=games_label align="right" first="desc" %}
             </th>
@@ -218,6 +226,9 @@
                 {{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}
               </td>
               <td class="px-4 py-3 text-right tabular-nums">
+                {% include "nba/partials/latest_fp.html" with gain=player.latest_fp_gain avg_change=player.latest_avg_change %}
+              </td>
+              <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_games_played|default_if_none:"–" }}
               </td>
               <td class="px-4 py-3 text-right tabular-nums">
@@ -247,6 +258,7 @@
     <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
       <strong class="font-medium">{{ value_label }}:</strong> {% translate "expected salary for his points per game minus actual salary — + means a bargain." %}
       <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his average rose over his last 10 games." %}
+      <strong class="ml-2 font-medium">{{ latest_fp_label }}:</strong> {% translate "points since the previous snapshot — – means no game." %}
       {% if last_season %}<strong class="ml-2 font-medium">{{ last_fp_label }}:</strong> {% translate "fantasy points per game last season, by this game's rules." %}{% endif %}
     </p>
 

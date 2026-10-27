@@ -1,5 +1,5 @@
 {% extends "app.html" %}
-{% load i18n money season_stats_tags %}
+{% load i18n money player_stats season_stats_tags %}
 
 {% block title %}{{ player.full_name }} · {{ SITE_NAME }}{% endblock %}
 {% block page_title %}{{ player.full_name }}{% endblock %}
@@ -170,9 +170,11 @@
 
     {% translate "Value" as value_label %}
     {% translate "Hotness" as hotness_label %}
+    {% translate "Latest FP" as latest_fp_label %}
+    {% translate "Latest FP is what a player scored between the two newest snapshots, with the change in his points per game beneath it. A dash means he did not play in between; 0.0 means he played and scored nothing." as latest_fp_help %}
     {% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
     {% translate "Hotness shows how often a player's points per game went up after his recent games. We look at his last 10 games: each time his season average rose after a game, that counts as a rise. Days without a game don't count. Hot: a rise in at least 6 of 10 games. Cold: 4 or fewer. Steady: in between. With fewer than 3 games to compare, only the count is shown." as hotness_help %}
-    <div class="grid grid-cols-2 gap-px border-t border-neutral-200 bg-neutral-200 sm:grid-cols-4 lg:grid-cols-7 dark:border-neutral-800 dark:bg-neutral-800">
+    <div class="grid grid-cols-2 gap-px border-t border-neutral-200 bg-neutral-200 sm:grid-cols-4 xl:grid-cols-8 dark:border-neutral-800 dark:bg-neutral-800">
       <div class="bg-white p-4 dark:bg-neutral-900">
         <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Current salary" %}</p>
         <p class="mt-1 text-lg font-bold tabular-nums" title="{{ player.current_salary|exact }}">
@@ -205,6 +207,33 @@
         <p class="mt-1 text-lg font-bold tabular-nums">
           {{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}
         </p>
+      </div>
+      {# Next to the average it moved: what the newest snapshot added. #}
+      <div class="bg-white p-4 dark:bg-neutral-900">
+        <p class="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+          {{ latest_fp_label }} {% include "partials/info_popover.html" with text=latest_fp_help label=latest_fp_label %}
+        </p>
+        {% if latest_change and latest_change.fp is not None %}
+          <p class="mt-1 text-lg font-bold tabular-nums {% if latest_change.fp < 0 %}text-rose-600 dark:text-rose-400{% endif %}">
+            {% if latest_change.fp > 0 %}+{% endif %}{{ latest_change.fp|floatformat:"1g" }}
+          </p>
+          {% if latest_change.fp_per_game is not None %}
+            <p class="mt-0.5 text-xs">
+              {% include "nba/partials/change.html" with value=latest_change.fp_per_game unit="points" %}
+              <span class="text-neutral-400 dark:text-neutral-500">{% translate "FP/G" %}</span>
+            </p>
+          {% endif %}
+          <p class="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">
+            {% blocktranslate with date=latest_change.previous_on|short_month_day %}since {{ date }}{% endblocktranslate %}
+          </p>
+        {% elif latest_change %}
+          <p class="mt-1 text-lg font-bold text-neutral-400 dark:text-neutral-500">–</p>
+          <p class="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">
+            {% blocktranslate with date=latest_change.previous_on|short_month_day %}No game since {{ date }}{% endblocktranslate %}
+          </p>
+        {% else %}
+          <p class="mt-1 text-lg font-bold text-neutral-400 dark:text-neutral-500">–</p>
+        {% endif %}
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">
         <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Points total" %}</p>

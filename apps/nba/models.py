@@ -72,6 +72,32 @@ def predict_salary(fantasy_points_per_game: float | Decimal) -> Decimal:
     return max(MIN_SALARY, salary).quantize(Decimal("0.01"))
 
 
+def latest_fp_change(snapshots):
+    """What a player scored between his two newest snapshots.
+
+    `snapshots` is newest first; only the first two are read. Returns None
+    unless both exist and belong to the same season -- a new season's first
+    snapshot starts from zero and is not a game's worth of points. Otherwise a
+    dict with `fp` (points gained), `fp_per_game` (how far the average moved),
+    `as_of` and `previous_as_of`.
+
+    No game in between leaves `fp` and `fp_per_game` None rather than 0: a rest
+    day is not a player who took the floor and scored nothing, and the screens
+    tell the two apart. The database twin is `apps.nba.views.with_latest_fp_change`.
+    """
+    if len(snapshots) < 2 or snapshots[0].season_id != snapshots[1].season_id:
+        return None
+    newer, older = snapshots[0], snapshots[1]
+    played = newer.games_played > older.games_played
+    averaged = played and newer.fp_per_game is not None and older.fp_per_game is not None
+    return {
+        "fp": newer.total_fp - older.total_fp if played else None,
+        "fp_per_game": newer.fp_per_game - older.fp_per_game if averaged else None,
+        "as_of": newer.as_of,
+        "previous_as_of": older.as_of,
+    }
+
+
 class Team(TimeStampedModel):
     """An NBA franchise."""
 
@@ -313,6 +339,19 @@ class Player(TimeStampedModel):
         if comparisons == 0:
             return None
         return f"{increases}/{comparisons}"
+
+    def latest_fp_change(self):
+        """What moved between his two newest snapshots; see `latest_fp_change`.
+
+        Reads the prefetched snapshots when a list brought them along, so a
+        roster of fifteen costs no query per row.
+        """
+        prefetched = getattr(self, "_prefetched_objects_cache", {}).get("snapshots")
+        if prefetched is not None:
+            snapshots = sorted(prefetched, key=lambda snapshot: snapshot.as_of, reverse=True)[:2]
+        else:
+            snapshots = list(self.snapshots.order_by("-as_of")[:2])
+        return latest_fp_change(snapshots)
 
     def save(self, *args, **kwargs):
         if not self.slug:

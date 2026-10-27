@@ -52,7 +52,7 @@
             </div>
           </div>
 
-          <dl class="mt-2 grid grid-cols-4 gap-2 text-xs">
+          <dl class="mt-2 grid grid-cols-3 gap-x-2 gap-y-2.5 text-xs sm:grid-cols-6">
             <div>
               <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Salary" %}</dt>
               <dd class="font-medium tabular-nums" title="{{ player.current_salary|exact }}">{{ player.current_salary|millions }}</dd>
@@ -64,6 +64,14 @@
             <div>
               <dt class="text-neutral-500 dark:text-neutral-400">{% translate "FP/G" %}</dt>
               <dd class="font-medium tabular-nums">{{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}</dd>
+            </div>
+            <div class="[&>dd>span]:items-start">
+              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Latest FP" %}</dt>
+              <dd class="tabular-nums">{% include "nba/partials/latest_fp.html" with gain=player.latest_fp_gain avg_change=player.latest_avg_change %}</dd>
+            </div>
+            <div>
+              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Games" %}</dt>
+              <dd class="font-medium tabular-nums">{{ player.current_games_played|default_if_none:"–" }}</dd>
             </div>
             <div class="[&>span]:items-start">
               <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Hotness" %}</dt>

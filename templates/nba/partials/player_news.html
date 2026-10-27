@@ -1,0 +1,32 @@
+{% load i18n %}
+{% comment %}
+  The player page's latest RotoWire news: five items, the rest of the twenty
+  loaded behind "Show more". Left out entirely for a player never in the news.
+  Context: player_news (newest first, at most 20).
+{% endcomment %}
+{% if player_news %}
+<div id="news" class="card overflow-hidden [scroll-margin-top:5rem]" x-data="{ more: false }">
+  <div class="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 sm:px-5 dark:border-neutral-800">
+    <div class="min-w-0">
+      <h2 class="text-sm font-semibold">{% translate "Latest news" %}</h2>
+      <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{% translate "From RotoWire, fetched every four hours." %}</p>
+    </div>
+    <a href="{% url 'nba:news' %}" class="btn btn-secondary shrink-0 !px-3 !py-1.5 text-xs">{% translate "All news" %}</a>
+  </div>
+  <ul class="divide-y divide-neutral-100 dark:divide-neutral-800/70">
+    {% for item in player_news %}
+      <li {% if forloop.counter > 5 %}x-show="more" x-cloak{% endif %}>
+        {% include "nba/partials/news_item.html" with on_player_page=True %}
+      </li>
+    {% endfor %}
+  </ul>
+  {% if player_news|length > 5 %}
+    <div class="border-t border-neutral-200 px-4 py-2 sm:px-5 dark:border-neutral-800" x-show="!more">
+      <button type="button" @click="more = true"
+              class="btn btn-ghost w-full !py-1.5 text-xs">
+        {% blocktranslate count count=player_news|length|add:"-5" %}Show {{ count }} more{% plural %}Show {{ count }} more{% endblocktranslate %}
+      </button>
+    </div>
+  {% endif %}
+</div>
+{% endif %}

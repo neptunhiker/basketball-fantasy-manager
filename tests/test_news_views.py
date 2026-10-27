@@ -296,3 +296,58 @@ def test_the_admin_lists_news_and_filters_the_unmatched(admin_client, teams):
     assert listing.status_code == 200
     assert list(listing.context["cl"].queryset) == [unmatched]
     assert detail.status_code == 200
+
+
+# -- the player page's news box --------------------------------------------------
+
+
+def detail_url(someone):
+    return reverse("nba:player-detail", args=[someone.slug])
+
+
+def test_the_player_page_shows_his_latest_news(signed_in, teams):
+    smart = player("Marcus", "Smart", teams["HOU"])
+    news("Questionable for Wednesday", player=smart, kind=PlayerNews.Kind.INJURY)
+    news("Somebody else's news")
+
+    response = signed_in.get(detail_url(smart))
+
+    assert [item.headline for item in response.context["player_news"]] == [
+        "Questionable for Wednesday"
+    ]
+    page = response.content.decode()
+    assert "Latest news" in page
+    assert "Somebody else&#x27;s news" not in page
+
+
+def test_a_player_never_in_the_news_has_no_news_box(signed_in, teams):
+    smart = player("Marcus", "Smart", teams["HOU"])
+
+    page = signed_in.get(detail_url(smart)).content.decode()
+
+    assert 'id="news"' not in page
+
+
+def test_the_news_box_folds_away_all_but_five(signed_in, teams):
+    smart = player("Marcus", "Smart", teams["HOU"])
+    for index in range(25):
+        news(f"Item {index}", player=smart)
+
+    response = signed_in.get(detail_url(smart))
+
+    assert len(response.context["player_news"]) == 20
+    assert response.context["player_news"][0].headline == "Item 24"
+    assert "Show 15 more" in response.content.decode()
+
+
+def test_the_news_box_costs_one_query_however_many_items(signed_in, teams):
+    smart = player("Marcus", "Smart", teams["HOU"])
+    news("Item", player=smart)
+    with CaptureQueriesContext(connection) as one:
+        signed_in.get(detail_url(smart))
+    for index in range(10):
+        news(f"Item {index}", player=smart)
+    with CaptureQueriesContext(connection) as eleven:
+        signed_in.get(detail_url(smart))
+
+    assert len(eleven) == len(one)

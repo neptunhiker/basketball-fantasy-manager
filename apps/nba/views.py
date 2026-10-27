@@ -1171,6 +1171,8 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
             "No private notes yet. Save one to remember your take on this player."
         )
         context["note"] = kwargs.get("note")
+        # RotoWire's latest on him: five shown, the rest behind "Show more".
+        context["player_news"] = list(self.object.news.all()[:20])
         # Oldest on the left, which is the opposite of the table below it: a
         # line is read forwards through the season, a table newest-first.
         # `fp_per_game` is already an average -- points over games played to

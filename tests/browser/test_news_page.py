@@ -11,7 +11,7 @@ from django.utils import timezone
 from apps.nba.models import PlayerNews
 from apps.nba.rotowire import sync_news
 
-from .conftest import page_overflow, shot
+from .conftest import SCREENS, page_overflow, shot
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "rotowire" / "news_nba.json"
 
@@ -68,3 +68,16 @@ def test_the_filters_narrow_the_list(news, open_page):
     page.wait_for_function("document.querySelectorAll('#news-feed article').length === 1")
     assert page_overflow(page) == 0
     shot(page, "news", "news-phone-my-rosters")
+
+
+@pytest.mark.parametrize("size", ["phone", "desktop"])
+def test_the_player_page_shows_his_news(news, open_page, size):
+    sengun = next(p for p in news["players"] if p.last_name == "Şengün")
+    page = open_page(news["user"], reverse("nba:player-detail", args=[sengun.slug]), size=size)
+
+    box = page.locator("#news")
+    assert box.get_by_role("heading", name="Latest news").is_visible()
+    assert box.locator("article").count() == 2
+    assert page_overflow(page) == 0
+    shot(page, "news", f"player-{size}")
+    box.screenshot(path=str(SCREENS / "news" / f"player-{size}-box.png"))

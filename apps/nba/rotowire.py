@@ -18,24 +18,12 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from .models import NbaApiUsage, Player, PlayerNews
+from .models import ROTOWIRE_TEAM_CODES, NbaApiUsage, Player, PlayerNews
 from .services import DailyApiLimitExceeded, NbaApiError, normalize_name
 
 logger = logging.getLogger(__name__)
 
 PROVIDER = "rotowire"
-
-# RotoWire's team codes where they are not ours. PHO is in the feed; the rest
-# are the other spellings the same family of feeds is known to use.
-FEED_TEAM_CODES = {
-    "PHO": "PHX",
-    "BRK": "BKN",
-    "CHO": "CHA",
-    "GS": "GSW",
-    "NY": "NYK",
-    "NO": "NOP",
-    "SA": "SAS",
-}
 
 # ".../headlines/yaxel-lendeborg-injury-iffy-for-wednesday-536364": the
 # player's name, the kind of item, the headline, and RotoWire's ID for it.
@@ -84,7 +72,7 @@ class ParsedNews:
 
     @property
     def team_code(self):
-        return FEED_TEAM_CODES.get(self.feed_team_abbreviation, self.feed_team_abbreviation)
+        return ROTOWIRE_TEAM_CODES.get(self.feed_team_abbreviation, self.feed_team_abbreviation)
 
 
 @dataclass(frozen=True)

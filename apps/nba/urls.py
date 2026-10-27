@@ -1,11 +1,12 @@
 from django.urls import path
 
-from . import season_stats_views, views
+from . import news_views, season_stats_views, views
 
 app_name = "nba"
 
 urlpatterns = [
     path("teams/", views.TeamListView.as_view(), name="team-list"),
+    path("news/", news_views.NewsListView.as_view(), name="news"),
     path(
         "teams/<slug:abbreviation>/notes/<uuid:note_pk>/edit/",
         views.TeamNoteEditView.as_view(),

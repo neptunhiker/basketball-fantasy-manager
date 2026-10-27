@@ -532,6 +532,19 @@ class NbaApiUsage(TimeStampedModel):
         return f"{self.provider} - {self.usage_date}: {self.request_count}"
 
 
+# RotoWire's team codes where they are not ours. PHO is in the feed; the rest
+# are the other spellings the same family of feeds is known to use.
+ROTOWIRE_TEAM_CODES = {
+    "PHO": "PHX",
+    "BRK": "BKN",
+    "CHO": "CHA",
+    "GS": "GSW",
+    "NY": "NYK",
+    "NO": "NOP",
+    "SA": "SAS",
+}
+
+
 class PlayerNews(TimeStampedModel):
     """One RotoWire news item about an NBA player.
 
@@ -559,8 +572,8 @@ class PlayerNews(TimeStampedModel):
     headline = models.CharField("Headline", max_length=255)
     body = models.TextField("Text", blank=True)
     url = models.URLField("Article", max_length=500)
-    # The feed dates an item but does not time it; `first_seen_at` orders the
-    # items of one day.
+    # The feed dates an item but does not time it. Within a day its IDs give
+    # the order: RotoWire numbers its items as it publishes them.
     published_on = models.DateField("Published on")
     first_seen_at = models.DateTimeField("First seen at", default=timezone.now)
     feed_player_id = models.PositiveIntegerField("Feed player ID", null=True, blank=True)
@@ -570,12 +583,12 @@ class PlayerNews(TimeStampedModel):
     raw_payload = models.JSONField("Raw provider payload", default=dict, blank=True)
 
     class Meta:
-        ordering = ["-published_on", "-first_seen_at", "-rotowire_news_id"]
+        ordering = ["-published_on", "-rotowire_news_id"]
         verbose_name = "Player news"
         verbose_name_plural = "Player news"
         indexes = [
             models.Index(fields=["player", "-published_on"]),
-            models.Index(fields=["-published_on", "-first_seen_at"]),
+            models.Index(fields=["-published_on", "-rotowire_news_id"]),
             models.Index(fields=["kind"]),
         ]
 
@@ -585,6 +598,12 @@ class PlayerNews(TimeStampedModel):
     @property
     def is_injury(self):
         return self.kind == self.Kind.INJURY
+
+    @property
+    def team_code(self):
+        """The team as we write it: "PHX" for the feed's "PHO"."""
+        code = self.feed_team_abbreviation
+        return ROTOWIRE_TEAM_CODES.get(code, code)
 
 
 class ImportRun(TimeStampedModel):

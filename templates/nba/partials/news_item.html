@@ -1,0 +1,60 @@
+{% load i18n %}
+{% comment %}
+  One RotoWire news item. Context: item (a PlayerNews). With `on_player_page`
+  the player's own page shows it: his name gives way to the item's date, since
+  that list is not grouped by day.
+{% endcomment %}
+<article class="flex gap-3 px-4 py-4 sm:gap-4 sm:px-5">
+  {# The kind at a glance: a red cross for an injury, a page for news. #}
+  <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full sm:h-9 sm:w-9
+    {% if item.is_injury %}bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400{% else %}bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-300{% endif %}"
+        aria-hidden="true">
+    {% if item.is_injury %}
+      <svg class="h-4 w-4 sm:h-4.5 sm:w-4.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 4h5v5.5H20v5h-5.5V20h-5v-5.5H4v-5h5.5V4Z"/>
+      </svg>
+    {% else %}
+      <svg class="h-4 w-4 sm:h-4.5 sm:w-4.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 4h11a1 1 0 0 1 1 1v13a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1Zm12 5h2a1 1 0 0 1 1 1v8a2 2 0 0 1-4 0M8 8h5M8 12h5M8 16h3"/>
+      </svg>
+    {% endif %}
+  </span>
+
+  <div class="min-w-0 flex-1">
+    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+      {% if on_player_page %}
+        <time datetime="{{ item.published_on|date:'Y-m-d' }}" class="text-xs font-medium text-neutral-500 dark:text-neutral-400">{{ item.published_on|date:"SHORT_DATE_FORMAT" }}</time>
+      {% elif item.player %}
+        <a href="{% url 'nba:player-detail' item.player.slug %}"
+           class="relative text-sm font-semibold text-primary-700 underline-offset-2 transition after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] hover:underline dark:text-primary-300">{{ item.player.full_name }}</a>
+      {% else %}
+        <span class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{{ item.feed_player_name }}</span>
+      {% endif %}
+      {% if not on_player_page %}
+        <span class="text-xs text-neutral-400 dark:text-neutral-500">
+          {% if item.feed_position %}{{ item.feed_position }} · {% endif %}{% if item.team_code == "FA" %}{% translate "Free agent" %}{% else %}{{ item.team_code }}{% endif %}
+        </span>
+      {% endif %}
+      {% if item.is_injury %}
+        <span class="badge bg-red-50 !py-0 text-red-700 dark:bg-red-500/10 dark:text-red-300">{% translate "Injury" %}</span>
+      {% endif %}
+      {% for roster_name in item.on_rosters %}
+        <span class="badge badge-pending !py-0 max-w-[10rem]" title="{% blocktranslate %}On your roster {{ roster_name }}{% endblocktranslate %}">
+          <span class="truncate">{{ roster_name }}</span>
+        </span>
+      {% endfor %}
+    </div>
+    <h3 class="mt-1 max-w-3xl text-[0.9375rem] font-semibold leading-snug text-neutral-900 dark:text-neutral-50">{{ item.headline }}</h3>
+    {% if item.body %}
+      <p class="mt-1 max-w-3xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">{{ item.body }}</p>
+    {% endif %}
+    <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer"
+       class="relative mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary-600 after:absolute after:-inset-2 after:content-[''] hover:underline dark:text-primary-300">
+      {% translate "Read on RotoWire" %}
+      <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>
+      </svg>
+      <span class="sr-only">({% translate "opens in a new tab" %})</span>
+    </a>
+  </div>
+</article>

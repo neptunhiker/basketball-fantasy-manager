@@ -4,6 +4,7 @@ from .models import (
     ImportRun,
     Player,
     PlayerInjury,
+    PlayerNews,
     PlayerSeasonStats,
     SeasonStatsImport,
     Team,
@@ -19,7 +20,15 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ["full_name", "position", "team", "is_active", "is_rookie", "bbde_id"]
+    list_display = [
+        "full_name",
+        "position",
+        "team",
+        "is_active",
+        "is_rookie",
+        "bbde_id",
+        "rotowire_id",
+    ]
     list_filter = ["position", "is_active", "is_rookie", "team"]
     search_fields = ["first_name", "last_name"]
     list_select_related = ["team"]
@@ -42,6 +51,58 @@ class PlayerInjuryAdmin(admin.ModelAdmin):
     autocomplete_fields = ["player"]
     date_hierarchy = "observed_at"
     ordering = ["-observed_at", "-created_at"]
+
+
+class MatchedFilter(admin.SimpleListFilter):
+    title = "matched"
+    parameter_name = "matched"
+
+    def lookups(self, request, model_admin):
+        return [("yes", "Linked to a player"), ("no", "Not linked")]
+
+    def queryset(self, request, queryset):
+        if self.value() == "yes":
+            return queryset.filter(player__isnull=False)
+        if self.value() == "no":
+            return queryset.filter(player__isnull=True)
+        return queryset
+
+
+@admin.register(PlayerNews)
+class PlayerNewsAdmin(admin.ModelAdmin):
+    """The RotoWire news log. Only the player link is meant to be edited: set it
+    by hand for an item the import could not place."""
+
+    list_display = [
+        "published_on",
+        "feed_player_name",
+        "feed_team_abbreviation",
+        "kind",
+        "headline",
+        "player",
+    ]
+    list_filter = [MatchedFilter, "kind", "feed_team_abbreviation"]
+    search_fields = ["feed_player_name", "headline", "body"]
+    list_select_related = ["player"]
+    autocomplete_fields = ["player"]
+    date_hierarchy = "published_on"
+    readonly_fields = [
+        "rotowire_news_id",
+        "kind",
+        "headline",
+        "body",
+        "url",
+        "published_on",
+        "first_seen_at",
+        "feed_player_id",
+        "feed_player_name",
+        "feed_team_abbreviation",
+        "feed_position",
+        "raw_payload",
+    ]
+
+    def has_add_permission(self, request):
+        return False
 
 
 @admin.register(ImportRun)

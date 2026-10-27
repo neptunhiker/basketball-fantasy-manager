@@ -1,0 +1,62 @@
+{% load i18n %}
+{# The part of the news page the filters swap: the items, grouped by day. #}
+<div id="news-feed">
+  {% if news %}
+    {% regroup news by published_on as days %}
+    {% for day in days %}
+      <section aria-labelledby="news-day-{{ day.grouper|date:'Ymd' }}">
+        <h2 id="news-day-{{ day.grouper|date:'Ymd' }}"
+            class="flex items-baseline justify-between gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-2 sm:px-5 dark:border-neutral-800 dark:bg-neutral-950/40 {% if not forloop.first %}border-t{% endif %}">
+          <span class="text-xs font-semibold uppercase tracking-wider text-tertiary-700 dark:text-neutral-200">
+            {% if day.grouper == today %}{% translate "Today" %}{% elif day.grouper == yesterday %}{% translate "Yesterday" %}{% else %}{{ day.grouper|date:"l" }}{% endif %}
+          </span>
+          <span class="flex items-baseline gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <time datetime="{{ day.grouper|date:'Y-m-d' }}">{{ day.grouper|date:"MONTH_DAY_FORMAT" }}</time>
+            <span aria-hidden="true">·</span>
+            <span class="tabular-nums">{% blocktranslate count count=day.list|length %}{{ count }} item{% plural %}{{ count }} items{% endblocktranslate %}</span>
+          </span>
+        </h2>
+        <ul class="divide-y divide-neutral-100 dark:divide-neutral-800/70">
+          {% for item in day.list %}
+            <li>{% include "nba/partials/news_item.html" %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endfor %}
+
+    {% if is_paginated %}
+      <div class="flex items-center justify-between gap-3 border-t border-neutral-200 px-4 py-3 text-sm text-neutral-500 sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
+        <span class="text-xs sm:text-sm">
+          {% blocktranslate with count=page_obj.paginator.count page=page_obj.number pages=page_obj.paginator.num_pages %}{{ count }} items · page {{ page }} of {{ pages }}{% endblocktranslate %}
+        </span>
+        <div class="flex shrink-0 gap-2">
+          {% if page_obj.has_previous %}
+            <a href="{% querystring page=page_obj.previous_page_number %}"
+               class="btn btn-secondary !px-3 !py-1.5 text-xs max-sm:h-10 max-sm:!px-4">{% translate "Previous" %}</a>
+          {% endif %}
+          {% if page_obj.has_next %}
+            <a href="{% querystring page=page_obj.next_page_number %}"
+               class="btn btn-secondary !px-3 !py-1.5 text-xs max-sm:h-10 max-sm:!px-4">{% translate "Next" %}</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="px-4 py-16 text-center">
+      <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-500 dark:bg-primary-500/10 dark:text-primary-300" aria-hidden="true">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 4h11a1 1 0 0 1 1 1v13a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1Zm12 5h2a1 1 0 0 1 1 1v8a2 2 0 0 1-4 0M8 8h5M8 12h5M8 16h3"/>
+        </svg>
+      </span>
+      {% if has_filters %}
+        <p class="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-200">{% translate "Nothing matches those filters." %}</p>
+        <a href="{{ request.path }}" class="btn btn-secondary mt-5 text-xs">{% translate "Show all news" %}</a>
+      {% else %}
+        <p class="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-200">{% translate "No news yet." %}</p>
+        <p class="mx-auto mt-1 max-w-sm text-sm text-neutral-500 dark:text-neutral-400">
+          {% translate "Player news from RotoWire is fetched every four hours and shows up here." %}
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,86 @@
+{% extends "app.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "News" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "News" %}{% endblock %}
+
+{% block content %}
+<div class="card overflow-hidden">
+  <div class="border-b border-neutral-200 px-4 py-3 sm:px-5 dark:border-neutral-800">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{% translate "Player news" %}</h2>
+      <span id="news-indicator" class="htmx-indicator text-xs text-neutral-500">{% translate "Loading" %}…</span>
+    </div>
+    <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+      {% translate "From RotoWire, fetched every four hours." %}
+      {% if last_pull %}
+        {% translate "Last update:" %} <time datetime="{{ last_pull|date:'c' }}">{{ last_pull|date:"SHORT_DATETIME_FORMAT" }}</time>
+      {% endif %}
+    </p>
+  </div>
+
+  {# Every change reloads the list below; the address keeps the filters, so #}
+  {# a reload or a shared link shows the same news. #}
+  <form class="border-b border-neutral-200 p-4 sm:px-5 dark:border-neutral-800"
+        hx-get="{{ request.path }}"
+        hx-trigger="change"
+        hx-target="#news-feed"
+        hx-swap="outerHTML"
+        hx-push-url="true"
+        hx-indicator="#news-indicator">
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-[auto_minmax(0,15rem)_minmax(0,15rem)] md:items-center">
+      {# All / Injuries / News as one segmented switch. Radios underneath, so #}
+      {# it is a plain form field to HTMX and arrow keys move between them. #}
+      <fieldset class="col-span-2 md:col-span-1 md:min-w-[19rem]">
+        <legend class="sr-only">{% translate "Kind of news" %}</legend>
+        <div class="grid grid-cols-3 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+          <label class="relative flex min-h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-neutral-600 transition has-[:checked]:bg-white has-[:checked]:text-tertiary-800 has-[:checked]:shadow-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary-500 dark:text-neutral-400 dark:has-[:checked]:bg-neutral-900 dark:has-[:checked]:text-neutral-50">
+            <input type="radio" name="kind" value="" class="sr-only" {% if not current_kind %}checked{% endif %}>
+            {% translate "All" %}
+          </label>
+          {% for value, label in kinds %}
+            <label class="relative flex min-h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium text-neutral-600 transition has-[:checked]:bg-white has-[:checked]:text-tertiary-800 has-[:checked]:shadow-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary-500 dark:text-neutral-400 dark:has-[:checked]:bg-neutral-900 dark:has-[:checked]:text-neutral-50">
+              <input type="radio" name="kind" value="{{ value }}" class="sr-only" {% if current_kind == value %}checked{% endif %}>
+              {% if value == "injury" %}
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" aria-hidden="true"></span>{% translate "Injuries" %}
+              {% else %}
+                {{ label }}
+              {% endif %}
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+
+      <div>
+        <label for="news-team" class="sr-only">{% translate "Team" %}</label>
+        <select id="news-team" name="team"
+                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+          <option value="">{% translate "All teams" %}</option>
+          {% for team in teams %}
+            <option value="{{ team.abbreviation }}" {% if request.GET.team == team.abbreviation %}selected{% endif %}>{{ team.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="news-roster" class="sr-only">{% translate "Roster" %}</label>
+        <select id="news-roster" name="roster"
+                class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base sm:text-sm shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+                {% if not rosters %}disabled title="{% translate 'You have no roster this season.' %}"{% endif %}>
+          <option value="">{% translate "All players" %}</option>
+          {% if rosters %}
+            <option value="{{ my_rosters }}" {% if request.GET.roster == my_rosters %}selected{% endif %}>{% translate "My rosters" %}</option>
+            {% if rosters|length > 1 %}
+              {% for roster in rosters %}
+                <option value="{{ roster.pk }}" {% if request.GET.roster == roster.pk|stringformat:'s' %}selected{% endif %}>{{ roster.name }} · {{ roster.manager.nick_name }}</option>
+              {% endfor %}
+            {% endif %}
+          {% endif %}
+        </select>
+      </div>
+    </div>
+  </form>
+
+  {% include "nba/partials/news_feed.html" %}
+</div>
+{% endblock %}

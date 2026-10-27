@@ -18,6 +18,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
+from apps.nba.stats import HOTNESS_GAMES
 
 # Injury report statuses that mean the player can play, compared casefolded.
 HEALTHY_INJURY_STATUSES = frozenset({"healthy", "available", "returned", "cleared"})
@@ -264,11 +265,16 @@ class Player(TimeStampedModel):
         return (self.expected_return - timezone.localdate()).days
 
     def hotness_score(self):
-        """Return how often the player's FP/game has improved recently.
+        """Return how often the player's FP/game rose after his recent games.
 
-        The newest eleven snapshots provide up to ten comparisons. Snapshots
-        are selected and ordered by ``as_of`` within the most recent season so
-        cumulative stats from different seasons are never compared.
+        Snapshots are written daily, but a player plays only every other day or
+        so: a day without a game leaves the average untouched and must not count
+        as a miss. So only snapshots where `games_played` went up are kept, and
+        the newest `HOTNESS_GAMES` + 1 of those give up to `HOTNESS_GAMES`
+        comparisons. Several games between two snapshots (a missed download) are
+        one comparison -- all we know is where the average ended up. Only the
+        most recent season is read, so cumulative stats from different seasons
+        are never compared.
         """
         prefetched = getattr(self, "_prefetched_objects_cache", {}).get("snapshots")
         if prefetched is not None:
@@ -277,22 +283,29 @@ class Player(TimeStampedModel):
         else:
             snapshot_query = self.snapshots.order_by("-as_of")
             latest = snapshot_query.first()
-            snapshots = snapshot_query.filter(season_id=latest.season_id)[:11] if latest else []
+            snapshots = snapshot_query.filter(season_id=latest.season_id) if latest else []
 
         if latest is None:
             return None
 
-        snapshots = [snapshot for snapshot in snapshots if snapshot.season_id == latest.season_id][
-            :11
+        snapshots = [
+            snapshot
+            for snapshot in reversed(snapshots)
+            if snapshot.season_id == latest.season_id and snapshot.fp_per_game is not None
         ]
-        snapshots.reverse()
+
+        # Oldest to newest: keep a snapshot only once more games have been
+        # played. Rest days drop out, and so does a source correcting the count
+        # downwards.
+        games = []
+        for snapshot in snapshots:
+            if not games or snapshot.games_played > games[-1].games_played:
+                games.append(snapshot)
+        games = games[-(HOTNESS_GAMES + 1) :]
 
         increases = 0
         comparisons = 0
-        for previous, current in pairwise(snapshots):
-            if previous.fp_per_game is None or current.fp_per_game is None:
-                continue
-
+        for previous, current in pairwise(games):
             comparisons += 1
             if current.fp_per_game > previous.fp_per_game:
                 increases += 1

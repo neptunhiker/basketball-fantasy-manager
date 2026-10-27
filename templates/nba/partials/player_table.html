@@ -11,7 +11,7 @@
 {% translate "Hotness" as hotness_label %}
 {% translate "Return" as return_label %}
 {% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
-{% translate "Hotness says how often his points per game rose from one weekly snapshot to the next (up to the last 10 comparisons). Hot: rising at least 6 times in 10. Cold: at most 4 in 10. With fewer than 3 comparisons only the count is shown." as hotness_help %}
+{% translate "Hotness shows how often a player's points per game went up after his recent games. We look at his last 10 games: each time his season average rose after a game, that counts as a rise. Days without a game don't count. Hot: a rise in at least 6 of 10 games. Cold: 4 or fewer. Steady: in between. With fewer than 3 games to compare, only the count is shown." as hotness_help %}
 {% translate "Watchlist" as watchlist_label %}
 {% if last_season %}
   {% blocktranslate with season=last_season_short asvar last_fp_label %}FP {{ season }}{% endblocktranslate %}
@@ -246,7 +246,7 @@
     {# The two derived columns, explained where every reader sees it. #}
     <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
       <strong class="font-medium">{{ value_label }}:</strong> {% translate "expected salary for his points per game minus actual salary — + means a bargain." %}
-      <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his points per game rose over the last weeks." %}
+      <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his average rose over his last 10 games." %}
       {% if last_season %}<strong class="ml-2 font-medium">{{ last_fp_label }}:</strong> {% translate "fantasy points per game last season, by this game's rules." %}{% endif %}
     </p>
 

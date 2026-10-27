@@ -70,9 +70,11 @@ DESCENDING_FIRST = frozenset(
 )
 
 
-# Hotness is "how often did points per game rise between consecutive weekly
-# snapshots", e.g. 3 of 7. Below MIN_COMPARISONS it is shown as the bare
-# fraction: two weeks do not make a trend, and a label would claim one.
+# Hotness is "after how many of his last HOTNESS_GAMES games did his points per
+# game rise", e.g. 3 of 7. Days without a game are not counted. Below
+# MIN_COMPARISONS it is shown as the bare fraction: two games do not make a
+# trend, and a label would claim one.
+HOTNESS_GAMES = 10
 HOT_SHARE = Decimal("0.6")
 COLD_SHARE = Decimal("0.4")
 MIN_COMPARISONS = 3

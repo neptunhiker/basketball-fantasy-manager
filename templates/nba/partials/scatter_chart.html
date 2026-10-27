@@ -160,9 +160,9 @@
         </div>
         {% if variant != "last" %}
         <div class="flex items-baseline justify-between gap-4">
-          <dt class="text-neutral-500 dark:text-neutral-400" title="{% translate 'Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)' %}">{% translate "Hotness" %}</dt>
+          <dt class="text-neutral-500 dark:text-neutral-400" title="{% translate 'Games, out of his last 10, after which his points per game went up' %}">{% translate "Hotness" %}</dt>
           <dd class="font-semibold tabular-nums text-neutral-900 dark:text-white"
-              title="{% translate 'Increases in fantasy points per game across consecutive recent snapshots (up to the last 10 comparisons)' %}"
+              title="{% translate 'Games, out of his last 10, after which his points per game went up' %}"
               x-text="selected?.hotness || '–'"></dd>
         </div>
         {% endif %}

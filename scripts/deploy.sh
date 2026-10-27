@@ -83,6 +83,11 @@ fi
 printf '\n'
 
 docker image prune -f >/dev/null
+# Cap the build cache at 2 GB; it otherwise grows with every build.
+# --keep-storage is the older name for --max-used-space.
+docker builder prune -f --max-used-space 2gb >/dev/null 2>&1 \
+    || docker builder prune -f --keep-storage 2gb >/dev/null 2>&1 \
+    || echo "Build cache prune failed, continuing" >&2
 
 echo "$ENV containers:"
 "${COMPOSE[@]}" ps

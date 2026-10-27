@@ -27,7 +27,12 @@ PROVIDER = "rotowire"
 
 # ".../headlines/yaxel-lendeborg-injury-iffy-for-wednesday-536364": the
 # player's name, the kind of item, the headline, and RotoWire's ID for it.
-HEADLINE_URL = re.compile(r"/headlines/.+?-(?P<kind>injury|news)(?:-.*)?-(?P<id>\d+)/?$")
+# Anchored to RotoWire's own address: the link goes on the page as an `href`,
+# where anything else -- a `javascript:` link above all -- has no business.
+HEADLINE_URL = re.compile(
+    r"^https://www\.rotowire\.com/basketball/headlines/"
+    r"[\w-]+?-(?P<kind>injury|news)(?:-[\w-]*)?-(?P<id>\d+)/?$"
+)
 
 MONTHS = {
     month: number
@@ -178,7 +183,7 @@ def parse_news(payload):
         if not isinstance(record, dict):
             continue
         url = _text(record.get("headlineUrl"))
-        match = HEADLINE_URL.search(url)
+        match = HEADLINE_URL.match(url)
         if not match:
             logger.warning("RotoWire item skipped, no ID in its link: %r", url)
             continue
@@ -276,12 +281,19 @@ def _parsed_from_row(row):
     )
 
 
-@transaction.atomic
 def sync_news(payload=None):
-    """Store one pull of the feed; fetch it first when no payload is given."""
+    """Store one pull of the feed; fetch it first when no payload is given.
+
+    The request is made before the transaction opens, so a pull that fails
+    to store still counts against the day's requests -- it was made.
+    """
     if payload is None:
         payload = fetch_news()
-    items = parse_news(payload)
+    return _store(parse_news(payload))
+
+
+@transaction.atomic
+def _store(items):
     matcher = PlayerMatcher()
 
     created = matched = 0

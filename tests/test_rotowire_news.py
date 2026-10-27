@@ -108,6 +108,21 @@ def test_an_item_without_an_id_in_its_link_is_skipped(payload, caplog):
     assert "no ID in its link" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "javascript:alert(1)//www.rotowire.com/basketball/headlines/x-news-y-536399",
+        "https://evil.example/basketball/headlines/x-news-y-536399",
+        "http://www.rotowire.com/basketball/headlines/x-news-y-536399",
+        "https://www.rotowire.com.evil.example/basketball/headlines/x-news-y-536399",
+    ],
+)
+def test_a_link_that_is_not_rotowire_s_is_skipped(payload, url):
+    payload["items"][0]["headlineUrl"] = url
+
+    assert 536367 not in {entry.rotowire_news_id for entry in parse_news(payload)}
+
+
 def test_a_headline_ending_in_a_number_keeps_the_items_id():
     entry = {
         "player": "Jerami Grant",
@@ -364,6 +379,22 @@ def test_fetch_sends_the_key_and_counts_the_request(db, api_key, payload, monkey
     assert request.full_url.endswith("/api/v1/news/nba")
     assert request.get_header("X-rapidapi-key") == "test-key"
     assert request.get_header("X-rapidapi-host") == "rotowire-fantasy-sports-api.p.rapidapi.com"
+    assert NbaApiUsage.objects.get(provider=PROVIDER).request_count == 1
+
+
+def test_a_pull_that_fails_to_store_still_counts_its_request(db, api_key, payload, monkeypatch):
+    monkeypatch.setattr(
+        rotowire, "urlopen", lambda request, timeout: FakeResponse(json.dumps(payload).encode())
+    )
+
+    def broken(items):
+        raise RuntimeError("disk full")
+
+    monkeypatch.setattr(rotowire, "_store", broken)
+
+    with pytest.raises(RuntimeError):
+        sync_news()
+
     assert NbaApiUsage.objects.get(provider=PROVIDER).request_count == 1
 
 

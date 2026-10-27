@@ -4429,3 +4429,11 @@ msgstr "Zum dunklen Design wechseln"
 
 #~ msgid "Roster value plus cash: your personal salary cap."
 #~ msgstr "Kaderwert plus Cash: dein persönlicher Salary Cap."
+
+#: templates/partials/import_banner.html:8
+msgid ""
+"Prices are being updated from basketball.de. Refresh in a minute to see the "
+"new values."
+msgstr ""
+"Die Preise werden gerade von basketball.de aktualisiert. Lade die Seite in "
+"einer Minute neu, um die neuen Werte zu sehen."

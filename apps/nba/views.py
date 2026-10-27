@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import (
     Case,
     Count,
@@ -514,6 +515,10 @@ def last_bbde_import():
 
 
 @method_decorator(sensitive_post_parameters("password"), name="dispatch")
+# Outside the request transaction, so the run's "running" row is visible to
+# everyone else -- for the banner and the one-import-at-a-time check -- while
+# it lasts. The import makes its own transaction for the writes.
+@method_decorator(transaction.non_atomic_requests, name="dispatch")
 class BbdeImportView(StaffRequiredMixin, View):
     """Staff import of the basketball.de player list, in a modal.
 

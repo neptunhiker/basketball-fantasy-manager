@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.utils import timezone
 
+from apps.nba.importer import import_in_progress
 from apps.nba.models import NbaApiUsage
 from apps.nba.services import PROVIDER, daily_limit_for
 
@@ -33,4 +34,7 @@ def site(request):
             latest_injury_api_usage.updated_at if latest_injury_api_usage else None
         ),
         "injury_refresh_available": injury_refresh_available,
+        # Passed uncalled: templates call it only where the banner is drawn,
+        # so partials and pages without it cost no query.
+        "bbde_import_running": import_in_progress,
     }

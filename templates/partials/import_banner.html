@@ -1,0 +1,11 @@
+{% load i18n %}
+{% if bbde_import_running %}
+  <div class="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300"
+       role="status">
+    <svg class="mt-0.5 h-4 w-4 shrink-0 animate-spin motion-reduce:animate-none" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v3a5 5 0 0 0-5 5H4Z"/>
+    </svg>
+    <span>{% translate "Prices are being updated from basketball.de. Refresh in a minute to see the new values." %}</span>
+  </div>
+{% endif %}

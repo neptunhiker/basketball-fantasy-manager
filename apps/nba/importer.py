@@ -57,6 +57,18 @@ class _DryRunRollback(Exception):
     """Raised inside the write transaction to undo a dry run."""
 
 
+def import_in_progress():
+    """Whether a real import is running now, for the banner on every page.
+
+    Dry runs are left out: they change nothing anyone could see.
+    """
+    return ImportRun.objects.filter(
+        status=ImportRun.Status.RUNNING,
+        dry_run=False,
+        started_at__gte=timezone.now() - RUNNING_TIMEOUT,
+    ).exists()
+
+
 def import_bbde(
     username,
     password,

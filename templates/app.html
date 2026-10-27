@@ -227,6 +227,7 @@
 
     <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-5xl space-y-6">
+        {% include "partials/import_banner.html" %}
         {% include "partials/messages.html" %}
         {% block content %}{% endblock %}
       </div>

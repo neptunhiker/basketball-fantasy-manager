@@ -494,6 +494,7 @@ class ImportRun(TimeStampedModel):
     class Source(models.TextChoices):
         WEB = "web", _("Web")
         COMMAND = "command", _("Command")
+        SCHEDULED = "scheduled", _("Scheduled")
 
     class Status(models.TextChoices):
         RUNNING = "running", _("Running")

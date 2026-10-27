@@ -1033,6 +1033,10 @@ msgstr "Web"
 msgid "Command"
 msgstr "Befehl"
 
+#: apps/nba/models.py:497
+msgid "Scheduled"
+msgstr "Geplant"
+
 #: apps/nba/models.py:499
 msgid "Running"
 msgstr "Läuft"

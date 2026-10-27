@@ -133,6 +133,11 @@ Q_CLUSTER = {
 
 SITE_NAME = "Pengi Fantasy Manager"
 
+# The basketball.de login for the daily scheduled import. Empty disables it;
+# the manual import in the app asks for a login and never uses these.
+BBDE_USERNAME = env("BBDE_USERNAME", default="")
+BBDE_PASSWORD = env("BBDE_PASSWORD", default="")
+
 RAPID_API_KEY = env("RAPID_API_KEY", default="")
 RAPID_API_HOST = env("RAPID_API_HOST", default="api-basketball-nba.p.rapidapi.com")
 RAPID_API_INJURIES_URL = env(

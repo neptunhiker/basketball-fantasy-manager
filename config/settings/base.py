@@ -150,6 +150,16 @@ RAPID_API_TIMEOUT = env.int("RAPID_API_TIMEOUT", default=15)
 RAPID_API_DAILY_LIMIT = 1
 RAPID_API_SUPERUSER_DAILY_LIMIT = 5
 
+# RotoWire player news, on the same RapidAPI account as the injury feed above.
+# The free plan stops at 500 requests a month; the schedule makes six a day,
+# and the daily limit leaves two for a manual run.
+ROTOWIRE_HOST = env("ROTOWIRE_HOST", default="rotowire-fantasy-sports-api.p.rapidapi.com")
+ROTOWIRE_NEWS_URL = env(
+    "ROTOWIRE_NEWS_URL",
+    default="https://rotowire-fantasy-sports-api.p.rapidapi.com/api/v1/news/nba",
+)
+ROTOWIRE_DAILY_LIMIT = 8
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

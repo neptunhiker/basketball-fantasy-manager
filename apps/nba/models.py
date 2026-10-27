@@ -178,6 +178,16 @@ class Player(TimeStampedModel):
         blank=True,
         help_text="Set by the import. Fill in by hand to link a player the import could not match.",
     )
+    # RotoWire's number for the player, from their news feed. Stored on the
+    # first match by name and team, so a later trade or a "Jr." on one side
+    # does not lose the link. Empty until the player has been in the news.
+    rotowire_id = models.PositiveIntegerField(
+        "RotoWire ID",
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Set by the news import. Fill in by hand to link unmatched news.",
+    )
     is_rookie = models.BooleanField(
         "Rookie",
         default=False,
@@ -520,6 +530,63 @@ class NbaApiUsage(TimeStampedModel):
 
     def __str__(self):
         return f"{self.provider} - {self.usage_date}: {self.request_count}"
+
+
+class PlayerNews(TimeStampedModel):
+    """One RotoWire news item about an NBA player.
+
+    The feed only ever shows its newest 25 items, so every item is kept once
+    seen. `rotowire_news_id` is what makes a second pull of the same items an
+    update instead of a copy. `player` stays empty while nobody here matches;
+    the `feed_*` columns keep what RotoWire said so a later import can retry.
+    """
+
+    class Kind(models.TextChoices):
+        INJURY = "injury", _("Injury")
+        NEWS = "news", _("News")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    rotowire_news_id = models.PositiveIntegerField("RotoWire news ID", unique=True)
+    player = models.ForeignKey(
+        Player,
+        verbose_name="Player",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="news",
+    )
+    kind = models.CharField("Kind", max_length=8, choices=Kind, default=Kind.NEWS)
+    headline = models.CharField("Headline", max_length=255)
+    body = models.TextField("Text", blank=True)
+    url = models.URLField("Article", max_length=500)
+    # The feed dates an item but does not time it; `first_seen_at` orders the
+    # items of one day.
+    published_on = models.DateField("Published on")
+    first_seen_at = models.DateTimeField("First seen at", default=timezone.now)
+    feed_player_id = models.PositiveIntegerField("Feed player ID", null=True, blank=True)
+    feed_player_name = models.CharField("Feed player name", max_length=160)
+    feed_first_name = models.CharField("Feed first name", max_length=64, blank=True)
+    feed_last_name = models.CharField("Feed last name", max_length=64, blank=True)
+    feed_team_abbreviation = models.CharField("Feed team", max_length=8, blank=True)
+    feed_position = models.CharField("Feed position", max_length=8, blank=True)
+    raw_payload = models.JSONField("Raw provider payload", default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-published_on", "-first_seen_at", "-rotowire_news_id"]
+        verbose_name = "Player news"
+        verbose_name_plural = "Player news"
+        indexes = [
+            models.Index(fields=["player", "-published_on"]),
+            models.Index(fields=["-published_on", "-first_seen_at"]),
+            models.Index(fields=["kind"]),
+        ]
+
+    def __str__(self):
+        return f"{self.feed_player_name}: {self.headline}"
+
+    @property
+    def is_injury(self):
+        return self.kind == self.Kind.INJURY
 
 
 class ImportRun(TimeStampedModel):

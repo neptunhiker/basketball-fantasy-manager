@@ -44,6 +44,7 @@ from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbd
 from .models import (
     DAY_TO_DAY_INJURY_STATUSES,
     HEALTHY_INJURY_STATUSES,
+    MIN_SALARY,
     ImportRun,
     Player,
     PlayerInjury,
@@ -62,7 +63,8 @@ def with_expected_salary(qs):
     """Annotate `predicted_salary_amount` and `salary_difference_amount` (Value).
 
     The database twin of `apps.nba.models.predict_salary`, so lists can sort by
-    it: the same polynomial on points per game, in millions, never below zero.
+    it: the same polynomial on points per game, in millions, never below
+    `MIN_SALARY`.
     One copy only -- three hand-kept ones once drifted, with the constant term
     written as 4.668975 instead of 0.4668975, which put every expected salary
     $4.2M too high in the lists while the player page showed the right figure.
@@ -79,11 +81,15 @@ def with_expected_salary(qs):
         millions * Value(Decimal("1000000")),
         output_field=DecimalField(max_digits=20, decimal_places=2),
     )
+    minimum = Value(MIN_SALARY * Decimal("1000000"))
     return qs.annotate(
         predicted_salary_amount=Case(
+            # Negative points per game get the minimum outright, as in
+            # `predict_salary`: the polynomial climbs again left of zero.
+            When(current_fp_per_game__lt=0, then=minimum),
             When(
                 current_fp_per_game__isnull=False,
-                then=Greatest(Value(Decimal("0.00")), expected),
+                then=Greatest(minimum, expected),
             ),
             output_field=DecimalField(max_digits=20, decimal_places=2),
         )

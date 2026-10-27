@@ -29,6 +29,10 @@ HEALTHY = "healthy"
 DAY_TO_DAY = "day_to_day"
 INJURED = "injured"
 
+# The game's minimum salary, in millions: no player is ever priced below it,
+# so no expected salary is either.
+MIN_SALARY = Decimal("0.50")
+
 
 def injury_state(status):
     """`HEALTHY`, `DAY_TO_DAY` or `INJURED` for an injury report's status.
@@ -44,14 +48,17 @@ def injury_state(status):
 
 
 def predict_salary(fantasy_points_per_game: float | Decimal) -> Decimal:
-    """Return the expected salary in millions for a fantasy scoring rate."""
+    """Return the expected salary in millions for a fantasy scoring rate.
+
+    Never below `MIN_SALARY`: the polynomial dips under it for low scorers.
+    """
     if isinstance(fantasy_points_per_game, Decimal):
         x = fantasy_points_per_game
     else:
         x = Decimal(str(fantasy_points_per_game))
 
     if x < 0:
-        return Decimal("0.00")
+        return MIN_SALARY
 
     salary = (
         Decimal("8.753479e-6") * x**4
@@ -61,7 +68,7 @@ def predict_salary(fantasy_points_per_game: float | Decimal) -> Decimal:
         + Decimal("4.668975e-1")
     )
 
-    return max(Decimal("0.00"), salary).quantize(Decimal("0.01"))
+    return max(MIN_SALARY, salary).quantize(Decimal("0.01"))
 
 
 class Team(TimeStampedModel):

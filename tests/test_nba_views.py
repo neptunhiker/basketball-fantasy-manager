@@ -458,7 +458,41 @@ def test_predict_salary_matches_formula_and_floor():
     from apps.nba.models import predict_salary
 
     assert predict_salary(Decimal("20")) == Decimal("6.08")
-    assert predict_salary(Decimal("-1")) == Decimal("0.00")
+    assert predict_salary(Decimal("-1")) == Decimal("0.50")
+
+
+@pytest.mark.parametrize("fp_per_game", ["-5", "0", "1", "2.5", 0, 1.0])
+def test_predict_salary_never_below_the_minimum_salary(fp_per_game):
+    """The game's minimum salary is 0.5M; the polynomial dips under it below ~2.5 FP."""
+    from apps.nba.models import MIN_SALARY, predict_salary
+
+    assert Decimal("0.50") == MIN_SALARY
+    assert predict_salary(fp_per_game) == MIN_SALARY
+
+
+def test_predict_salary_above_the_minimum_is_untouched():
+    from apps.nba.models import MIN_SALARY, predict_salary
+
+    assert predict_salary(Decimal("10")) > MIN_SALARY
+    assert predict_salary(Decimal("10")) == Decimal("2.18")
+
+
+@pytest.mark.parametrize("fp_per_game", ["-3.00", "0.00", "1.00"])
+def test_the_list_floors_at_the_minimum_salary(db, fp_per_game):
+    """The database formula applies the same 0.5M floor as `predict_salary`."""
+    from apps.nba.views import with_expected_salary
+
+    player = Player.objects.create(
+        first_name="T",
+        last_name="Floor",
+        position="C",
+        current_salary=500_000,
+        current_fp_per_game=Decimal(fp_per_game),
+    )
+    row = with_expected_salary(Player.objects.filter(pk=player.pk)).get()
+
+    assert row.predicted_salary_amount == Decimal("500000")
+    assert row.salary_difference_amount == Decimal("0")
 
 
 def test_player_predicted_salary_uses_current_points_per_game(db):
@@ -613,7 +647,7 @@ def test_empty_state_mentions_the_missing_import(signed_in, teams):
     assert "basketball.de" in body
 
 
-@pytest.mark.parametrize("fp_per_game", ["5.00", "14.00", "27.50", "42.00"])
+@pytest.mark.parametrize("fp_per_game", ["0.00", "1.00", "5.00", "14.00", "27.50", "42.00"])
 def test_the_list_values_match_the_player_page(db, fp_per_game):
     """The database formula and `predict_salary` must agree.
 

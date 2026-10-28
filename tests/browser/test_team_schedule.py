@@ -6,10 +6,11 @@ import random
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from playwright.sync_api import expect
 
 from apps.nba.models import Game
 
-from .conftest import page_overflow, shot
+from .conftest import SCREENS, page_overflow, shot
 
 
 def make_schedule(game, days_back=40, days_ahead=60):
@@ -66,3 +67,66 @@ def test_the_team_list_ranks_by_games_this_week(scheduled, open_page):
     assert counts == sorted(counts, reverse=True)
     assert page_overflow(page) == 0
     shot(page, "team-schedule", "teams-tablet-by-week")
+
+
+def team_url(team):
+    return reverse("nba:team-detail", args=[team.abbreviation.lower()])
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+def test_the_team_page_shows_its_schedule_at_every_width(scheduled, open_page, size):
+    team = scheduled["teams"][0]
+    page = open_page(scheduled["user"], team_url(team), size=size)
+
+    box = page.locator("#schedule")
+    assert box.get_by_role("heading", name="Schedule").is_visible()
+    assert box.get_by_role("heading", name="Coming up").is_visible()
+    assert box.locator("li:visible").count() == 10
+    assert page_overflow(page) == 0
+    box.screenshot(path=str(SCREENS / "team-schedule" / f"team-box-{size}.png"))
+    shot(page, "team-schedule", f"team-{size}")
+
+
+@pytest.mark.parametrize("size", ["phone", "desktop"])
+def test_the_team_page_in_dark_mode(scheduled, open_page, size):
+    team = scheduled["teams"][0]
+    page = open_page(scheduled["user"], team_url(team), size=size, dark=True)
+
+    assert page_overflow(page) == 0
+    page.locator("#schedule").screenshot(
+        path=str(SCREENS / "team-schedule" / f"team-box-{size}-dark.png")
+    )
+
+
+def test_the_full_season_opens_and_closes(scheduled, open_page):
+    team = scheduled["teams"][0]
+    total = Game.objects.for_team(team).count()
+    page = open_page(scheduled["user"], team_url(team), size="phone")
+    box = page.locator("#schedule")
+
+    box.get_by_role("button", name=f"Show full season ({total} games)").click()
+    expect(box.locator("li:visible")).to_have_count(total)
+    assert page_overflow(page) == 0
+    box.screenshot(path=str(SCREENS / "team-schedule" / "team-box-phone-full.png"))
+
+    box.get_by_role("button", name="Show fewer").click()
+    expect(box.locator("li:visible")).to_have_count(10)
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet"])
+def test_both_pages_in_german(scheduled, open_page, size):
+    user = scheduled["user"]
+    user.language = "de"
+    user.save(update_fields=["language"])
+    team = scheduled["teams"][0]
+
+    teams = open_page(user, reverse("nba:team-list"), size=size)
+    assert teams.get_by_role("link", name="Offen").is_visible()
+    assert page_overflow(teams) == 0
+    shot(teams, "team-schedule", f"teams-{size}-de")
+
+    page = open_page(user, team_url(team), size=size)
+    box = page.locator("#schedule")
+    assert box.get_by_role("heading", name="Spielplan").is_visible()
+    assert page_overflow(page) == 0
+    box.screenshot(path=str(SCREENS / "team-schedule" / f"team-box-{size}-de.png"))

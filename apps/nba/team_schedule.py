@@ -16,6 +16,8 @@ from .models import GAME_LENGTH, REGULAR_SEASON_GAMES, Game
 
 # What "the next days" means on the team pages.
 NEXT_DAYS = 7
+# How many games the team page lists before "Show full season".
+UPCOMING_GAMES = 10
 
 
 @dataclass

@@ -202,3 +202,71 @@ def test_the_team_list_costs_the_same_however_many_games(signed_in, teams, seaso
         signed_in.get(TEAM_LIST)
 
     assert len(many) == len(few)
+
+
+# -- the team page ---------------------------------------------------------------
+
+
+def team_page(client, team):
+    return client.get(reverse("nba:team-detail", args=[team.abbreviation.lower()]))
+
+
+def test_the_team_page_shows_the_schedule_box(signed_in, teams, season):
+    bos, lal = teams["BOS"], teams["LAL"]
+    game(bos, lal, hours(-48), season)
+    for day in range(12):
+        game(lal if day % 2 else bos, bos if day % 2 else lal, hours(24 * day + 5), season)
+
+    response = team_page(signed_in, bos)
+
+    assert response.context["team_schedule"].played == 1
+    assert len(response.context["upcoming_rows"]) == 10
+    assert len(response.context["schedule_rows"]) == 13
+    page = response.content.decode()
+    assert 'id="schedule"' in page
+    assert "1 of 82 games played" in page
+    assert "Show full season (13 games)" in page
+    assert f'href="{reverse("nba:team-detail", args=["lal"])}"' in page
+
+
+def test_the_rows_know_home_away_and_played(signed_in, teams, season):
+    bos, lal = teams["BOS"], teams["LAL"]
+    game(bos, lal, hours(-48), season)
+    game(lal, bos, hours(30), season, note="NBA Cup - Group Play")
+
+    rows = team_page(signed_in, bos).context["schedule_rows"]
+
+    assert [(row["home"], row["played"], row["opponent"]) for row in rows] == [
+        (True, True, lal),
+        (False, False, lal),
+    ]
+    assert rows[1]["game"].is_nba_cup
+
+
+def test_without_a_schedule_the_team_page_has_no_box(signed_in, teams, season):
+    response = team_page(signed_in, teams["BOS"])
+
+    assert response.context["team_schedule"] is None
+    assert 'id="schedule"' not in response.content.decode()
+
+
+def test_a_team_whose_season_is_over_lists_no_more_games(signed_in, teams, season):
+    bos, lal = teams["BOS"], teams["LAL"]
+    game(bos, lal, hours(-48), season)
+
+    page = team_page(signed_in, bos).content.decode()
+
+    assert "No more games on the schedule this season." in page
+
+
+def test_the_team_page_costs_the_same_however_many_games(signed_in, teams, season):
+    bos, lal = teams["BOS"], teams["LAL"]
+    game(bos, lal, hours(-24), season)
+    with CaptureQueriesContext(connection) as few:
+        team_page(signed_in, bos)
+    for day in range(40):
+        game(lal, bos, hours(24 * (day - 20) + 5), season)
+    with CaptureQueriesContext(connection) as many:
+        team_page(signed_in, bos)
+
+    assert len(many) == len(few)

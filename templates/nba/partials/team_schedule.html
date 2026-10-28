@@ -1,0 +1,84 @@
+{% load i18n %}
+{% comment %}
+  The team page's schedule box: games played and left over a bar of the
+  season, the next seven days and the next game, then the next ten games and,
+  behind "Show full season", every game by month. Left out until a schedule
+  is loaded. Context: from apps.nba.views.team_schedule_context.
+{% endcomment %}
+{% if team_schedule %}
+<section id="schedule" class="card overflow-hidden [scroll-margin-top:5rem]" x-data="{ full: false }" aria-labelledby="schedule-heading">
+  <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-b border-neutral-200 px-4 py-3 sm:px-5 dark:border-neutral-800">
+    <h2 id="schedule-heading" class="text-sm font-semibold">{% translate "Schedule" %}</h2>
+    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+      {% blocktranslate with season=schedule_season.label %}Regular season {{ season }} · Berlin time{% endblocktranslate %}
+    </p>
+  </div>
+
+  {# The figures: four tiles, two by two on a phone. #}
+  <div class="grid grid-cols-2 divide-neutral-200 border-b border-neutral-200 sm:grid-cols-4 sm:divide-x dark:divide-neutral-800 dark:border-neutral-800">
+    <div class="border-b border-r border-neutral-200 px-4 py-4 sm:border-0 sm:px-5 dark:border-neutral-800">
+      <p class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Played" %}</p>
+      <p class="mt-1 text-2xl font-bold tabular-nums">{{ team_schedule.played }}</p>
+    </div>
+    <div class="border-b border-neutral-200 px-4 py-4 sm:border-0 sm:px-5 dark:border-neutral-800">
+      <p class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "To go" %}</p>
+      <p class="mt-1 text-2xl font-bold tabular-nums text-primary-700 dark:text-primary-300">{{ team_schedule.left }}</p>
+    </div>
+    <div class="border-r border-neutral-200 px-4 py-4 sm:border-0 sm:px-5 dark:border-neutral-800">
+      <p class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% blocktranslate count days=next_days %}Next {{ days }} day{% plural %}Next {{ days }} days{% endblocktranslate %}</p>
+      <p class="mt-1 flex items-baseline gap-1.5">
+        <span class="text-2xl font-bold tabular-nums {% if team_schedule.next_days >= 4 %}text-emerald-700 dark:text-emerald-300{% endif %}">{{ team_schedule.next_days }}</span>
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate count count=team_schedule.next_days %}game{% plural %}games{% endblocktranslate %}</span>
+      </p>
+    </div>
+    <div class="px-4 py-4 sm:px-5">
+      <p class="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Next game" %}</p>
+      <p class="mt-2 text-sm">{% include "nba/partials/next_game.html" with schedule=team_schedule link_opponent=True compact=True %}</p>
+    </div>
+  </div>
+
+  {# The season so far, as a bar. #}
+  <div class="border-b border-neutral-200 px-4 py-3 sm:px-5 dark:border-neutral-800">
+    <div class="flex items-baseline justify-between text-xs text-neutral-500 dark:text-neutral-400">
+      <span>{% blocktranslate with played=team_schedule.played %}{{ played }} of 82 games played{% endblocktranslate %}</span>
+      <span class="tabular-nums">{{ team_schedule.progress }}%</span>
+    </div>
+    <div class="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800" role="progressbar"
+         aria-valuemin="0" aria-valuemax="82" aria-valuenow="{{ team_schedule.played }}" aria-label="{% translate 'Season played' %}">
+      <div class="h-full rounded-full bg-gradient-to-r from-primary-500 to-secondary-500" style="width: {{ team_schedule.progress }}%"></div>
+    </div>
+  </div>
+
+  {# The next games; the whole season instead once opened. #}
+  <div x-show="!full">
+    <h3 class="px-4 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-tertiary-700 sm:px-5 dark:text-neutral-200">{% translate "Coming up" %}</h3>
+    {% if upcoming_rows %}
+      <ul class="divide-y divide-neutral-100 dark:divide-neutral-800/70">
+        {% for row in upcoming_rows %}{% include "nba/partials/schedule_row.html" %}{% endfor %}
+      </ul>
+    {% else %}
+      <p class="px-4 pb-5 pt-2 text-sm text-neutral-500 sm:px-5 dark:text-neutral-400">{% translate "No more games on the schedule this season." %}</p>
+    {% endif %}
+  </div>
+
+  <div x-show="full" x-cloak>
+    {% regroup schedule_rows by month as months %}
+    {% for month in months %}
+      <h3 class="border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-tertiary-700 sm:px-5 dark:border-neutral-800 dark:bg-neutral-950/40 dark:text-neutral-200 {% if not forloop.first %}border-t{% endif %}">
+        {{ month.grouper|date:"F Y" }}
+      </h3>
+      <ul class="divide-y divide-neutral-100 dark:divide-neutral-800/70">
+        {% for row in month.list %}{% include "nba/partials/schedule_row.html" %}{% endfor %}
+      </ul>
+    {% endfor %}
+  </div>
+
+  <div class="border-t border-neutral-200 px-4 py-2 sm:px-5 dark:border-neutral-800">
+    <button type="button" @click="full = !full; if (!full) $el.closest('section').scrollIntoView({ block: 'start' })"
+            class="btn btn-ghost w-full !py-1.5 text-xs" :aria-expanded="full.toString()">
+      <span x-show="!full">{% blocktranslate count count=schedule_rows|length %}Show full season ({{ count }} game){% plural %}Show full season ({{ count }} games){% endblocktranslate %}</span>
+      <span x-show="full" x-cloak>{% translate "Show fewer" %}</span>
+    </button>
+  </div>
+</section>
+{% endif %}

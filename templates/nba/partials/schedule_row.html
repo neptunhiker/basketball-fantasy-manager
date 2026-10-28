@@ -1,0 +1,50 @@
+{% load i18n %}
+{% comment %}
+  One game in a team's schedule: when (Berlin time), home or away, the
+  opponent, and what it is -- played, live, today, NBA Cup. Context: row (from
+  apps.nba.views.team_schedule_context), today, tomorrow.
+{% endcomment %}
+{% with game=row.game opponent=row.opponent %}
+<li class="relative flex items-center gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 {% if row.played %}text-neutral-400 dark:text-neutral-500{% endif %}">
+  {% if game.tip_off|date:"Ymd" == today|date:"Ymd" and not row.played %}
+    <span class="absolute inset-y-0 left-0 w-1 bg-primary-500 dark:bg-primary-400" aria-hidden="true"></span>
+  {% endif %}
+  <time datetime="{{ game.tip_off|date:'c' }}" class="w-[5.5rem] shrink-0 tabular-nums sm:w-28">
+    <span class="block text-sm font-medium {% if not row.played %}text-neutral-900 dark:text-neutral-100{% endif %}">
+      {% if game.tip_off|date:"Ymd" == today|date:"Ymd" %}{% translate "Today" %}{% elif game.tip_off|date:"Ymd" == tomorrow|date:"Ymd" %}{% translate "Tomorrow" %}{% else %}{{ game.tip_off|date:"D j.n." }}{% endif %}
+    </span>
+    <span class="block text-xs {% if not row.played %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ game.tip_off|date:"H:i" }}</span>
+  </time>
+
+  <span class="inline-flex h-6 w-9 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold uppercase tracking-wide
+               {% if row.played %}bg-neutral-100 dark:bg-neutral-800{% elif row.home %}bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300{% else %}bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300{% endif %}"
+        title="{% if row.home %}{% translate 'Home game' %}{% else %}{% translate 'Away game' %}{% endif %}">
+    {% if row.home %}{% translate "vs" %}{% else %}@{% endif %}
+  </span>
+
+  <a href="{% url 'nba:team-detail' opponent.abbreviation|lower %}" class="group flex min-w-0 flex-1 items-center gap-2.5">
+    <span class="hidden w-9 shrink-0 text-xs font-semibold tracking-wide sm:inline {% if not row.played %}text-neutral-700 dark:text-neutral-200{% endif %}">{{ opponent.abbreviation }}</span>
+    <span class="truncate text-sm group-hover:text-primary-600 group-hover:underline dark:group-hover:text-primary-400 {% if not row.played %}text-neutral-800 dark:text-neutral-100{% endif %}">{{ opponent.name }}</span>
+  </a>
+
+  <span class="flex shrink-0 items-center gap-2">
+    {% if game.is_nba_cup %}
+      <span class="hidden rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 sm:inline dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/30">{% translate "NBA Cup" %}</span>
+      <span class="h-2 w-2 rounded-full bg-amber-400 sm:hidden" title="{% translate 'NBA Cup' %}" aria-label="{% translate 'NBA Cup' %}"></span>
+    {% endif %}
+    {% if row.live %}
+      <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700 dark:text-red-300">
+        <span class="relative flex h-2 w-2" aria-hidden="true">
+          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75 motion-reduce:animate-none"></span>
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+        </span>
+        {% translate "Live" %}
+      </span>
+    {% elif row.played %}
+      <svg class="h-4 w-4 text-neutral-300 dark:text-neutral-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-label="{% translate 'Played' %}" role="img">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7"/>
+      </svg>
+    {% endif %}
+  </span>
+</li>
+{% endwith %}

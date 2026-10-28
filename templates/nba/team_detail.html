@@ -31,6 +31,8 @@
     </div>
   </div>
 
+  {% include "nba/partials/team_schedule.html" %}
+
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {% for card in cards %}
       {% include "nba/partials/stat_card.html" %}

@@ -37,7 +37,7 @@ from django.views.generic import DetailView, ListView
 from apps.core.dates import local_date
 from apps.core.views import ConfirmView, StaffRequiredMixin
 from apps.fantasy import services
-from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
+from apps.fantasy.models import PlayerSnapshot, Roster, Season, WatchlistEntry
 from apps.fantasy.views import player_roster_options
 
 from . import charts, stats
@@ -67,7 +67,7 @@ from .services import (
     sync_injuries,
 )
 from .stats import DESCENDING_FIRST
-from .team_schedule import NEXT_DAYS, team_schedules
+from .team_schedule import NEXT_DAYS, UPCOMING_GAMES, season_games, team_schedules
 
 
 def with_expected_salary(qs):
@@ -936,6 +936,41 @@ def _coverage(summary, total):
     ) % {"n": summary["n"], "total": total}
 
 
+def team_schedule_context(team, now=None):
+    """The team page's schedule box: the figures, the next games, the season.
+
+    One query: the team's games this season, from which the figures are
+    counted the same way as on the team list.
+    """
+    now = now or timezone.now()
+    season = Season.objects.filter(is_current=True).first()
+    games = list(season_games(season).for_team(team)) if season else []
+    if not games:
+        return {"team_schedule": None}
+    summary = team_schedules(now=now, games=games)[team.pk]
+    rows = [
+        {
+            "game": game,
+            "opponent": game.opponent_of(team),
+            "home": game.is_home_for(team),
+            "played": game.is_played(now),
+            "live": game.tip_off <= now and not game.is_played(now),
+            "month": timezone.localtime(game.tip_off).date().replace(day=1),
+        }
+        for game in games
+    ]
+    today = timezone.localdate()
+    return {
+        "team_schedule": summary,
+        "schedule_season": season,
+        "schedule_rows": rows,
+        "upcoming_rows": [row for row in rows if not row["played"]][:UPCOMING_GAMES],
+        "today": today,
+        "tomorrow": today + dt.timedelta(days=1),
+        "next_days": NEXT_DAYS,
+    }
+
+
 class TeamDetailView(LoginRequiredMixin, DetailView):
     """One franchise: its players, and what they cost and score.
 
@@ -1100,6 +1135,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         ]
 
         context["inactive_count"] = self.object.players.filter(is_active=False).count()
+        context.update(team_schedule_context(self.object))
         context.update(salary_charts(players, self._last_season()))
         sort, descending = self._sort_params()
         context["last_season"] = self._last_season()

@@ -285,3 +285,55 @@ def test_the_player_list_costs_the_same_however_many_players(signed_in, schedule
         signed_in.get(PLAYER_LIST, {"sort": "projected"})
 
     assert len(eleven) == len(one)
+
+
+# -- the player page -------------------------------------------------------------
+
+
+def player_page(client, someone):
+    return client.get(f"/players/{someone.slug}/")
+
+
+def test_the_player_page_shows_his_rest_of_the_season(signed_in, schedule):
+    smart = player(schedule["HOU"], fp_per_game="30.00")
+
+    response = player_page(signed_in, smart)
+
+    figures = response.context["rest_of_season"]
+    assert (figures.games_expected, figures.next_days, figures.projected_fp) == (80, 4, 2040)
+    page = response.content.decode()
+    assert "Rest of the season" in page
+    assert "30.00 FP/G" in page and "80 games" in page and "85% availability" in page
+    assert 'href="/teams/hou/#schedule"' in page
+    assert "Next game" in page
+
+
+def test_an_injured_player_s_page_names_his_first_game_back(signed_in, schedule):
+    smart = player(schedule["HOU"])
+    hurt(smart, back_in_days=6)
+
+    response = player_page(signed_in, smart)
+
+    figures = response.context["rest_of_season"]
+    first_back = figures.next_game.next_game
+    assert timezone.localtime(first_back.tip_off).date() >= figures.return_date
+    page = response.content.decode()
+    assert "3 missed while injured" in page
+    assert "First game back" in page
+
+
+def test_a_free_agent_or_no_schedule_has_no_box(signed_in, teams, season):
+    free_agent = player(None, name="Free")
+    houston = player(teams["HOU"], name="Rocket")
+
+    assert "Rest of the season" not in player_page(signed_in, free_agent).content.decode()
+    assert "Rest of the season" not in player_page(signed_in, houston).content.decode()
+
+
+def test_without_points_per_game_the_box_says_so(signed_in, schedule):
+    rookie = player(schedule["HOU"], fp_per_game=None, name="Rookie")
+
+    page = player_page(signed_in, rookie).content.decode()
+
+    assert "No points per game yet" in page
+    assert "availability" not in page.split("Rest of the season")[1].split("</section>")[0]

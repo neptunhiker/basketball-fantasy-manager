@@ -32,7 +32,7 @@ from django.db.models.functions import Cast, Coalesce, Greatest, Round
 from django.utils import timezone
 
 from .models import DAY_TO_DAY_INJURY_STATUSES, GAME_LENGTH
-from .team_schedule import NEXT_DAYS, season_games, team_schedules
+from .team_schedule import NEXT_DAYS, TeamSchedule, season_games, team_schedules
 
 EXPECTED_AVAILABILITY = Decimal("0.85")
 
@@ -145,6 +145,8 @@ class RestOfSeason:
     fp_per_game: Decimal | None
     return_date: dt.date | None
     team_schedule: object
+    # His own next game: the team's, or while he is out the first one back.
+    next_game: object = None
 
     @property
     def games_expected(self):
@@ -172,15 +174,25 @@ def rest_of_season(player, now=None):
         return None
     return_date = None
     missed = missed_next_days = 0
+    next_game = schedule
     if player.is_injured and player.expected_return:
         return_date = player.expected_return
         horizon = now + dt.timedelta(days=NEXT_DAYS)
+        first_back = None
         for game in games:
-            on = timezone.localtime(game.tip_off).date()
-            if game.tip_off > now - GAME_LENGTH and on < return_date:
+            if (
+                game.tip_off <= now - GAME_LENGTH
+                or game.is_called_off
+                or not game.is_regular_season
+            ):
+                continue
+            if timezone.localtime(game.tip_off).date() < return_date:
                 missed += 1
                 if game.tip_off < horizon:
                     missed_next_days += 1
+            elif first_back is None:
+                first_back = game
+        next_game = TeamSchedule(team_id=player.team_id, next_game=first_back, now=now)
     return RestOfSeason(
         team_games_left=schedule.left,
         games_missed=missed,
@@ -188,4 +200,5 @@ def rest_of_season(player, now=None):
         fp_per_game=player.current_fp_per_game,
         return_date=return_date,
         team_schedule=schedule,
+        next_game=next_game,
     )

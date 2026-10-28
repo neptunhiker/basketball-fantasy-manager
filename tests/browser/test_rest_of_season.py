@@ -70,3 +70,32 @@ def test_the_team_page_table_shows_it_too(projected, open_page, size):
     table = page.locator("table").last
     assert page_overflow(page) == 0
     table.screenshot(path=str(SCREENS / "rest-of-season" / f"team-table-{size}.png"))
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+def test_the_player_page_shows_his_rest_of_the_season(projected, open_page, size):
+    injured = projected["players"][2]
+    page = open_page(
+        projected["user"], reverse("nba:player-detail", args=[injured.slug]), size=size
+    )
+
+    box = page.locator("section", has=page.get_by_role("heading", name="Rest of the season"))
+    assert box.is_visible()
+    assert box.get_by_text("missed while injured").is_visible()
+    assert page_overflow(page) == 0
+    box.screenshot(path=str(SCREENS / "rest-of-season" / f"player-box-{size}.png"))
+    shot(page, "rest-of-season", f"player-{size}")
+
+
+@pytest.mark.parametrize("size", ["phone", "desktop"])
+def test_the_player_page_box_in_dark_mode_and_german(projected, open_page, size):
+    user = projected["user"]
+    user.language = "de"
+    user.save(update_fields=["language"])
+    healthy = projected["players"][3]
+    page = open_page(user, reverse("nba:player-detail", args=[healthy.slug]), size=size, dark=True)
+
+    box = page.locator("section", has=page.get_by_role("heading", name="Rest der Saison"))
+    assert box.is_visible()
+    assert page_overflow(page) == 0
+    box.screenshot(path=str(SCREENS / "rest-of-season" / f"player-box-{size}-dark-de.png"))

@@ -57,7 +57,7 @@ from .models import (
     injury_state,
     latest_fp_change,
 )
-from .rest_of_season import EXPECTED_AVAILABILITY, with_rest_of_season
+from .rest_of_season import EXPECTED_AVAILABILITY, rest_of_season, with_rest_of_season
 from .salary_charts import salary_charts
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
 from .services import (
@@ -1288,6 +1288,11 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
         context["note"] = kwargs.get("note")
         # RotoWire's latest on him: five shown, the rest behind "Show more".
         context["player_news"] = list(self.object.news.all()[:20])
+        context["rest_of_season"] = rest_of_season(self.object)
+        today = timezone.localdate()
+        context["today"] = today
+        context["tomorrow"] = today + dt.timedelta(days=1)
+        context["next_days"] = NEXT_DAYS
         # Oldest on the left, which is the opposite of the table below it: a
         # line is read forwards through the season, a table newest-first.
         # `fp_per_game` is already an average -- points over games played to

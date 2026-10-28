@@ -45,6 +45,13 @@ class TeamSchedule:
         return self.next_game is not None and self.next_game.tip_off <= self.now
 
     @property
+    def next_game_is_soon(self):
+        """Within six days: a weekday alone names it without doubt."""
+        return self.next_game is not None and self.next_game.tip_off < self.now + dt.timedelta(
+            days=6
+        )
+
+    @property
     def next_opponent(self):
         return self.next_game.opponent_of_id(self.team_id) if self.next_game else None
 

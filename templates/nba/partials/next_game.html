@@ -5,7 +5,7 @@
   Context: schedule (a TeamSchedule), today, tomorrow; link_opponent to link
   the opponent's page (not inside another link); compact for the phone line
   under a team's name: "Fri 20:00 @ WAS", the weekday instead of the date and
-  of "Tomorrow", without the dot.
+  of "Tomorrow" for a game within six days, without the dot.
 {% endcomment %}
 {% with game=schedule.next_game opponent=schedule.next_opponent %}
   {% if game %}
@@ -18,7 +18,7 @@
         <span class="font-semibold text-red-700 dark:text-red-300">{% translate "Live" %}</span>
       {% else %}
         <time datetime="{{ game.tip_off|date:'c' }}" class="whitespace-nowrap tabular-nums">
-          {% if game.tip_off|date:"Ymd" == today|date:"Ymd" %}<span class="font-medium text-primary-700 dark:text-primary-300">{% translate "Today" %}</span>{% elif compact %}{{ game.tip_off|date:"D" }}{% elif game.tip_off|date:"Ymd" == tomorrow|date:"Ymd" %}{% translate "Tomorrow" %}{% else %}{{ game.tip_off|date:"D j.n." }}{% endif %}
+          {% if game.tip_off|date:"Ymd" == today|date:"Ymd" %}<span class="font-medium text-primary-700 dark:text-primary-300">{% translate "Today" %}</span>{% elif compact and schedule.next_game_is_soon %}{{ game.tip_off|date:"D" }}{% elif compact %}{{ game.tip_off|date:"D j.n." }}{% elif game.tip_off|date:"Ymd" == tomorrow|date:"Ymd" %}{% translate "Tomorrow" %}{% else %}{{ game.tip_off|date:"D j.n." }}{% endif %}
           {{ game.tip_off|date:"H:i" }}
         </time>
       {% endif %}

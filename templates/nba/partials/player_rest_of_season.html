@@ -1,0 +1,66 @@
+{% load i18n %}
+{% comment %}
+  The player page's rest of the season: projected points, the games he can
+  still play (less those an injury costs), the next seven days and the next
+  game, with how the projection is worked out. Left out without a team or a
+  loaded schedule. Context: rest_of_season (apps.nba.rest_of_season), player,
+  today, tomorrow, next_days.
+{% endcomment %}
+{% if rest_of_season %}
+{% with ros=rest_of_season %}
+<section class="card overflow-hidden" aria-labelledby="rest-of-season-heading">
+  <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-b border-neutral-200 px-4 py-3 sm:px-5 dark:border-neutral-800">
+    <h2 id="rest-of-season-heading" class="text-sm font-semibold">{% translate "Rest of the season" %}</h2>
+    <a href="{% url 'nba:team-detail' player.team.abbreviation|lower %}#schedule"
+       class="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline dark:text-primary-400">
+      {% blocktranslate with team=player.team.abbreviation %}{{ team }} schedule{% endblocktranslate %}
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+
+  <div class="grid grid-cols-2 gap-px bg-neutral-200 sm:grid-cols-4 dark:bg-neutral-800">
+    {# The projection leads: it is the one figure a trade weighs. #}
+    <div class="relative bg-white p-4 dark:bg-neutral-900">
+      <span class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary-500 to-secondary-500" aria-hidden="true"></span>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Projected FP" %}</p>
+      <p class="mt-1 text-2xl font-bold tabular-nums text-primary-700 dark:text-primary-300">
+        {% if ros.projected_fp is not None %}{{ ros.projected_fp|floatformat:"0g" }}{% else %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% endif %}
+      </p>
+      {% if ros.projected_fp is None %}
+        <p class="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{% translate "No points per game yet" %}</p>
+      {% endif %}
+    </div>
+    <div class="bg-white p-4 dark:bg-neutral-900">
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Games expected" %}</p>
+      <p class="mt-1 text-2xl font-bold tabular-nums">{{ ros.games_expected }}</p>
+      {% if ros.games_missed %}
+        <p class="mt-0.5 text-xs text-red-700 dark:text-red-300">
+          {% blocktranslate with date=ros.return_date|date:"j.n." count count=ros.games_missed %}{{ count }} missed while injured, back {{ date }}{% plural %}{{ count }} missed while injured, back {{ date }}{% endblocktranslate %}
+        </p>
+      {% else %}
+        <p class="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">
+          {% blocktranslate with left=ros.team_games_left %}of {{ left }} team games left{% endblocktranslate %}
+        </p>
+      {% endif %}
+    </div>
+    <div class="bg-white p-4 dark:bg-neutral-900">
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate count days=next_days %}Next {{ days }} day{% plural %}Next {{ days }} days{% endblocktranslate %}</p>
+      <p class="mt-1 flex items-baseline gap-1.5">
+        <span class="text-2xl font-bold tabular-nums {% if ros.next_days >= 4 %}text-emerald-700 dark:text-emerald-300{% elif ros.next_days == 0 %}text-neutral-400 dark:text-neutral-500{% endif %}">{{ ros.next_days }}</span>
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate count count=ros.next_days %}game{% plural %}games{% endblocktranslate %}</span>
+      </p>
+    </div>
+    <div class="bg-white p-4 dark:bg-neutral-900">
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">{% if ros.return_date %}{% translate "First game back" %}{% else %}{% translate "Next game" %}{% endif %}</p>
+      <p class="mt-2 text-sm">{% include "nba/partials/next_game.html" with schedule=ros.next_game link_opponent=True compact=True %}</p>
+    </div>
+  </div>
+
+  {% if ros.projected_fp is not None %}
+    <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 tabular-nums sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
+      {% blocktranslate with fpg=ros.fp_per_game|floatformat:"2g" games=ros.games_expected percent=ros.availability_percent %}{{ fpg }} FP/G × {{ games }} games × {{ percent }}% availability{% endblocktranslate %}
+    </p>
+  {% endif %}
+</section>
+{% endwith %}
+{% endif %}

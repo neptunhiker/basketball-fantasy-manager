@@ -444,22 +444,23 @@ def test_the_schedule_exists_after_migrate(db):
     schedule = Schedule.objects.get(func="apps.nba.tasks.scheduled_rotowire_news_import")
 
     assert schedule.schedule_type == Schedule.CRON
-    assert schedule.cron == "0 */4 * * *"
+    assert schedule.cron == "0 6,12,18 * * *"
     assert schedule.repeats == -1
     assert not schedule.args
     assert not schedule.kwargs
 
 
-def test_the_first_run_waits_for_the_next_four_hour_mark():
+def test_the_next_run_is_the_next_of_six_noon_and_six_berlin_time():
     from importlib import import_module
+    from zoneinfo import ZoneInfo
 
-    migration = import_module("apps.nba.migrations.0019_scheduled_rotowire_news_import")
+    migration = import_module("apps.nba.migrations.0020_rotowire_news_three_times_a_day")
 
-    next_run = migration.next_four_hour_mark()
+    next_run = migration.next_pull().astimezone(ZoneInfo("Europe/Berlin"))
 
-    assert next_run.hour % 4 == 0
+    assert next_run.hour in (6, 12, 18)
     assert (next_run.minute, next_run.second) == (0, 0)
-    assert dt.timedelta(0) < next_run - timezone.now() <= dt.timedelta(hours=4)
+    assert dt.timedelta(0) < next_run - timezone.now() <= dt.timedelta(hours=12)
 
 
 def test_without_a_key_the_task_does_nothing(db, settings, monkeypatch):

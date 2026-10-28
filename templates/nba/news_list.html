@@ -12,7 +12,7 @@
       <span id="news-indicator" class="htmx-indicator text-xs text-neutral-500">{% translate "Loading" %}…</span>
     </div>
     <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-      {% translate "From RotoWire, fetched every four hours." %}
+      {% translate "From RotoWire, fetched three times a day." %}
       {% if last_pull %}
         {% translate "Last update:" %} <time datetime="{{ last_pull|date:'c' }}">{{ last_pull|date:"SHORT_DATETIME_FORMAT" }}</time>
       {% endif %}

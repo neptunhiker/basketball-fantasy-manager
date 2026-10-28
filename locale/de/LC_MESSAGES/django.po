@@ -3186,8 +3186,8 @@ msgid "Player news"
 msgstr "Spielernews"
 
 #: templates/nba/news_list.html:15 templates/nba/partials/player_news.html:12
-msgid "From RotoWire, fetched every four hours."
-msgstr "Von RotoWire, alle vier Stunden abgerufen."
+msgid "From RotoWire, fetched three times a day."
+msgstr "Von RotoWire, dreimal täglich abgerufen."
 
 #: templates/nba/news_list.html:17
 msgid "Last update:"
@@ -3487,9 +3487,9 @@ msgstr "Noch keine News."
 
 #: templates/nba/partials/news_feed.html:57
 msgid ""
-"Player news from RotoWire is fetched every four hours and shows up here."
+"Player news from RotoWire is fetched three times a day and shows up here."
 msgstr ""
-"Spielernews von RotoWire werden alle vier Stunden abgerufen und erscheinen "
+"Spielernews von RotoWire werden dreimal täglich abgerufen und erscheinen "
 "hier."
 
 #: templates/nba/partials/news_item.html:42

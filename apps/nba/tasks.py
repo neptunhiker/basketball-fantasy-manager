@@ -35,7 +35,7 @@ def scheduled_bbde_import(client=None):
 
 
 def scheduled_rotowire_news_import():
-    """The four-hourly RotoWire news pull, started by a Django-Q schedule.
+    """The RotoWire news pull at 6:00, 12:00 and 18:00, started by a Django-Q schedule.
 
     The feed shows its newest 25 items and nothing older, so a pull in which
     every item is new may have missed some in between; that is logged, as the

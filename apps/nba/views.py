@@ -33,6 +33,7 @@ from django.views import View
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
 from django.views.generic import DetailView, ListView
 
+from apps.core.dates import local_date
 from apps.core.views import ConfirmView, StaffRequiredMixin
 from apps.fantasy import services
 from apps.fantasy.models import PlayerSnapshot, Roster, WatchlistEntry
@@ -57,7 +58,13 @@ from .models import (
 )
 from .salary_charts import salary_charts
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
-from .services import DailyApiLimitExceeded, NbaApiError, daily_limit_for, sync_injuries
+from .services import (
+    DailyApiLimitExceeded,
+    MonthlyReserveReached,
+    NbaApiError,
+    daily_limit_for,
+    sync_injuries,
+)
 from .stats import DESCENDING_FIRST
 
 
@@ -508,6 +515,19 @@ class WatchlistView(PlayerListView):
     template_name = "nba/player_list.html"
 
 
+def reserve_reached_message(quota):
+    """The injury button's refusal once RapidAPI's monthly requests run low."""
+    if quota.resets_at is None:
+        return _(
+            "This month's requests to the injury service are nearly used up. "
+            "The injury report can be updated again next month."
+        )
+    return _(
+        "This month's requests to the injury service are nearly used up. "
+        "The injury report can be updated again from %(date)s."
+    ) % {"date": local_date(quota.resets_at)}
+
+
 class InjuryRefreshView(LoginRequiredMixin, View):
     """Synchronize injuries once per day and return the action state for HTMX."""
 
@@ -523,6 +543,8 @@ class InjuryRefreshView(LoginRequiredMixin, View):
                     "The next update can be invoked tomorrow."
                 )
             }
+        except MonthlyReserveReached as exc:
+            context = {"injury_refresh_error": reserve_reached_message(exc.quota)}
         except NbaApiError:
             context = {
                 "injury_refresh_error": _(

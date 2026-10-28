@@ -149,6 +149,9 @@ RAPID_API_TIMEOUT = env.int("RAPID_API_TIMEOUT", default=15)
 # made today, a superuser until the second limit is reached.
 RAPID_API_DAILY_LIMIT = 1
 RAPID_API_SUPERUSER_DAILY_LIMIT = 5
+# The subscription has 90 requests a month, shared by the injury button and the
+# NBA schedule import. Both stop once RapidAPI reports fewer left than this.
+RAPID_API_MONTHLY_RESERVE = 10
 
 # RotoWire player news, on the same RapidAPI account as the injury feed above.
 # The free plan stops at 500 requests a month; the schedule makes three a day,

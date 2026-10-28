@@ -14,6 +14,7 @@ from django.db.models import OuterRef, Subquery
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 
+from . import quota
 from .models import HEALTHY_INJURY_STATUSES, NbaApiUsage, Player, PlayerInjury
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,22 @@ class NbaApiError(RuntimeError):
 
 class DailyApiLimitExceeded(NbaApiError):
     """The configured daily outbound-request limit has been reached."""
+
+
+class MonthlyReserveReached(NbaApiError):
+    """RapidAPI reports fewer requests left this month than the reserve."""
+
+    def __init__(self, provider_quota, reserve):
+        super().__init__(quota.describe(provider_quota, reserve))
+        self.quota = provider_quota
+
+
+def check_monthly_reserve(now=None):
+    """Refuse a request once the subscription's monthly requests run low."""
+    reserve = settings.RAPID_API_MONTHLY_RESERVE
+    low = quota.low(PROVIDER, reserve, now)
+    if low is not None:
+        raise MonthlyReserveReached(low, reserve)
 
 
 @dataclass(frozen=True)
@@ -91,6 +108,7 @@ def fetch_injuries(daily_limit=None):
     if not settings.RAPID_API_KEY:
         raise NbaApiError("RAPID_API_KEY is not configured.")
 
+    check_monthly_reserve()
     _reserve_api_call(daily_limit=daily_limit)
     request = Request(
         settings.RAPID_API_INJURIES_URL,
@@ -102,10 +120,12 @@ def fetch_injuries(daily_limit=None):
     )
     try:
         with urlopen(request, timeout=settings.RAPID_API_TIMEOUT) as response:
+            quota.record(PROVIDER, getattr(response, "headers", None))
             if response.status != 200:
                 raise NbaApiError(f"NBA API returned HTTP {response.status}.")
             payload = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
+        quota.record(PROVIDER, exc.headers)
         raise NbaApiError(f"NBA API returned HTTP {exc.code}.") from exc
     except (URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise NbaApiError("NBA API request failed or returned invalid JSON.") from exc

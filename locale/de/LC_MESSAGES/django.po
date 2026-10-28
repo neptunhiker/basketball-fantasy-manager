@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 22:42+0100\n"
+"POT-Creation-Date: 2026-10-28 19:17+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -930,11 +930,11 @@ msgstr "basketball.de-Benutzername"
 msgid "basketball.de password"
 msgstr "basketball.de-Passwort"
 
-#: apps/nba/importer.py:90 apps/nba/views.py:615
+#: apps/nba/importer.py:90 apps/nba/views.py:637
 msgid "There is no current season to import into."
 msgstr "Es gibt keine aktuelle Saison, in die importiert werden kann."
 
-#: apps/nba/importer.py:94 apps/nba/views.py:617
+#: apps/nba/importer.py:94 apps/nba/views.py:639
 msgid "Another import is still running. Please try again shortly."
 msgstr "Es läuft bereits ein Import. Bitte versuche es gleich noch einmal."
 
@@ -980,51 +980,51 @@ msgstr ""
 "Es wurden nur %(rows)d Zeilen gelesen (beim letzten Mal %(previous)d), daher "
 "wurde kein Spieler als inaktiv markiert."
 
-#: apps/nba/models.py:105
+#: apps/nba/models.py:110
 msgid "Eastern Conference"
 msgstr "Eastern Conference"
 
-#: apps/nba/models.py:106
+#: apps/nba/models.py:111
 msgid "Western Conference"
 msgstr "Western Conference"
 
-#: apps/nba/models.py:109
+#: apps/nba/models.py:114
 msgid "Atlantic"
 msgstr "Atlantic"
 
-#: apps/nba/models.py:110
+#: apps/nba/models.py:115
 msgid "Central"
 msgstr "Central"
 
-#: apps/nba/models.py:111
+#: apps/nba/models.py:116
 msgid "Southeast"
 msgstr "Southeast"
 
-#: apps/nba/models.py:112
+#: apps/nba/models.py:117
 msgid "Northwest"
 msgstr "Northwest"
 
-#: apps/nba/models.py:113
+#: apps/nba/models.py:118
 msgid "Pacific"
 msgstr "Pacific"
 
-#: apps/nba/models.py:114
+#: apps/nba/models.py:119
 msgid "Southwest"
 msgstr "Southwest"
 
-#: apps/nba/models.py:142
+#: apps/nba/models.py:156
 msgid "Guard"
 msgstr "Guard"
 
-#: apps/nba/models.py:143
+#: apps/nba/models.py:157
 msgid "Forward"
 msgstr "Forward"
 
-#: apps/nba/models.py:144
+#: apps/nba/models.py:158
 msgid "Center"
 msgstr "Center"
 
-#: apps/nba/models.py:558 templates/fantasy/partials/roster_panel.html:312
+#: apps/nba/models.py:627 templates/fantasy/partials/roster_panel.html:312
 #: templates/nba/partials/injury_status.html:86
 #: templates/nba/partials/news_item.html:39
 #: templates/nba/partials/player_table.html:164
@@ -1032,49 +1032,49 @@ msgstr "Center"
 msgid "Injury"
 msgstr "Verletzung"
 
-#: apps/nba/models.py:559 templates/app.html:98 templates/nba/news_list.html:4
+#: apps/nba/models.py:628 templates/app.html:98 templates/nba/news_list.html:4
 #: templates/nba/news_list.html:5
 msgid "News"
 msgstr "News"
 
-#: apps/nba/models.py:618 apps/nba/models.py:701
+#: apps/nba/models.py:687 apps/nba/models.py:770
 msgid "Web"
 msgstr "Web"
 
-#: apps/nba/models.py:619 apps/nba/models.py:702
+#: apps/nba/models.py:688 apps/nba/models.py:771
 #: templates/nba/season_stats_upload.html:197
 msgid "Command"
 msgstr "Befehl"
 
-#: apps/nba/models.py:620
+#: apps/nba/models.py:689
 msgid "Scheduled"
 msgstr "Geplant"
 
-#: apps/nba/models.py:623
+#: apps/nba/models.py:692
 msgid "Running"
 msgstr "Läuft"
 
-#: apps/nba/models.py:624
+#: apps/nba/models.py:693
 msgid "Succeeded"
 msgstr "Erfolgreich"
 
-#: apps/nba/models.py:625 apps/nba/models.py:709
+#: apps/nba/models.py:694 apps/nba/models.py:778
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
-#: apps/nba/models.py:705
+#: apps/nba/models.py:774
 msgid "Previewed"
 msgstr "Vorschau"
 
-#: apps/nba/models.py:706 templates/nba/partials/season_stats_status.html:4
+#: apps/nba/models.py:775 templates/nba/partials/season_stats_status.html:4
 msgid "Imported"
 msgstr "Importiert"
 
-#: apps/nba/models.py:707
+#: apps/nba/models.py:776
 msgid "Discarded"
 msgstr "Verworfen"
 
-#: apps/nba/models.py:708
+#: apps/nba/models.py:777
 msgid "Expired"
 msgstr "Abgelaufen"
 
@@ -1225,19 +1225,36 @@ msgstr "Freiwürfe"
 
 #: apps/nba/views.py:522
 msgid ""
+"This month's requests to the injury service are nearly used up. The injury "
+"report can be updated again next month."
+msgstr ""
+"Die Abrufe beim Verletzungsdienst sind für diesen Monat fast aufgebraucht. "
+"Der Verletzungsbericht kann nächsten Monat wieder aktualisiert werden."
+
+#: apps/nba/views.py:526
+#, python-format
+msgid ""
+"This month's requests to the injury service are nearly used up. The injury "
+"report can be updated again from %(date)s."
+msgstr ""
+"Die Abrufe beim Verletzungsdienst sind für diesen Monat fast aufgebraucht. "
+"Der Verletzungsbericht kann ab dem %(date)s wieder aktualisiert werden."
+
+#: apps/nba/views.py:542
+msgid ""
 "The injury report was already updated today. The next update can be invoked "
 "tomorrow."
 msgstr ""
 "Der Verletzungsbericht wurde heute bereits aktualisiert. Das nächste Update "
 "kann morgen gestartet werden."
 
-#: apps/nba/views.py:529
+#: apps/nba/views.py:551
 msgid "The injury report could not be updated. Please try again tomorrow."
 msgstr ""
 "Der Verletzungsbericht konnte nicht aktualisiert werden. Bitte versuche es "
 "morgen erneut."
 
-#: apps/nba/views.py:535
+#: apps/nba/views.py:557
 #, python-format
 msgid ""
 "Injury report updated: %(created)d created, %(updated)d updated, "
@@ -1246,17 +1263,17 @@ msgstr ""
 "Verletzungsbericht aktualisiert: %(created)d erstellt, %(updated)d "
 "aktualisiert, %(recovered)d wieder fit, %(unmatched)d nicht zugeordnet."
 
-#: apps/nba/views.py:611
+#: apps/nba/views.py:633
 msgid "This basketball.de account has not been activated yet."
 msgstr "Dieses basketball.de-Konto ist noch nicht aktiviert."
 
-#: apps/nba/views.py:613
+#: apps/nba/views.py:635
 msgid "basketball.de did not accept this username and password."
 msgstr ""
 "basketball.de hat diesen Benutzernamen und dieses Passwort nicht akzeptiert."
 
 # UX fixes, round 1
-#: apps/nba/views.py:620
+#: apps/nba/views.py:642
 msgid ""
 "There are no NBA teams in the database yet. Ask an administrator to run "
 "manage.py seed_teams first."
@@ -1264,12 +1281,12 @@ msgstr ""
 "Es sind noch keine NBA-Teams in der Datenbank. Bitte eine Administratorin "
 "oder einen Administrator, zuerst manage.py seed_teams auszuführen."
 
-#: apps/nba/views.py:623
+#: apps/nba/views.py:645
 #, python-format
 msgid "The import failed: %(reason)s"
 msgstr "Der Import ist fehlgeschlagen: %(reason)s"
 
-#: apps/nba/views.py:882
+#: apps/nba/views.py:904
 #, python-format
 msgid "From %(n)d of %(total)d player. No value on record for the rest."
 msgid_plural ""
@@ -1279,105 +1296,105 @@ msgstr[0] ""
 msgstr[1] ""
 "Aus %(n)d von %(total)d Spielern. Für den Rest ist kein Wert erfasst."
 
-#: apps/nba/views.py:1014
+#: apps/nba/views.py:1036
 msgid "Salaries"
 msgstr "Gehälter"
 
-#: apps/nba/views.py:1017
+#: apps/nba/views.py:1039
 msgid "Average"
 msgstr "Durchschnitt"
 
-#: apps/nba/views.py:1018
+#: apps/nba/views.py:1040
 msgid "Median"
 msgstr "Median"
 
-#: apps/nba/views.py:1019
+#: apps/nba/views.py:1041
 msgid "Lowest"
 msgstr "Niedrigster Wert"
 
-#: apps/nba/views.py:1020
+#: apps/nba/views.py:1042
 msgid "Highest"
 msgstr "Höchster Wert"
 
-#: apps/nba/views.py:1021
+#: apps/nba/views.py:1043
 msgid "Total"
 msgstr "Gesamt"
 
-#: apps/nba/views.py:1026 templates/nba/partials/season_stats_card.html:44
+#: apps/nba/views.py:1048 templates/nba/partials/season_stats_card.html:44
 msgid "Fantasy points"
 msgstr "Fantasy-Punkte"
 
-#: apps/nba/views.py:1029
+#: apps/nba/views.py:1051
 msgid "Avg per game"
 msgstr "Durchschnitt pro Spiel"
 
-#: apps/nba/views.py:1030
+#: apps/nba/views.py:1052
 msgid "Median per game"
 msgstr "Median pro Spiel"
 
-#: apps/nba/views.py:1031
+#: apps/nba/views.py:1053
 msgid "Fewest per game"
 msgstr "Wenigste pro Spiel"
 
-#: apps/nba/views.py:1032
+#: apps/nba/views.py:1054
 msgid "Most per game"
 msgstr "Meiste pro Spiel"
 
-#: apps/nba/views.py:1033 templates/nba/player_detail.html:239
+#: apps/nba/views.py:1055 templates/nba/player_detail.html:239
 msgid "Points total"
 msgstr "Punkte gesamt"
 
-#: apps/nba/views.py:1036
+#: apps/nba/views.py:1058
 msgid "Team per game"
 msgstr "Team pro Spiel"
 
-#: apps/nba/views.py:1041
+#: apps/nba/views.py:1063
 msgid "Player health"
 msgstr "Spielergesundheit"
 
-#: apps/nba/views.py:1044 templates/nba/partials/injury_status.html:3
+#: apps/nba/views.py:1066 templates/nba/partials/injury_status.html:3
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:90
 msgid "Healthy"
 msgstr "Gesund"
 
-#: apps/nba/views.py:1045 templates/nba/partials/injury_status.html:4
+#: apps/nba/views.py:1067 templates/nba/partials/injury_status.html:4
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:91 templates/nba/team_list.html:30
 msgid "Day-to-day"
 msgstr "Angeschlagen"
 
-#: apps/nba/views.py:1046 templates/nba/partials/injury_status.html:2
+#: apps/nba/views.py:1068 templates/nba/partials/injury_status.html:2
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:92 templates/nba/team_list.html:31
 msgid "Injured"
 msgstr "Verletzt"
 
-#: apps/nba/views.py:1070
+#: apps/nba/views.py:1092
 msgid "Only you can see these notes. They are for your own team context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Teamkontext gedacht."
 
-#: apps/nba/views.py:1073
+#: apps/nba/views.py:1095
 msgid "No private notes yet. Save one to remember your take on this team."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Teams festzuhalten."
 
-#: apps/nba/views.py:1168
+#: apps/nba/views.py:1190
 msgid "Only you can see these notes. They are for your own player context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Spielerkontext gedacht."
 
-#: apps/nba/views.py:1171
+#: apps/nba/views.py:1193
 msgid "No private notes yet. Save one to remember your take on this player."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Spielers festzuhalten."
 
-#: apps/nba/views.py:1281
+#: apps/nba/views.py:1303
 msgid "The note will be removed for good. This cannot be undone."
 msgstr ""
 "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."

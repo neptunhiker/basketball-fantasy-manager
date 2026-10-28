@@ -8,7 +8,7 @@ Everything downstream needs them to exist before it can import a single player.
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from apps.nba.models import Team
+from apps.nba.models import ESPN_TEAM_IDS, Team
 
 E = Team.Conference.EAST
 W = Team.Conference.WEST
@@ -71,6 +71,7 @@ class Command(BaseCommand):
                     "name": name,
                     "conference": conference,
                     "division": division,
+                    "espn_id": ESPN_TEAM_IDS[abbreviation],
                 },
             )
             if was_created:

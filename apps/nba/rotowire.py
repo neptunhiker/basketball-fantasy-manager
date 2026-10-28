@@ -20,7 +20,8 @@ from django.utils import timezone
 
 from apps.fantasy.models import Season
 
-from .models import ROTOWIRE_TEAM_CODES, ApiQuota, NbaApiUsage, Player, PlayerNews
+from . import quota
+from .models import ROTOWIRE_TEAM_CODES, NbaApiUsage, Player, PlayerNews
 from .services import DailyApiLimitExceeded, NbaApiError, normalize_name
 
 logger = logging.getLogger(__name__)
@@ -109,43 +110,8 @@ def in_news_window(today=None):
 
 
 def low_quota(now=None):
-    """The quota row when it is below the reserve and still current, else None.
-
-    A count from before RapidAPI's reset says nothing about now: the next pull
-    goes ahead and brings the new figure. Without a reset time, a count from an
-    earlier calendar month is taken as out of date instead.
-    """
-    quota = ApiQuota.objects.filter(provider=PROVIDER).first()
-    if quota is None or quota.remaining >= settings.ROTOWIRE_MONTHLY_RESERVE:
-        return None
-    now = now or timezone.now()
-    if quota.resets_at is not None:
-        current = quota.resets_at > now
-    else:
-        reported = timezone.localtime(quota.reported_at)
-        today = timezone.localtime(now)
-        current = (reported.year, reported.month) == (today.year, today.month)
-    return quota if current else None
-
-
-def _record_quota(headers, now=None):
-    """Keep what RapidAPI's response headers say about this month's requests."""
-    if headers is None:
-        return
-    remaining = _int(headers.get("X-RateLimit-Requests-Remaining"))
-    if remaining is None or remaining < 0:
-        return
-    now = now or timezone.now()
-    reset = _int(headers.get("X-RateLimit-Requests-Reset"))
-    ApiQuota.objects.update_or_create(
-        provider=PROVIDER,
-        defaults={
-            "limit": _int(headers.get("X-RateLimit-Requests-Limit")),
-            "remaining": remaining,
-            "resets_at": now + timedelta(seconds=reset) if reset is not None else None,
-            "reported_at": now,
-        },
-    )
+    """The quota row when RotoWire's requests are below the reserve, else None."""
+    return quota.low(PROVIDER, settings.ROTOWIRE_MONTHLY_RESERVE, now)
 
 
 def why_not_now(force=False):
@@ -166,17 +132,9 @@ def why_not_now(force=False):
             f"outside the season window ({settings.ROTOWIRE_DAYS_BEFORE_SEASON} days "
             f"before to {settings.ROTOWIRE_DAYS_AFTER_SEASON} days after a season)"
         )
-    quota = low_quota()
-    if quota is not None:
-        until = (
-            f" until {timezone.localtime(quota.resets_at):%d.%m.%Y %H:%M}"
-            if quota.resets_at
-            else ""
-        )
-        return (
-            f"only {quota.remaining} RapidAPI requests left{until}, "
-            f"below the reserve of {settings.ROTOWIRE_MONTHLY_RESERVE}"
-        )
+    low = low_quota()
+    if low is not None:
+        return quota.describe(low, settings.ROTOWIRE_MONTHLY_RESERVE)
     return None
 
 
@@ -202,13 +160,13 @@ def fetch_news():
     )
     try:
         with urlopen(request, timeout=settings.RAPID_API_TIMEOUT) as response:
-            _record_quota(getattr(response, "headers", None))
+            quota.record(PROVIDER, getattr(response, "headers", None))
             if response.status != 200:
                 raise NbaApiError(f"RotoWire API returned HTTP {response.status}.")
             payload = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         # RapidAPI counts a refused request too, a 429 above all.
-        _record_quota(exc.headers)
+        quota.record(PROVIDER, exc.headers)
         raise NbaApiError(f"RotoWire API returned HTTP {exc.code}.") from exc
     except (URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise NbaApiError("RotoWire API request failed or returned invalid JSON.") from exc

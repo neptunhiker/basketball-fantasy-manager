@@ -98,6 +98,11 @@ def latest_fp_change(snapshots):
     }
 
 
+class TeamManager(models.Manager):
+    def get_by_natural_key(self, abbreviation):
+        return self.get(abbreviation=abbreviation)
+
+
 class Team(TimeStampedModel):
     """An NBA franchise."""
 
@@ -120,6 +125,10 @@ class Team(TimeStampedModel):
     abbreviation = models.CharField("Abbreviation", max_length=4, unique=True)
     conference = models.CharField("Conference", max_length=4, choices=Conference, blank=True)
     division = models.CharField("Division", max_length=16, choices=Division, blank=True)
+    # The schedule feed's team ID -- ESPN's numbering, which never changes.
+    espn_id = models.PositiveSmallIntegerField("ESPN ID", unique=True, null=True, blank=True)
+
+    objects = TeamManager()
 
     class Meta:
         ordering = ["name"]
@@ -128,6 +137,11 @@ class Team(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    def natural_key(self):
+        # Copying games from production to staging by `dumpdata
+        # --natural-foreign`: every database gives its teams other UUIDs.
+        return (self.abbreviation,)
 
 
 class Player(TimeStampedModel):
@@ -550,6 +564,41 @@ class ApiQuota(TimeStampedModel):
 
     def __str__(self):
         return f"{self.provider}: {self.remaining} of {self.limit} left"
+
+
+# ESPN's team IDs, used by the schedule feed, by our abbreviation.
+ESPN_TEAM_IDS = {
+    "ATL": 1,
+    "BOS": 2,
+    "NOP": 3,
+    "CHI": 4,
+    "CLE": 5,
+    "DAL": 6,
+    "DEN": 7,
+    "DET": 8,
+    "GSW": 9,
+    "HOU": 10,
+    "IND": 11,
+    "LAC": 12,
+    "LAL": 13,
+    "MIA": 14,
+    "MIL": 15,
+    "MIN": 16,
+    "BKN": 17,
+    "NYK": 18,
+    "ORL": 19,
+    "PHI": 20,
+    "PHX": 21,
+    "POR": 22,
+    "SAC": 23,
+    "SAS": 24,
+    "OKC": 25,
+    "UTA": 26,
+    "WAS": 27,
+    "TOR": 28,
+    "MEM": 29,
+    "CHA": 30,
+}
 
 
 # RotoWire's team codes where they are not ours. PHO is in the feed; the rest

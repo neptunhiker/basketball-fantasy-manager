@@ -760,3 +760,85 @@ def test_the_command_refuses_while_switched_off(in_season, api_key, settings, mo
 
     with pytest.raises(CommandError, match="ROTOWIRE_ENABLED is off"):
         call_command("import_rotowire_news")
+
+
+def test_the_refusal_names_force_where_it_helps(db, api_key, monkeypatch):
+    monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
+
+    with pytest.raises(CommandError, match="Run with --force"):
+        call_command("import_rotowire_news")
+
+
+def test_the_refusal_does_not_name_force_where_it_cannot_help(in_season, settings):
+    settings.RAPID_API_KEY = ""
+
+    with pytest.raises(CommandError) as refused:
+        call_command("import_rotowire_news")
+
+    assert "--force" not in str(refused.value)
+
+
+def test_force_pulls_outside_the_window_and_below_the_reserve(db, api_key, payload, monkeypatch):
+    quota(3)
+    monkeypatch.setattr(rotowire, "fetch_news", lambda: payload)
+    out = io.StringIO()
+
+    call_command("import_rotowire_news", force=True, stdout=out)
+
+    assert "RotoWire news imported: 25 items" in out.getvalue()
+
+
+def test_force_does_not_override_the_switch(db, api_key, settings, monkeypatch):
+    settings.ROTOWIRE_ENABLED = False
+    monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
+
+    with pytest.raises(CommandError, match="ROTOWIRE_ENABLED is off"):
+        call_command("import_rotowire_news", force=True)
+
+
+def test_force_does_not_override_the_daily_limit(db, api_key, settings, monkeypatch):
+    settings.ROTOWIRE_DAILY_LIMIT = 0
+    monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
+
+    with pytest.raises(CommandError, match="daily limit"):
+        call_command("import_rotowire_news", force=True)
+
+
+def test_check_makes_no_request_and_reports(in_season, api_key, monkeypatch):
+    quota(484)
+    monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
+    out = io.StringIO()
+
+    call_command("import_rotowire_news", check=True, stdout=out)
+
+    assert "A pull would be made." in out.getvalue()
+    assert "RapidAPI: 484 of 500 requests left, resets " in out.getvalue()
+    assert not NbaApiUsage.objects.exists()
+
+
+def test_check_says_why_not(db, api_key, monkeypatch):
+    monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
+    out = io.StringIO()
+
+    call_command("import_rotowire_news", check=True, stdout=out)
+
+    assert "No pull would be made: no season within" in out.getvalue()
+    assert "RapidAPI has not reported a count yet." in out.getvalue()
+
+
+def test_the_checks_come_in_order(in_season, settings):
+    quota(3)
+    settings.RAPID_API_KEY = ""
+    settings.ROTOWIRE_ENABLED = False
+    assert rotowire.why_not_now() == "ROTOWIRE_ENABLED is off"
+
+    settings.ROTOWIRE_ENABLED = True
+    assert rotowire.why_not_now() == "RAPID_API_KEY is not set"
+
+    settings.RAPID_API_KEY = "test-key"
+    in_season.delete()
+    assert rotowire.why_not_now().startswith("no season within")
+
+    today = timezone.localdate()
+    make_season("again", today, today + dt.timedelta(days=1))
+    assert rotowire.why_not_now().startswith("only 3 RapidAPI requests left")

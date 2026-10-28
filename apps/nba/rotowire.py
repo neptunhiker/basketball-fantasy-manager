@@ -148,15 +148,19 @@ def _record_quota(headers, now=None):
     )
 
 
-def why_not_now():
+def why_not_now(force=False):
     """Why no pull should be made right now, or None when one may.
 
-    The schedule skips for any of these; the import command refuses.
+    The schedule skips for any of these; the import command refuses. `force`
+    sets aside the season window and the reserve, never the switch or the key
+    -- nor the daily limit, which `fetch_news` keeps on its own.
     """
     if not settings.ROTOWIRE_ENABLED:
         return "ROTOWIRE_ENABLED is off"
     if not settings.RAPID_API_KEY:
         return "RAPID_API_KEY is not set"
+    if force:
+        return None
     if not in_news_window():
         return (
             f"no season within {settings.ROTOWIRE_DAYS_BEFORE_SEASON} days before "

@@ -199,9 +199,9 @@
                 {% if player.note_count %}
                   {% include "nba/partials/note_count.html" with count=player.note_count url_base=player.slug kind="player" %}
                 {% endif %}
-                {# Phones scroll a long way to the projection; its gist rides under the name. #}
+                {# Below `lg` the table scrolls a long way to the projection; its gist rides under the name. #}
                 {% if show_rest_of_season and player.games_expected is not None %}
-                  <span class="mt-0.5 block whitespace-nowrap text-[0.7rem] font-normal leading-tight text-neutral-500 tabular-nums md:hidden dark:text-neutral-400">
+                  <span class="mt-0.5 block whitespace-nowrap text-[0.7rem] font-normal leading-tight text-neutral-500 tabular-nums lg:hidden dark:text-neutral-400">
                     {% if player.projected_fp is not None %}<span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ player.projected_fp|floatformat:"0g" }}</span> {% translate "proj." %} · {% endif %}{% blocktranslate with n=player.next_days %}{{ n }} in 7 d{% endblocktranslate %}
                   </span>
                 {% endif %}

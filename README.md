@@ -357,6 +357,21 @@ ssh nba "cd /srv/fantasy-manager/prod && docker compose -p fantasy-prod -f docke
 Both the schedule load and the injury button stop once RapidAPI reports fewer
 than 10 requests left this month; "API quotas" in the admin shows the count.
 
+### Rest of the season per player
+
+The player list, the team page's table and the player page show, once a
+schedule is loaded (`apps/nba/rest_of_season.py`):
+
+- **Games left**: the team's games still to play (82 less those played), less
+  the games he misses while injured -- his team's games before the expected
+  return date of an injury that keeps him out. Day-to-day, or out with no
+  return date, costs nothing.
+- **7 days**: the games he can play in the next seven days.
+- **Proj. FP**: this season's points per game × games left × 85%
+  availability (`EXPECTED_AVAILABILITY`). The factor is the same for everyone,
+  so it changes how realistic the figure reads, not who ranks above whom; a
+  per-player rate can replace it there.
+
 ## Deploying to Fly.io
 
 Once:

@@ -1,0 +1,34 @@
+{% load i18n %}
+{% comment %}
+  A team's next game, on one line: "Fri 31.10. 01:30 · @ BOS", "Today 20:00 ·
+  vs LAL", or a pulsing "Live" while it is on. Berlin time, as everywhere.
+  Context: schedule (a TeamSchedule), today, tomorrow; link_opponent to link
+  the opponent's page (not inside another link); compact for the phone line
+  under a team's name: "Fri 20:00 @ WAS", the weekday instead of the date and
+  of "Tomorrow", without the dot.
+{% endcomment %}
+{% with game=schedule.next_game opponent=schedule.next_opponent %}
+  {% if game %}
+    <span class="inline-flex items-center gap-x-1.5 {% if compact %}flex-wrap{% else %}whitespace-nowrap{% endif %}">
+      {% if schedule.next_game_is_live %}
+        <span class="relative flex h-2 w-2" aria-hidden="true">
+          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75 motion-reduce:animate-none"></span>
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+        </span>
+        <span class="font-semibold text-red-700 dark:text-red-300">{% translate "Live" %}</span>
+      {% else %}
+        <time datetime="{{ game.tip_off|date:'c' }}" class="whitespace-nowrap tabular-nums">
+          {% if game.tip_off|date:"Ymd" == today|date:"Ymd" %}<span class="font-medium text-primary-700 dark:text-primary-300">{% translate "Today" %}</span>{% elif compact %}{{ game.tip_off|date:"D" }}{% elif game.tip_off|date:"Ymd" == tomorrow|date:"Ymd" %}{% translate "Tomorrow" %}{% else %}{{ game.tip_off|date:"D j.n." }}{% endif %}
+          {{ game.tip_off|date:"H:i" }}
+        </time>
+      {% endif %}
+      {% if not compact %}<span class="text-neutral-300 dark:text-neutral-600" aria-hidden="true">·</span>{% endif %}
+      <span class="whitespace-nowrap font-medium text-neutral-800 dark:text-neutral-100">
+        {% if schedule.next_game_is_home %}{% translate "vs" %}{% else %}@{% endif %}
+        {% if link_opponent %}<a href="{% url 'nba:team-detail' opponent.abbreviation|lower %}" class="hover:text-primary-600 hover:underline dark:hover:text-primary-400" title="{{ opponent.name }}">{{ opponent.abbreviation }}</a>{% else %}<span title="{{ opponent.name }}">{{ opponent.abbreviation }}</span>{% endif %}
+      </span>
+    </span>
+  {% else %}
+    <span class="text-neutral-400 dark:text-neutral-500">–</span>
+  {% endif %}
+{% endwith %}

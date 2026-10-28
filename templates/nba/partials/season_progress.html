@@ -1,0 +1,21 @@
+{% load i18n %}
+{% comment %}
+  Games left of the 82, over a thin bar of the season played: "60" above
+  "22 played". A dash before any schedule is loaded. Context: schedule.
+{% endcomment %}
+{% if schedule %}
+  <div class="ml-auto flex w-full max-w-[7.5rem] flex-col items-end gap-1"
+       title="{% blocktranslate with played=schedule.played left=schedule.left %}{{ played }} played, {{ left }} to go{% endblocktranslate %}">
+    <span class="font-semibold tabular-nums text-neutral-900 dark:text-neutral-50">{{ schedule.left }}</span>
+    <span class="h-1 w-10 overflow-hidden sm:w-full sm:max-w-16 rounded-full bg-neutral-200 dark:bg-neutral-700" role="progressbar"
+          aria-valuemin="0" aria-valuemax="82" aria-valuenow="{{ schedule.played }}"
+          aria-label="{% translate 'Season played' %}">
+      <span class="block h-full rounded-full bg-primary-500 dark:bg-primary-400" style="width: {{ schedule.progress }}%"></span>
+    </span>
+    <span class="hidden whitespace-nowrap text-[11px] leading-none text-neutral-500 tabular-nums sm:block dark:text-neutral-400">
+      {% blocktranslate count played=schedule.played %}{{ played }} played{% plural %}{{ played }} played{% endblocktranslate %}
+    </span>
+  </div>
+{% else %}
+  <span class="text-neutral-400 dark:text-neutral-500">–</span>
+{% endif %}

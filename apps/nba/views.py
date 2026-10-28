@@ -1,3 +1,4 @@
+import datetime as dt
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 
@@ -66,6 +67,7 @@ from .services import (
     sync_injuries,
 )
 from .stats import DESCENDING_FIRST
+from .team_schedule import NEXT_DAYS, team_schedules
 
 
 def with_expected_salary(qs):
@@ -271,17 +273,44 @@ class TeamListView(LoginRequiredMixin, ListView):
             )
             team.injured_count = sum(1 for player in team.active_roster if player.is_injured)
             team.day_to_day_count = sum(1 for player in team.active_roster if player.is_day_to_day)
-        if self.ranked:
-            teams.sort(key=lambda team: (team.fp_per_game is None, -(team.fp_per_game or 0)))
+        schedules = team_schedules()
+        for team in teams:
+            team.schedule = schedules.get(team.pk)
+        if self.sort in self.RANKINGS:
+            teams.sort(key=self.RANKINGS[self.sort])
         return teams
+
+    # ?sort=...: one flat ranking, highest first, instead of the divisions. A
+    # team without the figure (no points yet, no schedule loaded) goes last.
+    RANKINGS = {
+        "fpg": lambda team: (team.fp_per_game is None, -(team.fp_per_game or 0)),
+        "left": lambda team: (team.schedule is None, -(team.schedule.left if team.schedule else 0)),
+        "next": lambda team: (
+            team.schedule is None,
+            -(team.schedule.next_days if team.schedule else 0),
+            -(team.schedule.left if team.schedule else 0),
+        ),
+    }
+
+    @property
+    def sort(self):
+        return self.request.GET.get("sort", "")
 
     @property
     def ranked(self):
-        """?sort=fpg: one flat ranking by points per game instead of the divisions."""
-        return self.request.GET.get("sort") == "fpg"
+        return self.sort in self.RANKINGS
 
     def get_context_data(self, **kwargs):
-        return {**super().get_context_data(**kwargs), "ranked": self.ranked}
+        today = timezone.localdate()
+        return {
+            **super().get_context_data(**kwargs),
+            "ranked": self.ranked,
+            "sort": self.sort,
+            "today": today,
+            "tomorrow": today + dt.timedelta(days=1),
+            "next_days": NEXT_DAYS,
+            "has_schedule": any(team.schedule for team in self.object_list),
+        }
 
 
 class PlayerListView(LoginRequiredMixin, ListView):

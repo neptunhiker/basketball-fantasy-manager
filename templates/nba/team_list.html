@@ -14,8 +14,12 @@
     </div>
 
     <div class="overflow-x-auto">
-      {# Phones: salary waits for `sm`; injuries show as a badge under the name. #}
-      <table class="w-full text-left text-sm max-sm:[&_tr>*:nth-child(4)]:hidden max-sm:[&_tr>*:nth-child(5)]:hidden">
+      {% comment %}
+        Phones: team, FP/G and games left; injuries and the next game show
+        under the name. Tablets add salary, injuries and the next seven days;
+        players, day-to-day and the next game as a column wait for `lg`.
+      {% endcomment %}
+      <table class="w-full text-left text-sm max-sm:[&_tr>*:nth-child(4)]:hidden max-sm:[&_tr>*:nth-child(5)]:hidden max-sm:[&_tr>*:nth-child(6)]:hidden max-sm:[&_tr>*:nth-child(8)]:hidden max-lg:[&_tr>*:nth-child(2)]:hidden max-lg:[&_tr>*:nth-child(5)]:hidden max-lg:[&_tr>*:nth-child(9)]:hidden">
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
           <tr>
             {# "Team" returns to the divisions, "FP/G" ranks all 30 teams. #}
@@ -23,12 +27,23 @@
               <a href="{% url 'nba:team-list' %}" class="hover:text-primary-600 dark:hover:text-primary-400 {% if not ranked %}text-primary-600 dark:text-primary-400{% endif %}">{% translate "Team" %}</a>
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Players" %}</th>
-            <th scope="col" class="px-4 py-3 text-right font-medium">
-              <a href="?sort=fpg" class="hover:text-primary-600 dark:hover:text-primary-400 {% if ranked %}text-primary-600 dark:text-primary-400{% endif %}">{% translate "FP/G" %}{% if ranked %} &#9660;{% endif %}</a>
+            <th scope="col" class="px-4 py-3 text-right font-medium max-sm:px-2">
+              <a href="?sort=fpg" class="whitespace-nowrap hover:text-primary-600 dark:hover:text-primary-400 {% if sort == 'fpg' %}text-primary-600 dark:text-primary-400{% endif %}">{% translate "FP/G" %}{% if sort == 'fpg' %} &#9660;{% endif %}</a>
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Salary" %}</th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Day-to-day" %}</th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Injured" %}</th>
+            {% if has_schedule %}
+            <th scope="col" class="px-4 py-3 text-right font-medium max-sm:pl-2">
+              <a href="?sort=left" class="whitespace-nowrap hover:text-primary-600 dark:hover:text-primary-400 {% if sort == 'left' %}text-primary-600 dark:text-primary-400{% endif %}"
+                 title="{% translate 'Regular-season games still to play, of 82' %}">{% translate "To go" %}{% if sort == 'left' %} &#9660;{% endif %}</a>
+            </th>
+            <th scope="col" class="px-4 py-3 text-center font-medium">
+              <a href="?sort=next" class="whitespace-nowrap hover:text-primary-600 dark:hover:text-primary-400 {% if sort == 'next' %}text-primary-600 dark:text-primary-400{% endif %}"
+                 title="{% blocktranslate count days=next_days %}Games in the next {{ days }} day{% plural %}Games in the next {{ days }} days{% endblocktranslate %}">{% blocktranslate count days=next_days %}{{ days }} day{% plural %}{{ days }} days{% endblocktranslate %}{% if sort == 'next' %} &#9660;{% endif %}</a>
+            </th>
+            <th scope="col" class="px-4 py-3 font-medium">{% translate "Next game" %}</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -36,7 +51,7 @@
             {% if not ranked %}
               {% ifchanged team.division %}
                 <tr class="bg-neutral-50 dark:bg-neutral-800/40">
-                  <th colspan="6" scope="colgroup"
+                  <th colspan="{% if has_schedule %}9{% else %}6{% endif %}" scope="colgroup"
                       class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                     {{ team.get_conference_display }} · {{ team.get_division_display }}
                   </th>
@@ -52,10 +67,11 @@
                       {{ team.abbreviation }}
                     </span>
                     <span class="min-w-0">
-                      <span class="block truncate font-medium group-hover:text-primary-600 group-hover:underline dark:group-hover:text-primary-400">{{ team.name }}</span>
+                      <span class="block truncate font-medium max-sm:whitespace-normal group-hover:text-primary-600 group-hover:underline dark:group-hover:text-primary-400">{{ team.name }}</span>
                       {% if ranked %}<span class="block text-xs text-neutral-500 dark:text-neutral-400">{{ team.get_conference_display }} · {{ team.get_division_display }}</span>{% endif %}
                       {% if team.injured_count %}<span class="mt-0.5 inline-block text-xs text-red-700 sm:hidden dark:text-red-300">{% blocktranslate count count=team.injured_count %}{{ count }} injured{% plural %}{{ count }} injured{% endblocktranslate %}</span>{% endif %}
                       {% if team.day_to_day_count %}<span class="mt-0.5 inline-block text-xs text-amber-800 sm:hidden dark:text-amber-300">{% blocktranslate count count=team.day_to_day_count %}{{ count }} day-to-day{% plural %}{{ count }} day-to-day{% endblocktranslate %}</span>{% endif %}
+                      {% if team.schedule.next_game %}<span class="mt-0.5 block text-xs text-neutral-500 lg:hidden dark:text-neutral-400">{% include "nba/partials/next_game.html" with schedule=team.schedule compact=True %}</span>{% endif %}
                     </span>
                   </a>
                   {% if team.note_count %}
@@ -64,10 +80,21 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400">{{ team.active_players }}</td>
-              <td class="px-4 py-3 text-right font-medium tabular-nums">{{ team.fp_per_game|floatformat:"2g"|default:"–" }}</td>
+              <td class="px-4 py-3 text-right font-medium tabular-nums max-sm:px-2">{{ team.fp_per_game|floatformat:"2g"|default:"–" }}</td>
               <td class="px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400" title="{{ team.total_salary|exact }}">{{ team.total_salary|millions }}</td>
               <td class="px-4 py-3 text-right tabular-nums {% if team.day_to_day_count %}text-amber-800 dark:text-amber-300{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">{{ team.day_to_day_count }}</td>
               <td class="px-4 py-3 text-right tabular-nums {% if team.injured_count %}text-red-700 dark:text-red-300{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">{{ team.injured_count }}</td>
+              {% if has_schedule %}
+              <td class="px-4 py-3 text-right max-sm:pl-2">
+                {% include "nba/partials/season_progress.html" with schedule=team.schedule %}
+              </td>
+              <td class="px-4 py-3 text-center">
+                {% include "nba/partials/next_days_badge.html" with schedule=team.schedule %}
+              </td>
+              <td class="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-300">
+                {% include "nba/partials/next_game.html" with schedule=team.schedule link_opponent=True %}
+              </td>
+              {% endif %}
             </tr>
           {% endfor %}
         </tbody>

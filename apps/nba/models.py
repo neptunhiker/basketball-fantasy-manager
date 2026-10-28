@@ -963,7 +963,10 @@ class Game(TimeStampedModel):
         return not self.is_called_off and self.tip_off <= (now or timezone.now()) - GAME_LENGTH
 
     def opponent_of(self, team):
-        return self.away_team if self.home_team_id == team.pk else self.home_team
+        return self.opponent_of_id(team.pk)
+
+    def opponent_of_id(self, team_id):
+        return self.away_team if self.home_team_id == team_id else self.home_team
 
     def is_home_for(self, team):
         return self.home_team_id == team.pk

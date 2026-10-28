@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-28 19:17+0100\n"
+"POT-Creation-Date: 2026-10-28 19:38+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -79,7 +79,7 @@ msgstr "Coach"
 #: templates/nba/news_list.html:55 templates/nba/partials/player_table.html:4
 #: templates/nba/player_compare.html:97 templates/nba/player_detail.html:299
 #: templates/nba/player_list.html:75 templates/nba/season_stats_import.html:127
-#: templates/nba/team_list.html:23
+#: templates/nba/team_list.html:28
 msgid "Team"
 msgstr "Team"
 
@@ -930,11 +930,11 @@ msgstr "basketball.de-Benutzername"
 msgid "basketball.de password"
 msgstr "basketball.de-Passwort"
 
-#: apps/nba/importer.py:90 apps/nba/views.py:637
+#: apps/nba/importer.py:90 apps/nba/views.py:666
 msgid "There is no current season to import into."
 msgstr "Es gibt keine aktuelle Saison, in die importiert werden kann."
 
-#: apps/nba/importer.py:94 apps/nba/views.py:639
+#: apps/nba/importer.py:94 apps/nba/views.py:668
 msgid "Another import is still running. Please try again shortly."
 msgstr "Es läuft bereits ein Import. Bitte versuche es gleich noch einmal."
 
@@ -1223,7 +1223,7 @@ msgstr "Dreier"
 msgid "Free throws"
 msgstr "Freiwürfe"
 
-#: apps/nba/views.py:522
+#: apps/nba/views.py:551
 msgid ""
 "This month's requests to the injury service are nearly used up. The injury "
 "report can be updated again next month."
@@ -1231,7 +1231,7 @@ msgstr ""
 "Die Abrufe beim Verletzungsdienst sind für diesen Monat fast aufgebraucht. "
 "Der Verletzungsbericht kann nächsten Monat wieder aktualisiert werden."
 
-#: apps/nba/views.py:526
+#: apps/nba/views.py:555
 #, python-format
 msgid ""
 "This month's requests to the injury service are nearly used up. The injury "
@@ -1240,7 +1240,7 @@ msgstr ""
 "Die Abrufe beim Verletzungsdienst sind für diesen Monat fast aufgebraucht. "
 "Der Verletzungsbericht kann ab dem %(date)s wieder aktualisiert werden."
 
-#: apps/nba/views.py:542
+#: apps/nba/views.py:571
 msgid ""
 "The injury report was already updated today. The next update can be invoked "
 "tomorrow."
@@ -1248,13 +1248,13 @@ msgstr ""
 "Der Verletzungsbericht wurde heute bereits aktualisiert. Das nächste Update "
 "kann morgen gestartet werden."
 
-#: apps/nba/views.py:551
+#: apps/nba/views.py:580
 msgid "The injury report could not be updated. Please try again tomorrow."
 msgstr ""
 "Der Verletzungsbericht konnte nicht aktualisiert werden. Bitte versuche es "
 "morgen erneut."
 
-#: apps/nba/views.py:557
+#: apps/nba/views.py:586
 #, python-format
 msgid ""
 "Injury report updated: %(created)d created, %(updated)d updated, "
@@ -1263,17 +1263,17 @@ msgstr ""
 "Verletzungsbericht aktualisiert: %(created)d erstellt, %(updated)d "
 "aktualisiert, %(recovered)d wieder fit, %(unmatched)d nicht zugeordnet."
 
-#: apps/nba/views.py:633
+#: apps/nba/views.py:662
 msgid "This basketball.de account has not been activated yet."
 msgstr "Dieses basketball.de-Konto ist noch nicht aktiviert."
 
-#: apps/nba/views.py:635
+#: apps/nba/views.py:664
 msgid "basketball.de did not accept this username and password."
 msgstr ""
 "basketball.de hat diesen Benutzernamen und dieses Passwort nicht akzeptiert."
 
 # UX fixes, round 1
-#: apps/nba/views.py:642
+#: apps/nba/views.py:671
 msgid ""
 "There are no NBA teams in the database yet. Ask an administrator to run "
 "manage.py seed_teams first."
@@ -1281,12 +1281,12 @@ msgstr ""
 "Es sind noch keine NBA-Teams in der Datenbank. Bitte eine Administratorin "
 "oder einen Administrator, zuerst manage.py seed_teams auszuführen."
 
-#: apps/nba/views.py:645
+#: apps/nba/views.py:674
 #, python-format
 msgid "The import failed: %(reason)s"
 msgstr "Der Import ist fehlgeschlagen: %(reason)s"
 
-#: apps/nba/views.py:904
+#: apps/nba/views.py:933
 #, python-format
 msgid "From %(n)d of %(total)d player. No value on record for the rest."
 msgid_plural ""
@@ -1296,105 +1296,105 @@ msgstr[0] ""
 msgstr[1] ""
 "Aus %(n)d von %(total)d Spielern. Für den Rest ist kein Wert erfasst."
 
-#: apps/nba/views.py:1036
+#: apps/nba/views.py:1065
 msgid "Salaries"
 msgstr "Gehälter"
 
-#: apps/nba/views.py:1039
+#: apps/nba/views.py:1068
 msgid "Average"
 msgstr "Durchschnitt"
 
-#: apps/nba/views.py:1040
+#: apps/nba/views.py:1069
 msgid "Median"
 msgstr "Median"
 
-#: apps/nba/views.py:1041
+#: apps/nba/views.py:1070
 msgid "Lowest"
 msgstr "Niedrigster Wert"
 
-#: apps/nba/views.py:1042
+#: apps/nba/views.py:1071
 msgid "Highest"
 msgstr "Höchster Wert"
 
-#: apps/nba/views.py:1043
+#: apps/nba/views.py:1072
 msgid "Total"
 msgstr "Gesamt"
 
-#: apps/nba/views.py:1048 templates/nba/partials/season_stats_card.html:44
+#: apps/nba/views.py:1077 templates/nba/partials/season_stats_card.html:44
 msgid "Fantasy points"
 msgstr "Fantasy-Punkte"
 
-#: apps/nba/views.py:1051
+#: apps/nba/views.py:1080
 msgid "Avg per game"
 msgstr "Durchschnitt pro Spiel"
 
-#: apps/nba/views.py:1052
+#: apps/nba/views.py:1081
 msgid "Median per game"
 msgstr "Median pro Spiel"
 
-#: apps/nba/views.py:1053
+#: apps/nba/views.py:1082
 msgid "Fewest per game"
 msgstr "Wenigste pro Spiel"
 
-#: apps/nba/views.py:1054
+#: apps/nba/views.py:1083
 msgid "Most per game"
 msgstr "Meiste pro Spiel"
 
-#: apps/nba/views.py:1055 templates/nba/player_detail.html:239
+#: apps/nba/views.py:1084 templates/nba/player_detail.html:239
 msgid "Points total"
 msgstr "Punkte gesamt"
 
-#: apps/nba/views.py:1058
+#: apps/nba/views.py:1087
 msgid "Team per game"
 msgstr "Team pro Spiel"
 
-#: apps/nba/views.py:1063
+#: apps/nba/views.py:1092
 msgid "Player health"
 msgstr "Spielergesundheit"
 
-#: apps/nba/views.py:1066 templates/nba/partials/injury_status.html:3
+#: apps/nba/views.py:1095 templates/nba/partials/injury_status.html:3
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:90
 msgid "Healthy"
 msgstr "Gesund"
 
-#: apps/nba/views.py:1067 templates/nba/partials/injury_status.html:4
+#: apps/nba/views.py:1096 templates/nba/partials/injury_status.html:4
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
-#: templates/nba/player_list.html:91 templates/nba/team_list.html:30
+#: templates/nba/player_list.html:91 templates/nba/team_list.html:35
 msgid "Day-to-day"
 msgstr "Angeschlagen"
 
-#: apps/nba/views.py:1068 templates/nba/partials/injury_status.html:2
+#: apps/nba/views.py:1097 templates/nba/partials/injury_status.html:2
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
-#: templates/nba/player_list.html:92 templates/nba/team_list.html:31
+#: templates/nba/player_list.html:92 templates/nba/team_list.html:36
 msgid "Injured"
 msgstr "Verletzt"
 
-#: apps/nba/views.py:1092
+#: apps/nba/views.py:1121
 msgid "Only you can see these notes. They are for your own team context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Teamkontext gedacht."
 
-#: apps/nba/views.py:1095
+#: apps/nba/views.py:1124
 msgid "No private notes yet. Save one to remember your take on this team."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Teams festzuhalten."
 
-#: apps/nba/views.py:1190
+#: apps/nba/views.py:1219
 msgid "Only you can see these notes. They are for your own player context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Spielerkontext gedacht."
 
-#: apps/nba/views.py:1193
+#: apps/nba/views.py:1222
 msgid "No private notes yet. Save one to remember your take on this player."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Spielers festzuhalten."
 
-#: apps/nba/views.py:1303
+#: apps/nba/views.py:1332
 msgid "The note will be removed for good. This cannot be undone."
 msgstr ""
 "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."
@@ -1793,7 +1793,7 @@ msgstr "Teams"
 #: templates/fantasy/manager_list.html:91
 #: templates/fantasy/partials/roster_panel.html:98
 #: templates/fantasy/roster_list.html:72 templates/nba/player_list.html:4
-#: templates/nba/player_list.html:5 templates/nba/team_list.html:25
+#: templates/nba/player_list.html:5 templates/nba/team_list.html:30
 msgid "Players"
 msgstr "Spieler"
 
@@ -2442,7 +2442,7 @@ msgstr[0] "%(count)s Spieler"
 msgstr[1] "%(count)s Spieler"
 
 #: templates/fantasy/partials/roster_panel.html:240
-#: templates/nba/team_list.html:57
+#: templates/nba/team_list.html:71
 #, python-format
 msgid "%(count)s injured"
 msgid_plural "%(count)s injured"
@@ -2450,7 +2450,7 @@ msgstr[0] "%(count)s verletzt"
 msgstr[1] "%(count)s verletzt"
 
 #: templates/fantasy/partials/roster_panel.html:242
-#: templates/nba/team_list.html:58
+#: templates/nba/team_list.html:72
 #, python-format
 msgid "%(count)s day-to-day"
 msgid_plural "%(count)s day-to-day"
@@ -2584,12 +2584,12 @@ msgid "Return date unknown"
 msgstr "Rückkehr unbekannt"
 
 #: templates/fantasy/partials/squad_cards.html:57
-#: templates/nba/player_detail.html:301 templates/nba/team_list.html:29
+#: templates/nba/player_detail.html:301 templates/nba/team_list.html:34
 msgid "Salary"
 msgstr "Gehalt"
 
 #: templates/fantasy/partials/squad_cards.html:65
-#: templates/nba/player_detail.html:223 templates/nba/team_list.html:27
+#: templates/nba/player_detail.html:223 templates/nba/team_list.html:32
 msgid "FP/G"
 msgstr "FP/G"
 
@@ -3475,6 +3475,7 @@ msgid "points per game"
 msgstr "Punkte pro Spiel"
 
 #: templates/nba/partials/news_feed.html:11
+#: templates/nba/partials/next_game.html:21
 msgid "Today"
 msgstr "Heute"
 
@@ -3521,6 +3522,25 @@ msgstr "Auf RotoWire lesen"
 #: templates/nba/partials/news_item.html:57
 msgid "opens in a new tab"
 msgstr "öffnet in neuem Tab"
+
+#: templates/nba/partials/next_days_badge.html:14
+#, python-format
+msgid "%(count)s game in the next 7 days"
+msgid_plural "%(count)s games in the next 7 days"
+msgstr[0] "%(count)s Spiel in den nächsten 7 Tagen"
+msgstr[1] "%(count)s Spiele in den nächsten 7 Tagen"
+
+#: templates/nba/partials/next_game.html:18
+msgid "Live"
+msgstr "Live"
+
+#: templates/nba/partials/next_game.html:21
+msgid "Tomorrow"
+msgstr "Morgen"
+
+#: templates/nba/partials/next_game.html:27
+msgid "vs"
+msgstr "vs"
 
 #: templates/nba/partials/note.html:8
 #, python-format
@@ -3771,6 +3791,22 @@ msgid "Games, out of his last 10, after which his points per game went up"
 msgstr ""
 "Spiele unter seinen letzten 10, nach denen seine Punkte pro Spiel gestiegen "
 "sind"
+
+#: templates/nba/partials/season_progress.html:8
+#, python-format
+msgid "%(played)s played, %(left)s to go"
+msgstr "%(played)s gespielt, %(left)s offen"
+
+#: templates/nba/partials/season_progress.html:12
+msgid "Season played"
+msgstr "Gespielter Anteil der Saison"
+
+#: templates/nba/partials/season_progress.html:16
+#, python-format
+msgid "%(played)s played"
+msgid_plural "%(played)s played"
+msgstr[0] "%(played)s gespielt"
+msgstr[1] "%(played)s gespielt"
 
 #: templates/nba/partials/season_stats_card.html:17
 #: templates/nba/season_stats_upload.html:20
@@ -4539,11 +4575,37 @@ msgid_plural "%(team_count)s franchises"
 msgstr[0] "%(team_count)s Franchise"
 msgstr[1] "%(team_count)s Franchises"
 
-#: templates/nba/team_list.html:78
+#: templates/nba/team_list.html:39
+msgid "Regular-season games still to play, of 82"
+msgstr "Offene Spiele der regulären Saison, von 82"
+
+#: templates/nba/team_list.html:39
+msgid "To go"
+msgstr "Offen"
+
+#: templates/nba/team_list.html:43
+#, python-format
+msgid "Games in the next %(days)s day"
+msgid_plural "Games in the next %(days)s days"
+msgstr[0] "Spiele am nächsten %(days)s Tag"
+msgstr[1] "Spiele in den nächsten %(days)s Tagen"
+
+#: templates/nba/team_list.html:43
+#, python-format
+msgid "%(days)s day"
+msgid_plural "%(days)s days"
+msgstr[0] "%(days)s Tag"
+msgstr[1] "%(days)s Tage"
+
+#: templates/nba/team_list.html:45
+msgid "Next game"
+msgstr "Nächstes Spiel"
+
+#: templates/nba/team_list.html:102
 msgid "No teams yet."
 msgstr "Noch keine Teams."
 
-#: templates/nba/team_list.html:81
+#: templates/nba/team_list.html:105
 msgid "Creates the 30 NBA franchises."
 msgstr "Erstellt die 30 NBA-Franchises."
 

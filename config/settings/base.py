@@ -153,6 +153,18 @@ RAPID_API_SUPERUSER_DAILY_LIMIT = 5
 # NBA schedule import. Both stop once RapidAPI reports fewer left than this.
 RAPID_API_MONTHLY_RESERVE = 10
 
+# The NBA schedule, from the injury feed's API: loaded whole a few times a
+# season, 31 days a request. Requests come out of the same 90 a month as the
+# injury button, so only production loads it unless the switch says otherwise;
+# staging and a laptop copy production's games instead (see the README).
+NBA_SCHEDULE_URL = env(
+    "NBA_SCHEDULE_URL",
+    default="https://api-basketball-nba.p.rapidapi.com/v2/games/range",
+)
+NBA_SCHEDULE_ENABLED = env.bool("NBA_SCHEDULE_ENABLED", default=ENVIRONMENT == "production")
+# A whole season is six or seven requests; this leaves room for one retry.
+NBA_SCHEDULE_DAILY_LIMIT = 10
+
 # RotoWire player news, on the same RapidAPI account as the injury feed above.
 # The free plan stops at 500 requests a month; the schedule makes three a day,
 # and the daily limit leaves five for manual runs.

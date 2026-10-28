@@ -1,0 +1,1274 @@
+{
+ "data": [
+  {
+   "id": "401909834",
+   "date": "2026-10-21T23:00Z",
+   "name": "Atlanta Hawks at Orlando Magic",
+   "shortName": "ATL @ ORL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "19",
+    "abbreviation": "ORL",
+    "name": "Orlando Magic",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "1",
+    "abbreviation": "ATL",
+    "name": "Atlanta Hawks",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909835",
+   "date": "2026-10-21T23:00Z",
+   "name": "Milwaukee Bucks at Washington Wizards",
+   "shortName": "MIL @ WSH",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "27",
+    "abbreviation": "WSH",
+    "name": "Washington Wizards",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "15",
+    "abbreviation": "MIL",
+    "name": "Milwaukee Bucks",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909091",
+   "date": "2026-10-21T23:30Z",
+   "name": "Minnesota Timberwolves at Miami Heat",
+   "shortName": "MIN @ MIA",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "14",
+    "abbreviation": "MIA",
+    "name": "Miami Heat",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "16",
+    "abbreviation": "MIN",
+    "name": "Minnesota Timberwolves",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909836",
+   "date": "2026-10-21T23:30Z",
+   "name": "Charlotte Hornets at Brooklyn Nets",
+   "shortName": "CHA @ BKN",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "17",
+    "abbreviation": "BKN",
+    "name": "Brooklyn Nets",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "30",
+    "abbreviation": "CHA",
+    "name": "Charlotte Hornets",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909837",
+   "date": "2026-10-21T23:30Z",
+   "name": "Chicago Bulls at Toronto Raptors",
+   "shortName": "CHI @ TOR",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "28",
+    "abbreviation": "TOR",
+    "name": "Toronto Raptors",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "4",
+    "abbreviation": "CHI",
+    "name": "Chicago Bulls",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909838",
+   "date": "2026-10-22T00:00Z",
+   "name": "Utah Jazz at Memphis Grizzlies",
+   "shortName": "UTAH @ MEM",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "29",
+    "abbreviation": "MEM",
+    "name": "Memphis Grizzlies",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "26",
+    "abbreviation": "UTAH",
+    "name": "Utah Jazz",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909839",
+   "date": "2026-10-22T00:00Z",
+   "name": "Indiana Pacers at New Orleans Pelicans",
+   "shortName": "IND @ NO",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "3",
+    "abbreviation": "NO",
+    "name": "New Orleans Pelicans",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "11",
+    "abbreviation": "IND",
+    "name": "Indiana Pacers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909840",
+   "date": "2026-10-22T00:30Z",
+   "name": "Dallas Mavericks at Houston Rockets",
+   "shortName": "DAL @ HOU",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "10",
+    "abbreviation": "HOU",
+    "name": "Houston Rockets",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "6",
+    "abbreviation": "DAL",
+    "name": "Dallas Mavericks",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909092",
+   "date": "2026-10-22T02:00Z",
+   "name": "Golden State Warriors at Los Angeles Lakers",
+   "shortName": "GS @ LAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "9",
+    "abbreviation": "GS",
+    "name": "Golden State Warriors",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909841",
+   "date": "2026-10-22T02:00Z",
+   "name": "Phoenix Suns at Portland Trail Blazers",
+   "shortName": "PHX @ POR",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "22",
+    "abbreviation": "POR",
+    "name": "Portland Trail Blazers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "21",
+    "abbreviation": "PHX",
+    "name": "Phoenix Suns",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909842",
+   "date": "2026-10-22T02:30Z",
+   "name": "Sacramento Kings at LA Clippers",
+   "shortName": "SAC @ LAC",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "12",
+    "abbreviation": "LAC",
+    "name": "LA Clippers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "23",
+    "abbreviation": "SAC",
+    "name": "Sacramento Kings",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909093",
+   "date": "2026-10-22T23:00Z",
+   "name": "Cleveland Cavaliers at Philadelphia 76ers",
+   "shortName": "CLE @ PHI",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "20",
+    "abbreviation": "PHI",
+    "name": "Philadelphia 76ers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "5",
+    "abbreviation": "CLE",
+    "name": "Cleveland Cavaliers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909094",
+   "date": "2026-10-23T01:30Z",
+   "name": "Denver Nuggets at Oklahoma City Thunder",
+   "shortName": "DEN @ OKC",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "25",
+    "abbreviation": "OKC",
+    "name": "Oklahoma City Thunder",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "7",
+    "abbreviation": "DEN",
+    "name": "Denver Nuggets",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909848",
+   "date": "2026-10-23T20:00Z",
+   "name": "Chicago Bulls at Milwaukee Bucks",
+   "shortName": "CHI @ MIL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "15",
+    "abbreviation": "MIL",
+    "name": "Milwaukee Bucks",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "4",
+    "abbreviation": "CHI",
+    "name": "Chicago Bulls",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909095",
+   "date": "2026-10-23T23:00Z",
+   "name": "New York Knicks at Boston Celtics",
+   "shortName": "NY @ BOS",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "2",
+    "abbreviation": "BOS",
+    "name": "Boston Celtics",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "18",
+    "abbreviation": "NY",
+    "name": "New York Knicks",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909843",
+   "date": "2026-10-23T23:00Z",
+   "name": "Atlanta Hawks at Charlotte Hornets",
+   "shortName": "ATL @ CHA",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "30",
+    "abbreviation": "CHA",
+    "name": "Charlotte Hornets",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "1",
+    "abbreviation": "ATL",
+    "name": "Atlanta Hawks",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909851",
+   "date": "2026-10-24T02:00Z",
+   "name": "LA Clippers at Los Angeles Lakers",
+   "shortName": "LAC @ LAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "12",
+    "abbreviation": "LAC",
+    "name": "LA Clippers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909861",
+   "date": "2026-10-25T21:00Z",
+   "name": "Los Angeles Lakers at Utah Jazz",
+   "shortName": "LAL @ UTAH",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "26",
+    "abbreviation": "UTAH",
+    "name": "Utah Jazz",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909880",
+   "date": "2026-10-28T03:00Z",
+   "name": "Portland Trail Blazers at Los Angeles Lakers",
+   "shortName": "POR @ LAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "post",
+    "name": "STATUS_FINAL",
+    "detail": "Final",
+    "completed": true
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "22",
+    "abbreviation": "POR",
+    "name": "Portland Trail Blazers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909892",
+   "date": "2026-10-29T02:30Z",
+   "name": "Los Angeles Lakers at LA Clippers",
+   "shortName": "LAL @ LAC",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Wed, October 28th at 10:30 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "12",
+    "abbreviation": "LAC",
+    "name": "LA Clippers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909277",
+   "date": "2026-10-30T23:00Z",
+   "name": "Charlotte Hornets at Washington Wizards",
+   "shortName": "CHA @ WSH",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, October 30th at 7:00 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "27",
+    "abbreviation": "WSH",
+    "name": "Washington Wizards",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "30",
+    "abbreviation": "CHA",
+    "name": "Charlotte Hornets",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909278",
+   "date": "2026-10-30T23:30Z",
+   "name": "Chicago Bulls at Boston Celtics",
+   "shortName": "CHI @ BOS",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, October 30th at 7:30 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "2",
+    "abbreviation": "BOS",
+    "name": "Boston Celtics",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "4",
+    "abbreviation": "CHI",
+    "name": "Chicago Bulls",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909279",
+   "date": "2026-10-30T23:30Z",
+   "name": "Detroit Pistons at Brooklyn Nets",
+   "shortName": "DET @ BKN",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, October 30th at 7:30 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "17",
+    "abbreviation": "BKN",
+    "name": "Brooklyn Nets",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "8",
+    "abbreviation": "DET",
+    "name": "Detroit Pistons",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909280",
+   "date": "2026-10-30T23:30Z",
+   "name": "New York Knicks at Philadelphia 76ers",
+   "shortName": "NY @ PHI",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, October 30th at 7:30 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "20",
+    "abbreviation": "PHI",
+    "name": "Philadelphia 76ers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "18",
+    "abbreviation": "NY",
+    "name": "New York Knicks",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909281",
+   "date": "2026-10-30T23:30Z",
+   "name": "Orlando Magic at Toronto Raptors",
+   "shortName": "ORL @ TOR",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, October 30th at 7:30 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "28",
+    "abbreviation": "TOR",
+    "name": "Toronto Raptors",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "19",
+    "abbreviation": "ORL",
+    "name": "Orlando Magic",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909282",
+   "date": "2026-10-31T00:00Z",
+   "name": "Indiana Pacers at Miami Heat",
+   "shortName": "IND @ MIA",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, October 30th at 8:00 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "14",
+    "abbreviation": "MIA",
+    "name": "Miami Heat",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "11",
+    "abbreviation": "IND",
+    "name": "Indiana Pacers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909283",
+   "date": "2026-10-31T00:00Z",
+   "name": "Houston Rockets at Dallas Mavericks",
+   "shortName": "HOU @ DAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, October 30th at 8:00 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "6",
+    "abbreviation": "DAL",
+    "name": "Dallas Mavericks",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "10",
+    "abbreviation": "HOU",
+    "name": "Houston Rockets",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909284",
+   "date": "2026-10-31T00:00Z",
+   "name": "LA Clippers at Minnesota Timberwolves",
+   "shortName": "LAC @ MIN",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, October 30th at 8:00 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "16",
+    "abbreviation": "MIN",
+    "name": "Minnesota Timberwolves",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "12",
+    "abbreviation": "LAC",
+    "name": "LA Clippers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909285",
+   "date": "2026-10-31T02:00Z",
+   "name": "Los Angeles Lakers at Golden State Warriors",
+   "shortName": "LAL @ GS",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, October 30th at 10:00 PM EDT",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "9",
+    "abbreviation": "GS",
+    "name": "Golden State Warriors",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909906",
+   "date": "2026-11-02T02:00Z",
+   "name": "Toronto Raptors at Los Angeles Lakers",
+   "shortName": "TOR @ LAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Sun, November 1st at 9:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "28",
+    "abbreviation": "TOR",
+    "name": "Toronto Raptors",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909921",
+   "date": "2026-11-03T03:00Z",
+   "name": "Miami Heat at Los Angeles Lakers",
+   "shortName": "MIA @ LAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Mon, November 2nd at 10:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "14",
+    "abbreviation": "MIA",
+    "name": "Miami Heat",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909934",
+   "date": "2026-11-05T03:00Z",
+   "name": "Los Angeles Lakers at Sacramento Kings",
+   "shortName": "LAL @ SAC",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Wed, November 4th at 10:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "23",
+    "abbreviation": "SAC",
+    "name": "Sacramento Kings",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909294",
+   "date": "2026-11-07T03:00Z",
+   "name": "Portland Trail Blazers at Los Angeles Lakers",
+   "shortName": "POR @ LAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, November 6th at 10:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "22",
+    "abbreviation": "POR",
+    "name": "Portland Trail Blazers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909946",
+   "date": "2026-11-08T23:00Z",
+   "name": "Los Angeles Lakers at Detroit Pistons",
+   "shortName": "LAL @ DET",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Sun, November 8th at 6:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "8",
+    "abbreviation": "DET",
+    "name": "Detroit Pistons",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909952",
+   "date": "2026-11-10T00:00Z",
+   "name": "Los Angeles Lakers at Atlanta Hawks",
+   "shortName": "LAL @ ATL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Mon, November 9th at 7:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "1",
+    "abbreviation": "ATL",
+    "name": "Atlanta Hawks",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909971",
+   "date": "2026-11-12T01:00Z",
+   "name": "Los Angeles Lakers at Milwaukee Bucks",
+   "shortName": "LAL @ MIL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Wed, November 11th at 8:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "15",
+    "abbreviation": "MIL",
+    "name": "Milwaukee Bucks",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909986",
+   "date": "2026-11-15T21:00Z",
+   "name": "Los Angeles Lakers at Phoenix Suns",
+   "shortName": "LAL @ PHX",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Sun, November 15th at 4:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "21",
+    "abbreviation": "PHX",
+    "name": "Phoenix Suns",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401910005",
+   "date": "2026-11-18T03:00Z",
+   "name": "Charlotte Hornets at Los Angeles Lakers",
+   "shortName": "CHA @ LAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Tue, November 17th at 10:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "30",
+    "abbreviation": "CHA",
+    "name": "Charlotte Hornets",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401910017",
+   "date": "2026-11-19T03:00Z",
+   "name": "Utah Jazz at Los Angeles Lakers",
+   "shortName": "UTAH @ LAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Wed, November 18th at 10:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [],
+   "home": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "26",
+    "abbreviation": "UTAH",
+    "name": "Utah Jazz",
+    "homeAway": "away"
+   }
+  },
+  {
+   "id": "401909313",
+   "date": "2026-11-21T03:00Z",
+   "name": "Sacramento Kings at Los Angeles Lakers",
+   "shortName": "SAC @ LAL",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "status": {
+    "state": "pre",
+    "name": "STATUS_SCHEDULED",
+    "detail": "Fri, November 20th at 10:00 PM EST",
+    "completed": false
+   },
+   "neutralSite": false,
+   "notes": [
+    "NBA Cup - Group Play"
+   ],
+   "home": {
+    "id": "13",
+    "abbreviation": "LAL",
+    "name": "Los Angeles Lakers",
+    "homeAway": "home"
+   },
+   "away": {
+    "id": "23",
+    "abbreviation": "SAC",
+    "name": "Sacramento Kings",
+    "homeAway": "away"
+   }
+  }
+ ],
+ "meta": {
+  "league": "nba",
+  "generatedAt": "2026-10-28T17:53:41.046Z",
+  "cacheTtlSeconds": 30,
+  "from": "20261021",
+  "to": "20261120",
+  "count": 40
+ }
+}

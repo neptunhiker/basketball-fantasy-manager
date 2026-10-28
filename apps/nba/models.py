@@ -886,3 +886,84 @@ class PlayerSeasonStats(TimeStampedModel):
 
     def __str__(self):
         return f"{self.player} {self.season}"
+
+
+# A regular season is 82 games a team. Two of them are only scheduled once the
+# NBA Cup's group stage ends in December, so counting what is stored would
+# come up short until then; what is left is worked out from this instead.
+REGULAR_SEASON_GAMES = 82
+# How long after tip-off a game counts as played. The schedule is loaded
+# rarely and carries no results, so the clock decides.
+GAME_LENGTH = dt.timedelta(hours=3)
+# ESPN's status names for a game that will not be played when it was set for.
+CALLED_OFF_STATUSES = frozenset({"STATUS_POSTPONED", "STATUS_CANCELED", "STATUS_SUSPENDED"})
+
+
+class GameQuerySet(models.QuerySet):
+    def for_team(self, team):
+        return self.filter(models.Q(home_team=team) | models.Q(away_team=team))
+
+    def counting(self):
+        """Regular-season games that are on: the ones the 82 are made of."""
+        return self.filter(is_regular_season=True).exclude(status__in=CALLED_OFF_STATUSES)
+
+    def played(self, now=None):
+        return self.counting().filter(tip_off__lte=(now or timezone.now()) - GAME_LENGTH)
+
+    def upcoming(self, now=None):
+        return self.counting().filter(tip_off__gt=(now or timezone.now()) - GAME_LENGTH)
+
+
+class Game(TimeStampedModel):
+    """One NBA game on the schedule, as the schedule feed last had it.
+
+    Loaded a few times a season and never with results: whether a game has
+    been played is read off the clock (`GAME_LENGTH` after tip-off).
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    espn_id = models.CharField("ESPN ID", max_length=20, unique=True)
+    # The year the season ends in, as the feed counts: 2027 for 2026-27.
+    season_year = models.PositiveSmallIntegerField("Season")
+    tip_off = models.DateTimeField("Tip-off")
+    home_team = models.ForeignKey(
+        Team, on_delete=models.PROTECT, related_name="home_games", verbose_name="Home team"
+    )
+    away_team = models.ForeignKey(
+        Team, on_delete=models.PROTECT, related_name="away_games", verbose_name="Away team"
+    )
+    # ESPN's own status name: STATUS_SCHEDULED, STATUS_FINAL, STATUS_POSTPONED...
+    status = models.CharField("Status", max_length=40, blank=True)
+    note = models.CharField("Note", max_length=200, blank=True)
+    is_regular_season = models.BooleanField("Regular season", default=True)
+
+    objects = GameQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["tip_off", "espn_id"]
+        indexes = [
+            models.Index(fields=["home_team", "tip_off"]),
+            models.Index(fields=["away_team", "tip_off"]),
+            models.Index(fields=["season_year", "tip_off"]),
+        ]
+
+    def __str__(self):
+        matchup = f"{self.away_team.abbreviation} @ {self.home_team.abbreviation}"
+        return f"{matchup}, {timezone.localtime(self.tip_off):%Y-%m-%d}"
+
+    @property
+    def is_called_off(self):
+        return self.status in CALLED_OFF_STATUSES
+
+    @property
+    def is_nba_cup(self):
+        return "NBA Cup" in self.note
+
+    def is_played(self, now=None):
+        return not self.is_called_off and self.tip_off <= (now or timezone.now()) - GAME_LENGTH
+
+    def opponent_of(self, team):
+        return self.away_team if self.home_team_id == team.pk else self.home_team
+
+    def is_home_for(self, team):
+        return self.home_team_id == team.pk

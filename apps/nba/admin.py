@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     ApiQuota,
+    Game,
     ImportRun,
     Player,
     PlayerInjury,
@@ -192,6 +193,47 @@ class ApiQuotaAdmin(admin.ModelAdmin):
     """Read-only: each request rewrites the row from RapidAPI's own figures."""
 
     list_display = ["provider", "remaining", "limit", "resets_at", "reported_at"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class GameTeamFilter(admin.SimpleListFilter):
+    """Every game a team plays, home or away."""
+
+    title = "team"
+    parameter_name = "team"
+
+    def lookups(self, request, model_admin):
+        return [(team.abbreviation, team.name) for team in Team.objects.order_by("name")]
+
+    def queryset(self, request, queryset):
+        if not self.value():
+            return queryset
+        team = Team.objects.filter(abbreviation=self.value()).first()
+        return queryset.for_team(team) if team else queryset.none()
+
+
+@admin.register(Game)
+class GameAdmin(admin.ModelAdmin):
+    """Read-only: the schedule import is the one thing that writes games."""
+
+    list_display = [
+        "tip_off",
+        "away_team",
+        "home_team",
+        "status",
+        "note",
+        "is_regular_season",
+        "season_year",
+    ]
+    list_filter = [GameTeamFilter, "season_year", "is_regular_season", "status"]
+    list_select_related = ["home_team", "away_team"]
+    date_hierarchy = "tip_off"
+    search_fields = ["espn_id", "home_team__name", "away_team__name"]
 
     def has_add_permission(self, request):
         return False

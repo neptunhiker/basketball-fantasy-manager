@@ -6,6 +6,9 @@ from .base import BASE_DIR, env
 DEBUG = True
 ENVIRONMENT = env("ENVIRONMENT", default="development").strip().lower()
 ALLOW_DEMO_DATA = env.bool("ALLOW_DEMO_DATA", default=True)
+# A laptop never loads the schedule itself unless told to: base derived the
+# default from an ENVIRONMENT that defaults to production.
+NBA_SCHEDULE_ENABLED = env.bool("NBA_SCHEDULE_ENABLED", default=ENVIRONMENT == "production")
 SECRET_KEY = env("SECRET_KEY", default="dev-only-insecure-key-do-not-use-in-production")
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]"]
 

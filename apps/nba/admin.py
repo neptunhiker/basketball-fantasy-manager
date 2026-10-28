@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import (
+    ApiQuota,
     ImportRun,
     Player,
     PlayerInjury,
@@ -178,6 +179,19 @@ class PlayerSeasonStatsAdmin(admin.ModelAdmin):
     list_filter = ["season"]
     search_fields = ["player__first_name", "player__last_name", "source_name"]
     list_select_related = ["player"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ApiQuota)
+class ApiQuotaAdmin(admin.ModelAdmin):
+    """Read-only: each request rewrites the row from RapidAPI's own figures."""
+
+    list_display = ["provider", "remaining", "limit", "resets_at", "reported_at"]
 
     def has_add_permission(self, request):
         return False

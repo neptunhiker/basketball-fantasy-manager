@@ -532,6 +532,26 @@ class NbaApiUsage(TimeStampedModel):
         return f"{self.provider} - {self.usage_date}: {self.request_count}"
 
 
+class ApiQuota(TimeStampedModel):
+    """What a RapidAPI provider last reported about the monthly requests left.
+
+    RapidAPI counts every request made with the key, from staging and
+    production alike, so this is the one tally both servers agree on.
+    """
+
+    provider = models.CharField("Provider", max_length=64, unique=True)
+    limit = models.PositiveIntegerField("Monthly limit", null=True, blank=True)
+    remaining = models.PositiveIntegerField("Remaining")
+    resets_at = models.DateTimeField("Resets at", null=True, blank=True)
+    reported_at = models.DateTimeField("Reported at")
+
+    class Meta:
+        verbose_name = "API quota"
+
+    def __str__(self):
+        return f"{self.provider}: {self.remaining} of {self.limit} left"
+
+
 # RotoWire's team codes where they are not ours. PHO is in the feed; the rest
 # are the other spellings the same family of feeds is known to use.
 ROTOWIRE_TEAM_CODES = {

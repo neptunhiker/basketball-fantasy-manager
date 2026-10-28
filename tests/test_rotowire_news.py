@@ -8,16 +8,19 @@ import datetime as dt
 import io
 import json
 from datetime import date
+from email.message import Message
 from pathlib import Path
+from urllib.error import HTTPError
 
 import pytest
 from django.core.management import CommandError, call_command
+from django.urls import reverse
 from django.utils import timezone
 from django_q.models import Schedule
 
 from apps.fantasy.models import Season
 from apps.nba import rotowire, tasks
-from apps.nba.models import NbaApiUsage, Player, PlayerNews, Team
+from apps.nba.models import ApiQuota, NbaApiUsage, Player, PlayerNews, Team
 from apps.nba.rotowire import (
     PROVIDER,
     RotoWireDisabled,
@@ -352,8 +355,25 @@ def test_a_link_set_by_hand_survives_a_pull_that_cannot_match(teams, payload):
 # -- the request -----------------------------------------------------------------
 
 
+def rapid_headers(remaining, limit=500, reset=86400):
+    """Response headers as RapidAPI sends them; they look up case-blind."""
+    headers = Message()
+    for name, value in [
+        ("X-RateLimit-Requests-Limit", limit),
+        ("X-RateLimit-Requests-Remaining", remaining),
+        ("X-RateLimit-Requests-Reset", reset),
+    ]:
+        if value is not None:
+            headers[name] = str(value)
+    return headers
+
+
 class FakeResponse(io.BytesIO):
     status = 200
+
+    def __init__(self, body, headers=None):
+        super().__init__(body)
+        self.headers = headers if headers is not None else Message()
 
     def __enter__(self):
         return self
@@ -504,6 +524,132 @@ def test_outside_the_window_the_command_refuses(db, api_key, monkeypatch):
 
     with pytest.raises(CommandError, match="no season within"):
         call_command("import_rotowire_news")
+
+
+# -- RapidAPI's monthly requests ------------------------------------------------
+
+
+def quota(remaining, resets_in=dt.timedelta(days=10), reported_ago=dt.timedelta(0), limit=500):
+    now = timezone.now()
+    return ApiQuota.objects.create(
+        provider=PROVIDER,
+        limit=limit,
+        remaining=remaining,
+        resets_at=now + resets_in if resets_in is not None else None,
+        reported_at=now - reported_ago,
+    )
+
+
+def test_a_response_records_rapidapi_s_count(db, api_key, payload, monkeypatch):
+    body = json.dumps(payload).encode()
+    monkeypatch.setattr(
+        rotowire,
+        "urlopen",
+        lambda request, timeout: FakeResponse(body, rapid_headers(484, reset=2603569)),
+    )
+
+    fetch_news()
+
+    recorded = ApiQuota.objects.get(provider=PROVIDER)
+    assert (recorded.limit, recorded.remaining) == (500, 484)
+    expected = timezone.now() + dt.timedelta(seconds=2603569)
+    assert abs(recorded.resets_at - expected) < dt.timedelta(minutes=1)
+
+
+def test_the_next_response_overwrites_the_count(db, api_key, payload, monkeypatch):
+    body = json.dumps(payload).encode()
+    for remaining in (484, 483):
+        monkeypatch.setattr(
+            rotowire,
+            "urlopen",
+            lambda request, timeout, left=remaining: FakeResponse(body, rapid_headers(left)),
+        )
+        fetch_news()
+
+    assert ApiQuota.objects.get().remaining == 483
+
+
+def test_a_refused_request_records_the_count_too(db, api_key, monkeypatch):
+    def refused(request, timeout):
+        raise HTTPError(request.full_url, 429, "Too Many Requests", rapid_headers(0), None)
+
+    monkeypatch.setattr(rotowire, "urlopen", refused)
+
+    with pytest.raises(NbaApiError, match="429"):
+        fetch_news()
+
+    assert ApiQuota.objects.get().remaining == 0
+
+
+@pytest.mark.parametrize("value", [None, "", "lots", "-1"])
+def test_a_missing_or_odd_count_is_not_recorded(db, api_key, payload, monkeypatch, value):
+    headers = Message()
+    if value is not None:
+        headers["X-RateLimit-Requests-Remaining"] = value
+    body = json.dumps(payload).encode()
+    monkeypatch.setattr(rotowire, "urlopen", lambda request, timeout: FakeResponse(body, headers))
+
+    fetch_news()
+
+    assert not ApiQuota.objects.exists()
+
+
+def test_without_a_reset_time_the_count_still_records(db, api_key, payload, monkeypatch):
+    body = json.dumps(payload).encode()
+    monkeypatch.setattr(
+        rotowire,
+        "urlopen",
+        lambda request, timeout: FakeResponse(body, rapid_headers(12, limit=None, reset=None)),
+    )
+
+    fetch_news()
+
+    recorded = ApiQuota.objects.get()
+    assert (recorded.limit, recorded.remaining, recorded.resets_at) == (None, 12, None)
+
+
+def test_no_count_yet_is_no_reason_to_stop(db):
+    assert rotowire.low_quota() is None
+
+
+@pytest.mark.parametrize(("remaining", "low"), [(19, True), (20, False), (484, False)])
+def test_the_reserve_is_twenty(db, remaining, low):
+    quota(remaining)
+
+    assert (rotowire.low_quota() is not None) is low
+
+
+def test_a_count_from_before_the_reset_is_out_of_date(db):
+    quota(0, resets_in=-dt.timedelta(minutes=1))
+
+    assert rotowire.low_quota() is None
+
+
+def test_without_a_reset_time_a_count_holds_for_its_calendar_month(db):
+    quota(0, resets_in=None)
+    now = timezone.now()
+
+    assert rotowire.low_quota(now) is not None
+    assert rotowire.low_quota(now + dt.timedelta(days=40)) is None
+
+
+def test_with_too_few_requests_left_the_task_does_nothing(in_season, api_key, monkeypatch):
+    quota(5)
+    monkeypatch.setattr(tasks, "sync_news", pytest.fail)
+
+    result = scheduled_rotowire_news_import()
+
+    assert result.startswith("skipped: only 5 RapidAPI requests left until ")
+    assert result.endswith("below the reserve of 20")
+
+
+def test_the_admin_shows_the_count(admin_client):
+    quota(484)
+
+    page = admin_client.get(reverse("admin:nba_apiquota_changelist"))
+
+    assert page.status_code == 200
+    assert b"484" in page.content
 
 
 # -- schedule, task and command --------------------------------------------------

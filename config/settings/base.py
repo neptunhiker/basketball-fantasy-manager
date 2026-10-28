@@ -167,6 +167,9 @@ ROTOWIRE_ENABLED = env.bool("ROTOWIRE_ENABLED", default=True)
 # with no season set up at all, the schedule skips.
 ROTOWIRE_DAYS_BEFORE_SEASON = 14
 ROTOWIRE_DAYS_AFTER_SEASON = 70
+# The schedule stops once RapidAPI reports fewer requests left this month,
+# keeping the rest for a pull by hand.
+ROTOWIRE_MONTHLY_RESERVE = 20
 
 LOGGING = {
     "version": 1,

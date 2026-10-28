@@ -89,7 +89,7 @@
                 {% include "nba/partials/season_progress.html" with schedule=team.schedule %}
               </td>
               <td class="px-4 py-3 text-center">
-                {% include "nba/partials/next_days_badge.html" with schedule=team.schedule %}
+                {% if team.schedule %}{% include "nba/partials/next_days_badge.html" with n=team.schedule.next_days %}{% else %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% endif %}
               </td>
               <td class="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-300">
                 {% include "nba/partials/next_game.html" with schedule=team.schedule link_opponent=True %}

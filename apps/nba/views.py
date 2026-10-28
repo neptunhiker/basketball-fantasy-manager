@@ -57,6 +57,7 @@ from .models import (
     injury_state,
     latest_fp_change,
 )
+from .rest_of_season import EXPECTED_AVAILABILITY, with_rest_of_season
 from .salary_charts import salary_charts
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
 from .services import (
@@ -68,6 +69,19 @@ from .services import (
 )
 from .stats import DESCENDING_FIRST
 from .team_schedule import NEXT_DAYS, UPCOMING_GAMES, season_games, team_schedules
+
+# The player list's "games in the next seven days" filter: at least this many.
+WEEK_GAMES_FILTERS = ("3", "4")
+
+
+def rest_of_season_context():
+    """What the player table needs to show the rest-of-season columns -- or
+    to leave them out, before any schedule is loaded."""
+    return {
+        "show_rest_of_season": season_games().exists(),
+        "availability_percent": round(EXPECTED_AVAILABILITY * 100),
+        "next_days": NEXT_DAYS,
+    }
 
 
 def with_expected_salary(qs):
@@ -337,6 +351,9 @@ class PlayerListView(LoginRequiredMixin, ListView):
         "hotness": [],
         "last_fp": [F("last_season_fp")],
         "return": [F("expected_return_date")],
+        "projected": [F("projected_fp")],
+        "left": [F("games_expected")],
+        "week": [F("next_days")],
     }
 
     def get_queryset(self):
@@ -411,6 +428,10 @@ class PlayerListView(LoginRequiredMixin, ListView):
 
         if self.request.GET.get("min_games") == "6":
             qs = qs.filter(current_games_played__gte=6)
+
+        qs = with_rest_of_season(qs)
+        if (week_games := self.request.GET.get("week_games")) in WEEK_GAMES_FILTERS:
+            qs = qs.filter(next_days__gte=int(week_games))
 
         qs = with_last_season(qs, self._last_season())
         if self._last_season() and self.request.GET.get("last_min_games") == "1":
@@ -511,6 +532,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
                 "last_min_games",
                 "return_from",
                 "return_to",
+                "week_games",
             )
             if self.request.GET.get(key, "").strip()
         )
@@ -526,6 +548,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
         # before tip-off, this season's once games are played.
         context["default_chart_view"] = "last" if self._preseason() else "current"
         context["current_sort"] = sort
+        context.update(rest_of_season_context())
         context["current_dir"] = "desc" if descending else "asc"
         context["can_import_from_bbde"] = can_import_from_bbde(self.request.user)
         if context["can_import_from_bbde"] and not self.request.htmx:
@@ -996,6 +1019,9 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         "hotness": [],
         "last_fp": [F("last_season_fp")],
         "return": [F("expected_return_date")],
+        "projected": [F("projected_fp")],
+        "left": [F("games_expected")],
+        "week": [F("next_days")],
     }
 
     def get_object(self, queryset=None):
@@ -1055,6 +1081,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         qs = services.with_player_marks(qs, self.request.user)
         qs = qs.annotate(note_count=my_note_count(self.request.user))
         qs = with_expected_return(qs)
+        qs = with_rest_of_season(qs)
         qs = with_last_season(qs, self._last_season())
 
         qs = with_expected_salary(qs)
@@ -1145,6 +1172,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         # before tip-off, this season's once games are played.
         context["default_chart_view"] = "last" if self._preseason() else "current"
         context["current_sort"] = sort
+        context.update(rest_of_season_context())
         context["current_dir"] = "desc" if descending else "asc"
         context["notes"] = with_note_urls(
             self.object.notes.filter(user=self.request.user)

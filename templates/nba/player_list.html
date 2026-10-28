@@ -162,6 +162,17 @@
                  class="rounded border-neutral-300 text-primary-500 focus:ring-primary-500/30 dark:border-neutral-700 dark:bg-neutral-900">
           {% translate "At least 6 games" %}
         </label>
+        {% if show_rest_of_season %}
+          <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <span class="shrink-0">{% blocktranslate count days=next_days %}Next {{ days }} day{% plural %}Next {{ days }} days{% endblocktranslate %}</span>
+            <select name="week_games"
+                    class="rounded-lg border border-neutral-300 bg-white py-1.5 pl-2.5 pr-8 text-base text-neutral-900 shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 sm:text-xs dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 {% if request.GET.week_games %}border-primary-400 dark:border-primary-500/60{% endif %}">
+              <option value="">{% translate "any number of games" %}</option>
+              <option value="3" {% if request.GET.week_games == "3" %}selected{% endif %}>{% translate "at least 3 games" %}</option>
+              <option value="4" {% if request.GET.week_games == "4" %}selected{% endif %}>{% translate "at least 4 games" %}</option>
+            </select>
+          </label>
+        {% endif %}
         {% if last_season %}
           <label class="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
             <input type="checkbox" name="last_min_games" value="1" {% if request.GET.last_min_games == "1" %}checked{% endif %}

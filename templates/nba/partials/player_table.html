@@ -15,6 +15,11 @@
 {% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
 {% translate "Hotness shows how often a player's points per game went up after his recent games. We look at his last 10 games: each time his season average rose after a game, that counts as a rise. Days without a game don't count. Hot: a rise in at least 6 of 10 games. Cold: 4 or fewer. Steady: in between. With fewer than 3 games to compare, only the count is shown." as hotness_help %}
 {% translate "Watchlist" as watchlist_label %}
+{% translate "Proj. FP" as projected_label %}
+{% translate "Left" context "games left" as games_left_label %}
+{% blocktranslate count days=next_days|default:7 asvar week_label %}{{ days }} day{% plural %}{{ days }} days{% endblocktranslate %}
+{% blocktranslate with percent=availability_percent asvar projected_help %}Projected fantasy points for the rest of the season: points per game this season × the games he can still play × {{ percent }}% availability, because hardly anyone plays every game. Games he misses while injured, up to his expected return, are left out.{% endblocktranslate %}
+{% translate "Left: the games his team still has to play of its 82, less the ones he misses while injured. 7 days: the games he can play in the next week." as games_left_help %}
 {% if last_season %}
   {% blocktranslate with season=last_season_short asvar last_fp_label %}FP {{ season }}{% endblocktranslate %}
   {% blocktranslate with season=last_season games=last_season_min_games asvar last_fp_help %}Fantasy points per game in the {{ season }} regular season, by this game's rules: points + rebounds + 1.5 × assists + 2 × steals + 2 × blocks − 2 × turnovers − 0.5 × missed field goals − 0.5 × missed free throws − 0.5 × personal fouls. Worked out from per-game averages, so it can differ from the real figure by a few tenths. Grey: fewer than {{ games }} games.{% endblocktranslate %}
@@ -143,6 +148,23 @@
             <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="avg" label=avg_game_label align="right" first="desc" %}
             </th>
+            {% if show_rest_of_season %}
+              <th scope="col" class="whitespace-nowrap px-4 py-3 text-right font-medium">
+                <span class="inline-flex items-center gap-1">
+                  {% include "nba/partials/sort_header.html" with key="projected" label=projected_label align="right" first="desc" %}
+                  {% include "partials/info_popover.html" with text=projected_help label=projected_label %}
+                </span>
+              </th>
+              <th scope="col" class="whitespace-nowrap px-4 py-3 text-right font-medium">
+                <span class="inline-flex items-center gap-1">
+                  {% include "nba/partials/sort_header.html" with key="left" label=games_left_label align="right" first="desc" %}
+                  {% include "partials/info_popover.html" with text=games_left_help label=games_left_label %}
+                </span>
+              </th>
+              <th scope="col" class="whitespace-nowrap px-4 py-3 text-center font-medium">
+                {% include "nba/partials/sort_header.html" with key="week" label=week_label align="center" first="desc" %}
+              </th>
+            {% endif %}
             <th scope="col" class="whitespace-nowrap px-4 py-3 text-right font-medium">
               <span class="inline-flex items-center gap-1">
                 {% include "nba/partials/sort_header.html" with key="latest" label=latest_fp_label align="right" first="desc" %}
@@ -176,6 +198,12 @@
                    class="hover:text-primary-600 hover:underline dark:hover:text-primary-400">{{ player.full_name }}</a>
                 {% if player.note_count %}
                   {% include "nba/partials/note_count.html" with count=player.note_count url_base=player.slug kind="player" %}
+                {% endif %}
+                {# Phones scroll a long way to the projection; its gist rides under the name. #}
+                {% if show_rest_of_season and player.games_expected is not None %}
+                  <span class="mt-0.5 block whitespace-nowrap text-[0.7rem] font-normal leading-tight text-neutral-500 tabular-nums md:hidden dark:text-neutral-400">
+                    {% if player.projected_fp is not None %}<span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ player.projected_fp|floatformat:"0g" }}</span> {% translate "proj." %} · {% endif %}{% blocktranslate with n=player.next_days %}{{ n }} in 7 d{% endblocktranslate %}
+                  </span>
                 {% endif %}
               </td>
               <td class="px-4 py-3 text-center">
@@ -225,6 +253,29 @@
               <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}
               </td>
+              {% if show_rest_of_season %}
+                <td class="px-4 py-3 text-right tabular-nums">
+                  {% if player.projected_fp is None %}
+                    <span class="text-neutral-400 dark:text-neutral-500">–</span>
+                  {% else %}
+                    <span class="font-semibold text-tertiary-700 dark:text-neutral-50">{{ player.projected_fp|floatformat:"0g" }}</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3 text-right tabular-nums"
+                    {% if player.team_games_left is not None %}title="{% blocktranslate with left=player.team_games_left %}Team: {{ left }} games left{% endblocktranslate %}"{% endif %}>
+                  {% if player.games_expected is None %}
+                    <span class="text-neutral-400 dark:text-neutral-500">–</span>
+                  {% else %}
+                    {{ player.games_expected }}
+                    {% if player.games_missed %}
+                      <span class="block whitespace-nowrap text-[0.7rem] leading-tight text-red-700 dark:text-red-300">{% blocktranslate with missed=player.games_missed %}−{{ missed }} injured{% endblocktranslate %}</span>
+                    {% endif %}
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3 text-center">
+                  {% if player.next_days is None %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% else %}{% include "nba/partials/next_days_badge.html" with n=player.next_days %}{% endif %}
+                </td>
+              {% endif %}
               <td class="px-4 py-3 text-right tabular-nums">
                 {% include "nba/partials/latest_fp.html" with gain=player.latest_fp_gain avg_change=player.latest_avg_change %}
               </td>
@@ -259,6 +310,7 @@
       <strong class="font-medium">{{ value_label }}:</strong> {% translate "expected salary for his points per game minus actual salary — + means a bargain." %}
       <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his average rose over his last 10 games." %}
       <strong class="ml-2 font-medium">{{ latest_fp_label }}:</strong> {% translate "points since the previous snapshot — – means no game." %}
+      {% if show_rest_of_season %}<strong class="ml-2 font-medium">{{ projected_label }}:</strong> {% blocktranslate with percent=availability_percent %}points per game × games he can still play × {{ percent }}% availability.{% endblocktranslate %}{% endif %}
       {% if last_season %}<strong class="ml-2 font-medium">{{ last_fp_label }}:</strong> {% translate "fantasy points per game last season, by this game's rules." %}{% endif %}
     </p>
 
@@ -296,7 +348,7 @@
         <p class="mx-auto mt-1 max-w-sm text-sm text-neutral-500 dark:text-neutral-400">
           {% translate "Mark players you want to trade away or keep clear of with the thumbs-down on their page or in your roster." %}
         </p>
-      {% elif request.GET.q or request.GET.position or request.GET.team or request.GET.injury_status or request.GET.roster or request.GET.max_salary or request.GET.min_games or request.GET.watchlist or request.GET.kicklist or request.GET.last_min_games %}
+      {% elif request.GET.q or request.GET.position or request.GET.team or request.GET.injury_status or request.GET.roster or request.GET.max_salary or request.GET.min_games or request.GET.watchlist or request.GET.kicklist or request.GET.last_min_games or request.GET.week_games %}
         <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "Nothing matches those filters." %}</p>
       {% else %}
         <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "No players yet." %}</p>

@@ -201,3 +201,87 @@ def test_one_player_s_figures_match_the_list(schedule):
 def test_one_player_without_a_team_or_schedule_has_no_figures(teams, season):
     assert rest_of_season(player(None)) is None
     assert rest_of_season(player(teams["HOU"], name="Other")) is None
+
+
+# -- the player list and the team page -------------------------------------------
+
+
+@pytest.fixture
+def signed_in(client, user, password):
+    client.login(email=user.email, password=password)
+    return client
+
+
+PLAYER_LIST = "/players/"
+
+
+def names(response):
+    return [player.last_name for player in response.context["players"]]
+
+
+def test_the_player_list_sorts_by_projected_points(signed_in, schedule):
+    player(schedule["HOU"], fp_per_game="30.00", name="Star")
+    player(schedule["HOU"], fp_per_game="10.00", name="Bench")
+    player(None, fp_per_game="40.00", name="Free")
+
+    response = signed_in.get(PLAYER_LIST, {"sort": "projected"})
+
+    assert names(response)[:3] == ["Star", "Bench", "Free"]
+    page = response.content.decode()
+    assert "Proj. FP" in page
+    assert "2,040" in page  # 30 FP/G * 80 games * 0.85
+
+
+def test_the_player_list_shows_injured_games(signed_in, schedule):
+    smart = player(schedule["HOU"])
+    hurt(smart, back_in_days=6)
+
+    page = signed_in.get(PLAYER_LIST).content.decode()
+
+    assert "\u22123 injured" in page
+
+
+def test_the_week_filter_keeps_players_with_enough_games(signed_in, schedule, teams, season):
+    player(schedule["HOU"], name="Busy")
+    player(teams["BOS"], name="Idle")
+    game(teams["BOS"], teams["MIA"], 30, season)
+
+    at_least_4 = signed_in.get(PLAYER_LIST, {"week_games": "4"})
+    unknown = signed_in.get(PLAYER_LIST, {"week_games": "9"})
+
+    assert names(at_least_4) == ["Busy"]
+    assert at_least_4.context["active_filter_count"] == 1
+    assert set(names(unknown)) == {"Busy", "Idle"}
+
+
+def test_without_a_schedule_the_columns_and_filter_stay_away(signed_in, teams, season):
+    player(teams["HOU"])
+
+    response = signed_in.get(PLAYER_LIST)
+
+    assert not response.context["show_rest_of_season"]
+    page = response.content.decode()
+    assert "Proj. FP" not in page
+    assert 'name="week_games"' not in page
+
+
+def test_the_team_page_table_has_the_columns(signed_in, schedule):
+    player(schedule["HOU"], fp_per_game="30.00", name="Star")
+
+    response = signed_in.get("/teams/hou/", {"sort": "projected"})
+
+    assert response.context["show_rest_of_season"]
+    assert response.context["players"][0].projected_fp == 2040
+    assert "Proj. FP" in response.content.decode()
+
+
+def test_the_player_list_costs_the_same_however_many_players(signed_in, schedule):
+    player(schedule["HOU"], name="One")
+    with CaptureQueriesContext(connection) as one:
+        signed_in.get(PLAYER_LIST, {"sort": "projected"})
+    for index in range(10):
+        hurt(player(schedule["HOU"], name=f"P{index}"), back_in_days=index)
+    with CaptureQueriesContext(connection) as eleven:
+        signed_in.get(PLAYER_LIST, {"sort": "projected"})
+
+    assert len(eleven) == len(one)

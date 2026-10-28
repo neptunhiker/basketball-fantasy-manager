@@ -4,6 +4,7 @@ import logging
 
 from django.conf import settings
 
+from . import schedule
 from .importer import import_bbde
 from .models import ImportRun, PlayerNews
 from .rotowire import sync_news, why_not_now
@@ -52,4 +53,16 @@ def scheduled_rotowire_news_import():
             "RotoWire news: all %s items were new, some may have been missed.", result.items
         )
     logger.info("RotoWire news imported: %s", result)
+    return str(result)
+
+
+def scheduled_nba_schedule_load():
+    """The yearly schedule loads -- the season's start, after the NBA Cup group
+    stage -- started by Django-Q schedules. A failure is left to raise."""
+    reason = schedule.why_not_now()
+    if reason:
+        logger.info("Scheduled NBA schedule load skipped: %s.", reason)
+        return f"skipped: {reason}"
+    result = schedule.load_season()
+    logger.info("NBA schedule loaded: %s", result)
     return str(result)

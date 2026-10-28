@@ -18,12 +18,14 @@ import pytest
 from django.core.management import CommandError, call_command
 from django.urls import reverse
 from django.utils import timezone
+from django_q.models import Schedule
 
 from apps.fantasy.models import Season
 from apps.nba import schedule
 from apps.nba.models import ApiQuota, Game, NbaApiUsage, Team
 from apps.nba.schedule import TALLY, load_season, parse_games, ranges, season_span, why_not_now
 from apps.nba.services import PROVIDER, DailyApiLimitExceeded, MonthlyReserveReached, NbaApiError
+from apps.nba.tasks import scheduled_nba_schedule_load
 
 from .test_rotowire_news import FakeResponse, rapid_headers
 
@@ -479,3 +481,40 @@ def test_the_admin_lists_a_team_s_games(admin_client, teams, season, payload):
 
     assert listing.status_code == 200
     assert listing.context["cl"].result_count == 17
+
+
+# -- the yearly loads ------------------------------------------------------------
+
+
+def test_the_two_yearly_loads_exist_after_migrate(db):
+    loads = Schedule.objects.filter(func="apps.nba.tasks.scheduled_nba_schedule_load")
+
+    assert sorted(loads.values_list("cron", flat=True)) == ["0 6 1 10 *", "0 6 20 12 *"]
+    for load_schedule in loads:
+        assert load_schedule.repeats == -1
+        assert load_schedule.next_run > timezone.now()
+        local = timezone.localtime(load_schedule.next_run, ZoneInfo("Europe/Berlin"))
+        assert (local.month, local.day, local.hour) in {(10, 1, 6), (12, 20, 6)}
+
+
+def test_the_task_skips_and_says_why(season, settings, monkeypatch):
+    settings.NBA_SCHEDULE_ENABLED = False
+    monkeypatch.setattr(schedule, "load_season", pytest.fail)
+
+    assert scheduled_nba_schedule_load() == "skipped: NBA_SCHEDULE_ENABLED is off"
+
+
+def test_the_task_loads_and_reports(teams, season, enabled, payload, monkeypatch):
+    monkeypatch.setattr(schedule, "fetch_range", lambda first, last: payload)
+
+    assert scheduled_nba_schedule_load().startswith("40 games, 40 new")
+
+
+def test_a_failed_load_fails_the_task(season, enabled, monkeypatch):
+    def broken(first, last):
+        raise NbaApiError("NBA schedule returned HTTP 503.")
+
+    monkeypatch.setattr(schedule, "fetch_range", broken)
+
+    with pytest.raises(NbaApiError):
+        scheduled_nba_schedule_load()

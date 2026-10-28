@@ -162,6 +162,11 @@ ROTOWIRE_DAILY_LIMIT = 8
 # Off stops every request, scheduled or by hand: staging sets it to false so
 # the shared key's requests are left to production.
 ROTOWIRE_ENABLED = env.bool("ROTOWIRE_ENABLED", default=True)
+# Pulls happen from two weeks before a season starts -- preseason injuries and
+# signings -- to ten weeks after it ends, through the Finals. Outside that, and
+# with no season set up at all, the schedule skips.
+ROTOWIRE_DAYS_BEFORE_SEASON = 14
+ROTOWIRE_DAYS_AFTER_SEASON = 70
 
 LOGGING = {
     "version": 1,

@@ -15,6 +15,7 @@ from django.core.management import CommandError, call_command
 from django.utils import timezone
 from django_q.models import Schedule
 
+from apps.fantasy.models import Season
 from apps.nba import rotowire, tasks
 from apps.nba.models import NbaApiUsage, Player, PlayerNews, Team
 from apps.nba.rotowire import (
@@ -448,6 +449,63 @@ def test_the_tally_is_separate_from_the_injury_feed(db):
     assert NbaApiUsage.objects.get(provider=PROVIDER).request_count == 1
 
 
+# -- the season window ----------------------------------------------------------
+
+
+def make_season(label, starts_on, ends_on, is_current=False):
+    return Season.objects.create(
+        label=label, starts_on=starts_on, ends_on=ends_on, is_current=is_current
+    )
+
+
+@pytest.fixture
+def in_season(db):
+    today = timezone.localdate()
+    return make_season("now", today - dt.timedelta(days=30), today + dt.timedelta(days=30), True)
+
+
+@pytest.mark.parametrize(
+    ("today", "expected"),
+    [
+        (date(2026, 10, 5), False),
+        (date(2026, 10, 6), True),
+        (date(2027, 1, 15), True),
+        (date(2027, 6, 20), True),
+        (date(2027, 6, 21), False),
+    ],
+)
+def test_the_window_runs_two_weeks_before_to_ten_after_a_season(db, today, expected):
+    make_season("2026-27", date(2026, 10, 20), date(2027, 4, 11), is_current=True)
+
+    assert rotowire.in_news_window(today) is expected
+
+
+def test_without_a_season_there_is_no_window(db):
+    assert rotowire.in_news_window() is False
+
+
+def test_next_season_opens_the_window_before_it_is_made_current(db):
+    make_season("2026-27", date(2026, 10, 20), date(2027, 4, 11), is_current=True)
+    make_season("2027-28", date(2027, 10, 19), date(2028, 4, 9))
+
+    assert rotowire.in_news_window(date(2027, 10, 10)) is True
+
+
+def test_outside_the_window_the_task_does_nothing(db, api_key, monkeypatch):
+    monkeypatch.setattr(tasks, "sync_news", pytest.fail)
+
+    result = scheduled_rotowire_news_import()
+
+    assert result.startswith("skipped: no season within 14 days before")
+
+
+def test_outside_the_window_the_command_refuses(db, api_key, monkeypatch):
+    monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
+
+    with pytest.raises(CommandError, match="no season within"):
+        call_command("import_rotowire_news")
+
+
 # -- schedule, task and command --------------------------------------------------
 
 
@@ -481,14 +539,14 @@ def test_without_a_key_the_task_does_nothing(db, settings, monkeypatch):
     assert scheduled_rotowire_news_import().startswith("skipped")
 
 
-def test_while_switched_off_the_task_does_nothing(db, api_key, settings, monkeypatch):
+def test_while_switched_off_the_task_does_nothing(in_season, api_key, settings, monkeypatch):
     settings.ROTOWIRE_ENABLED = False
     monkeypatch.setattr(tasks, "sync_news", pytest.fail)
 
     assert scheduled_rotowire_news_import() == "skipped: ROTOWIRE_ENABLED is off"
 
 
-def test_the_task_imports_and_reports(db, api_key, payload, monkeypatch):
+def test_the_task_imports_and_reports(in_season, api_key, payload, monkeypatch):
     monkeypatch.setattr(rotowire, "fetch_news", lambda: payload)
 
     result = scheduled_rotowire_news_import()
@@ -497,7 +555,7 @@ def test_the_task_imports_and_reports(db, api_key, payload, monkeypatch):
     assert PlayerNews.objects.count() == 25
 
 
-def test_the_task_warns_when_every_item_was_new(db, api_key, payload, monkeypatch, caplog):
+def test_the_task_warns_when_every_item_was_new(in_season, api_key, payload, monkeypatch, caplog):
     older = copy.deepcopy(payload)
     older["items"] = [payload["items"][0]]
     sync_news(older)
@@ -510,7 +568,9 @@ def test_the_task_warns_when_every_item_was_new(db, api_key, payload, monkeypatc
     assert "some may have been missed" in caplog.text
 
 
-def test_the_task_does_not_warn_on_an_overlapping_pull(db, api_key, payload, monkeypatch, caplog):
+def test_the_task_does_not_warn_on_an_overlapping_pull(
+    in_season, api_key, payload, monkeypatch, caplog
+):
     sync_news(payload)
     monkeypatch.setattr(rotowire, "fetch_news", lambda: payload)
 
@@ -519,7 +579,7 @@ def test_the_task_does_not_warn_on_an_overlapping_pull(db, api_key, payload, mon
     assert "some may have been missed" not in caplog.text
 
 
-def test_a_failed_request_fails_the_task(db, api_key, monkeypatch):
+def test_a_failed_request_fails_the_task(in_season, api_key, monkeypatch):
     def broken():
         raise NbaApiError("RotoWire API returned HTTP 503.")
 
@@ -529,7 +589,7 @@ def test_a_failed_request_fails_the_task(db, api_key, monkeypatch):
         scheduled_rotowire_news_import()
 
 
-def test_the_command_imports_and_reports(db, payload, monkeypatch):
+def test_the_command_imports_and_reports(in_season, api_key, payload, monkeypatch):
     monkeypatch.setattr(rotowire, "fetch_news", lambda: payload)
     out = io.StringIO()
 
@@ -538,7 +598,7 @@ def test_the_command_imports_and_reports(db, payload, monkeypatch):
     assert "RotoWire news imported: 25 items, 25 new" in out.getvalue()
 
 
-def test_the_command_turns_an_api_error_into_a_command_error(db, monkeypatch):
+def test_the_command_turns_an_api_error_into_a_command_error(in_season, api_key, monkeypatch):
     def broken():
         raise DailyApiLimitExceeded("The rotowire daily limit of 8 requests has been reached.")
 
@@ -548,9 +608,9 @@ def test_the_command_turns_an_api_error_into_a_command_error(db, monkeypatch):
         call_command("import_rotowire_news")
 
 
-def test_the_command_refuses_while_switched_off(db, api_key, settings, monkeypatch):
+def test_the_command_refuses_while_switched_off(in_season, api_key, settings, monkeypatch):
     settings.ROTOWIRE_ENABLED = False
     monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
 
-    with pytest.raises(CommandError, match="switched off"):
+    with pytest.raises(CommandError, match="ROTOWIRE_ENABLED is off"):
         call_command("import_rotowire_news")

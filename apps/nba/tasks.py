@@ -6,7 +6,7 @@ from django.conf import settings
 
 from .importer import import_bbde
 from .models import ImportRun, PlayerNews
-from .rotowire import sync_news
+from .rotowire import sync_news, why_not_now
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +41,10 @@ def scheduled_rotowire_news_import():
     every item is new may have missed some in between; that is logged, as the
     sign the schedule should run more often. A failure is left to raise.
     """
-    if not settings.ROTOWIRE_ENABLED:
-        logger.info("Scheduled RotoWire news import skipped: switched off.")
-        return "skipped: ROTOWIRE_ENABLED is off"
-    if not settings.RAPID_API_KEY:
-        logger.warning("Scheduled RotoWire news import skipped: no RapidAPI key configured.")
-        return "skipped: RAPID_API_KEY is not set"
+    reason = why_not_now()
+    if reason:
+        logger.info("Scheduled RotoWire news import skipped: %s.", reason)
+        return f"skipped: {reason}"
     had_news = PlayerNews.objects.exists()
     result = sync_news()
     if had_news and result.items and result.created == result.items:

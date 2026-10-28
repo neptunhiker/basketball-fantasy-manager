@@ -10,13 +10,15 @@ import json
 import logging
 import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
+
+from apps.fantasy.models import Season
 
 from .models import ROTOWIRE_TEAM_CODES, NbaApiUsage, Player, PlayerNews
 from .services import DailyApiLimitExceeded, NbaApiError, normalize_name
@@ -95,6 +97,32 @@ class NewsSyncResult:
             f"{self.matched} matched, {self.unmatched} unmatched, "
             f"{self.relinked} older items linked."
         )
+
+
+def in_news_window(today=None):
+    """Whether `today` is within the stretch around a season that pulls run in."""
+    today = today or timezone.localdate()
+    return Season.objects.filter(
+        starts_on__lte=today + timedelta(days=settings.ROTOWIRE_DAYS_BEFORE_SEASON),
+        ends_on__gte=today - timedelta(days=settings.ROTOWIRE_DAYS_AFTER_SEASON),
+    ).exists()
+
+
+def why_not_now():
+    """Why no pull should be made right now, or None when one may.
+
+    The schedule skips for any of these; the import command refuses.
+    """
+    if not settings.ROTOWIRE_ENABLED:
+        return "ROTOWIRE_ENABLED is off"
+    if not settings.RAPID_API_KEY:
+        return "RAPID_API_KEY is not set"
+    if not in_news_window():
+        return (
+            f"no season within {settings.ROTOWIRE_DAYS_BEFORE_SEASON} days before "
+            f"or {settings.ROTOWIRE_DAYS_AFTER_SEASON} days after today"
+        )
+    return None
 
 
 class RotoWireDisabled(NbaApiError):

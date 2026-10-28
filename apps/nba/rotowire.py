@@ -97,8 +97,14 @@ class NewsSyncResult:
         )
 
 
+class RotoWireDisabled(NbaApiError):
+    """ROTOWIRE_ENABLED is off, so no request may be made."""
+
+
 def fetch_news():
     """Fetch and decode the NBA news feed, consuming one of today's requests."""
+    if not settings.ROTOWIRE_ENABLED:
+        raise RotoWireDisabled("RotoWire news is switched off (ROTOWIRE_ENABLED=false).")
     if not settings.RAPID_API_KEY:
         raise NbaApiError("RAPID_API_KEY is not configured.")
 

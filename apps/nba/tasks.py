@@ -41,6 +41,9 @@ def scheduled_rotowire_news_import():
     every item is new may have missed some in between; that is logged, as the
     sign the schedule should run more often. A failure is left to raise.
     """
+    if not settings.ROTOWIRE_ENABLED:
+        logger.info("Scheduled RotoWire news import skipped: switched off.")
+        return "skipped: ROTOWIRE_ENABLED is off"
     if not settings.RAPID_API_KEY:
         logger.warning("Scheduled RotoWire news import skipped: no RapidAPI key configured.")
         return "skipped: RAPID_API_KEY is not set"

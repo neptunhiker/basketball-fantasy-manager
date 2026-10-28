@@ -19,6 +19,7 @@ from apps.nba import rotowire, tasks
 from apps.nba.models import NbaApiUsage, Player, PlayerNews, Team
 from apps.nba.rotowire import (
     PROVIDER,
+    RotoWireDisabled,
     fetch_news,
     name_key,
     parse_feed_date,
@@ -407,6 +408,16 @@ def test_fetch_without_a_key_makes_no_request(db, settings):
     assert not NbaApiUsage.objects.exists()
 
 
+def test_fetch_while_switched_off_makes_no_request(db, api_key, settings, monkeypatch):
+    settings.ROTOWIRE_ENABLED = False
+    monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
+
+    with pytest.raises(RotoWireDisabled):
+        fetch_news()
+
+    assert not NbaApiUsage.objects.exists()
+
+
 def test_fetch_rejects_a_response_without_items(db, api_key, monkeypatch):
     monkeypatch.setattr(
         rotowire, "urlopen", lambda request, timeout: FakeResponse(b'{"message": "nope"}')
@@ -470,6 +481,13 @@ def test_without_a_key_the_task_does_nothing(db, settings, monkeypatch):
     assert scheduled_rotowire_news_import().startswith("skipped")
 
 
+def test_while_switched_off_the_task_does_nothing(db, api_key, settings, monkeypatch):
+    settings.ROTOWIRE_ENABLED = False
+    monkeypatch.setattr(tasks, "sync_news", pytest.fail)
+
+    assert scheduled_rotowire_news_import() == "skipped: ROTOWIRE_ENABLED is off"
+
+
 def test_the_task_imports_and_reports(db, api_key, payload, monkeypatch):
     monkeypatch.setattr(rotowire, "fetch_news", lambda: payload)
 
@@ -527,4 +545,12 @@ def test_the_command_turns_an_api_error_into_a_command_error(db, monkeypatch):
     monkeypatch.setattr(rotowire, "fetch_news", broken)
 
     with pytest.raises(CommandError, match="daily limit"):
+        call_command("import_rotowire_news")
+
+
+def test_the_command_refuses_while_switched_off(db, api_key, settings, monkeypatch):
+    settings.ROTOWIRE_ENABLED = False
+    monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
+
+    with pytest.raises(CommandError, match="switched off"):
         call_command("import_rotowire_news")

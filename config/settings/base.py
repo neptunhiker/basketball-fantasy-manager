@@ -159,6 +159,9 @@ ROTOWIRE_NEWS_URL = env(
     default="https://rotowire-fantasy-sports-api.p.rapidapi.com/api/v1/news/nba",
 )
 ROTOWIRE_DAILY_LIMIT = 8
+# Off stops every request, scheduled or by hand: staging sets it to false so
+# the shared key's requests are left to production.
+ROTOWIRE_ENABLED = env.bool("ROTOWIRE_ENABLED", default=True)
 
 LOGGING = {
     "version": 1,

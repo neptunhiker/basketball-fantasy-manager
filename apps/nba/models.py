@@ -914,6 +914,11 @@ class GameQuerySet(models.QuerySet):
         return self.counting().filter(tip_off__gt=(now or timezone.now()) - GAME_LENGTH)
 
 
+class GameManager(models.Manager.from_queryset(GameQuerySet)):
+    def get_by_natural_key(self, espn_id):
+        return self.get(espn_id=espn_id)
+
+
 class Game(TimeStampedModel):
     """One NBA game on the schedule, as the schedule feed last had it.
 
@@ -937,7 +942,7 @@ class Game(TimeStampedModel):
     note = models.CharField("Note", max_length=200, blank=True)
     is_regular_season = models.BooleanField("Regular season", default=True)
 
-    objects = GameQuerySet.as_manager()
+    objects = GameManager()
 
     class Meta:
         ordering = ["tip_off", "espn_id"]
@@ -950,6 +955,11 @@ class Game(TimeStampedModel):
     def __str__(self):
         matchup = f"{self.away_team.abbreviation} @ {self.home_team.abbreviation}"
         return f"{matchup}, {timezone.localtime(self.tip_off):%Y-%m-%d}"
+
+    def natural_key(self):
+        # A copy with `dumpdata --natural-primary` updates the games another
+        # database already has instead of adding them a second time.
+        return (self.espn_id,)
 
     @property
     def is_called_off(self):

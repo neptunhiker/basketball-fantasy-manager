@@ -455,7 +455,7 @@ def test_check_reports_without_a_request(teams, season, enabled, payload, monkey
 def test_games_copy_to_a_database_whose_teams_have_other_ids(teams, season, payload, tmp_path):
     load(season, payload)
     dump = tmp_path / "games.json"
-    call_command("dumpdata", "nba.Game", "--natural-foreign", "--output", str(dump), verbosity=0)
+    dump_games(dump)
     Game.objects.all().delete()
     Team.objects.all().delete()
     call_command("seed_teams", verbosity=0)
@@ -518,3 +518,27 @@ def test_a_failed_load_fails_the_task(season, enabled, monkeypatch):
 
     with pytest.raises(NbaApiError):
         scheduled_nba_schedule_load()
+
+
+def dump_games(path):
+    call_command(
+        "dumpdata",
+        "nba.Game",
+        "--natural-foreign",
+        "--natural-primary",
+        "--output",
+        str(path),
+        verbosity=0,
+    )
+
+
+def test_copying_again_updates_instead_of_adding(teams, season, payload, tmp_path):
+    load(season, payload)
+    dump = tmp_path / "games.json"
+    dump_games(dump)
+    Game.objects.filter(espn_id="401909834").update(note="stale")
+
+    call_command("loaddata", str(dump), verbosity=0)
+
+    assert Game.objects.count() == 40
+    assert Game.objects.get(espn_id="401909834").note == ""

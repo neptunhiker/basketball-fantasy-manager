@@ -321,6 +321,42 @@ docker compose -p fantasy-staging -f docker-compose.deploy.yml exec -T web \
 `--force` pulls outside the season window or below the reserve; the switch, the
 key and the daily limit of 8 still hold.
 
+### NBA schedule
+
+The team pages count games played and still to play from the stored
+schedule, by the clock: a game counts as played three hours after tip-off.
+The schedule comes from the injury feed's RapidAPI subscription (90 requests a
+month, shared with the injury button), 31 days a request, so a whole season
+is six or seven. The worker loads it on 1 October and on 20 December (after
+the NBA Cup group stage adds each team's last two games); run it by hand once
+the new season is set up, or after a postponement:
+
+```bash
+cd /srv/fantasy-manager/prod
+docker compose -p fantasy-prod -f docker-compose.deploy.yml exec -T web \
+  python manage.py import_nba_schedule --check   # would a load be made? no request
+docker compose -p fantasy-prod -f docker-compose.deploy.yml exec -T web \
+  python manage.py import_nba_schedule           # load the season
+```
+
+Only production loads by default (`NBA_SCHEDULE_ENABLED` defaults to
+`ENVIRONMENT == "production"`). Staging and a laptop copy production's games
+instead, which costs no request; running it again updates the games already
+copied:
+
+```bash
+# Production to staging
+ssh nba "cd /srv/fantasy-manager/prod && docker compose -p fantasy-prod -f docker-compose.deploy.yml exec -T web python manage.py dumpdata nba.Game --natural-foreign --natural-primary" \
+  | ssh nba "cd /srv/fantasy-manager/staging && docker compose -p fantasy-staging -f docker-compose.deploy.yml exec -T web python manage.py loaddata --format=json -"
+
+# Production to this laptop
+ssh nba "cd /srv/fantasy-manager/prod && docker compose -p fantasy-prod -f docker-compose.deploy.yml exec -T web python manage.py dumpdata nba.Game --natural-foreign --natural-primary" \
+  | uv run python manage.py loaddata --format=json -
+```
+
+Both the schedule load and the injury button stop once RapidAPI reports fewer
+than 10 requests left this month; "API quotas" in the admin shows the count.
+
 ## Deploying to Fly.io
 
 Once:

@@ -516,13 +516,13 @@ def test_outside_the_window_the_task_does_nothing(db, api_key, monkeypatch):
 
     result = scheduled_rotowire_news_import()
 
-    assert result.startswith("skipped: no season within 14 days before")
+    assert result.startswith("skipped: outside the season window (14 days before to 70 days after")
 
 
 def test_outside_the_window_the_command_refuses(db, api_key, monkeypatch):
     monkeypatch.setattr(rotowire, "urlopen", pytest.fail)
 
-    with pytest.raises(CommandError, match="no season within"):
+    with pytest.raises(CommandError, match="outside the season window"):
         call_command("import_rotowire_news")
 
 
@@ -822,7 +822,7 @@ def test_check_says_why_not(db, api_key, monkeypatch):
 
     call_command("import_rotowire_news", check=True, stdout=out)
 
-    assert "No pull would be made: no season within" in out.getvalue()
+    assert "No pull would be made: outside the season window" in out.getvalue()
     assert "RapidAPI has not reported a count yet." in out.getvalue()
 
 
@@ -837,7 +837,7 @@ def test_the_checks_come_in_order(in_season, settings):
 
     settings.RAPID_API_KEY = "test-key"
     in_season.delete()
-    assert rotowire.why_not_now().startswith("no season within")
+    assert rotowire.why_not_now().startswith("outside the season window")
 
     today = timezone.localdate()
     make_season("again", today, today + dt.timedelta(days=1))

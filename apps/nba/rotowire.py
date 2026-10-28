@@ -163,8 +163,8 @@ def why_not_now(force=False):
         return None
     if not in_news_window():
         return (
-            f"no season within {settings.ROTOWIRE_DAYS_BEFORE_SEASON} days before "
-            f"or {settings.ROTOWIRE_DAYS_AFTER_SEASON} days after today"
+            f"outside the season window ({settings.ROTOWIRE_DAYS_BEFORE_SEASON} days "
+            f"before to {settings.ROTOWIRE_DAYS_AFTER_SEASON} days after a season)"
         )
     quota = low_quota()
     if quota is not None:

@@ -299,6 +299,28 @@ gunzip -c backups/<file>.sql.gz \
       sh -c 'psql -U "$POSTGRES_USER" "$POSTGRES_DB"'
 ```
 
+### RotoWire news
+
+The worker pulls RotoWire's news feed at 6:00, 12:00 and 18:00. Staging and
+production share one RapidAPI key and its 500 requests a month, so staging's
+`.env` switches the pull off with `ROTOWIRE_ENABLED=false` (restart `web` and
+`worker` after changing it). The schedule also skips outside two weeks before
+to ten weeks after a season, and once RapidAPI reports fewer than 20 requests
+left; the admin's "API quotas" page shows the last count it reported.
+
+By hand, on the server (`prod` and `fantasy-prod` for production):
+
+```bash
+cd /srv/fantasy-manager/staging
+docker compose -p fantasy-staging -f docker-compose.deploy.yml exec -T web \
+  python manage.py import_rotowire_news --check   # would a pull be made? no request
+docker compose -p fantasy-staging -f docker-compose.deploy.yml exec -T web \
+  python manage.py import_rotowire_news           # pull now
+```
+
+`--force` pulls outside the season window or below the reserve; the switch, the
+key and the daily limit of 8 still hold.
+
 ## Deploying to Fly.io
 
 Once:

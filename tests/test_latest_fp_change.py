@@ -43,14 +43,15 @@ def make_player(last_name, position="G"):
 
 
 def record_days(player, season, days, start_days_ago=10):
-    """One snapshot per day, oldest first, each a `(total_fp, games_played)` pair."""
+    """One snapshot per day, oldest first, each a `(total_fp, games_played)` pair
+    or a `(total_fp, games_played, salary)` triple."""
     start = timezone.now() - dt.timedelta(days=start_days_ago)
-    for index, (total_fp, games_played) in enumerate(days):
+    for index, (total_fp, games_played, *salary) in enumerate(days):
         services.record_snapshot(
             player,
             season,
             start + dt.timedelta(days=index),
-            salary=1_000_000,
+            salary=salary[0] if salary else 1_000_000,
             total_fp=Decimal(str(total_fp)),
             games_played=games_played,
             team=player.team,
@@ -93,6 +94,39 @@ def test_python_and_database_agree(case, season):
     assert row.latest_fp_gain == gain
     assert (change or {}).get("fp_per_game") == avg_change
     assert row.latest_avg_change == avg_change
+
+
+# (days, expected games gained, expected salary change)
+MOVES = {
+    "a game and a raise": ([(100, 4, 9_000_000), (148.5, 5, 9_300_000)], 1, Decimal("300000")),
+    "a rest day and a cut": ([(100, 4, 9_000_000), (100, 4, 8_900_000)], 0, Decimal("-100000")),
+    "two games, same price": ([(100, 4, 9_000_000), (160, 6, 9_000_000)], 2, Decimal("0")),
+    "a corrected games count": ([(100, 5, 9_000_000), (100, 4, 9_000_000)], -1, Decimal("0")),
+}
+
+
+@pytest.mark.parametrize("case", MOVES)
+def test_games_and_salary_moves_agree(case, season):
+    days, games, salary = MOVES[case]
+    player = record_days(make_player("Mover"), season, days)
+
+    change = player.latest_fp_change()
+    row = annotated(player)
+
+    assert change["games"] == games
+    assert row.latest_games_gained == games
+    assert change["salary"] == salary
+    assert row.latest_salary_change == salary
+
+
+def test_games_and_salary_moves_need_two_snapshots_in_the_season(season):
+    player = record_days(make_player("Lonely"), season, [(30, 1, 5_000_000)])
+
+    row = annotated(player)
+
+    assert player.latest_fp_change() is None
+    assert row.latest_games_gained is None
+    assert row.latest_salary_change is None
 
 
 def test_a_rest_day_still_reports_the_two_snapshots(season):

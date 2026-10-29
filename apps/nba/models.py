@@ -84,6 +84,10 @@ def latest_fp_change(snapshots):
     No game in between leaves `fp` and `fp_per_game` None rather than 0: a rest
     day is not a player who took the floor and scored nothing, and the screens
     tell the two apart. The database twin is `apps.nba.views.with_latest_fp_change`.
+
+    `games` and `salary` are the plain differences and always set: the game
+    reprices players on days they rest too, and a corrected games count can
+    make `games` negative -- only a positive one means he played.
     """
     if len(snapshots) < 2 or snapshots[0].season_id != snapshots[1].season_id:
         return None
@@ -93,6 +97,8 @@ def latest_fp_change(snapshots):
     return {
         "fp": newer.total_fp - older.total_fp if played else None,
         "fp_per_game": newer.fp_per_game - older.fp_per_game if averaged else None,
+        "games": newer.games_played - older.games_played,
+        "salary": newer.salary - older.salary,
         "as_of": newer.as_of,
         "previous_as_of": older.as_of,
     }

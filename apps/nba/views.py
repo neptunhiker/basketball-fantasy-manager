@@ -127,12 +127,14 @@ def with_expected_salary(qs):
 
 
 def with_latest_fp_change(qs):
-    """Annotate `latest_fp_gain` and `latest_avg_change` (both Decimal or None).
+    """Annotate `latest_fp_gain` and `latest_avg_change` (both Decimal or None),
+    plus `latest_games_gained` and `latest_salary_change`.
 
     The database twin of `apps.nba.models.latest_fp_change`, so lists can sort
     by it. The newest snapshot is mirrored on the `current_*` columns, so only
-    the one before it -- within the same season -- has to be looked up. Both are
-    NULL when there is no such snapshot, or when no game was played in between.
+    the one before it -- within the same season -- has to be looked up. The
+    first two are NULL when there is no such snapshot, or when no game was
+    played in between; the last two only when there is no such snapshot.
     """
     newest = PlayerSnapshot.objects.filter(player_id=OuterRef("pk")).order_by("-as_of")
     previous = PlayerSnapshot.objects.filter(
@@ -145,6 +147,9 @@ def with_latest_fp_change(qs):
         previous_total_fp=Subquery(previous.values("total_fp"), output_field=points),
         previous_fp_per_game=Subquery(previous.values("fp_per_game"), output_field=points),
         previous_games_played=Subquery(previous.values("games_played")),
+        previous_salary=Subquery(
+            previous.values("salary"), output_field=DecimalField(max_digits=12, decimal_places=2)
+        ),
     )
     played = Q(current_games_played__gt=F("previous_games_played"))
     return qs.annotate(
@@ -159,6 +164,15 @@ def with_latest_fp_change(qs):
             When(played, then=F("current_fp_per_game") - F("previous_fp_per_game")),
             default=None,
             output_field=points,
+        ),
+        # Wrapped so a corrected, lower count is a plain negative integer.
+        latest_games_gained=ExpressionWrapper(
+            F("current_games_played") - F("previous_games_played"),
+            output_field=IntegerField(),
+        ),
+        latest_salary_change=ExpressionWrapper(
+            F("current_salary") - F("previous_salary"),
+            output_field=DecimalField(max_digits=12, decimal_places=2),
         ),
     )
 

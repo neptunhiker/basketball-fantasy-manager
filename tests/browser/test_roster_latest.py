@@ -82,6 +82,8 @@ def latest(game):
             "An MRI confirmed a mild hamstring strain. Brunson will be re-evaluated in two weeks.",
         ),
     ]
+    # Numbered oldest first, as RotoWire numbers its items when it publishes.
+    items.sort(key=lambda item: -item[2])
     for number, (player, kind, hours, headline, body) in enumerate(items, start=1):
         PlayerNews.objects.create(
             rotowire_news_id=900 + number,

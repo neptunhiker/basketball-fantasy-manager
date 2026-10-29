@@ -8,7 +8,7 @@ its items but does not time them.
 
 Nothing here queries per player. The squad comes with its snapshots
 prefetched (`RosterPlayer.objects.as_squad`), the news is one query and the
-schedule another.
+roster's season schedule another.
 """
 
 import datetime as dt

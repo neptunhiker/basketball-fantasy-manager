@@ -376,9 +376,7 @@ def test_every_player_on_the_page_is_reachable(signed_in, roster, pool):
     body = signed_in.get(build_url(roster)).content.decode()
 
     unreachable = [
-        player.full_name
-        for player in rostered
-        if f'href="{detail_url(player)}"' not in body
+        player.full_name for player in rostered if f'href="{detail_url(player)}"' not in body
     ]
     assert unreachable == []
 
@@ -485,7 +483,8 @@ def test_a_narrow_screen_keeps_the_handle_below_the_bar(signed_in, roster):
     assert f'href="{reverse("fantasy:manager-list")}"' in below
     # The two halves, and the classes that keep them from overlapping.
     assert body.count("Managed by") == 2
-    assert "md:hidden" in content.split("Managed by")[0].rsplit("<p ", 1)[1]
+    # On the line that also carries the phone's link to the Latest tab.
+    assert "md:hidden" in content.split("Managed by")[0].rsplit("<div ", 1)[1]
     assert "md:flex" in header_of(body).split("Managed by")[0].rsplit("<span ", 1)[1]
 
 

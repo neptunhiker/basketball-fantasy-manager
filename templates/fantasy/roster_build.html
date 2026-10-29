@@ -59,6 +59,12 @@
     <span class="hidden sm:inline">{% translate "Trade" %}</span>
     </button>
   {% endif %}
+  {# From `sm` only: a fifth icon below it squeezed the roster's name out of #}
+  {# the bar at 375px. Phones get the link at the top of the content. #}
+  <a href="{% url 'fantasy:roster-latest' roster.pk %}"
+     class="btn btn-ghost hidden text-xs sm:inline-flex sm:!px-3">
+    {% translate "Latest" %}
+  </a>
   <a href="{% url 'fantasy:roster-history' roster.pk %}"
     aria-label="{% translate 'History' %}"
      class="btn btn-ghost h-10 w-10 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3">
@@ -98,11 +104,22 @@
 {# inside a `:where()`, which has no specificity, so any `mb-*` here #}
 {# *replaces* the 24px rather than adjusting it -- `-mb-2` set the gap to #}
 {# minus eight pixels and the card sat on top of this line. #}
-<p class="mb-2 flex min-w-0 items-baseline gap-1.5 text-xs text-neutral-500 md:hidden dark:text-neutral-400">
-  {% translate "Managed by" %}
-  <a href="{% url 'fantasy:manager-list' %}"
-     class="truncate font-medium text-tertiary-700 transition hover:text-primary-600 dark:text-neutral-200 dark:hover:text-primary-300">{{ roster.manager.nick_name }}</a>
-</p>
+{# On phones it also carries the way to the Latest tab, which has no room #}
+{# in the header bar there. #}
+<div class="mb-2 flex min-w-0 items-center justify-between gap-3 md:hidden">
+  <p class="flex min-w-0 items-baseline gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+    {% translate "Managed by" %}
+    <a href="{% url 'fantasy:manager-list' %}"
+       class="truncate font-medium text-tertiary-700 transition hover:text-primary-600 dark:text-neutral-200 dark:hover:text-primary-300">{{ roster.manager.nick_name }}</a>
+  </p>
+  <a href="{% url 'fantasy:roster-latest' roster.pk %}"
+     class="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-3.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100 sm:hidden dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20">
+    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l2.5-6 5 12 2.5-6h4"/>
+    </svg>
+    {% translate "Latest update" %}
+  </a>
+</div>
 
 {# Stacked, not columns, and the order is the argument: this page is about a #}
 {# team, so the team comes first, and the market you change it in follows. #}

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 20:15+0100\n"
+"POT-Creation-Date: 2026-10-29 20:19+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -2865,7 +2865,7 @@ msgid "None of your watched players match those filters."
 msgstr "Keiner deiner Watchlist-Spieler passt zu diesen Filtern."
 
 #: templates/fantasy/roster_build.html:21
-#: templates/fantasy/roster_build.html:102
+#: templates/fantasy/roster_build.html:111
 msgid "Managed by"
 msgstr "Verwaltet von"
 
@@ -2873,21 +2873,30 @@ msgstr "Verwaltet von"
 msgid "Trade (Disabled)"
 msgstr "Trade (deaktiviert)"
 
-#: templates/fantasy/roster_build.html:63
+#: templates/fantasy/roster_build.html:66
+#: templates/fantasy/roster_latest.html:11
+msgid "Latest"
+msgstr "Aktuell"
+
 #: templates/fantasy/roster_build.html:69
+#: templates/fantasy/roster_build.html:75
 #: templates/fantasy/roster_history.html:16
 msgid "History"
 msgstr "Verlauf"
 
-#: templates/fantasy/roster_build.html:72
-#: templates/fantasy/roster_build.html:77
+#: templates/fantasy/roster_build.html:78
+#: templates/fantasy/roster_build.html:83
 msgid "Rules"
 msgstr "Regeln"
 
-#: templates/fantasy/roster_build.html:84
+#: templates/fantasy/roster_build.html:90
 #: templates/fantasy/roster_list.html:61
 msgid "Delete roster"
 msgstr "Kader löschen"
+
+#: templates/fantasy/roster_build.html:120
+msgid "Latest update"
+msgstr "Aktuelles Update"
 
 #: templates/fantasy/roster_history.html:28
 #: templates/fantasy/roster_latest.html:23
@@ -2970,14 +2979,10 @@ msgstr "Art"
 msgid "No moves yet. As soon as you buy a player, it shows up here."
 msgstr "Noch keine Züge. Sobald du einen Spieler kaufst, erscheint er hier."
 
-#: templates/fantasy/roster_latest.html:11
-msgid "Latest"
-msgstr "Neuestes"
-
 #: templates/fantasy/roster_latest.html:37
 #, python-format
 msgid "Latest · %(season)s"
-msgstr "Neuestes · %(season)s"
+msgstr "Aktuell · %(season)s"
 
 #: templates/fantasy/roster_latest.html:41
 #, python-format

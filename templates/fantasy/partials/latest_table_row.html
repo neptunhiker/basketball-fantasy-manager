@@ -1,0 +1,45 @@
+{% load i18n money %}
+{# One player on the Latest table, with his news folded underneath. Context: row. #}
+{% with player=row.player %}
+  <tbody x-data="{ open: false }" class="border-t border-neutral-200 dark:border-neutral-800">
+    <tr class="transition-colors hover:bg-primary-50/40 dark:hover:bg-primary-500/[0.04]" :class="open && 'bg-primary-50/40 dark:bg-primary-500/[0.04]'">
+      <td class="px-4 py-2.5 lg:px-5">{% include "fantasy/partials/latest_player.html" %}</td>
+      <td class="px-2 py-2.5 text-right tabular-nums">
+        {% if row.played %}<span class="font-medium">+{{ row.games }}</span>{% else %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% endif %}
+      </td>
+      <td class="px-2 py-2.5 text-right tabular-nums">
+        {% if row.fp is None %}
+          <span class="text-neutral-400 dark:text-neutral-500" title="{% translate 'No game since the previous import' %}">–<span class="sr-only"> {% translate "No game since the previous import" %}</span></span>
+        {% else %}
+          <span class="text-base font-semibold {% if row.fp < 0 %}text-rose-600 dark:text-rose-400{% else %}text-tertiary-700 dark:text-neutral-50{% endif %}">{% if row.fp > 0 %}+{% endif %}{{ row.fp|floatformat:"1g" }}</span>
+        {% endif %}
+      </td>
+      <td class="px-2 py-2.5 text-right tabular-nums">
+        <span class="inline-flex flex-col items-end leading-tight">
+          <span class="font-medium">{{ player.current_fp_per_game|floatformat:"1g"|default:"–" }}</span>
+          <span class="mt-0.5 text-[0.7rem]">{% include "nba/partials/change.html" with value=row.fp_per_game_change unit="points" %}</span>
+        </span>
+      </td>
+      <td class="px-2 py-2.5 text-right tabular-nums">
+        <span class="inline-flex flex-col items-end leading-tight">
+          <span class="font-medium" title="{{ player.current_salary|exact }}">{{ player.current_salary|millions }}</span>
+          <span class="mt-0.5 text-[0.7rem]">{% include "nba/partials/change.html" with value=row.salary_change unit="money" %}</span>
+        </span>
+      </td>
+      <td class="px-2 py-1.5 lg:px-3">
+        {% if row.news %}
+          {% include "fantasy/partials/latest_news_button.html" with target="news-t-"|add:player.slug %}
+        {% else %}
+          <span class="px-2 text-neutral-300 dark:text-neutral-600">–</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% if row.news %}
+      <tr id="news-t-{{ player.slug }}" x-show="open" x-cloak>
+        <td colspan="6" class="p-0">
+          {% include "fantasy/partials/latest_news_items.html" %}
+        </td>
+      </tr>
+    {% endif %}
+  </tbody>
+{% endwith %}

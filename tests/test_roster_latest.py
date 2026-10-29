@@ -5,6 +5,7 @@ from decimal import Decimal
 from itertools import count
 
 import pytest
+from django.urls import reverse
 from django.utils import timezone
 
 from apps.fantasy import services
@@ -253,3 +254,62 @@ def test_the_report_costs_a_fixed_number_of_queries(
     with django_assert_max_num_queries(7):
         report = roster_latest(fresh, now=now)
         assert [row.lead_news for row in report.played]
+
+
+# --- the page ----------------------------------------------------------------
+
+
+@pytest.fixture
+def signed_in(client, user, password):
+    client.login(email=user.email, password=password)
+    return client
+
+
+def latest_url(roster):
+    return reverse("fantasy:roster-latest", args=[roster.pk])
+
+
+def test_the_page_shows_the_groups_and_the_news(signed_in, roster, season, imports, now):
+    scorer = signed(roster, season, imports, "Scorer", (100, 4, 9_000_000), (158.5, 5, 9_300_000))
+    signed(roster, season, imports, "Resting", (60, 4), (60, 4))
+    news(scorer, 2, now, kind=PlayerNews.Kind.INJURY, headline="Scorer (ankle) questionable")
+
+    response = signed_in.get(latest_url(roster))
+
+    assert response.status_code == 200
+    body = response.text
+    assert "Played" in body
+    assert "+58.5" in body
+    assert "Scorer (ankle) questionable" in body
+    assert "No update" in body
+    assert [group["key"] for group in response.context["groups"]] == ["played"]
+
+
+def test_the_page_says_when_there_is_nothing_to_compare(signed_in, roster, season, now):
+    player = make_player("Fresh")
+    snapshot(player, season, now - dt.timedelta(hours=1), 30, 1)
+    player.refresh_from_db()
+    services.buy(roster, player, player.current_salary)
+
+    body = signed_in.get(latest_url(roster)).text
+
+    assert "first import" in body
+
+
+def test_an_empty_roster_points_back_to_building_it(signed_in, roster):
+    body = signed_in.get(latest_url(roster)).text
+
+    assert "No players on this roster yet." in body
+
+
+def test_someone_elses_roster_is_not_found(signed_in, other_manager, season):
+    theirs = Roster.objects.create(manager=other_manager, season=season, name="Theirs")
+
+    assert signed_in.get(latest_url(theirs)).status_code == 404
+
+
+def test_signed_out_visitors_are_sent_to_sign_in(client, roster):
+    response = client.get(latest_url(roster))
+
+    assert response.status_code == 302
+    assert "login" in response["Location"]

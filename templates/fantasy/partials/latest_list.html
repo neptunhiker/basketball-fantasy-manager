@@ -1,0 +1,98 @@
+{% load i18n money %}
+{% comment %}
+  The Latest tab on phones (below `md`): the table's rows, two lines each.
+  Name and points gained on the first, where the eye lands; the average and
+  the price on the second; the news as a full-width button under them.
+  Context: report, groups, today, tomorrow.
+{% endcomment %}
+<div class="md:hidden" x-data="{ quiet: false }">
+  {% for group in groups %}
+    <h3 class="border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-wider text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-400 {% if not forloop.first %}border-t{% endif %}">
+      {{ group.label }}
+      <span class="ml-1 rounded-full bg-neutral-200/80 px-1.5 py-px text-[0.65rem] tabular-nums text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ group.rows|length }}</span>
+    </h3>
+    <ul class="divide-y divide-neutral-200 dark:divide-neutral-800">
+      {% for row in group.rows %}
+        {% with player=row.player %}
+          <li x-data="{ open: false }">
+            <div class="px-4 py-3">
+              <div class="flex items-start gap-3">
+                <div class="min-w-0 flex-1">{% include "fantasy/partials/latest_player.html" %}</div>
+                <div class="shrink-0 text-right tabular-nums">
+                  {% if row.fp is None %}
+                    <p class="text-sm font-medium text-neutral-400 dark:text-neutral-500">{% translate "No game" %}</p>
+                  {% else %}
+                    <p class="text-lg font-bold leading-tight {% if row.fp < 0 %}text-rose-600 dark:text-rose-400{% else %}text-tertiary-700 dark:text-neutral-50{% endif %}">{% if row.fp > 0 %}+{% endif %}{{ row.fp|floatformat:"1g" }}</p>
+                    <p class="text-[0.7rem] text-neutral-500 dark:text-neutral-400">
+                      {% blocktranslate count counter=row.games %}FP · {{ counter }} game{% plural %}FP · {{ counter }} games{% endblocktranslate %}
+                    </p>
+                  {% endif %}
+                </div>
+            </div>
+
+            <dl class="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 pl-[2.375rem] text-xs tabular-nums">
+              <div class="flex items-baseline gap-1.5">
+                <dt class="text-neutral-500 dark:text-neutral-400">{% translate "FP/G" %}</dt>
+                <dd class="flex items-baseline gap-1.5">
+                  <span class="font-medium">{{ player.current_fp_per_game|floatformat:"1g"|default:"–" }}</span>
+                  {% if row.fp_per_game_change is not None %}{% include "nba/partials/change.html" with value=row.fp_per_game_change unit="points" %}{% endif %}
+                </dd>
+              </div>
+              <div class="flex items-baseline gap-1.5">
+                <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Salary" %}</dt>
+                <dd class="flex items-baseline gap-1.5">
+                  <span class="font-medium" title="{{ player.current_salary|exact }}">{{ player.current_salary|millions }}</span>
+                  {% if row.salary_change is not None %}{% include "nba/partials/change.html" with value=row.salary_change unit="money" %}{% endif %}
+                </dd>
+              </div>
+            </dl>
+
+            {% if row.news %}
+              <div class="mt-2 pl-[2.375rem]">
+                <div class="-ml-2">
+                  {% include "fantasy/partials/latest_news_button.html" with target="news-l-"|add:player.slug %}
+                </div>
+              </div>
+            {% endif %}
+            </div>
+            {% if row.news %}
+              <div id="news-l-{{ player.slug }}" x-show="open" x-cloak>
+                {% include "fantasy/partials/latest_news_items.html" %}
+              </div>
+            {% endif %}
+          </li>
+        {% endwith %}
+      {% endfor %}
+    </ul>
+  {% endfor %}
+
+  {% if report.quiet %}
+    <h3 class="{% if groups %}border-t{% endif %} border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/60">
+      <button type="button" @click="quiet = !quiet" :aria-expanded="quiet.toString()" aria-expanded="false" aria-controls="latest-quiet-list"
+              class="flex min-h-11 w-full items-center gap-2 px-4 text-[0.7rem] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+        {% translate "No update" %}
+        <span class="rounded-full bg-neutral-200/80 px-1.5 py-px text-[0.65rem] tabular-nums text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ report.quiet|length }}</span>
+        <svg class="ml-auto h-4 w-4 transition-transform motion-reduce:transition-none" :class="quiet && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
+        </svg>
+      </button>
+    </h3>
+    <ul id="latest-quiet-list" x-show="quiet" x-cloak class="divide-y divide-neutral-100 border-t border-neutral-200 dark:divide-neutral-800/70 dark:border-neutral-800">
+      {% for row in report.quiet %}
+        {% with player=row.player %}
+          <li class="flex items-center gap-3 px-4 py-2.5">
+            <div class="min-w-0 flex-1">{% include "fantasy/partials/latest_player.html" with muted=True %}</div>
+            <div class="shrink-0 text-right text-xs text-neutral-500 dark:text-neutral-400">
+              {% if row.schedule.next_game %}
+                <span class="block text-[0.65rem] uppercase tracking-wide text-neutral-400 dark:text-neutral-500">{% translate "Next" %}</span>
+                {% include "nba/partials/next_game.html" with schedule=row.schedule compact=True %}
+              {% else %}
+                –
+              {% endif %}
+            </div>
+          </li>
+        {% endwith %}
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>

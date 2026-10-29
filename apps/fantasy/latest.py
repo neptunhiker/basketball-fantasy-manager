@@ -86,6 +86,10 @@ class LatestReport:
         return self.played + self.salary_only
 
     @property
+    def games_total(self):
+        return sum(row.games for row in self.played)
+
+    @property
     def fp_total(self):
         return sum((row.fp for row in self.played if row.fp is not None), Decimal("0"))
 

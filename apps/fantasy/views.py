@@ -46,6 +46,7 @@ from apps.nba.stats import DESCENDING_FIRST
 
 from . import services
 from .forms import SeasonForm, TradeGrantForm
+from .latest import roster_latest
 from .models import (
     MINIMUM_BY_POSITION,
     ROSTER_ICON_CHOICES,
@@ -1046,6 +1047,39 @@ def _build_context(request, roster):
         **_signings_deadline(roster.season),
         "next_trade_grant": services.next_trade_grant(roster.season),
     }
+
+
+class RosterLatestView(OwnRosterMixin, TemplateView):
+    """What the newest stats import and the last day's news changed.
+
+    One row per player, grouped by what happened to him: played, repriced
+    without a game, only in the news, nothing. The groups are worked out in
+    `latest.roster_latest`; this only puts them in the order the page reads.
+    """
+
+    template_name = "fantasy/roster_latest.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        roster = self.get_roster()
+        report = roster_latest(roster)
+        today = timezone.localdate()
+        # The quiet players come last and folded, so they are not in here.
+        groups = [
+            ("played", _("Played"), report.played),
+            ("salary", _("Repriced without a game"), report.salary_only),
+            ("news", _("In the news"), report.news_only),
+        ]
+        context.update(
+            roster=roster,
+            report=report,
+            groups=[
+                {"key": key, "label": label, "rows": rows} for key, label, rows in groups if rows
+            ],
+            today=today,
+            tomorrow=today + dt.timedelta(days=1),
+        )
+        return context
 
 
 class RosterBuildView(OwnRosterMixin, TemplateView):

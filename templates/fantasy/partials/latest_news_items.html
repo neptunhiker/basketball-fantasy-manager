@@ -1,0 +1,7 @@
+{% load i18n %}
+{# A player's news from the last 24 hours, opened under his row. Context: row. #}
+<div class="divide-y divide-neutral-200/70 border-t border-dashed border-neutral-200 bg-neutral-50/80 dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50">
+  {% for item in row.news %}
+    {% include "nba/partials/news_item.html" with on_player_page=True %}
+  {% endfor %}
+</div>

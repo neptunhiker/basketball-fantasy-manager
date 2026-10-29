@@ -52,4 +52,5 @@ urlpatterns = [
     ),
     path("rosters/<uuid:pk>/trade/", views.RosterTradeView.as_view(), name="roster-trade"),
     path("rosters/<uuid:pk>/history/", views.RosterHistoryView.as_view(), name="roster-history"),
+    path("rosters/<uuid:pk>/latest/", views.RosterLatestView.as_view(), name="roster-latest"),
 ]

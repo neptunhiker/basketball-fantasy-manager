@@ -1,0 +1,85 @@
+{% load i18n money %}
+{% comment %}
+  The Latest tab as a table, from `md`; phones get `latest_list.html`. One
+  <tbody> per player, so his news can open in a row right under him without
+  the table losing its columns. Context: report, groups, today, tomorrow.
+
+  Same colour rules as the squad table: points are plain unless negative, the
+  average's move is green or red, and money is never coloured -- whether a
+  price rise is good news depends on whether you are buying or selling.
+{% endcomment %}
+<div class="hidden overflow-x-auto md:block" x-data="{ quiet: false }">
+  <table class="w-full min-w-[42rem] table-fixed text-sm">
+    {# Tight number columns until `xl`: below it the sidebar or the tablet #}
+    {# leaves too little width, and the names need it more. #}
+    <colgroup>
+      <col>
+      <col class="w-11 xl:w-14">
+      <col class="w-16 xl:w-20">
+      <col class="w-20 xl:w-28">
+      <col class="w-24 xl:w-32">
+      <col class="w-[32%] xl:w-[34%]">
+    </colgroup>
+    <thead>
+      <tr class="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+        <th scope="col" class="px-4 py-3 font-medium lg:px-5">{% translate "Player" %}</th>
+        <th scope="col" class="px-2 py-3 text-right font-medium"><abbr title="{% translate 'Games since the previous import' %}" class="no-underline">{% translate "G" %}</abbr></th>
+        <th scope="col" class="px-2 py-3 text-right font-medium"><abbr title="{% translate 'Fantasy points since the previous import' %}" class="no-underline">FP</abbr></th>
+        <th scope="col" class="px-2 py-3 text-right font-medium"><abbr title="{% translate 'Points per game' %}" class="no-underline">{% translate "FP/G" %}</abbr></th>
+        <th scope="col" class="px-2 py-3 text-right font-medium">{% translate "Salary" %}</th>
+        <th scope="col" class="px-4 py-3 font-medium lg:px-5">{% translate "News · 24 h" %}</th>
+      </tr>
+    </thead>
+
+    {% for group in groups %}
+      <tbody>
+        <tr class="bg-neutral-50 dark:bg-neutral-900/60">
+          <th scope="colgroup" colspan="6" class="px-4 py-2 text-left text-[0.7rem] font-semibold uppercase tracking-wider text-neutral-500 lg:px-5 dark:text-neutral-400">
+            {{ group.label }}
+            <span class="ml-1 rounded-full bg-neutral-200/80 px-1.5 py-px text-[0.65rem] tabular-nums text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ group.rows|length }}</span>
+          </th>
+        </tr>
+      </tbody>
+      {% for row in group.rows %}
+        {% include "fantasy/partials/latest_table_row.html" %}
+      {% endfor %}
+    {% endfor %}
+
+    {% if report.quiet %}
+      <tbody>
+        <tr class="bg-neutral-50 dark:bg-neutral-900/60">
+          <th scope="colgroup" colspan="6" class="px-4 py-1 text-left lg:px-5">
+            <button type="button" @click="quiet = !quiet" :aria-expanded="quiet.toString()" aria-expanded="false" aria-controls="latest-quiet"
+                    class="-mx-2 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-[0.7rem] font-semibold uppercase tracking-wider text-neutral-500 transition hover:text-primary-700 dark:text-neutral-400 dark:hover:text-primary-300">
+              {% translate "No update" %}
+              <span class="rounded-full bg-neutral-200/80 px-1.5 py-px text-[0.65rem] tabular-nums text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ report.quiet|length }}</span>
+              <svg class="h-3.5 w-3.5 transition-transform motion-reduce:transition-none" :class="quiet && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
+              </svg>
+            </button>
+          </th>
+        </tr>
+      </tbody>
+      <tbody id="latest-quiet" x-show="quiet" x-cloak class="divide-y divide-neutral-100 dark:divide-neutral-800/70">
+        {% for row in report.quiet %}
+          {% with player=row.player %}
+            <tr class="text-neutral-500 dark:text-neutral-400">
+              <td class="px-4 py-2 lg:px-5">{% include "fantasy/partials/latest_player.html" with muted=True %}</td>
+              <td class="px-2 py-2 text-right tabular-nums">–</td>
+              <td class="px-2 py-2 text-right tabular-nums">–</td>
+              <td class="px-2 py-2 text-right tabular-nums">{{ player.current_fp_per_game|floatformat:"1g"|default:"–" }}</td>
+              <td class="px-2 py-2 text-right tabular-nums" title="{{ player.current_salary|exact }}">{{ player.current_salary|millions }}</td>
+              <td class="px-4 py-2 text-xs lg:px-5">
+                {% if row.schedule.next_game %}
+                  <span class="mr-1 text-neutral-400 dark:text-neutral-500">{% translate "Next" %}</span>{% include "nba/partials/next_game.html" with schedule=row.schedule %}
+                {% else %}
+                  <span class="text-neutral-400 dark:text-neutral-500">–</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endwith %}
+        {% endfor %}
+      </tbody>
+    {% endif %}
+  </table>
+</div>

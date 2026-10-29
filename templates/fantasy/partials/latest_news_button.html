@@ -1,0 +1,25 @@
+{% load i18n %}
+{% comment %}
+  A player's news on one line -- an injury first, then the newest item -- and
+  the button that opens the rest. Needs an Alpine `open` around it. Context:
+  row, target (the id of what it opens).
+{% endcomment %}
+{% with item=row.lead_news more=row.news|length|add:"-1" %}
+  <button type="button" @click="open = !open" :aria-expanded="open.toString()" aria-expanded="false" aria-controls="{{ target }}"
+          class="group flex min-h-10 w-full min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-neutral-100 dark:hover:bg-neutral-800/70"
+          :class="open && 'bg-neutral-100 dark:bg-neutral-800/70'">
+    {% if item.is_injury %}
+      <span class="badge shrink-0 bg-red-50 !py-0 text-red-700 dark:bg-red-500/10 dark:text-red-300">{% translate "Injury" %}</span>
+    {% else %}
+      <span class="badge shrink-0 bg-primary-50 !py-0 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300">{% translate "News" %}</span>
+    {% endif %}
+    <span class="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-neutral-800 dark:text-neutral-100">{{ item.headline }}</span>
+    {% if more > 0 %}
+      <span class="shrink-0 rounded-full bg-neutral-100 px-1.5 text-[0.65rem] font-semibold tabular-nums text-neutral-600 group-hover:bg-white dark:bg-neutral-800 dark:text-neutral-300 dark:group-hover:bg-neutral-900"
+            title="{% blocktranslate count counter=more %}{{ counter }} more item{% plural %}{{ counter }} more items{% endblocktranslate %}">+{{ more }}</span>
+    {% endif %}
+    <svg class="h-4 w-4 shrink-0 text-neutral-400 transition-transform motion-reduce:transition-none" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
+    </svg>
+  </button>
+{% endwith %}

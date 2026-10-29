@@ -1,0 +1,135 @@
+{% extends "app.html" %}
+{% load i18n static money %}
+
+{% comment %}
+  The roster's Latest tab: what the newest basketball.de import changed, and
+  what RotoWire wrote about the squad in the last 24 hours. Built for a quick
+  look after the 12:15 import -- the summary first, then one compact row per
+  player, grouped by what happened to him. See `apps.fantasy.latest`.
+{% endcomment %}
+
+{% block title %}{% translate "Latest" %} · {{ roster.name }} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}
+  <span class="flex min-w-0 items-center gap-3">
+    <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png"
+         alt="{% blocktranslate with icon=roster.get_icon_display %}{{ icon }} roster icon{% endblocktranslate %}"
+         class="h-10 w-10 shrink-0 rounded-xl border-2 border-white object-cover shadow-md sm:h-12 sm:w-12 dark:border-neutral-800">
+    <span class="truncate">{{ roster.name }}</span>
+  </span>
+{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'fantasy:roster-build' roster.pk %}" class="btn btn-secondary text-xs">
+    {% translate "Back to roster" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-5xl space-y-6">
+
+  {# What the import and the news add up to #}
+  <section class="card overflow-hidden" aria-labelledby="latest-heading">
+    <div class="gradient-rule h-1"></div>
+    <div class="p-5 sm:p-6">
+      <div class="grid gap-x-6 gap-y-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+        <div class="min-w-0">
+          <p class="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
+            {% blocktranslate with season=roster.season.label %}Latest · {{ season }}{% endblocktranslate %}
+          </p>
+          <h2 id="latest-heading" class="mt-1 text-2xl font-bold tracking-tight text-balance text-tertiary-700 sm:text-3xl dark:text-neutral-100">
+            {% if report.as_of %}
+              {% blocktranslate with day=report.as_of|date:"l" %}The {{ day }} update{% endblocktranslate %}
+            {% else %}
+              {% translate "No stats import yet" %}
+            {% endif %}
+          </h2>
+          <p class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-500 sm:text-sm dark:text-neutral-400">
+            {% if report.as_of %}
+              <span class="inline-flex items-center gap-1.5 font-medium text-tertiary-700 dark:text-neutral-200">
+                <svg class="h-3.5 w-3.5 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 0 1-13.7 5.6L4 15.3M4 20v-4.7h4.7"/>
+                </svg>
+                {% blocktranslate with moment=report.as_of|date:"D j.n., H:i" %}Stats import {{ moment }}{% endblocktranslate %}
+              </span>
+              {% if report.has_comparison %}
+                <span>{% blocktranslate with moment=report.previous_as_of|date:"D j.n., H:i" %}compared with {{ moment }}{% endblocktranslate %}</span>
+              {% endif %}
+              <span class="hidden text-neutral-300 sm:inline dark:text-neutral-600" aria-hidden="true">·</span>
+            {% endif %}
+            <span>{% translate "News from the last 24 hours" %}</span>
+          </p>
+        </div>
+        {% if report.has_comparison %}
+          <div class="xl:text-right">
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Points gained" %}</p>
+            <p class="text-3xl font-bold tabular-nums text-tertiary-700 sm:text-4xl dark:text-neutral-50">
+              {% if report.fp_total > 0 %}+{% endif %}{{ report.fp_total|floatformat:"1g" }}
+            </p>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              {% blocktranslate count counter=report.games_total %}in {{ counter }} game{% plural %}in {{ counter }} games{% endblocktranslate %}
+            </p>
+          </div>
+        {% endif %}
+      </div>
+
+      <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-xl bg-neutral-50 px-3.5 py-3 dark:bg-neutral-800/50">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Players updated" %}</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums">
+            {{ report.updated|length }}<span class="text-sm font-normal text-neutral-500 dark:text-neutral-400"> / {{ report.squad_size }}</span>
+          </dd>
+        </div>
+        <div class="rounded-xl bg-neutral-50 px-3.5 py-3 dark:bg-neutral-800/50">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Played" %}</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums">{{ report.played|length }}</dd>
+        </div>
+        <div class="rounded-xl bg-neutral-50 px-3.5 py-3 dark:bg-neutral-800/50">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Squad value" %}</dt>
+          <dd class="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 text-lg font-semibold tabular-nums">
+            <span title="{{ roster.squad_value|exact }}">{{ roster.squad_value|millions }}</span>
+            {% if report.has_comparison %}<span class="text-xs font-medium">{% include "nba/partials/change.html" with value=report.value_change unit="money" %}</span>{% endif %}
+          </dd>
+        </div>
+        <div class="rounded-xl bg-neutral-50 px-3.5 py-3 dark:bg-neutral-800/50">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "News" %}</dt>
+          <dd class="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 text-lg font-semibold tabular-nums">
+            {{ report.news_count }}
+            {% if report.injury_count %}
+              <span class="text-xs font-medium text-red-700 dark:text-red-300">
+                {% blocktranslate count counter=report.injury_count %}{{ counter }} injury{% plural %}{{ counter }} injuries{% endblocktranslate %}
+              </span>
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  {# Player by player #}
+  <section class="card overflow-hidden" aria-label="{% translate 'Players' %}">
+    {% if not report.squad_size %}
+      <div class="px-5 py-12 text-center">
+        <p class="font-medium text-tertiary-700 dark:text-neutral-100">{% translate "No players on this roster yet." %}</p>
+        <a href="{% url 'fantasy:roster-build' roster.pk %}" class="btn btn-primary mt-4 text-sm">{% translate "Build the roster" %}</a>
+      </div>
+    {% else %}
+      {% if not report.as_of %}
+        <p class="border-b border-neutral-200 px-4 py-3 text-sm text-neutral-500 sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
+          {% translate "There is no stats import for this season yet. Changes show up here after the first two." %}
+        </p>
+      {% elif not report.has_comparison %}
+        <p class="border-b border-neutral-200 px-4 py-3 text-sm text-neutral-500 sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
+          {% translate "This is the season's first import, so there is nothing to compare yet. Changes show up here after the next one." %}
+        </p>
+      {% elif not report.updated %}
+        <p class="border-b border-neutral-200 px-4 py-3 text-sm text-neutral-500 sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
+          {% blocktranslate count counter=report.squad_size %}No stat changes in this import: your player did not play and was not repriced.{% plural %}No stat changes in this import: none of your {{ counter }} players played or was repriced.{% endblocktranslate %}
+        </p>
+      {% endif %}
+      {% include "fantasy/partials/latest_list.html" %}
+      {% include "fantasy/partials/latest_table.html" %}
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

@@ -54,6 +54,76 @@ class Candidate:
     games_played: int = 0
 
 
+@dataclass
+class Changes:
+    """How a Dream Team differs from the one the import before it left.
+
+    `previous` is None for the first result of a season; the page then says
+    "first calculation" instead of listing changes.
+    """
+
+    current: object
+    previous: object
+    came_in: list
+    went_out: list
+    stayed: int
+
+    @property
+    def is_first(self):
+        return self.previous is None
+
+    @property
+    def unchanged(self):
+        return self.previous is not None and not self.came_in and not self.went_out
+
+    @property
+    def salary_change(self):
+        if self.previous is None:
+            return None
+        return self.current.total_salary - self.previous.total_salary
+
+
+def previous_of(dream_team):
+    """The stored result of the import before this one, in the same season.
+
+    "Before" by stored results, not by imports: an import that produced no
+    Dream Team is skipped, and the comparison reaches back to the last one that
+    did. Picks and their players come prefetched.
+    """
+    return (
+        DreamTeam.objects.filter(season_id=dream_team.season_id, as_of__lt=dream_team.as_of)
+        .order_by("-as_of")
+        .prefetch_related("picks__player")
+        .first()
+    )
+
+
+def changes(current, previous=None):
+    """Who came into `current` and who went out, against the previous result.
+
+    Worked out on read rather than stored: comparing two teams of fifteen is
+    nothing, and a stored comparison would go stale the moment an older
+    import is recalculated. Pass `previous` to skip looking it up.
+    """
+    if previous is None:
+        previous = previous_of(current)
+    now = {pick.player_id: pick for pick in current.picks.all()}
+    if previous is None:
+        return Changes(current=current, previous=None, came_in=[], went_out=[], stayed=len(now))
+    before = {pick.player_id: pick for pick in previous.picks.all()}
+
+    def by_points(picks):
+        return sorted(picks, key=lambda pick: (-pick.total_fp, str(pick.player_id)))
+
+    return Changes(
+        current=current,
+        previous=previous,
+        came_in=by_points(pick for key, pick in now.items() if key not in before),
+        went_out=by_points(pick for key, pick in before.items() if key not in now),
+        stayed=len(now.keys() & before.keys()),
+    )
+
+
 def draft_moment(season):
     """When the game's prices count as draft-day prices.
 

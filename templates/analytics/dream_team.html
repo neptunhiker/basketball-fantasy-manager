@@ -223,7 +223,8 @@
           <div class="rounded-xl bg-neutral-50 px-3.5 py-3 dark:bg-neutral-800/50">
             <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Total salary" %}</dt>
             <dd class="mt-0.5 text-lg font-semibold tabular-nums" title="{{ dream_team.total_salary|exact }}">{{ dream_team.total_salary|millions }}</dd>
-            <dd class="text-xs tabular-nums {% if changes.salary_change > 0 %}text-rose-700 dark:text-rose-400{% elif changes.salary_change < 0 %}text-emerald-700 dark:text-emerald-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">
+            {# Neutral on purpose: spending more of the budget is neither good nor bad. #}
+            <dd class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
               {% if changes.salary_change > 0 %}+{% endif %}{{ changes.salary_change|millions }}
             </dd>
           </div>

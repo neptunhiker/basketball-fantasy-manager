@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 21:14+0100\n"
+"POT-Creation-Date: 2026-10-30 21:16+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -134,7 +134,7 @@ msgstr "Benutzer"
 msgid "You cannot change your own role."
 msgstr "Du kannst deine eigene Rolle nicht ändern."
 
-#: apps/accounts/services.py:67
+#: apps/accounts/services.py:65
 msgid "The last administrator cannot lose that role."
 msgstr ""
 "Der letzten Administratorin bzw. dem letzten Administrator kann diese Rolle "
@@ -148,42 +148,42 @@ msgstr "Dein Passwort wurde geändert."
 msgid "Your details have been saved."
 msgstr "Deine Daten wurden gespeichert."
 
-#: apps/accounts/views.py:188
+#: apps/accounts/views.py:192
 #, python-format
 msgid "%(name)s is now: %(role)s."
 msgstr "%(name)s ist jetzt: %(role)s."
 
-#: apps/accounts/views.py:211
+#: apps/accounts/views.py:215
 #, python-format
 msgid "Invitation link created for %(email)s."
 msgstr "Einladungslink für %(email)s wurde erstellt."
 
-#: apps/accounts/views.py:224
+#: apps/accounts/views.py:228
 msgid "That person has already accepted their invitation."
 msgstr "Diese Person hat ihre Einladung bereits angenommen."
 
-#: apps/accounts/views.py:233
+#: apps/accounts/views.py:237
 #, python-format
 msgid "New invitation link created for %(email)s."
 msgstr "Ein neuer Einladungslink für %(email)s wurde erstellt."
 
-#: apps/accounts/views.py:294
+#: apps/accounts/views.py:298
 msgid "Welcome! Your account is now active."
 msgstr "Willkommen! Dein Konto ist jetzt aktiv."
 
-#: apps/analytics/dream_team.py:120
+#: apps/analytics/dream_team.py:190
 msgid "There are no stats for this season yet."
 msgstr "Für diese Saison gibt es noch keine Statistiken."
 
-#: apps/analytics/dream_team.py:125
+#: apps/analytics/dream_team.py:195
 msgid "There are no prices from before the season started."
 msgstr "Es gibt keine Gehälter von vor dem Saisonstart."
 
-#: apps/analytics/dream_team.py:127
+#: apps/analytics/dream_team.py:197
 msgid "Nobody has played a game yet."
 msgstr "Noch hat niemand ein Spiel bestritten."
 
-#: apps/analytics/dream_team.py:131
+#: apps/analytics/dream_team.py:201
 #, python-format
 msgid "No team of %(size)d players fits the budget and the position minimums."
 msgstr ""
@@ -195,70 +195,70 @@ msgstr ""
 msgid "%(date)s at %(time)s"
 msgstr "%(date)s um %(time)s Uhr"
 
-#: apps/core/views.py:41
+#: apps/core/views.py:43
 msgid "The signing phase opens soon."
 msgstr "Die Transferphase beginnt bald."
 
-#: apps/core/views.py:42
+#: apps/core/views.py:44
 msgid "Get your shortlist ready, then start building when signings open."
 msgstr ""
 "Bereite deine Auswahlliste vor und beginne mit dem Aufbau, sobald die "
 "Transferphase beginnt."
 
-#: apps/core/views.py:45
+#: apps/core/views.py:47
 msgid "Complete your roster before signings close."
 msgstr "Vervollständige deinen Kader, bevor die Transferphase endet."
 
-#: apps/core/views.py:46
+#: apps/core/views.py:48
 msgid "Make your final additions before the signing window shuts."
 msgstr ""
 "Nimm deine letzten Ergänzungen vor, bevor sich das Transferfenster schließt."
 
-#: apps/core/views.py:49
+#: apps/core/views.py:51
 msgid "Set your lineup before tip-off."
 msgstr "Stelle deine Aufstellung vor dem Tip-off zusammen."
 
-#: apps/core/views.py:50
+#: apps/core/views.py:52
 msgid "Signings are closed. Waiting for season tip-off."
 msgstr "Die Transferphase ist geschlossen. Wir warten auf den Saisonstart."
 
-#: apps/core/views.py:53
+#: apps/core/views.py:55
 msgid "Make every move count."
 msgstr "Jeder Schritt zählt."
 
-#: apps/core/views.py:54
+#: apps/core/views.py:56
 msgid "The season is live. Keep an eye on your roster until the final day."
 msgstr "Die Saison läuft. Behalte deinen Kader bis zum letzten Tag im Blick."
 
-#: apps/core/views.py:59
+#: apps/core/views.py:61
 msgid "Signings open in"
 msgstr "Transferphase beginnt in"
 
-#: apps/core/views.py:60
+#: apps/core/views.py:62
 msgid "Signings close in"
 msgstr "Transferphase endet in"
 
-#: apps/core/views.py:61
+#: apps/core/views.py:63
 msgid "Season starts in"
 msgstr "Saison beginnt in"
 
-#: apps/core/views.py:62
+#: apps/core/views.py:64
 msgid "Season ends in"
 msgstr "Saison endet in"
 
-#: apps/core/views.py:88 templates/core/dashboard.html:69
+#: apps/core/views.py:90 templates/core/dashboard.html:69
 msgid "The season is underway."
 msgstr "Die Saison läuft."
 
-#: apps/core/views.py:88
+#: apps/core/views.py:90
 msgid "Keep your roster moving."
 msgstr "Halte deinen Kader in Bewegung."
 
-#: apps/core/views.py:171
+#: apps/core/views.py:173
 msgid "Confirm"
 msgstr "Bestätigen"
 
-#: apps/core/views.py:172 apps/core/views.py:324 apps/core/views.py:459
+#: apps/core/views.py:174 apps/core/views.py:325 apps/core/views.py:460
 #: templates/accounts/invite_user.html:22
 #: templates/accounts/partials/role_modal.html:46
 #: templates/accounts/password_change.html:16
@@ -273,16 +273,16 @@ msgstr "Bestätigen"
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: apps/core/views.py:223
+#: apps/core/views.py:225
 #, python-format
 msgid "Type \"%(word)s\" exactly to confirm."
 msgstr "Gib \"%(word)s\" genau zur Bestätigung ein."
 
-#: apps/core/views.py:318 apps/fantasy/forms.py:221
+#: apps/core/views.py:319 apps/fantasy/forms.py:221
 msgid "Name"
 msgstr "Name"
 
-#: apps/core/views.py:323 apps/core/views.py:458
+#: apps/core/views.py:324 apps/core/views.py:459
 #: templates/accounts/password_change.html:15
 #: templates/fantasy/partials/roster_create.html:64
 #: templates/nba/partials/note_edit.html:17
@@ -291,7 +291,7 @@ msgstr "Name"
 msgid "Save"
 msgstr "Speichern"
 
-#: apps/core/views.py:359
+#: apps/core/views.py:360
 msgid "Please enter a name."
 msgstr "Bitte gib einen Namen ein."
 
@@ -299,7 +299,7 @@ msgstr "Bitte gib einen Namen ein."
 msgid "The season the app works with"
 msgstr "Die Saison, mit der die App arbeitet"
 
-#: apps/fantasy/forms.py:41
+#: apps/fantasy/forms.py:42
 msgid ""
 "Only one season can hold this. Ticking it here takes it off whichever season"
 " has it now."
@@ -307,52 +307,52 @@ msgstr ""
 "Nur eine Saison kann dies haben. Wenn du es hier aktivierst, wird es von der"
 " aktuell markierten Saison entfernt."
 
-#: apps/fantasy/forms.py:95
+#: apps/fantasy/forms.py:97
 msgid "Label"
 msgstr "Bezeichnung"
 
-#: apps/fantasy/forms.py:96
+#: apps/fantasy/forms.py:98
 msgid "Starts on"
 msgstr "Beginnt am"
 
-#: apps/fantasy/forms.py:97
+#: apps/fantasy/forms.py:99
 msgid "Ends on"
 msgstr "Endet am"
 
-#: apps/fantasy/forms.py:98 templates/core/dashboard.html:83
+#: apps/fantasy/forms.py:100 templates/core/dashboard.html:83
 msgid "Signings open"
 msgstr "Transferphase öffnet"
 
-#: apps/fantasy/forms.py:99 templates/core/dashboard.html:87
+#: apps/fantasy/forms.py:101 templates/core/dashboard.html:87
 msgid "Signings close"
 msgstr "Transferphase schließt"
 
 # official game rules: budget, free trades, trade market
-#: apps/fantasy/forms.py:100
+#: apps/fantasy/forms.py:102
 msgid "Starting budget"
 msgstr "Startbudget"
 
-#: apps/fantasy/forms.py:101
+#: apps/fantasy/forms.py:103
 msgid "Weekly trades from"
 msgstr "Wöchentliche Trades ab"
 
-#: apps/fantasy/forms.py:102
+#: apps/fantasy/forms.py:104
 msgid "Trades per week"
 msgstr "Trades pro Woche"
 
-#: apps/fantasy/forms.py:103
+#: apps/fantasy/forms.py:105
 msgid "Trade buying opens"
 msgstr "Trade-Kauf ab"
 
-#: apps/fantasy/forms.py:104
+#: apps/fantasy/forms.py:106
 msgid "Trade buying closes"
 msgstr "Trade-Kauf bis"
 
-#: apps/fantasy/forms.py:107
+#: apps/fantasy/forms.py:109
 msgid "How the season is written in the official game, e.g. 2026-27."
 msgstr "Wie die Saison im offiziellen Spiel geschrieben wird, z. B. 2026-27."
 
-#: apps/fantasy/forms.py:109
+#: apps/fantasy/forms.py:111
 msgid ""
 "Before this moment rosters cannot be created and players cannot be signed. "
 "Leave empty to open immediately."
@@ -360,7 +360,7 @@ msgstr ""
 "Vor diesem Zeitpunkt können keine Kader erstellt und keine Spieler "
 "verpflichtet werden. Leer lassen, um sofort zu öffnen."
 
-#: apps/fantasy/forms.py:113
+#: apps/fantasy/forms.py:115
 msgid ""
 "After this moment a roster can only change through trades: no more buying, "
 "no more selling, and no new rosters. Leave empty to keep signings open for "
@@ -370,11 +370,11 @@ msgstr ""
 "Verpflichten, kein Entlassen und keine neuen Kader mehr. Leer lassen, damit "
 "die Transferphase die ganze Saison offen bleibt."
 
-#: apps/fantasy/forms.py:118
+#: apps/fantasy/forms.py:120
 msgid "In dollars, e.g. 63000000. Applies to rosters created from now on."
 msgstr "In Dollar, z. B. 63000000. Gilt für alle ab jetzt erstellten Kader."
 
-#: apps/fantasy/forms.py:121
+#: apps/fantasy/forms.py:123
 msgid ""
 "The first weekly free trade, e.g. a Sunday at 22:00. Another follows every 7"
 " days until the season ends. Leave empty for none."
@@ -382,32 +382,32 @@ msgstr ""
 "Der erste wöchentliche Gratis-Trade, z. B. ein Sonntag um 22:00 Uhr. Danach "
 "folgt alle 7 Tage einer, bis die Saison endet. Leer lassen für keine."
 
-#: apps/fantasy/forms.py:124
+#: apps/fantasy/forms.py:126
 msgid "How many trades each weekly grant adds to every roster."
 msgstr ""
 "Wie viele Trades jede wöchentliche Ausschüttung jedem Kader gutschreibt."
 
-#: apps/fantasy/forms.py:126
+#: apps/fantasy/forms.py:128
 msgid "From when trades can be bought and sold. Leave empty for no limit."
 msgstr ""
 "Ab wann Trades gekauft und verkauft werden können. Leer lassen für keine "
 "Einschränkung."
 
-#: apps/fantasy/forms.py:129
+#: apps/fantasy/forms.py:131
 msgid "Until when trades can be bought and sold. Leave empty for no limit."
 msgstr ""
 "Bis wann Trades gekauft und verkauft werden können. Leer lassen für keine "
 "Einschränkung."
 
-#: apps/fantasy/forms.py:163 apps/fantasy/models.py:304
+#: apps/fantasy/forms.py:165 apps/fantasy/models.py:304
 msgid "A season has to end after it starts."
 msgstr "Eine Saison muss nach ihrem Beginn enden."
 
-#: apps/fantasy/forms.py:166 apps/fantasy/models.py:312
+#: apps/fantasy/forms.py:168 apps/fantasy/models.py:312
 msgid "Signings must close after they open."
 msgstr "Die Transferphase muss nach ihrem Beginn enden."
 
-#: apps/fantasy/forms.py:173
+#: apps/fantasy/forms.py:174
 msgid "Trade buying must close after it opens."
 msgstr "Der Trade-Kauf muss nach seinem Beginn enden."
 
@@ -966,39 +966,46 @@ msgstr "basketball.de-Benutzername"
 msgid "basketball.de password"
 msgstr "basketball.de-Passwort"
 
-#: apps/nba/importer.py:90 apps/nba/views.py:703
+#: apps/nba/importer.py:92 apps/nba/views.py:703
 msgid "There is no current season to import into."
 msgstr "Es gibt keine aktuelle Saison, in die importiert werden kann."
 
-#: apps/nba/importer.py:94 apps/nba/views.py:705
+#: apps/nba/importer.py:96 apps/nba/views.py:705
 msgid "Another import is still running. Please try again shortly."
 msgstr "Es läuft bereits ein Import. Bitte versuche es gleich noch einmal."
 
 # UX fixes, round 1
-#: apps/nba/importer.py:102
+#: apps/nba/importer.py:104
 msgid ""
 "There are no NBA teams in the database. Run `manage.py seed_teams` first."
 msgstr ""
 "Es sind keine NBA-Teams in der Datenbank. Führe zuerst `manage.py "
 "seed_teams` aus."
 
-#: apps/nba/importer.py:115 apps/nba/season_stats.py:453
+#: apps/nba/importer.py:117 apps/nba/season_stats.py:453
 msgid "Unexpected error. The details are in the server log."
 msgstr "Unerwarteter Fehler. Die Details stehen im Server-Log."
 
-#: apps/nba/importer.py:155
+#: apps/nba/importer.py:143
+msgid ""
+"The Dream Team could not be worked out. The details are in the server log."
+msgstr ""
+"Das Dream Team konnte nicht berechnet werden. Die Details stehen im Server-"
+"Log."
+
+#: apps/nba/importer.py:178
 #, python-format
 msgid "The pager announced %(expected)d pages but %(read)d were read."
 msgstr ""
 "Die Seitennavigation kündigte %(expected)d Seiten an, gelesen wurden aber "
 "%(read)d."
 
-#: apps/nba/importer.py:194
+#: apps/nba/importer.py:217
 #, python-format
 msgid "%(player)s: unknown team '%(team)s'"
 msgstr "%(player)s: unbekanntes Team „%(team)s“"
 
-#: apps/nba/importer.py:232
+#: apps/nba/importer.py:255
 #, python-format
 msgid ""
 "%(player)s: games played could not be derived exactly (FP %(fp)s, FP/G "
@@ -1007,7 +1014,7 @@ msgstr ""
 "%(player)s: Die Zahl der Spiele ließ sich nicht exakt ableiten (FP %(fp)s, "
 "FP/G %(fpg)s)."
 
-#: apps/nba/importer.py:276
+#: apps/nba/importer.py:299
 #, python-format
 msgid ""
 "Only %(rows)d rows were read, against %(previous)d last time, so no player "

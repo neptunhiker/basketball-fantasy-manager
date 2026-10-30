@@ -16,6 +16,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+from apps.analytics.dream_team import NoDreamTeam
+from apps.analytics.dream_team import refresh as refresh_dream_team
 from apps.fantasy.models import Season
 from apps.fantasy.services import record_snapshot
 
@@ -83,7 +85,8 @@ def import_bbde(
     Everything is fetched before anything is written, and all writes happen in
     one transaction: a run either applies completely or not at all. Returns the
     finished `ImportRun`; raises a `BbdeError` (with the run marked failed) when
-    basketball.de cannot be read.
+    basketball.de cannot be read. A real run ends by working out the season's
+    Dream Team for its snapshots.
     """
     season = Season.objects.filter(is_current=True).first()
     if season is None:
@@ -115,10 +118,31 @@ def import_bbde(
         _fail(run, _("Unexpected error. The details are in the server log."))
         raise
 
+    if not dry_run:
+        _update_dream_team(run, season)
     run.status = ImportRun.Status.SUCCEEDED
     run.finished_at = timezone.now()
     run.save()
     return run
+
+
+def _update_dream_team(run, season):
+    """Work out the Dream Team for the snapshots this run just wrote.
+
+    After the import's own transaction has committed, and never at its
+    expense: the players and snapshots are what the run is for, so a problem
+    here becomes a warning on a run that still succeeded.
+    """
+    try:
+        refresh_dream_team(season, run.started_at)
+    except NoDreamTeam:
+        # Expected before the first game, or before draft-day prices exist.
+        pass
+    except Exception:
+        logger.exception("Dream Team for basketball.de import %s failed", run.pk)
+        run.warnings.append(
+            _("The Dream Team could not be worked out. The details are in the server log.")
+        )
 
 
 def _fail(run, message):

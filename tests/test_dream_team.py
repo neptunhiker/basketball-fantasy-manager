@@ -6,7 +6,13 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from apps.analytics.dream_team import NoDreamTeam, candidates, draft_moment, refresh
+from apps.analytics.dream_team import (
+    NoDreamTeam,
+    candidates,
+    draft_moment,
+    missing_reason,
+    refresh,
+)
 from apps.analytics.models import DreamTeam
 from apps.fantasy.models import PlayerSnapshot, Season
 from apps.nba.models import Player, Team
@@ -136,6 +142,77 @@ def test_prices_come_from_the_last_snapshot_before_signings_opened(season):
     assert pool[0].salary == Decimal(5 * M)
 
 
+# --- when the first import came after signings opened ----------------------------
+#
+# Production 2026/27: signings opened on 13 September, the first import ran on
+# 4 October, tip-off was on 20 October. Nothing was scraped before signings
+# opened, so the first import -- still before tip-off -- stands for draft day.
+
+SIGNINGS_OPEN = dt.datetime(2026, 9, 13, 13, 30, tzinfo=BERLIN)
+FIRST_SCRAPE = dt.datetime(2026, 10, 4, 8, 7, tzinfo=BERLIN)
+SECOND_SCRAPE = dt.datetime(2026, 10, 11, 8, 7, tzinfo=BERLIN)
+
+
+@pytest.fixture
+def late_first_import(season):
+    season.signings_open_at = SIGNINGS_OPEN
+    season.save()
+    p = player("Early", "G")
+    snap(p, season, FIRST_SCRAPE, 3)
+    snap(p, season, SECOND_SCRAPE, 5)  # repriced in preseason
+    snap(p, season, FIRST_IMPORT, 7, fp=40, games=2)
+    return p
+
+
+def test_without_prices_from_before_signings_the_first_import_stands_in(season, late_first_import):
+    draft_as_of, pool = candidates(season, FIRST_IMPORT)
+
+    # The first import, not the later preseason one: closest to draft day.
+    assert draft_as_of == FIRST_SCRAPE
+    assert pool[0].salary == Decimal(3 * M)
+    assert pool[0].points == Decimal(40)
+
+
+def test_prices_from_before_signings_still_win_over_the_fallback(season, late_first_import):
+    snap(late_first_import, season, SIGNINGS_OPEN - dt.timedelta(days=1), 2)
+
+    draft_as_of, pool = candidates(season, FIRST_IMPORT)
+
+    assert draft_as_of == SIGNINGS_OPEN - dt.timedelta(days=1)
+    assert pool[0].salary == Decimal(2 * M)
+
+
+def test_a_first_import_after_tipoff_does_not_stand_in(season):
+    season.signings_open_at = SIGNINGS_OPEN
+    season.save()
+    snap(player("Late", "G"), season, FIRST_IMPORT, 3, fp=10, games=1)
+
+    assert candidates(season, FIRST_IMPORT) == (None, [])
+    assert missing_reason(season) == "no_prices"
+
+
+def test_the_fallback_tells_the_page_it_is_only_missing_a_calculation(season, late_first_import):
+    assert missing_reason(season) == "not_calculated"
+
+
+def test_the_production_season_gets_its_dream_team(season):
+    """The whole 2026/27 production case: 17 players, first scraped after
+    signings opened, then two imports with games."""
+    season.signings_open_at = SIGNINGS_OPEN
+    season.starts_on = dt.date(2026, 10, 20)
+    season.save()
+    for position, count in (("G", 7), ("F", 7), ("C", 3)):
+        for number in range(1, count + 1):
+            p = player(f"{position}{number}", position)
+            snap(p, season, FIRST_SCRAPE, 4)
+            snap(p, season, FIRST_IMPORT, 4, fp=number * 10, games=2)
+
+    dream_team = refresh(season)
+
+    assert dream_team.draft_as_of == FIRST_SCRAPE
+    assert dream_team.picks.count() == 15
+
+
 # --- refresh -----------------------------------------------------------------
 
 
@@ -247,8 +324,9 @@ def test_no_dream_team_when_no_legal_team_exists(season, league):
 
 def test_a_result_that_no_longer_holds_is_removed(season, league):
     refresh(season)
-    # The admin moves the draft date before the first snapshot: no prices.
-    season.signings_open_at = PRESEASON - dt.timedelta(days=1)
+    # The admin moves tip-off before the first snapshot: nothing stands for
+    # draft day any more.
+    season.starts_on = dt.date(2026, 10, 1)
     season.save()
 
     with pytest.raises(NoDreamTeam):

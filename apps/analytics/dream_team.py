@@ -124,15 +124,40 @@ def changes(current, previous=None):
     )
 
 
+def tip_off(season):
+    """Midnight local time on the season's first day."""
+    return timezone.make_aware(dt.datetime.combine(season.starts_on, dt.time.min))
+
+
 def draft_moment(season):
     """When the game's prices count as draft-day prices.
 
-    The moment signings opened, or, for a season without that date, tip-off at
-    midnight local time on its first day.
+    The moment signings opened, or, for a season without that date, tip-off.
     """
-    if season.signings_open_at:
-        return season.signings_open_at
-    return timezone.make_aware(dt.datetime.combine(season.starts_on, dt.time.min))
+    return season.signings_open_at or tip_off(season)
+
+
+def draft_snapshots(season):
+    """The snapshots the draft-day prices come from.
+
+    Those from before `draft_moment`, newest per player. When the first import
+    of the season came only after signings had opened -- nobody scraped the
+    prices the day the market opened -- the closest there is to draft day is
+    that first import, as long as it was still before tip-off: the season's
+    prices then, before a single game could move them. After tip-off there is
+    nothing that stands for draft day, and the queryset is empty.
+    """
+    snapshots = PlayerSnapshot.objects.filter(season=season)
+    before = snapshots.filter(as_of__lt=draft_moment(season))
+    if before.exists():
+        return before
+    first = (
+        snapshots.filter(as_of__lt=tip_off(season))
+        .order_by("as_of")
+        .values_list("as_of", flat=True)
+        .first()
+    )
+    return snapshots.filter(as_of=first) if first else snapshots.none()
 
 
 def candidates(season, as_of):
@@ -144,7 +169,7 @@ def candidates(season, as_of):
     day keeps the points of his last snapshot before `as_of`.
     """
     draft = list(
-        PlayerSnapshot.objects.filter(season=season, as_of__lt=draft_moment(season))
+        draft_snapshots(season)
         .latest_per_player()
         .only("player_id", "as_of", "salary", "position", "total_fp", "games_played")
     )
@@ -175,18 +200,18 @@ def candidates(season, as_of):
 def missing_reason(season):
     """Why `season` has no stored Dream Team, as a key the page words.
 
-    `no_stats`, `no_prices` (nothing from before draft day), `no_games`, or
+    `no_stats`, `no_prices` (nothing that stands for draft day), `no_games`, or
     `not_calculated` when there would be something to work out -- which only
     happens before the first import since the Dream Team existed, or after a
     calculation failed.
     """
     snapshots = PlayerSnapshot.objects.filter(season=season)
-    draft = draft_moment(season)
     if not snapshots.exists():
         return "no_stats"
-    if not snapshots.filter(as_of__lt=draft).exists():
+    prices_as_of = draft_snapshots(season).aggregate(moment=Max("as_of"))["moment"]
+    if prices_as_of is None:
         return "no_prices"
-    if not snapshots.filter(as_of__gt=draft, games_played__gt=0).exists():
+    if not snapshots.filter(as_of__gt=prices_as_of, games_played__gt=0).exists():
         return "no_games"
     return "not_calculated"
 

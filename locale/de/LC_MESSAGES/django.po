@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 20:19+0100\n"
+"POT-Creation-Date: 2026-10-30 21:14+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -170,6 +170,25 @@ msgstr "Ein neuer Einladungslink für %(email)s wurde erstellt."
 #: apps/accounts/views.py:294
 msgid "Welcome! Your account is now active."
 msgstr "Willkommen! Dein Konto ist jetzt aktiv."
+
+#: apps/analytics/dream_team.py:120
+msgid "There are no stats for this season yet."
+msgstr "Für diese Saison gibt es noch keine Statistiken."
+
+#: apps/analytics/dream_team.py:125
+msgid "There are no prices from before the season started."
+msgstr "Es gibt keine Gehälter von vor dem Saisonstart."
+
+#: apps/analytics/dream_team.py:127
+msgid "Nobody has played a game yet."
+msgstr "Noch hat niemand ein Spiel bestritten."
+
+#: apps/analytics/dream_team.py:131
+#, python-format
+msgid "No team of %(size)d players fits the budget and the position minimums."
+msgstr ""
+"Kein Team aus %(size)d Spielern passt ins Budget und erfüllt die Mindestzahl"
+" je Position."
 
 #: apps/core/dates.py:25
 #, python-format

@@ -8,6 +8,7 @@ import pytest
 from django.core.management import CommandError, call_command
 from django.db import connection
 
+from apps.analytics.models import DreamTeam, DreamTeamPick
 from apps.fantasy import services
 from apps.fantasy.models import Manager, PlayerSnapshot, Roster, Season, TradeGrant, Transaction
 from apps.nba.models import ImportRun, Player, PlayerInjury, PlayerNote, Team, TeamNote
@@ -41,6 +42,24 @@ def game(user, manager):
     TeamNote.objects.create(user=user, team=team, content="Deep bench")
     services.add_to_watchlist(user, player)
     ImportRun.objects.create(source=ImportRun.Source.COMMAND, status=ImportRun.Status.SUCCEEDED)
+    # A pick PROTECTs its player, so the Dream Team has to go first.
+    dream_team = DreamTeam.objects.create(
+        season=season,
+        as_of=dt.datetime(2026, 10, 25, tzinfo=dt.UTC),
+        draft_as_of=dt.datetime(2026, 10, 1, tzinfo=dt.UTC),
+        budget=Decimal("63000000"),
+        total_salary=Decimal("10000000"),
+        total_fp=Decimal("40"),
+        candidates=1,
+    )
+    DreamTeamPick.objects.create(
+        dream_team=dream_team,
+        player=player,
+        position="C",
+        salary=Decimal("10000000"),
+        total_fp=Decimal("40"),
+        games_played=2,
+    )
     return season
 
 
@@ -65,7 +84,17 @@ def test_confirming_with_the_database_name_wipes_the_game_but_keeps_the_frame(ga
     with mock.patch(INPUT, return_value=connection.settings_dict["NAME"]):
         call_command("reset_game_data")
 
-    for model in (Transaction, Roster, Player, PlayerSnapshot, PlayerInjury, PlayerNote, ImportRun):
+    for model in (
+        Transaction,
+        Roster,
+        Player,
+        PlayerSnapshot,
+        DreamTeam,
+        DreamTeamPick,
+        PlayerInjury,
+        PlayerNote,
+        ImportRun,
+    ):
         assert not model.objects.exists(), model
     assert not user.watchlist_entries.exists()
     assert Team.objects.count() == 30

@@ -9,6 +9,7 @@ basketball.de import then re-creates every player with their ID.
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, transaction
 
+from apps.analytics.models import DreamTeam
 from apps.fantasy.models import PlayerSnapshot, Roster, RosterPlayer, Transaction, WatchlistEntry
 from apps.nba.models import ImportRun, Player, PlayerInjury, PlayerNote
 
@@ -18,6 +19,7 @@ TARGETS = [
     ("Roster spots", RosterPlayer),
     ("Rosters", Roster),
     ("Watchlist entries", WatchlistEntry),
+    ("Dream Teams", DreamTeam),
     ("Snapshots", PlayerSnapshot),
     ("Injuries", PlayerInjury),
     ("Player notes", PlayerNote),
@@ -28,8 +30,8 @@ TARGETS = [
 
 class Command(BaseCommand):
     help = (
-        "Delete all rosters, transactions, watchlists, players, snapshots, injuries, "
-        "player notes and import runs. Keeps users, managers, teams, seasons, trade "
+        "Delete all rosters, transactions, watchlists, players, snapshots, Dream Teams, "
+        "injuries, player notes and import runs. Keeps users, managers, teams, seasons, trade "
         "grants and team notes. Asks for the database name to confirm."
     )
 

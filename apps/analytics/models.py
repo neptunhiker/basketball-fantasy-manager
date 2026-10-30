@@ -30,6 +30,12 @@ class DreamTeam(TimeStampedModel):
     candidates = models.PositiveIntegerField(
         "Candidates", help_text="Players with a draft-day price, i.e. who could have been picked."
     )
+    # Every candidate who had played by `as_of`, as `{"player", "position",
+    # "salary", "points", "games"}` with the amounts as strings. What the page
+    # draws its chart and its "left out" list from, kept with the result so the
+    # page never has to go back to the snapshots -- and so both always show the
+    # pool this team was actually chosen from.
+    pool = models.JSONField("Pool", default=list, blank=True)
 
     class Meta:
         ordering = ["-as_of"]

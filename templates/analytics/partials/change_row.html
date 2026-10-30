@@ -1,0 +1,12 @@
+{% load i18n money %}
+{# One player in the change card. Context: pick (a DreamTeamPick), out (True for a leaver, shown muted). #}
+<li class="flex items-center gap-3 py-2.5">
+  {% include "analytics/partials/position_badge.html" with position=pick.position label=pick.get_position_display size="sm" %}
+  <div class="min-w-0 flex-1">
+    <a href="{% url 'nba:player-detail' pick.player.slug %}"
+       class="block truncate text-sm font-semibold hover:text-primary-600 hover:underline dark:hover:text-primary-400 {% if out %}text-neutral-500 dark:text-neutral-400{% else %}text-tertiary-700 dark:text-neutral-100{% endif %}">{{ pick.player.first_name }} {{ pick.player.last_name }}</a>
+    <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ pick.player.team.abbreviation|default:"–" }} · <span title="{{ pick.salary|exact }}">{{ pick.salary|millions }}</span></p>
+  </div>
+  <span class="text-sm tabular-nums {% if out %}text-neutral-500 dark:text-neutral-400{% else %}font-semibold{% endif %}"
+        title="{% translate 'Points' %}">{{ pick.total_fp|floatformat:"1g" }}</span>
+</li>

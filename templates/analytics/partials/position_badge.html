@@ -1,0 +1,8 @@
+{# A position as a small coloured square: violet Guards, pink Forwards, amber Centers. #}
+{# Context: position ("G"/"F"/"C"), label (its full name, for the tooltip), size ("sm" or default). #}
+<span title="{{ label }}"
+      class="inline-flex shrink-0 items-center justify-center rounded-lg font-bold
+        {% if size == 'sm' %}h-6 w-6 text-[11px]{% else %}h-8 w-8 text-xs{% endif %}
+        {% if position == 'G' %}bg-primary-100 text-primary-800 dark:bg-primary-500/15 dark:text-primary-200
+        {% elif position == 'F' %}bg-secondary-100 text-secondary-800 dark:bg-secondary-500/15 dark:text-secondary-300
+        {% else %}bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300{% endif %}">{{ position }}</span>

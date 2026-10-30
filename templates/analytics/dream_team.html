@@ -1,0 +1,284 @@
+{% extends "app.html" %}
+{% load i18n static money %}
+
+{% comment %}
+  Season analytics: The Dream Team. The fifteen players who, bought on draft
+  day for the season's budget, would have scored the most points so far --
+  and who came in or went out since the import before. Only reads what
+  `apps.analytics.dream_team.refresh` stored after the newest import.
+{% endcomment %}
+
+{% block title %}{% translate "The Dream Team" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Analytics" %}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-6xl space-y-6">
+
+{% if not dream_team %}
+  <section class="card overflow-hidden" aria-labelledby="dream-team-heading">
+    <div class="gradient-rule h-1"></div>
+    <div class="flex flex-col items-center px-6 py-14 text-center sm:py-20">
+      <img src="{% static 'img/pengi_bookkeeper.png' %}" alt="" class="h-28 w-28 rounded-3xl object-cover shadow-md sm:h-32 sm:w-32">
+      <p class="mt-6 text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
+        {% if season %}{% blocktranslate with season=season.label %}Season analytics · {{ season }}{% endblocktranslate %}{% else %}{% translate "Season analytics" %}{% endif %}
+      </p>
+      <h2 id="dream-team-heading" class="mt-1 text-2xl font-bold tracking-tight text-tertiary-700 sm:text-3xl dark:text-neutral-100">{% translate "The Dream Team" %}</h2>
+      <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+        {% if not season %}
+          {% translate "No season is marked as current, so there is nothing to look back on yet." %}
+        {% elif missing == "no_stats" %}
+          {% translate "No stats have been imported for this season yet. The Dream Team appears after the first import with games played." %}
+        {% elif missing == "no_prices" %}
+          {% translate "There are no prices from before the season started, so nobody knows what the players cost on draft day. The Dream Team needs at least one import from before tip-off." %}
+        {% elif missing == "no_games" %}
+          {% translate "Nobody has played a game yet. The Dream Team appears after the first import with games played." %}
+        {% else %}
+          {% translate "The Dream Team has not been worked out yet. It appears after the next stats import." %}
+        {% endif %}
+      </p>
+      {% if missing == "not_calculated" and request.user.is_staff %}
+        <p class="mx-auto mt-4 max-w-md rounded-xl bg-neutral-50 px-4 py-3 text-xs text-neutral-600 dark:bg-neutral-800/60 dark:text-neutral-300">
+          {% translate "Staff: to work it out now, run" %} <code class="font-mono text-tertiary-700 dark:text-neutral-100">manage.py refresh_dream_team --all</code>
+        </p>
+      {% endif %}
+    </div>
+  </section>
+{% else %}
+
+  {# --- The headline -------------------------------------------------------- #}
+  <section class="card overflow-hidden" aria-labelledby="dream-team-heading">
+    <div class="gradient-rule h-1"></div>
+    <div class="p-5 sm:p-7">
+      <div class="grid gap-x-8 gap-y-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div class="min-w-0">
+          <p class="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
+            {% blocktranslate with season=season.label %}Season analytics · {{ season }}{% endblocktranslate %}
+          </p>
+          <h2 id="dream-team-heading" class="mt-1 text-3xl font-bold tracking-tight text-balance text-tertiary-700 sm:text-4xl dark:text-neutral-50">
+            {% translate "The Dream Team" %}
+          </h2>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-neutral-600 sm:text-base dark:text-neutral-300">
+            {% blocktranslate trimmed with budget=dream_team.budget|millions %}
+              The 15 players who, bought on draft day for {{ budget }}, would have scored the most points so far.
+              At least 5 Guards, 5 Forwards and 2 Centers.
+            {% endblocktranslate %}
+          </p>
+          <p class="mt-3 flex flex-wrap gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-1 dark:bg-neutral-800">
+              <svg class="h-3.5 w-3.5 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M3 3h8l10 10-8 8L3 11V3Z"/></svg>
+              {% blocktranslate with moment=dream_team.draft_as_of|date:"D j.n., H:i" %}Prices from {{ moment }}{% endblocktranslate %}
+            </span>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-1 dark:bg-neutral-800">
+              <svg class="h-3.5 w-3.5 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 0 1-13.7 5.6L4 15.3M4 20v-4.7h4.7"/></svg>
+              {% blocktranslate with moment=dream_team.as_of|date:"D j.n., H:i" %}Points as of {{ moment }}{% endblocktranslate %}
+            </span>
+          </p>
+        </div>
+        <div class="flex items-end justify-between gap-4 rounded-2xl bg-primary-50/70 px-4 py-3 lg:block lg:bg-transparent lg:p-0 lg:text-right dark:bg-primary-500/10 lg:dark:bg-transparent">
+          <p class="text-xs font-medium text-primary-700 lg:text-neutral-500 dark:text-primary-300 lg:dark:text-neutral-400">{% translate "Points so far" %}</p>
+          <div>
+            <p class="bg-gradient-to-r from-primary-600 to-secondary-700 bg-clip-text text-4xl font-bold tabular-nums tracking-tight text-transparent sm:text-5xl dark:from-primary-300 dark:to-secondary-300">
+              {{ dream_team.total_fp|floatformat:"1g" }}
+            </p>
+            <p class="text-right text-xs text-neutral-500 dark:text-neutral-400">
+              {% blocktranslate count counter=games %}in {{ counter }} game{% plural %}in {{ counter }} games{% endblocktranslate %}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <dl class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="col-span-2 rounded-xl bg-neutral-50 px-4 py-3 sm:col-span-1 dark:bg-neutral-800/50">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Salary used" %}</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums" title="{{ dream_team.total_salary|exact }}">
+            {{ dream_team.total_salary|millions }}<span class="text-sm font-normal text-neutral-500 dark:text-neutral-400"> / {{ dream_team.budget|millions }}</span>
+          </dd>
+          <dd class="mt-2 h-1.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700"
+              role="img" aria-label="{% blocktranslate with share=budget_used %}{{ share }}% of the budget used{% endblocktranslate %}">
+            <div class="gradient-rule h-full rounded-full" style="width: {{ budget_used }}%"></div>
+          </dd>
+        </div>
+        <div class="rounded-xl bg-neutral-50 px-4 py-3 dark:bg-neutral-800/50">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Left over" %}</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums" title="{{ dream_team.left_over|exact }}">{{ dream_team.left_over|millions }}</dd>
+        </div>
+        <div class="rounded-xl bg-neutral-50 px-4 py-3 dark:bg-neutral-800/50">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Players to choose from" %}</dt>
+          <dd class="mt-0.5 text-lg font-semibold tabular-nums">{{ dream_team.candidates }}</dd>
+        </div>
+        <div class="col-span-2 rounded-xl bg-neutral-50 px-4 py-3 sm:col-span-1 dark:bg-neutral-800/50">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Line-up" %}</dt>
+          <dd class="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-lg font-semibold tabular-nums">
+            {% for group in groups %}
+              <span class="inline-flex items-center gap-1">{% include "analytics/partials/position_badge.html" with position=group.position label=group.label size="sm" %}{{ group.rows|length }}</span>
+            {% endfor %}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+
+    {# --- The fifteen ------------------------------------------------------- #}
+    <section class="card overflow-hidden" aria-labelledby="picks-heading">
+      <div class="px-5 pb-3 pt-5 sm:px-6">
+        <h2 id="picks-heading" class="text-base font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "The 15 picks" %}</h2>
+        <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% translate "Price and position as on draft day." %}</p>
+      </div>
+      <table class="w-full text-sm">
+        <thead class="border-y border-neutral-100 bg-neutral-50/70 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800/40 dark:text-neutral-400">
+          <tr>
+            <th scope="col" class="py-2 pl-5 pr-3 text-left font-medium sm:pl-6">{% translate "Player" %}</th>
+            <th scope="col" class="hidden px-3 py-2 text-right font-medium sm:table-cell">{% translate "Draft price" %}</th>
+            <th scope="col" class="hidden px-3 py-2 text-right font-medium md:table-cell" title="{% translate 'Points per $1M of draft-day salary' %}">{% translate "Points per $M" %}</th>
+            <th scope="col" class="py-2 pl-3 pr-5 text-right font-medium sm:pr-6">{% translate "Points" %}</th>
+          </tr>
+        </thead>
+        {% for group in groups %}
+          <tbody>
+            <tr class="bg-primary-50/50 dark:bg-primary-500/5">
+              <th scope="colgroup" class="py-2 pl-5 pr-3 text-left sm:pl-6">
+                <span class="text-xs font-semibold uppercase tracking-wide text-primary-800 dark:text-primary-300">{{ group.label }}</span>
+                <span class="text-xs text-primary-700/80 dark:text-primary-300/70">· {{ group.rows|length }}</span>
+              </th>
+              <td class="hidden px-3 py-2 text-right text-xs tabular-nums text-primary-800 sm:table-cell dark:text-primary-300">{{ group.salary|millions }}</td>
+              <td class="hidden md:table-cell"></td>
+              <td class="py-2 pl-3 pr-5 text-right text-xs font-semibold tabular-nums text-primary-800 sm:pr-6 dark:text-primary-300">{{ group.points|floatformat:"1g" }}</td>
+            </tr>
+            {% for pick in group.rows %}
+              <tr class="border-t border-neutral-100 transition hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40">
+                <td class="py-2.5 pl-5 pr-3 sm:pl-6">
+                  <div class="flex min-w-0 items-center gap-3">
+                    {% include "analytics/partials/position_badge.html" with position=pick.position label=pick.get_position_display %}
+                    <div class="min-w-0">
+                      <p class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <a href="{% url 'nba:player-detail' pick.player.slug %}" class="truncate font-semibold text-tertiary-700 hover:text-primary-600 hover:underline dark:text-neutral-100 dark:hover:text-primary-400">{{ pick.player.first_name }} {{ pick.player.last_name }}</a>
+                        {% if pick.is_new %}<span class="badge badge-success px-2 py-0 text-[11px]">{% translate "New" %}</span>{% endif %}
+                      </p>
+                      <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                        {{ pick.player.team.abbreviation|default:"–" }}<span class="sm:hidden"> · {{ pick.salary|millions }}</span>
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="hidden px-3 py-2.5 text-right tabular-nums sm:table-cell" title="{{ pick.salary|exact }}">{{ pick.salary|millions }}</td>
+                <td class="hidden px-3 py-2.5 text-right tabular-nums text-neutral-600 md:table-cell dark:text-neutral-300">{{ pick.fp_per_million|floatformat:"1g"|default:"–" }}</td>
+                <td class="py-2.5 pl-3 pr-5 text-right sm:pr-6">
+                  <span class="font-semibold tabular-nums">{{ pick.total_fp|floatformat:"1g" }}</span>
+                  <span class="ml-auto mt-1 block h-1 w-16 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800" aria-hidden="true">
+                    <span class="block h-full rounded-full bg-primary-400 dark:bg-primary-500" style="width: {{ pick.bar }}%"></span>
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        {% endfor %}
+      </table>
+    </section>
+
+    {# Beside the picks on a wide screen; on a tablet, side by side below them. #}
+    <div class="grid gap-6 md:grid-cols-2 md:items-start lg:grid-cols-1">
+    {# --- What changed ---------------------------------------------------- #}
+    <section class="card p-5 sm:p-6" aria-labelledby="changes-heading">
+      <h2 id="changes-heading" class="text-base font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "Changes since the last import" %}</h2>
+      {% if changes.is_first %}
+        <p class="mt-3 rounded-xl bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-600 dark:bg-neutral-800/50 dark:text-neutral-300">
+          {% translate "This is the first Dream Team of the season. From the next import on, this shows who came in and who went out." %}
+        </p>
+      {% else %}
+        <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
+          {% blocktranslate with moment=changes.previous.as_of|date:"D j.n., H:i" %}Compared with {{ moment }}{% endblocktranslate %}
+        </p>
+        {% if changes.unchanged %}
+          <div class="mt-4 flex items-center gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4.5 4.5L19 7"/></svg>
+            {% translate "Unchanged: the same 15 as last time." %}
+          </div>
+        {% else %}
+          <h3 class="mt-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m-6 6 6-6 6 6"/></svg>
+            {% blocktranslate count counter=changes.came_in|length %}In · {{ counter }}{% plural %}In · {{ counter }}{% endblocktranslate %}
+          </h3>
+          <ul class="mt-1 divide-y divide-neutral-100 dark:divide-neutral-800">
+            {% for pick in changes.came_in %}
+              {% include "analytics/partials/change_row.html" with pick=pick %}
+            {% endfor %}
+          </ul>
+          <h3 class="mt-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-400">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m6-6-6 6-6-6"/></svg>
+            {% blocktranslate count counter=changes.went_out|length %}Out · {{ counter }}{% plural %}Out · {{ counter }}{% endblocktranslate %}
+          </h3>
+          <ul class="mt-1 divide-y divide-neutral-100 dark:divide-neutral-800">
+            {% for pick in changes.went_out %}
+              {% include "analytics/partials/change_row.html" with pick=pick out=True %}
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <dl class="mt-5 grid grid-cols-2 gap-3">
+          <div class="rounded-xl bg-neutral-50 px-3.5 py-3 dark:bg-neutral-800/50">
+            <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Stayed" %}</dt>
+            <dd class="mt-0.5 text-lg font-semibold tabular-nums">{{ changes.stayed }}<span class="text-sm font-normal text-neutral-500 dark:text-neutral-400"> / 15</span></dd>
+          </div>
+          <div class="rounded-xl bg-neutral-50 px-3.5 py-3 dark:bg-neutral-800/50">
+            <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Total salary" %}</dt>
+            <dd class="mt-0.5 text-lg font-semibold tabular-nums" title="{{ dream_team.total_salary|exact }}">{{ dream_team.total_salary|millions }}</dd>
+            <dd class="text-xs tabular-nums {% if changes.salary_change > 0 %}text-rose-700 dark:text-rose-400{% elif changes.salary_change < 0 %}text-emerald-700 dark:text-emerald-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">
+              {% if changes.salary_change > 0 %}+{% endif %}{{ changes.salary_change|millions }}
+            </dd>
+          </div>
+        </dl>
+      {% endif %}
+    </section>
+
+    {# --- The stars it could not afford ----------------------------------- #}
+    <section class="card p-5 sm:p-6" aria-labelledby="left-out-heading">
+      <h2 id="left-out-heading" class="text-base font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "Top scorers left out" %}</h2>
+      <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% translate "More points than some of the picks, but the 15 could not be bought around them." %}</p>
+      <ol class="mt-3 divide-y divide-neutral-100 dark:divide-neutral-800">
+        {% for entry in left_out %}
+          <li class="flex items-center gap-3 py-2.5">
+            <span class="w-4 text-center text-xs font-semibold tabular-nums text-neutral-400 dark:text-neutral-500">{{ forloop.counter }}</span>
+            {% include "analytics/partials/position_badge.html" with position=entry.position label=entry.player.get_position_display size="sm" %}
+            <div class="min-w-0 flex-1">
+              <a href="{% url 'nba:player-detail' entry.player.slug %}" class="block truncate text-sm font-semibold text-tertiary-700 hover:text-primary-600 hover:underline dark:text-neutral-100 dark:hover:text-primary-400">{{ entry.player.first_name }} {{ entry.player.last_name }}</a>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ entry.player.team.abbreviation|default:"–" }} · {{ entry.salary|millions }}</p>
+            </div>
+            <span class="text-sm font-semibold tabular-nums">{{ entry.points|floatformat:"1g" }}</span>
+          </li>
+        {% empty %}
+          <li class="py-3 text-sm text-neutral-500 dark:text-neutral-400">{% translate "Nobody: no player outside the team has outscored the weakest pick." %}</li>
+        {% endfor %}
+      </ol>
+    </section>
+    </div>
+  </div>
+
+  {# --- Price against points ----------------------------------------------- #}
+  <section class="card min-w-0 p-5 sm:p-6" aria-labelledby="chart-heading">
+    <h2 id="chart-heading" class="text-base font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "Price against points" %}</h2>
+    <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
+      {% translate "Every player who has played. The Dream Team sits high and to the left: cheap on draft day, scoring well since." %}
+    </p>
+    <div class="mt-4">
+      {% if chart %}
+        {% include "analytics/partials/dream_team_chart.html" %}
+      {% endif %}
+    </div>
+  </section>
+
+  {# --- How it is worked out ------------------------------------------------ #}
+  <section class="rounded-2xl border border-dashed border-neutral-300 px-5 py-4 sm:px-6 dark:border-neutral-700" aria-labelledby="method-heading">
+    <h2 id="method-heading" class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "How this is worked out" %}</h2>
+    <p class="mt-1 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+      {% blocktranslate trimmed %}
+        Every player with a price on draft day is a candidate, at that price and in that position.
+        Of all the teams of 15 that stay within the budget and meet the position minimums, this is the one with the most points so far.
+        It is worked out again after every stats import, so it can change from one day to the next.
+      {% endblocktranslate %}
+    </p>
+  </section>
+{% endif %}
+
+</div>
+{% endblock %}

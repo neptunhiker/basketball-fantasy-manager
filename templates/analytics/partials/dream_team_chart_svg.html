@@ -1,0 +1,52 @@
+{% load i18n l10n %}
+{# One drawing of the Dream Team chart. Context: chart, chart_id, css (when it shows). #}
+<svg viewBox="0 0 {{ chart.width|unlocalize }} {{ chart.height|unlocalize }}"
+     class="{{ css }} h-auto w-full"
+     role="img"
+     aria-label="{% translate 'Draft-day price against points for every player who has played; the Dream Team is highlighted' %}"
+     @mouseover="pick($event)" @focusin="pick($event)" @mouseout="hovered = null">
+  <g class="text-neutral-200 dark:text-neutral-800">
+    {% for tick in chart.x_ticks %}
+      <line x1="{{ tick.x|unlocalize }}" y1="{{ chart.plot_top|unlocalize }}" x2="{{ tick.x|unlocalize }}" y2="{{ chart.plot_bottom|unlocalize }}" stroke="currentColor" stroke-dasharray="3 4" />
+    {% endfor %}
+    {% for tick in chart.y_ticks %}
+      <line x1="{{ chart.plot_left|unlocalize }}" y1="{{ tick.y|unlocalize }}" x2="{{ chart.plot_right|unlocalize }}" y2="{{ tick.y|unlocalize }}" stroke="currentColor" stroke-dasharray="3 4" />
+    {% endfor %}
+  </g>
+
+  <g class="text-neutral-500 dark:text-neutral-400" fill="currentColor" font-size="12">
+    {% for tick in chart.y_ticks %}
+      <text x="{{ chart.label_right|unlocalize }}" y="{{ tick.y|unlocalize }}" text-anchor="end" dominant-baseline="middle">{{ tick.value|floatformat:"-2g" }}</text>
+    {% endfor %}
+    {% for tick in chart.x_ticks %}
+      <text x="{{ tick.x|unlocalize }}" y="{{ chart.label_bottom|unlocalize }}" text-anchor="{% if forloop.last %}end{% else %}middle{% endif %}">${{ tick.value|floatformat:"-2g" }}M</text>
+    {% endfor %}
+    <text x="{{ chart.plot_left|unlocalize }}" y="{{ chart.title_bottom|unlocalize }}" text-anchor="start" font-size="11">{% translate "Draft-day price" %}</text>
+    <text x="{{ chart.plot_left|unlocalize }}" y="10" text-anchor="start" font-size="11">{% translate "Points so far" %}</text>
+  </g>
+
+  <filter id="{{ chart_id }}-label-bg" x="-0.06" y="-0.12" width="1.12" height="1.24">
+    <feFlood class="chart-readout-bg" result="background" />
+    <feComposite in="SourceGraphic" in2="background" operator="over" />
+  </filter>
+
+  {% for dot in chart.dots %}
+    {% if dot.picked %}
+      <g>
+        <circle class="chart-hit" cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="12" tabindex="0" role="button" aria-label="{{ dot.label }}"
+                data-label="{{ dot.label }}" data-meta="{{ dot.meta }}" data-salary="{{ dot.x_value|floatformat:'2g' }}" data-points="{{ dot.y_value|floatformat:'1g' }}" data-picked="1"
+                data-url="{{ dot.detail_url }}" data-x="{{ dot.x|unlocalize }}" data-y="{{ dot.y|unlocalize }}" data-anchor="{{ dot.label_anchor }}" />
+        <circle class="chart-halo" cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="13" fill="{{ dot.color }}" />
+        <circle class="chart-dot" cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="5.5" fill="{{ dot.color }}" stroke="#ffffff" stroke-width="2" />
+      </g>
+    {% else %}
+      {# The wide transparent stroke is the hover target; the dot itself is 3 units. #}
+      <circle class="opacity-55 hover:opacity-100" cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="3" fill="{{ dot.color }}" stroke="transparent" stroke-width="10"
+              data-label="{{ dot.label }}" data-meta="{{ dot.meta }}" data-salary="{{ dot.x_value|floatformat:'2g' }}" data-points="{{ dot.y_value|floatformat:'1g' }}"
+              data-url="{{ dot.detail_url }}" data-x="{{ dot.x|unlocalize }}" data-y="{{ dot.y|unlocalize }}" data-anchor="{{ dot.label_anchor }}" />
+    {% endif %}
+  {% endfor %}
+  <text x-show="hovered" x-cloak pointer-events="none" class="fill-neutral-900 dark:fill-white"
+        :x="hovered?.x" :y="hovered?.y" :text-anchor="hovered?.anchor" dy="-12" font-size="12" font-weight="600"
+        filter="url(#{{ chart_id }}-label-bg)" x-text="hovered?.label"></text>
+</svg>

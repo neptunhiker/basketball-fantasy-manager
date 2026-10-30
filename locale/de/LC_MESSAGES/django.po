@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30 21:16+0100\n"
+"POT-Creation-Date: 2026-10-30 21:36+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -125,7 +125,7 @@ msgid "User"
 msgstr "Benutzer"
 
 #: apps/accounts/models.py:60 templates/accounts/user_list.html:4
-#: templates/accounts/user_list.html:5 templates/app.html:159
+#: templates/accounts/user_list.html:5 templates/app.html:169
 msgid "Users"
 msgstr "Benutzer"
 
@@ -134,7 +134,7 @@ msgstr "Benutzer"
 msgid "You cannot change your own role."
 msgstr "Du kannst deine eigene Rolle nicht ändern."
 
-#: apps/accounts/services.py:65
+#: apps/accounts/services.py:67
 msgid "The last administrator cannot lose that role."
 msgstr ""
 "Der letzten Administratorin bzw. dem letzten Administrator kann diese Rolle "
@@ -148,117 +148,129 @@ msgstr "Dein Passwort wurde geändert."
 msgid "Your details have been saved."
 msgstr "Deine Daten wurden gespeichert."
 
-#: apps/accounts/views.py:192
+#: apps/accounts/views.py:188
 #, python-format
 msgid "%(name)s is now: %(role)s."
 msgstr "%(name)s ist jetzt: %(role)s."
 
-#: apps/accounts/views.py:215
+#: apps/accounts/views.py:211
 #, python-format
 msgid "Invitation link created for %(email)s."
 msgstr "Einladungslink für %(email)s wurde erstellt."
 
-#: apps/accounts/views.py:228
+#: apps/accounts/views.py:224
 msgid "That person has already accepted their invitation."
 msgstr "Diese Person hat ihre Einladung bereits angenommen."
 
-#: apps/accounts/views.py:237
+#: apps/accounts/views.py:233
 #, python-format
 msgid "New invitation link created for %(email)s."
 msgstr "Ein neuer Einladungslink für %(email)s wurde erstellt."
 
-#: apps/accounts/views.py:298
+#: apps/accounts/views.py:294
 msgid "Welcome! Your account is now active."
 msgstr "Willkommen! Dein Konto ist jetzt aktiv."
 
-#: apps/analytics/dream_team.py:190
+#: apps/analytics/dream_team.py:209
 msgid "There are no stats for this season yet."
 msgstr "Für diese Saison gibt es noch keine Statistiken."
 
-#: apps/analytics/dream_team.py:195
+#: apps/analytics/dream_team.py:214
 msgid "There are no prices from before the season started."
 msgstr "Es gibt keine Gehälter von vor dem Saisonstart."
 
-#: apps/analytics/dream_team.py:197
+#: apps/analytics/dream_team.py:216
 msgid "Nobody has played a game yet."
 msgstr "Noch hat niemand ein Spiel bestritten."
 
-#: apps/analytics/dream_team.py:201
+#: apps/analytics/dream_team.py:220
 #, python-format
 msgid "No team of %(size)d players fits the budget and the position minimums."
 msgstr ""
 "Kein Team aus %(size)d Spielern passt ins Budget und erfüllt die Mindestzahl"
 " je Position."
 
+#: apps/analytics/views.py:77
+msgid "Guards"
+msgstr "Guards"
+
+#: apps/analytics/views.py:78
+msgid "Forwards"
+msgstr "Forwards"
+
+#: apps/analytics/views.py:79
+msgid "Centers"
+msgstr "Center"
+
 #: apps/core/dates.py:25
 #, python-format
 msgid "%(date)s at %(time)s"
 msgstr "%(date)s um %(time)s Uhr"
 
-#: apps/core/views.py:43
+#: apps/core/views.py:41
 msgid "The signing phase opens soon."
 msgstr "Die Transferphase beginnt bald."
 
-#: apps/core/views.py:44
+#: apps/core/views.py:42
 msgid "Get your shortlist ready, then start building when signings open."
 msgstr ""
 "Bereite deine Auswahlliste vor und beginne mit dem Aufbau, sobald die "
 "Transferphase beginnt."
 
-#: apps/core/views.py:47
+#: apps/core/views.py:45
 msgid "Complete your roster before signings close."
 msgstr "Vervollständige deinen Kader, bevor die Transferphase endet."
 
-#: apps/core/views.py:48
+#: apps/core/views.py:46
 msgid "Make your final additions before the signing window shuts."
 msgstr ""
 "Nimm deine letzten Ergänzungen vor, bevor sich das Transferfenster schließt."
 
-#: apps/core/views.py:51
+#: apps/core/views.py:49
 msgid "Set your lineup before tip-off."
 msgstr "Stelle deine Aufstellung vor dem Tip-off zusammen."
 
-#: apps/core/views.py:52
+#: apps/core/views.py:50
 msgid "Signings are closed. Waiting for season tip-off."
 msgstr "Die Transferphase ist geschlossen. Wir warten auf den Saisonstart."
 
-#: apps/core/views.py:55
+#: apps/core/views.py:53
 msgid "Make every move count."
 msgstr "Jeder Schritt zählt."
 
-#: apps/core/views.py:56
+#: apps/core/views.py:54
 msgid "The season is live. Keep an eye on your roster until the final day."
 msgstr "Die Saison läuft. Behalte deinen Kader bis zum letzten Tag im Blick."
 
-#: apps/core/views.py:61
+#: apps/core/views.py:59
 msgid "Signings open in"
 msgstr "Transferphase beginnt in"
 
-#: apps/core/views.py:62
+#: apps/core/views.py:60
 msgid "Signings close in"
 msgstr "Transferphase endet in"
 
-#: apps/core/views.py:63
+#: apps/core/views.py:61
 msgid "Season starts in"
 msgstr "Saison beginnt in"
 
-#: apps/core/views.py:64
+#: apps/core/views.py:62
 msgid "Season ends in"
 msgstr "Saison endet in"
 
-#: apps/core/views.py:90 templates/core/dashboard.html:69
+#: apps/core/views.py:88 templates/core/dashboard.html:69
 msgid "The season is underway."
 msgstr "Die Saison läuft."
 
-#: apps/core/views.py:90
+#: apps/core/views.py:88
 msgid "Keep your roster moving."
 msgstr "Halte deinen Kader in Bewegung."
 
-#: apps/core/views.py:173
+#: apps/core/views.py:171
 msgid "Confirm"
 msgstr "Bestätigen"
 
-#: apps/core/views.py:174 apps/core/views.py:325 apps/core/views.py:460
+#: apps/core/views.py:172 apps/core/views.py:324 apps/core/views.py:459
 #: templates/accounts/invite_user.html:22
 #: templates/accounts/partials/role_modal.html:46
 #: templates/accounts/password_change.html:16
@@ -273,16 +285,16 @@ msgstr "Bestätigen"
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: apps/core/views.py:225
+#: apps/core/views.py:223
 #, python-format
 msgid "Type \"%(word)s\" exactly to confirm."
 msgstr "Gib \"%(word)s\" genau zur Bestätigung ein."
 
-#: apps/core/views.py:319 apps/fantasy/forms.py:221
+#: apps/core/views.py:318 apps/fantasy/forms.py:221
 msgid "Name"
 msgstr "Name"
 
-#: apps/core/views.py:324 apps/core/views.py:459
+#: apps/core/views.py:323 apps/core/views.py:458
 #: templates/accounts/password_change.html:15
 #: templates/fantasy/partials/roster_create.html:64
 #: templates/nba/partials/note_edit.html:17
@@ -291,7 +303,7 @@ msgstr "Name"
 msgid "Save"
 msgstr "Speichern"
 
-#: apps/core/views.py:360
+#: apps/core/views.py:359
 msgid "Please enter a name."
 msgstr "Bitte gib einen Namen ein."
 
@@ -299,7 +311,7 @@ msgstr "Bitte gib einen Namen ein."
 msgid "The season the app works with"
 msgstr "Die Saison, mit der die App arbeitet"
 
-#: apps/fantasy/forms.py:42
+#: apps/fantasy/forms.py:41
 msgid ""
 "Only one season can hold this. Ticking it here takes it off whichever season"
 " has it now."
@@ -307,52 +319,52 @@ msgstr ""
 "Nur eine Saison kann dies haben. Wenn du es hier aktivierst, wird es von der"
 " aktuell markierten Saison entfernt."
 
-#: apps/fantasy/forms.py:97
+#: apps/fantasy/forms.py:95
 msgid "Label"
 msgstr "Bezeichnung"
 
-#: apps/fantasy/forms.py:98
+#: apps/fantasy/forms.py:96
 msgid "Starts on"
 msgstr "Beginnt am"
 
-#: apps/fantasy/forms.py:99
+#: apps/fantasy/forms.py:97
 msgid "Ends on"
 msgstr "Endet am"
 
-#: apps/fantasy/forms.py:100 templates/core/dashboard.html:83
+#: apps/fantasy/forms.py:98 templates/core/dashboard.html:83
 msgid "Signings open"
 msgstr "Transferphase öffnet"
 
-#: apps/fantasy/forms.py:101 templates/core/dashboard.html:87
+#: apps/fantasy/forms.py:99 templates/core/dashboard.html:87
 msgid "Signings close"
 msgstr "Transferphase schließt"
 
 # official game rules: budget, free trades, trade market
-#: apps/fantasy/forms.py:102
+#: apps/fantasy/forms.py:100
 msgid "Starting budget"
 msgstr "Startbudget"
 
-#: apps/fantasy/forms.py:103
+#: apps/fantasy/forms.py:101
 msgid "Weekly trades from"
 msgstr "Wöchentliche Trades ab"
 
-#: apps/fantasy/forms.py:104
+#: apps/fantasy/forms.py:102
 msgid "Trades per week"
 msgstr "Trades pro Woche"
 
-#: apps/fantasy/forms.py:105
+#: apps/fantasy/forms.py:103
 msgid "Trade buying opens"
 msgstr "Trade-Kauf ab"
 
-#: apps/fantasy/forms.py:106
+#: apps/fantasy/forms.py:104
 msgid "Trade buying closes"
 msgstr "Trade-Kauf bis"
 
-#: apps/fantasy/forms.py:109
+#: apps/fantasy/forms.py:107
 msgid "How the season is written in the official game, e.g. 2026-27."
 msgstr "Wie die Saison im offiziellen Spiel geschrieben wird, z. B. 2026-27."
 
-#: apps/fantasy/forms.py:111
+#: apps/fantasy/forms.py:109
 msgid ""
 "Before this moment rosters cannot be created and players cannot be signed. "
 "Leave empty to open immediately."
@@ -360,7 +372,7 @@ msgstr ""
 "Vor diesem Zeitpunkt können keine Kader erstellt und keine Spieler "
 "verpflichtet werden. Leer lassen, um sofort zu öffnen."
 
-#: apps/fantasy/forms.py:115
+#: apps/fantasy/forms.py:113
 msgid ""
 "After this moment a roster can only change through trades: no more buying, "
 "no more selling, and no new rosters. Leave empty to keep signings open for "
@@ -370,11 +382,11 @@ msgstr ""
 "Verpflichten, kein Entlassen und keine neuen Kader mehr. Leer lassen, damit "
 "die Transferphase die ganze Saison offen bleibt."
 
-#: apps/fantasy/forms.py:120
+#: apps/fantasy/forms.py:118
 msgid "In dollars, e.g. 63000000. Applies to rosters created from now on."
 msgstr "In Dollar, z. B. 63000000. Gilt für alle ab jetzt erstellten Kader."
 
-#: apps/fantasy/forms.py:123
+#: apps/fantasy/forms.py:121
 msgid ""
 "The first weekly free trade, e.g. a Sunday at 22:00. Another follows every 7"
 " days until the season ends. Leave empty for none."
@@ -382,32 +394,32 @@ msgstr ""
 "Der erste wöchentliche Gratis-Trade, z. B. ein Sonntag um 22:00 Uhr. Danach "
 "folgt alle 7 Tage einer, bis die Saison endet. Leer lassen für keine."
 
-#: apps/fantasy/forms.py:126
+#: apps/fantasy/forms.py:124
 msgid "How many trades each weekly grant adds to every roster."
 msgstr ""
 "Wie viele Trades jede wöchentliche Ausschüttung jedem Kader gutschreibt."
 
-#: apps/fantasy/forms.py:128
+#: apps/fantasy/forms.py:126
 msgid "From when trades can be bought and sold. Leave empty for no limit."
 msgstr ""
 "Ab wann Trades gekauft und verkauft werden können. Leer lassen für keine "
 "Einschränkung."
 
-#: apps/fantasy/forms.py:131
+#: apps/fantasy/forms.py:129
 msgid "Until when trades can be bought and sold. Leave empty for no limit."
 msgstr ""
 "Bis wann Trades gekauft und verkauft werden können. Leer lassen für keine "
 "Einschränkung."
 
-#: apps/fantasy/forms.py:165 apps/fantasy/models.py:304
+#: apps/fantasy/forms.py:163 apps/fantasy/models.py:304
 msgid "A season has to end after it starts."
 msgstr "Eine Saison muss nach ihrem Beginn enden."
 
-#: apps/fantasy/forms.py:168 apps/fantasy/models.py:312
+#: apps/fantasy/forms.py:166 apps/fantasy/models.py:312
 msgid "Signings must close after they open."
 msgstr "Die Transferphase muss nach ihrem Beginn enden."
 
-#: apps/fantasy/forms.py:174
+#: apps/fantasy/forms.py:173
 msgid "Trade buying must close after it opens."
 msgstr "Der Trade-Kauf muss nach seinem Beginn enden."
 
@@ -966,46 +978,46 @@ msgstr "basketball.de-Benutzername"
 msgid "basketball.de password"
 msgstr "basketball.de-Passwort"
 
-#: apps/nba/importer.py:92 apps/nba/views.py:703
+#: apps/nba/importer.py:93 apps/nba/views.py:703
 msgid "There is no current season to import into."
 msgstr "Es gibt keine aktuelle Saison, in die importiert werden kann."
 
-#: apps/nba/importer.py:96 apps/nba/views.py:705
+#: apps/nba/importer.py:97 apps/nba/views.py:705
 msgid "Another import is still running. Please try again shortly."
 msgstr "Es läuft bereits ein Import. Bitte versuche es gleich noch einmal."
 
 # UX fixes, round 1
-#: apps/nba/importer.py:104
+#: apps/nba/importer.py:105
 msgid ""
 "There are no NBA teams in the database. Run `manage.py seed_teams` first."
 msgstr ""
 "Es sind keine NBA-Teams in der Datenbank. Führe zuerst `manage.py "
 "seed_teams` aus."
 
-#: apps/nba/importer.py:117 apps/nba/season_stats.py:453
+#: apps/nba/importer.py:118 apps/nba/season_stats.py:453
 msgid "Unexpected error. The details are in the server log."
 msgstr "Unerwarteter Fehler. Die Details stehen im Server-Log."
 
-#: apps/nba/importer.py:143
+#: apps/nba/importer.py:144
 msgid ""
 "The Dream Team could not be worked out. The details are in the server log."
 msgstr ""
 "Das Dream Team konnte nicht berechnet werden. Die Details stehen im Server-"
 "Log."
 
-#: apps/nba/importer.py:178
+#: apps/nba/importer.py:179
 #, python-format
 msgid "The pager announced %(expected)d pages but %(read)d were read."
 msgstr ""
 "Die Seitennavigation kündigte %(expected)d Seiten an, gelesen wurden aber "
 "%(read)d."
 
-#: apps/nba/importer.py:217
+#: apps/nba/importer.py:218
 #, python-format
 msgid "%(player)s: unknown team '%(team)s'"
 msgstr "%(player)s: unbekanntes Team „%(team)s“"
 
-#: apps/nba/importer.py:255
+#: apps/nba/importer.py:256
 #, python-format
 msgid ""
 "%(player)s: games played could not be derived exactly (FP %(fp)s, FP/G "
@@ -1014,7 +1026,7 @@ msgstr ""
 "%(player)s: Die Zahl der Spiele ließ sich nicht exakt ableiten (FP %(fp)s, "
 "FP/G %(fpg)s)."
 
-#: apps/nba/importer.py:299
+#: apps/nba/importer.py:300
 #, python-format
 msgid ""
 "Only %(rows)d rows were read, against %(previous)d last time, so no player "
@@ -1827,6 +1839,290 @@ msgstr "Nach E-Mail-Adresse suchen"
 msgid "Searching"
 msgstr "Suche läuft"
 
+#: templates/analytics/dream_team.html:11
+#: templates/analytics/dream_team.html:25
+#: templates/analytics/dream_team.html:58
+#: templates/analytics/partials/dream_team_chart.html:20
+msgid "The Dream Team"
+msgstr "The Dream Team"
+
+#: templates/analytics/dream_team.html:12 templates/app.html:139
+msgid "Analytics"
+msgstr "Analysen"
+
+#: templates/analytics/dream_team.html:23
+#: templates/analytics/dream_team.html:55
+#, python-format
+msgid "Season analytics · %(season)s"
+msgstr "Saison-Analysen · %(season)s"
+
+#: templates/analytics/dream_team.html:23
+msgid "Season analytics"
+msgstr "Saison-Analysen"
+
+#: templates/analytics/dream_team.html:28
+msgid ""
+"No season is marked as current, so there is nothing to look back on yet."
+msgstr ""
+"Keine Saison ist als aktuell markiert, es gibt also noch nichts, worauf man "
+"zurückblicken kann."
+
+#: templates/analytics/dream_team.html:30
+msgid ""
+"No stats have been imported for this season yet. The Dream Team appears "
+"after the first import with games played."
+msgstr ""
+"Für diese Saison wurden noch keine Statistiken importiert. The Dream Team "
+"erscheint nach dem ersten Import mit gespielten Spielen."
+
+#: templates/analytics/dream_team.html:32
+msgid ""
+"There are no prices from before the season started, so nobody knows what the"
+" players cost on draft day. The Dream Team needs at least one import from "
+"before tip-off."
+msgstr ""
+"Es gibt keine Gehälter von vor dem Saisonstart, also ist unbekannt, was die "
+"Spieler am Draft-Tag gekostet haben. The Dream Team braucht mindestens einen"
+" Import von vor dem ersten Spieltag."
+
+#: templates/analytics/dream_team.html:34
+msgid ""
+"Nobody has played a game yet. The Dream Team appears after the first import "
+"with games played."
+msgstr ""
+"Noch hat niemand ein Spiel bestritten. The Dream Team erscheint nach dem "
+"ersten Import mit gespielten Spielen."
+
+#: templates/analytics/dream_team.html:36
+msgid ""
+"The Dream Team has not been worked out yet. It appears after the next stats "
+"import."
+msgstr ""
+"The Dream Team wurde noch nicht berechnet. Es erscheint nach dem nächsten "
+"Statistik-Import."
+
+#: templates/analytics/dream_team.html:41
+msgid "Staff: to work it out now, run"
+msgstr "Staff: Um es jetzt zu berechnen, führe aus:"
+
+#: templates/analytics/dream_team.html:61
+#, python-format
+msgid ""
+"The 15 players who, bought on draft day for %(budget)s, would have scored "
+"the most points so far. At least 5 Guards, 5 Forwards and 2 Centers."
+msgstr ""
+"Die 15 Spieler, die – am Draft-Tag für %(budget)s gekauft – bisher die "
+"meisten Punkte geholt hätten. Mindestens 5 Guards, 5 Forwards und 2 Center."
+
+#: templates/analytics/dream_team.html:69
+#, python-format
+msgid "Prices from %(moment)s"
+msgstr "Gehälter vom %(moment)s"
+
+#: templates/analytics/dream_team.html:73
+#, python-format
+msgid "Points as of %(moment)s"
+msgstr "Punkte bis %(moment)s"
+
+#: templates/analytics/dream_team.html:78
+#: templates/analytics/partials/dream_team_chart_svg.html:25
+msgid "Points so far"
+msgstr "Punkte bisher"
+
+#: templates/analytics/dream_team.html:84
+#: templates/fantasy/roster_latest.html:69
+#, python-format
+msgid "in %(counter)s game"
+msgid_plural "in %(counter)s games"
+msgstr[0] "in %(counter)s Spiel"
+msgstr[1] "in %(counter)s Spielen"
+
+#: templates/analytics/dream_team.html:92
+msgid "Salary used"
+msgstr "Gehalt verplant"
+
+#: templates/analytics/dream_team.html:97
+#, python-format
+msgid "%(share)s%% of the budget used"
+msgstr "%(share)s %% des Budgets verplant"
+
+#: templates/analytics/dream_team.html:102
+msgid "Left over"
+msgstr "Übrig"
+
+#: templates/analytics/dream_team.html:106
+msgid "Players to choose from"
+msgstr "Spieler zur Auswahl"
+
+#: templates/analytics/dream_team.html:110
+msgid "Line-up"
+msgstr "Aufstellung"
+
+#: templates/analytics/dream_team.html:126
+msgid "The 15 picks"
+msgstr "Die 15 Spieler"
+
+#: templates/analytics/dream_team.html:127
+msgid "Price and position as on draft day."
+msgstr "Gehalt und Position wie am Draft-Tag."
+
+#: templates/analytics/dream_team.html:132
+#: templates/fantasy/partials/latest_table.html:25
+#: templates/fantasy/partials/roster_panel.html:3
+#: templates/nba/partials/player_table.html:2
+#: templates/nba/player_compare.html:95
+#: templates/nba/season_stats_import.html:126
+msgid "Player"
+msgstr "Spieler"
+
+#: templates/analytics/dream_team.html:133
+msgid "Draft price"
+msgstr "Draft-Gehalt"
+
+#: templates/analytics/dream_team.html:134
+msgid "Points per $1M of draft-day salary"
+msgstr "Punkte pro 1 Mio. $ Gehalt am Draft-Tag"
+
+#: templates/analytics/dream_team.html:134
+msgid "Points per $M"
+msgstr "Punkte pro Mio. $"
+
+#: templates/analytics/dream_team.html:135
+#: templates/analytics/partials/change_row.html:11
+#: templates/fantasy/partials/roster_panel.html:9
+#: templates/nba/partials/player_table.html:8
+#: templates/nba/partials/scatter_chart.html:153
+#: templates/nba/partials/season_stats_card.html:57
+#: templates/nba/player_compare.html:101 templates/nba/player_detail.html:304
+#: templates/nba/season_stats_import.html:130
+msgid "Points"
+msgstr "Punkte"
+
+#: templates/analytics/dream_team.html:157
+#: templates/nba/partials/bbde_import_modal.html:19
+#: templates/nba/season_stats_import.html:99
+msgid "New"
+msgstr "Neu"
+
+#: templates/analytics/dream_team.html:184
+msgid "Changes since the last import"
+msgstr "Änderungen seit dem letzten Import"
+
+#: templates/analytics/dream_team.html:187
+msgid ""
+"This is the first Dream Team of the season. From the next import on, this "
+"shows who came in and who went out."
+msgstr ""
+"Das ist das erste Dream Team der Saison. Ab dem nächsten Import steht hier, "
+"wer neu dabei ist und wer rausgefallen ist."
+
+#: templates/analytics/dream_team.html:191
+#, python-format
+msgid "Compared with %(moment)s"
+msgstr "Verglichen mit %(moment)s"
+
+#: templates/analytics/dream_team.html:196
+msgid "Unchanged: the same 15 as last time."
+msgstr "Unverändert: dieselben 15 wie beim letzten Mal."
+
+#: templates/analytics/dream_team.html:201
+#, python-format
+msgid "In · %(counter)s"
+msgid_plural "In · %(counter)s"
+msgstr[0] "Neu · %(counter)s"
+msgstr[1] "Neu · %(counter)s"
+
+#: templates/analytics/dream_team.html:210
+#, python-format
+msgid "Out · %(counter)s"
+msgid_plural "Out · %(counter)s"
+msgstr[0] "Raus · %(counter)s"
+msgstr[1] "Raus · %(counter)s"
+
+#: templates/analytics/dream_team.html:220
+msgid "Stayed"
+msgstr "Geblieben"
+
+#: templates/analytics/dream_team.html:224
+msgid "Total salary"
+msgstr "Gehalt gesamt"
+
+#: templates/analytics/dream_team.html:236
+msgid "Top scorers left out"
+msgstr "Topscorer, die fehlen"
+
+#: templates/analytics/dream_team.html:237
+msgid ""
+"More points than some of the picks, but the 15 could not be bought around "
+"them."
+msgstr ""
+"Mehr Punkte als manche im Team, aber mit ihnen ließen sich die 15 nicht im "
+"Budget zusammenstellen."
+
+#: templates/analytics/dream_team.html:250
+msgid "Nobody: no player outside the team has outscored the weakest pick."
+msgstr ""
+"Niemand: Kein Spieler außerhalb des Teams hat mehr Punkte als der schwächste"
+" im Team."
+
+#: templates/analytics/dream_team.html:259
+msgid "Price against points"
+msgstr "Gehalt gegen Punkte"
+
+#: templates/analytics/dream_team.html:261
+msgid ""
+"Every player who has played. The Dream Team sits high and to the left: cheap"
+" on draft day, scoring well since."
+msgstr ""
+"Jeder Spieler, der schon gespielt hat. The Dream Team steht oben links: "
+"günstig am Draft-Tag, seitdem stark gepunktet."
+
+#: templates/analytics/dream_team.html:272
+msgid "How this is worked out"
+msgstr "So wird es berechnet"
+
+#: templates/analytics/dream_team.html:274
+msgid ""
+"Every player with a price on draft day is a candidate, at that price and in "
+"that position. Of all the teams of 15 that stay within the budget and meet "
+"the position minimums, this is the one with the most points so far. It is "
+"worked out again after every stats import, so it can change from one day to "
+"the next."
+msgstr ""
+"Jeder Spieler mit einem Gehalt am Draft-Tag kommt in Frage, zu diesem Gehalt"
+" und auf dieser Position. Von allen Teams aus 15 Spielern, die ins Budget "
+"passen und die Mindestzahl je Position erfüllen, ist das hier das mit den "
+"meisten Punkten bisher. Es wird nach jedem Statistik-Import neu berechnet "
+"und kann sich daher von Tag zu Tag ändern."
+
+#: templates/analytics/partials/dream_team_chart.html:24
+msgid "Everyone else who has played"
+msgstr "Alle anderen, die gespielt haben"
+
+#: templates/analytics/partials/dream_team_chart.html:28
+msgid "Hover over or tap a dot to see who it is."
+msgstr "Fahre über einen Punkt oder tippe darauf, um zu sehen, wer es ist."
+
+#: templates/analytics/partials/dream_team_chart.html:36
+msgid "points"
+msgstr "Punkte"
+
+#: templates/analytics/partials/dream_team_chart.html:37
+msgid "Dream Team"
+msgstr "Dream Team"
+
+#: templates/analytics/partials/dream_team_chart_svg.html:6
+msgid ""
+"Draft-day price against points for every player who has played; the Dream "
+"Team is highlighted"
+msgstr ""
+"Gehalt am Draft-Tag gegen Punkte für jeden Spieler, der gespielt hat; das "
+"Dream Team ist hervorgehoben"
+
+#: templates/analytics/partials/dream_team_chart_svg.html:24
+msgid "Draft-day price"
+msgstr "Gehalt am Draft-Tag"
+
 #: templates/app.html:57
 msgid "Main navigation"
 msgstr "Hauptnavigation"
@@ -1855,28 +2151,28 @@ msgstr "Spieler"
 msgid "Rosters"
 msgstr "Kader"
 
-#: templates/app.html:134
+#: templates/app.html:144
 msgid "Staff area"
 msgstr "Team-Bereich"
 
-#: templates/app.html:147 templates/fantasy/season_list.html:4
+#: templates/app.html:157 templates/fantasy/season_list.html:4
 #: templates/fantasy/season_list.html:5
 msgid "Seasons"
 msgstr "Saisons"
 
-#: templates/app.html:182 templates/app.html:229 templates/app.html:234
+#: templates/app.html:192 templates/app.html:239 templates/app.html:244
 msgid "Sign out"
 msgstr "Abmelden"
 
-#: templates/app.html:207
+#: templates/app.html:217
 msgid "Toggle navigation"
 msgstr "Navigation umschalten"
 
-#: templates/app.html:276 templates/partials/messages.html:14
+#: templates/app.html:286 templates/partials/messages.html:14
 msgid "Dismiss message"
 msgstr "Nachricht schließen"
 
-#: templates/app.html:286 templates/nba/news_list.html:12
+#: templates/app.html:296 templates/nba/news_list.html:12
 msgid "Loading"
 msgstr "Wird geladen"
 
@@ -2157,14 +2453,6 @@ msgstr[1] "%(counter)s weitere Meldungen"
 msgid "Free Agent"
 msgstr "Free Agent"
 
-#: templates/fantasy/partials/latest_table.html:25
-#: templates/fantasy/partials/roster_panel.html:3
-#: templates/nba/partials/player_table.html:2
-#: templates/nba/player_compare.html:95
-#: templates/nba/season_stats_import.html:126
-msgid "Player"
-msgstr "Spieler"
-
 #: templates/fantasy/partials/latest_table.html:26
 msgid "Games since the previous import"
 msgstr "Spiele seit dem vorherigen Import"
@@ -2361,15 +2649,6 @@ msgstr "Erwartetes Gehalt"
 #: templates/nba/player_compare.html:100 templates/nba/player_detail.html:171
 msgid "Value"
 msgstr "Wert"
-
-#: templates/fantasy/partials/roster_panel.html:9
-#: templates/nba/partials/player_table.html:8
-#: templates/nba/partials/scatter_chart.html:153
-#: templates/nba/partials/season_stats_card.html:57
-#: templates/nba/player_compare.html:101 templates/nba/player_detail.html:304
-#: templates/nba/season_stats_import.html:130
-msgid "Points"
-msgstr "Punkte"
 
 #: templates/fantasy/partials/roster_panel.html:10
 #: templates/nba/partials/player_table.html:9
@@ -3037,13 +3316,6 @@ msgstr "News der letzten 24 Stunden"
 msgid "Points gained"
 msgstr "Punkte dazu"
 
-#: templates/fantasy/roster_latest.html:69
-#, python-format
-msgid "in %(counter)s game"
-msgid_plural "in %(counter)s games"
-msgstr[0] "in %(counter)s Spiel"
-msgstr[1] "in %(counter)s Spielen"
-
 #: templates/fantasy/roster_latest.html:77
 msgid "Players updated"
 msgstr "Spieler mit Änderung"
@@ -3464,11 +3736,6 @@ msgstr[1] "%(counter)s Spieler von %(pages)s Seiten gelesen."
 #: templates/nba/season_stats_import.html:103
 msgid "Updated"
 msgstr "Aktualisiert"
-
-#: templates/nba/partials/bbde_import_modal.html:19
-#: templates/nba/season_stats_import.html:99
-msgid "New"
-msgstr "Neu"
 
 #: templates/nba/partials/bbde_import_modal.html:20
 msgid "Reactivated"

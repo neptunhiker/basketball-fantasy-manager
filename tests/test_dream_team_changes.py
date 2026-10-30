@@ -8,7 +8,7 @@ import pytest
 from apps.analytics.dream_team import changes, previous_of
 from apps.analytics.models import DreamTeam, DreamTeamPick
 from apps.fantasy.models import Season
-from apps.nba.models import Player
+from apps.nba.models import Player, Team
 
 pytestmark = pytest.mark.django_db
 
@@ -28,7 +28,10 @@ def season(db):
 
 @pytest.fixture
 def players(db):
-    return {name: Player.objects.create(last_name=name, position="G") for name in "ABCDEFG"}
+    team = Team.objects.get(abbreviation="LAL")
+    return {
+        name: Player.objects.create(last_name=name, position="G", team=team) for name in "ABCDEFG"
+    }
 
 
 def team(season, day, picks):
@@ -149,8 +152,9 @@ def test_comparing_costs_a_fixed_number_of_queries(season, players, django_asser
     current = team(season, 26, [(players[name], 1, 10) for name in "CDEFG"])
     current = DreamTeam.objects.prefetch_related("picks__player").get(pk=current.pk)
 
-    # The previous result, its picks, their players; the current one is prefetched.
-    with django_assert_num_queries(3):
+    # The previous result, its picks, their players and teams; the current one
+    # is prefetched.
+    with django_assert_num_queries(4):
         result = changes(current)
         names = [pick.player.last_name for pick in result.came_in + result.went_out]
 

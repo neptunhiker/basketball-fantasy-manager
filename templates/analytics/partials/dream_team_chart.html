@@ -1,0 +1,41 @@
+{% load i18n l10n %}
+{% comment %}
+  Every candidate who has played: draft-day price across, points up, the
+  Dream Team in violet over a grey crowd. Geometry from `apps.nba.charts.
+  scatter_chart`, drawn twice -- wide from `md` up, taller and narrower below
+  it, so a phone gets labels it can read. Hover, keyboard focus or a tap on a
+  dot names it in the readout underneath -- a tap arrives as a mouseover, so
+  no click handler is needed. One listener per drawing rather than one per dot
+  keeps four hundred dots light.
+  Context: chart, compact_chart, pick_color.
+{% endcomment %}
+<div x-data="{ selected: null, hovered: null, pick(event) { const data = event.target.dataset; if (data && data.label) this.selected = this.hovered = data } }">
+  {% include "analytics/partials/dream_team_chart_svg.html" with chart=chart chart_id="dream-team-wide" css="hidden md:block" %}
+  {% include "analytics/partials/dream_team_chart_svg.html" with chart=compact_chart chart_id="dream-team-compact" css="md:hidden" %}
+
+  <div class="mt-3 flex flex-col gap-3 border-t border-neutral-100 pt-3 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
+    <ul class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
+      <li class="flex items-center gap-1.5">
+        <span class="size-2.5 rounded-full ring-2 ring-white dark:ring-neutral-900" style="background-color: {{ pick_color }}" aria-hidden="true"></span>
+        {% translate "The Dream Team" %}
+      </li>
+      <li class="flex items-center gap-1.5">
+        <span class="size-2 rounded-full bg-neutral-400/60" aria-hidden="true"></span>
+        {% translate "Everyone else who has played" %}
+      </li>
+    </ul>
+    <p class="min-h-6 text-xs text-neutral-500 sm:text-right dark:text-neutral-400" aria-live="polite">
+      <span x-show="!selected">{% translate "Hover over or tap a dot to see who it is." %}</span>
+      <span x-show="selected" x-cloak class="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 sm:justify-end">
+        <a :href="selected?.url" class="font-semibold text-tertiary-700 hover:text-primary-600 hover:underline dark:text-neutral-100 dark:hover:text-primary-400"
+           x-text="selected?.label"></a>
+        <span x-text="selected?.meta"></span>
+        <span aria-hidden="true">·</span>
+        <span class="tabular-nums">$<span x-text="selected?.salary"></span>M</span>
+        <span aria-hidden="true">·</span>
+        <span class="tabular-nums"><span x-text="selected?.points"></span> {% translate "points" %}</span>
+        <span x-show="selected?.picked" class="badge bg-primary-50 px-2 py-0 text-[11px] text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">{% translate "Dream Team" %}</span>
+      </span>
+    </p>
+  </div>
+</div>

@@ -9,6 +9,7 @@ urlpatterns = [
     path("account/", include("apps.accounts.urls")),
     path("", include("apps.nba.urls")),
     path("", include("apps.fantasy.urls")),
+    path("", include("apps.analytics.urls")),
     path("", include("apps.core.urls")),
 ]
 

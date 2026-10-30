@@ -208,7 +208,7 @@ def games_played_color(games_played):
     return NEON_RED
 
 
-def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None):
+def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None, width=WIDTH, height=HEIGHT):
     """Plot measured `(label, x, y[, expected_salary[, metadata]])` points.
 
     Missing x or y values are omitted. The returned geometry is deliberately
@@ -219,6 +219,10 @@ def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None):
     drawn across the whole x axis as `curve_points`. The axes are still set by
     the dots alone -- the curve is a reference, not data, and must not squash
     the players into a corner -- so the template clips whatever leaves the plot.
+
+    `width` and `height` set the drawing's own coordinate space, and with it
+    the aspect ratio: a page that shows the chart narrow can ask for a taller,
+    narrower drawing, so its labels do not shrink to nothing.
     """
     measured = []
     for point in points:
@@ -241,8 +245,8 @@ def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None):
     x_low, x_high, x_step = _bounds([point[1] for point in measured], x_ticks)
     y_low, y_high, y_step = _bounds([point[2] for point in measured], y_ticks)
     plot_top = PAD_TOP + SCATTER_LABEL_ROOM
-    plot_width = WIDTH - PAD_LEFT - PAD_RIGHT
-    plot_height = HEIGHT - plot_top - PAD_BOTTOM
+    plot_width = width - PAD_LEFT - PAD_RIGHT
+    plot_height = height - plot_top - PAD_BOTTOM
 
     def x_of(value):
         return round(PAD_LEFT + plot_width * float((value - x_low) / (x_high - x_low)), 2)
@@ -255,7 +259,7 @@ def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None):
         half = len(label) * LABEL_CHAR_WIDTH / 2
         if x - half < 0:
             return "start"
-        if x + half > WIDTH:
+        if x + half > width:
             return "end"
         return "middle"
 
@@ -299,19 +303,19 @@ def scatter_chart(points, x_ticks=5, y_ticks=5, curve=None):
         "y_ticks": [
             {"y": y_of(value), "value": value} for value in tick_values(y_low, y_high, y_step)
         ],
-        "width": WIDTH,
+        "width": width,
         # Room under the tick labels for the axis title, which otherwise
         # ran into the first ticks.
-        "height": HEIGHT + AXIS_TITLE_ROOM,
-        "title_bottom": HEIGHT + AXIS_TITLE_ROOM - 2,
+        "height": height + AXIS_TITLE_ROOM,
+        "title_bottom": height + AXIS_TITLE_ROOM - 2,
         "plot_left": PAD_LEFT,
-        "plot_right": WIDTH - PAD_RIGHT,
+        "plot_right": width - PAD_RIGHT,
         "plot_top": plot_top,
-        "plot_bottom": HEIGHT - PAD_BOTTOM,
+        "plot_bottom": height - PAD_BOTTOM,
         "plot_width": plot_width,
         "plot_height": plot_height,
         "label_right": PAD_LEFT - 8,
-        "label_bottom": HEIGHT - 8,
+        "label_bottom": height - 8,
         # The dot colours, for the legend, so they are not copied into markup.
         "color_enough_games": NEON_GREEN,
         "color_few_games": NEON_RED,

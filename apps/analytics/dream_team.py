@@ -88,12 +88,12 @@ def previous_of(dream_team):
 
     "Before" by stored results, not by imports: an import that produced no
     Dream Team is skipped, and the comparison reaches back to the last one that
-    did. Picks and their players come prefetched.
+    did. Picks, their players and teams come prefetched.
     """
     return (
         DreamTeam.objects.filter(season_id=dream_team.season_id, as_of__lt=dream_team.as_of)
         .order_by("-as_of")
-        .prefetch_related("picks__player")
+        .prefetch_related("picks__player__team")
         .first()
     )
 
@@ -172,6 +172,25 @@ def candidates(season, as_of):
     return max(row.as_of for row in draft), pool
 
 
+def missing_reason(season):
+    """Why `season` has no stored Dream Team, as a key the page words.
+
+    `no_stats`, `no_prices` (nothing from before draft day), `no_games`, or
+    `not_calculated` when there would be something to work out -- which only
+    happens before the first import since the Dream Team existed, or after a
+    calculation failed.
+    """
+    snapshots = PlayerSnapshot.objects.filter(season=season)
+    draft = draft_moment(season)
+    if not snapshots.exists():
+        return "no_stats"
+    if not snapshots.filter(as_of__lt=draft).exists():
+        return "no_prices"
+    if not snapshots.filter(as_of__gt=draft, games_played__gt=0).exists():
+        return "no_games"
+    return "not_calculated"
+
+
 def refresh(season, as_of=None):
     """Work out the Dream Team for one import and store it.
 
@@ -215,6 +234,17 @@ def refresh(season, as_of=None):
                 "total_salary": sum((c.salary for c in team), Decimal(0)),
                 "total_fp": sum((c.points for c in team), Decimal(0)),
                 "candidates": len(pool),
+                "pool": [
+                    {
+                        "player": str(c.player_id),
+                        "position": c.position,
+                        "salary": str(c.salary),
+                        "points": str(c.points),
+                        "games": c.games_played,
+                    }
+                    for c in pool
+                    if c.games_played
+                ],
             },
         )
         dream_team.picks.all().delete()

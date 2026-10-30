@@ -75,6 +75,13 @@ TEMPLATES = [
 
 DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
+# No JIT compilation. Postgres compiles a query to machine code when it
+# *estimates* it to be expensive, and the player list's many per-row subqueries
+# look expensive on paper while running in about 50 ms -- compiling them took
+# over two seconds, on every request. JIT pays off for long analytical queries,
+# which this app does not run.
+DATABASE_OPTIONS = {"options": "-c jit=off"}
+DATABASES["default"]["OPTIONS"] = DATABASE_OPTIONS
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"

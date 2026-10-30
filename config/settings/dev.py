@@ -1,7 +1,7 @@
 """Local development settings."""
 
 from .base import *  # noqa: F403
-from .base import BASE_DIR, env
+from .base import BASE_DIR, DATABASE_OPTIONS, env
 
 DEBUG = True
 ENVIRONMENT = env("ENVIRONMENT", default="development").strip().lower()
@@ -19,6 +19,7 @@ DATABASES = {
     )
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
+DATABASES["default"]["OPTIONS"] = DATABASE_OPTIONS
 
 # Emails are printed to the console instead of being delivered.
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

@@ -266,6 +266,29 @@
       dark:border-neutral-800 dark:bg-neutral-900;
   }
 
+  /* One figure in a squad card's swipeable strip: label above, value below.
+     Fixed minimum width so the strip's tiles line up from card to card, and
+     the one the list is sorted by can be picked out with `stat-tile-sorted`. */
+  .stat-tile {
+    @apply flex min-w-[5.5rem] shrink-0 snap-start flex-col gap-1 rounded-xl
+      bg-neutral-100/70 px-3 py-2 ring-1 ring-transparent
+      dark:bg-neutral-800/60;
+  }
+
+  .stat-tile-sorted {
+    @apply bg-primary-50 ring-primary-200 dark:bg-primary-500/10 dark:ring-primary-500/30;
+  }
+
+  /* A sideways strip that is swiped, not dragged by a bar: the cut-off tile
+     at the screen edge already says there is more. */
+  .scroll-strip {
+    scrollbar-width: none;
+  }
+
+  .scroll-strip::-webkit-scrollbar {
+    display: none;
+  }
+
   .form-label {
     @apply mb-1.5 block text-sm font-medium text-tertiary-700 dark:text-neutral-200;
   }

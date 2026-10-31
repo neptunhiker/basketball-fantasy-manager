@@ -52,32 +52,75 @@
             </div>
           </div>
 
-          <dl class="mt-2 grid grid-cols-3 gap-x-2 gap-y-2.5 text-xs sm:grid-cols-6">
-            <div>
-              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Salary" %}</dt>
-              <dd class="font-medium tabular-nums" title="{{ player.current_salary|exact }}">{{ player.current_salary|millions }}</dd>
+          {# Every figure the table has, in the table's order: the salary #}
+          {# three, then the scoring five, split by a hairline. A phone swipes #}
+          {# them sideways, edge to edge of the card; from `sm` there is room #}
+          {# for all of them in two rows, and no scrolling. The tile the list #}
+          {# is sorted by is tinted, and brought into view on load -- sort by #}
+          {# Hotness and every card opens on its Hotness. #}
+          {# The ⓘ popovers are a bottom sheet below `sm` (`position: fixed`), #}
+          {# so the strip's overflow does not clip them; from `sm`, where they #}
+          {# hang below their button, the strip no longer scrolls. Which is #}
+          {# also why the edges fade with overlays and not a `mask-image` on #}
+          {# the strip: a mask would cut the bottom sheet away with the rest. #}
+          <div class="relative mt-3"
+               x-data="{ left: false, right: false, measure(el) { this.left = el.scrollLeft > 8; this.right = el.scrollLeft + el.clientWidth < el.scrollWidth - 8 } }">
+          <dl class="scroll-strip -mx-4 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 pb-0.5 text-xs
+                     sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0
+                     [&_dd>span]:items-start [&_dt]:flex [&_dt]:items-center [&_dt]:gap-1 [&_dt]:whitespace-nowrap [&_dt]:text-neutral-500 dark:[&_dt]:text-neutral-400"
+              x-init="const sorted = $el.querySelector('[data-sorted]'); if (sorted && $el.scrollWidth > $el.clientWidth) $el.scrollLeft = sorted.offsetLeft - 16; measure($el)"
+              @scroll.passive="measure($el)"
+              @resize.window.debounce="measure($el)">
+            <div class="stat-tile sm:min-w-0 {% if current_sort == 'salary' %}stat-tile-sorted{% endif %}" {% if current_sort == 'salary' %}data-sorted{% endif %}>
+              <dt>{% translate "Salary" %}</dt>
+              <dd class="text-sm font-semibold tabular-nums" title="{{ player.current_salary|exact }}">{{ player.current_salary|millions }}</dd>
             </div>
-            <div>
-              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Value" %}</dt>
-              <dd class="tabular-nums">{% include "nba/partials/value.html" with amount=player.salary_difference_amount %}</dd>
+            <div class="stat-tile sm:min-w-0 {% if current_sort == 'expected' %}stat-tile-sorted{% endif %}" {% if current_sort == 'expected' %}data-sorted{% endif %}>
+              <dt>{{ expected_salary_label }}</dt>
+              <dd class="text-sm font-semibold tabular-nums" title="{% translate 'Based on current points per game' %}">
+                {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% endif %}
+              </dd>
             </div>
-            <div>
-              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "FP/G" %}</dt>
-              <dd class="font-medium tabular-nums">{{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}</dd>
+            <div class="stat-tile sm:min-w-0 {% if current_sort == 'difference' %}stat-tile-sorted{% endif %}" {% if current_sort == 'difference' %}data-sorted{% endif %}>
+              <dt>{{ value_label }} {% include "partials/info_popover.html" with text=value_help label=value_label %}</dt>
+              <dd class="text-sm tabular-nums">{% include "nba/partials/value.html" with amount=player.salary_difference_amount %}</dd>
             </div>
-            <div class="[&>dd>span]:items-start">
-              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Latest FP" %}</dt>
-              <dd class="tabular-nums">{% include "nba/partials/latest_fp.html" with gain=player.latest_fp_gain avg_change=player.latest_avg_change %}</dd>
+            <div class="stat-tile relative ms-3 before:absolute before:inset-y-2 before:-left-2.5 before:w-px before:bg-neutral-200 sm:ms-0 sm:min-w-0 sm:before:hidden dark:before:bg-neutral-700 {% if current_sort == 'points' %}stat-tile-sorted{% endif %}" {% if current_sort == 'points' %}data-sorted{% endif %}>
+              <dt>{{ points_label }}</dt>
+              <dd class="text-sm font-semibold tabular-nums">{{ player.current_total_fp|floatformat:"2g"|default:"–" }}</dd>
             </div>
-            <div>
-              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Games" %}</dt>
-              <dd class="font-medium tabular-nums">{{ player.current_games_played|default_if_none:"–" }}</dd>
+            <div class="stat-tile sm:min-w-0 {% if current_sort == 'avg' %}stat-tile-sorted{% endif %}" {% if current_sort == 'avg' %}data-sorted{% endif %}>
+              <dt>{% translate "FP/G" %}</dt>
+              <dd class="text-sm font-semibold tabular-nums">{{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}</dd>
             </div>
-            <div class="[&>span]:items-start">
-              <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Hotness" %}</dt>
+            <div class="stat-tile sm:min-w-0 {% if current_sort == 'latest' %}stat-tile-sorted{% endif %}" {% if current_sort == 'latest' %}data-sorted{% endif %}>
+              <dt>{{ latest_fp_label }} {% include "partials/info_popover.html" with text=latest_fp_help label=latest_fp_label %}</dt>
+              <dd class="text-sm tabular-nums">{% include "nba/partials/latest_fp.html" with gain=player.latest_fp_gain avg_change=player.latest_avg_change %}</dd>
+            </div>
+            <div class="stat-tile sm:min-w-0 {% if current_sort == 'games' %}stat-tile-sorted{% endif %}" {% if current_sort == 'games' %}data-sorted{% endif %}>
+              <dt>{{ games_label }}</dt>
+              <dd class="text-sm font-semibold tabular-nums">{{ player.current_games_played|default_if_none:"–" }}</dd>
+            </div>
+            <div class="stat-tile sm:min-w-0 {% if current_sort == 'hotness' %}stat-tile-sorted{% endif %}" {% if current_sort == 'hotness' %}data-sorted{% endif %}>
+              <dt>{{ hotness_label }} {% include "partials/info_popover.html" with text=hotness_help label=hotness_label %}</dt>
               <dd>{% include "nba/partials/hotness.html" with score=player.hotness_score %}</dd>
             </div>
           </dl>
+          {# The fades are the card's own colour, so they read as the strip #}
+          {# running on under the card's edge; a kick candidate's card is #}
+          {# tinted, and its fades with it (rose-50/70 and rose-500/7% over #}
+          {# the card, flattened). The chevron makes the right one a prompt. #}
+          <div x-show="left" x-cloak x-transition.opacity aria-hidden="true"
+               class="pointer-events-none absolute inset-y-0 -left-4 w-8 bg-linear-to-r from-white sm:hidden dark:from-neutral-900
+                      group-has-[[data-kicked]]/card:from-[#fff5f6] dark:group-has-[[data-kicked]]/card:from-[#28181b]"></div>
+          <div x-show="right" x-cloak x-transition.opacity aria-hidden="true"
+               class="pointer-events-none absolute inset-y-0 -right-4 flex w-14 items-center justify-end bg-linear-to-l from-white from-35% pr-1.5 text-neutral-400 sm:hidden dark:from-neutral-900 dark:text-neutral-500
+                      group-has-[[data-kicked]]/card:from-[#fff5f6] dark:group-has-[[data-kicked]]/card:from-[#28181b]">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/>
+            </svg>
+          </div>
+          </div>
 
           <div class="mt-3 grid {% if transactions_allowed %}grid-cols-2{% else %}grid-cols-1{% endif %} gap-2">
             {% if trading_allowed and roster.trades_available > 0 %}

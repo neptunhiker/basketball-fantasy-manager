@@ -114,3 +114,22 @@ def test_the_history_is_cards_on_a_phone(game, open_page):
     cards = page.locator("main ul.md\\:hidden > li")
     assert cards.count() >= 9  # eight signings and the season start
     shot(page, "phase2", "history-phone")
+
+
+def test_the_snapshots_show_every_column_on_a_phone_with_the_date_pinned(game, open_page):
+    player = game["players"][0]
+    page = open_page(game["user"], reverse("nba:player-detail", args=[player.slug]))
+
+    table = page.locator("table", has=page.get_by_role("columnheader", name="As of"))
+    for name in ("As of", "Team", "Pos.", "Salary", "Points", "Avg/game", "Games"):
+        assert table.get_by_role("columnheader", name=name).is_visible()
+    frame = table.locator("xpath=..")
+    assert frame.evaluate("el => el.scrollWidth > el.clientWidth")
+    assert page_overflow(page) == 0
+
+    date_cell = table.locator("tbody tr td").first
+    before = date_cell.bounding_box()["x"]
+    frame.evaluate("el => { el.scrollLeft = el.scrollWidth }")
+    assert date_cell.bounding_box()["x"] == before
+    frame.scroll_into_view_if_needed()
+    shot(page, "phase2", "snapshots-phone")

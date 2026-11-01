@@ -126,6 +126,26 @@ def with_expected_salary(qs):
     )
 
 
+def with_fp_per_million(qs):
+    """Annotate `fp_per_million`: season fantasy points per $1M of current salary.
+
+    Total points, not points per game, so a player who misses games falls
+    behind one who plays them all. Unpriced players get None.
+    """
+    return qs.annotate(
+        fp_per_million=Case(
+            When(
+                current_salary__gt=0,
+                then=ExpressionWrapper(
+                    F("current_total_fp") * Value(Decimal("1000000")) / F("current_salary"),
+                    output_field=DecimalField(max_digits=20, decimal_places=4),
+                ),
+            ),
+            output_field=DecimalField(max_digits=20, decimal_places=4),
+        )
+    )
+
+
 def with_latest_fp_change(qs):
     """Annotate `latest_fp_gain` and `latest_avg_change` (both Decimal or None),
     plus `latest_games_gained` and `latest_salary_change`.
@@ -359,6 +379,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
         "expected": [F("predicted_salary_amount")],
         "difference": [F("salary_difference_amount")],
         "points": [F("current_total_fp")],
+        "fp_per_million": [F("fp_per_million")],
         "avg": [F("current_fp_per_game")],
         "latest": [F("latest_fp_gain")],
         "games": [F("current_games_played")],
@@ -459,6 +480,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
             qs = qs.filter(current_salary__lte=max_salary * 1_000_000)
 
         qs = with_expected_salary(qs)
+        qs = with_fp_per_million(qs)
         qs = with_latest_fp_change(qs)
 
         sort, descending = self._sort_params()
@@ -1027,6 +1049,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         "expected": [F("predicted_salary_amount")],
         "difference": [F("salary_difference_amount")],
         "points": [F("current_total_fp")],
+        "fp_per_million": [F("fp_per_million")],
         "avg": [F("current_fp_per_game")],
         "latest": [F("latest_fp_gain")],
         "games": [F("current_games_played")],
@@ -1099,6 +1122,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         qs = with_last_season(qs, self._last_season())
 
         qs = with_expected_salary(qs)
+        qs = with_fp_per_million(qs)
         qs = with_latest_fp_change(qs)
 
         sort, descending = self._sort_params()

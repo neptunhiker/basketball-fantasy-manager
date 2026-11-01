@@ -92,12 +92,12 @@ def test_the_comparison_is_transposed_on_phones(signed_in, roster):
     assert phone.count("Remove P Squad") == 2
 
 
-def test_the_players_table_keeps_names_in_view_and_drops_columns(signed_in, roster):
+def test_the_players_table_keeps_names_in_view_and_every_column(signed_in, roster):
     body = signed_in.get(reverse("nba:player-list")).text
 
     assert "max-md:sticky max-md:left-12" in body
-    # Expected salary, points and expected return wait for a wider screen.
-    assert body.count("hidden px-4 py-3 text-right font-medium md:table-cell") == 3
+    # Phones get the same columns as the desktop; they scroll sideways.
+    assert "md:table-cell" not in body
 
 
 @pytest.mark.parametrize(

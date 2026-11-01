@@ -6,6 +6,8 @@
 {% translate "Expected salary" as expected_salary_label %}
 {% translate "Value" as value_label %}
 {% translate "Points" as points_label %}
+{% translate "FP/$M" as fp_per_million_label %}
+{% translate "FP/$M is his fantasy points this season per $1 million of his current salary. It counts total points, not points per game, so players who rarely miss a game rise to the top." as fp_per_million_help %}
 {% translate "Avg/game" as avg_game_label %}
 {% translate "Games" as games_label %}
 {% translate "Hotness" as hotness_label %}
@@ -104,8 +106,7 @@
     {# "Status" only says something when inactive players can be listed. #}
     {% if request.GET.inactive or watchlist_page %}{% firstof "1" as show_status %}{% endif %}
     {# Below `md` the watch and name columns stay put while the figures #}
-    {# scroll, so a row never loses its player; Expected and Points wait #}
-    {# for the wider screen. #}
+    {# scroll, so a row never loses its player. Phones get every column. #}
     <div class="overflow-x-auto">
       <table class="w-full text-left text-sm">
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
@@ -133,7 +134,7 @@
             <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="salary" label=actual_salary_label align="right" first="desc" %}
             </th>
-            <th scope="col" class="hidden px-4 py-3 text-right font-medium md:table-cell">
+            <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="expected" label=expected_salary_label align="right" first="desc" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
@@ -142,8 +143,14 @@
                 {% include "partials/info_popover.html" with text=value_help label=value_label %}
               </span>
             </th>
-            <th scope="col" class="hidden px-4 py-3 text-right font-medium md:table-cell">
+            <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="points" label=points_label align="right" first="desc" %}
+            </th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">
+              <span class="inline-flex items-center gap-1 whitespace-nowrap">
+                {% include "nba/partials/sort_header.html" with key="fp_per_million" label=fp_per_million_label align="right" first="desc" %}
+                {% include "partials/info_popover.html" with text=fp_per_million_help label=fp_per_million_label %}
+              </span>
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="avg" label=avg_game_label align="right" first="desc" %}
@@ -180,7 +187,7 @@
                 {% include "partials/info_popover.html" with text=hotness_help label=hotness_label %}
               </span>
             </th>
-            <th scope="col" class="hidden px-4 py-3 text-right font-medium md:table-cell">
+            <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="return" label=return_label align="right" %}
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Injury" %}</th>
@@ -241,14 +248,17 @@
               <td class="px-4 py-3 text-right tabular-nums" title="{{ player.current_salary|exact }}">
                 {{ player.current_salary|millions }}
               </td>
-              <td class="hidden px-4 py-3 text-right tabular-nums md:table-cell" title="{% translate 'Based on current points per game' %}">
+              <td class="px-4 py-3 text-right tabular-nums" title="{% translate 'Based on current points per game' %}">
                 {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
               </td>
               <td class="px-4 py-3 text-right tabular-nums">
                 {% include "nba/partials/value.html" with amount=player.salary_difference_amount %}
               </td>
-              <td class="hidden px-4 py-3 text-right tabular-nums md:table-cell">
+              <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_total_fp|floatformat:"2g"|default:"–" }}
+              </td>
+              <td class="px-4 py-3 text-right tabular-nums">
+                {{ player.fp_per_million|floatformat:"1g"|default:"–" }}
               </td>
               <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_fp_per_game|floatformat:"2g"|default:"–" }}
@@ -285,7 +295,7 @@
               <td class="px-4 py-3 text-right tabular-nums">
                 {% include "nba/partials/hotness.html" with score=player.hotness_score %}
               </td>
-              <td class="hidden px-4 py-3 text-right md:table-cell">
+              <td class="px-4 py-3 text-right">
                 {% include "nba/partials/return_date.html" with player=player %}
               </td>
               <td class="px-4 py-3 text-right">
@@ -308,6 +318,7 @@
     {# The two derived columns, explained where every reader sees it. #}
     <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
       <strong class="font-medium">{{ value_label }}:</strong> {% translate "expected salary for his points per game minus actual salary — + means a bargain." %}
+      <strong class="ml-2 font-medium">{{ fp_per_million_label }}:</strong> {% translate "season points per $1M of current salary — missed games pull it down." %}
       <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his average rose over his last 10 games." %}
       <strong class="ml-2 font-medium">{{ latest_fp_label }}:</strong> {% translate "points since the previous snapshot — – means no game." %}
       {% if show_rest_of_season %}<strong class="ml-2 font-medium">{{ projected_label }}:</strong> {% blocktranslate with percent=availability_percent %}points per game × games he can still play × {{ percent }}% availability.{% endblocktranslate %}{% endif %}

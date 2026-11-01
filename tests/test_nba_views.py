@@ -417,6 +417,38 @@ def test_expected_salary_and_difference_are_sortable(signed_in, roster):
     ]
 
 
+def test_fp_per_million_is_sortable_and_counts_total_points(signed_in, roster):
+    from apps.nba.models import Player
+
+    # James scores more per game but has missed games: 300 FP for $10M is
+    # 30 per million, against Dončić's 200 FP for $5M at 40 per million.
+    Player.objects.filter(last_name="James").update(
+        current_total_fp=300, current_fp_per_game=50, current_salary=10_000_000
+    )
+    Player.objects.filter(last_name="Dončić").update(
+        current_total_fp=200, current_fp_per_game=20, current_salary=5_000_000
+    )
+
+    response = signed_in.get(reverse("nba:player-list"), {"sort": "fp_per_million", "dir": "desc"})
+    players = response.context["players"]
+
+    assert [player.full_name for player in players[:2]] == ["Luka Dončić", "LeBron James"]
+    assert players[0].fp_per_million == 40
+    assert players[1].fp_per_million == 30
+    assert "FP/$M" in response.text
+
+
+def test_fp_per_million_is_blank_without_a_salary(signed_in, roster):
+    from apps.nba.models import Player
+
+    Player.objects.filter(last_name="James").update(current_total_fp=300, current_salary=0)
+
+    response = signed_in.get(reverse("nba:player-list"), {"sort": "fp_per_million", "dir": "desc"})
+    james = next(p for p in response.context["players"] if p.last_name == "James")
+
+    assert james.fp_per_million is None
+
+
 def test_hotness_is_sortable(signed_in, roster):
     from datetime import timedelta
 

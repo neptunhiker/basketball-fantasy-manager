@@ -13,6 +13,8 @@ from apps.nba.models import MILLION, Player, Team, expected_salary_expression, p
 from apps.nba.salary_outlook import (
     AFTER_UPDATE,
     PRESEASON,
+    average_error,
+    past_updates,
     salary_baseline,
     salary_outlook,
     with_salary_outlook,
@@ -430,3 +432,83 @@ def test_the_trade_dialog_nets_both_players_changes(signed_in, roster):
     assert outlook["net"] == poly(12) - poly(20)
     available = {player.last_name: player for player in response.context["available"]}
     assert available["Faller"].outlook_change == poly(12) - poly(20)
+
+
+# --- how the prediction fared at past updates -------------------------------------
+
+
+def two_updates(season):
+    """The worked example over two updates: 0.6M of picks on top of 20 FP/G at
+    the first, then 25 FP/G and another 0.2M of picks at the second."""
+    player = make_player()
+    read(player, season, local(2026, 10, 13, 20), 4 * MILLION, 0, 0)
+    read(player, season, local(2026, 11, 15, 12, 15), 4 * MILLION, 20, 10)
+    read(player, season, local(2026, 11, 15, 22, 15), poly(20) + PREMIUM, 20, 10)
+    read(player, season, local(2026, 11, 22, 12, 15), poly(20) + PREMIUM, 25, 12)
+    read(player, season, local(2026, 11, 22, 22, 15), poly(25) + PREMIUM + 200_000, 25, 12)
+    return player
+
+
+def test_each_past_update_is_predicted_as_it_would_have_been(season):
+    player = two_updates(season)
+
+    rows = past_updates(list(player.snapshots.all()), salary_baseline(now=local(2026, 11, 24)))
+
+    second, first = rows
+    # The first update: no premium yet, so the polynomial alone.
+    assert first.moment == FIRST_UPDATE
+    assert first.predicted == poly(20)
+    assert first.error == PREMIUM
+    assert first.premium == PREMIUM
+    assert first.change == poly(20) + PREMIUM - 4 * MILLION
+    # The second: the first update's premium carried onto 25 FP/G.
+    assert second.moment == SECOND_UPDATE
+    assert second.predicted == poly(25) + PREMIUM
+    assert second.error == 200_000
+    assert second.premium == PREMIUM + 200_000
+    assert average_error(rows) == {"error": (PREMIUM + 200_000) / 2, "count": 2}
+
+
+def test_an_update_not_yet_read_is_not_a_past_update(season):
+    player = two_updates(season)
+
+    rows = past_updates(
+        list(player.snapshots.all()), salary_baseline(now=local(2026, 11, 22, 22, 5))
+    )
+
+    assert [row.moment for row in rows] == [FIRST_UPDATE]
+
+
+def test_a_week_without_a_snapshot_has_no_row(season):
+    player = make_player()
+    read(player, season, local(2026, 11, 15, 22, 15), poly(20), 20, 10)
+    # Nothing read on 22 November.
+    read(player, season, local(2026, 11, 29, 22, 15), poly(22), 22, 14)
+
+    rows = past_updates(list(player.snapshots.all()), salary_baseline(now=local(2026, 11, 30)))
+
+    assert [row.moment for row in rows] == [local(2026, 11, 29, 22), FIRST_UPDATE]
+
+
+def test_no_past_updates_before_the_first(season):
+    assert past_updates([], salary_baseline(now=local(2026, 11, 1))) == []
+
+
+def test_no_average_without_a_prediction():
+    assert average_error([]) is None
+
+
+def test_the_player_page_shows_the_next_update_and_the_past_ones(signed_in, season, monkeypatch):
+    player = two_updates(season)
+    read(player, season, local(2026, 11, 24, 12), poly(25) + PREMIUM + 200_000, 30, 14)
+    pin_the_clock(monkeypatch, local(2026, 11, 24, 18))
+
+    response = signed_in.get(reverse("nba:player-detail", args=[player.slug]))
+
+    outlook = response.context["salary_outlook"]
+    assert outlook.premium == PREMIUM + 200_000
+    assert outlook.change == poly(30) - poly(25)
+    assert len(response.context["past_updates"]) == 2
+    page = response.content.decode()
+    assert "Expected change" in page
+    assert "Past updates" in page

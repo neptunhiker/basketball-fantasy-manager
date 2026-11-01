@@ -59,7 +59,14 @@ from .models import (
 )
 from .rest_of_season import EXPECTED_AVAILABILITY, rest_of_season, with_rest_of_season
 from .salary_charts import salary_charts
-from .salary_outlook import salary_baseline, salary_outlook_context, with_salary_outlook
+from .salary_outlook import (
+    average_error,
+    past_updates,
+    salary_baseline,
+    salary_outlook,
+    salary_outlook_context,
+    with_salary_outlook,
+)
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
 from .services import (
     DailyApiLimitExceeded,
@@ -1302,6 +1309,15 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
             if predicted is not None and self.object.current_salary is not None
             else None
         )
+        # Where the next Sunday update should take his salary, and how the
+        # same prediction fared at the updates already behind him.
+        baseline = salary_baseline()
+        context.update(salary_outlook_context(baseline))
+        if baseline is not None:
+            updates = past_updates(snapshots, baseline)
+            context["salary_outlook"] = salary_outlook(self.object, baseline, snapshots)
+            context["past_updates"] = updates
+            context["average_error"] = average_error(updates)
         context["notes"] = with_note_urls(
             self.object.notes.filter(user=self.request.user)
             .select_related("player")

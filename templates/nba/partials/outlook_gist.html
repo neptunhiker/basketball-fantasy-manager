@@ -2,7 +2,7 @@
 {# The predicted change in one line, for under a player's name. Context: change (dollars), #}
 {# `short` to leave out the words where a header already says what it is. #}
 <span class="inline-flex items-center gap-1 font-semibold {% if change > 0 %}text-emerald-700 dark:text-emerald-400{% elif change < 0 %}text-rose-700 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">
-  {% if change > 0 %}<svg class="h-2 w-2" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M5 1.5 9.5 8.5h-9z"/></svg>{% elif change < 0 %}<svg class="h-2 w-2" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M5 8.5 9.5 1.5h-9z"/></svg>{% endif %}
+  {% if change > 0 %}<svg class="h-[0.6em] w-[0.6em] shrink-0" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M5 1.5 9.5 8.5h-9z"/></svg>{% elif change < 0 %}<svg class="h-[0.6em] w-[0.6em] shrink-0" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M5 8.5 9.5 1.5h-9z"/></svg>{% endif %}
   {% if change > 0 %}+{% elif change == 0 %}±{% endif %}{{ change|millions }}
 </span>
 {% if not short %}<span class="ml-1 text-neutral-500 dark:text-neutral-400">{% translate "next update" %}</span>{% endif %}

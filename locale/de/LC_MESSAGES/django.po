@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 16:22+0100\n"
+"POT-Creation-Date: 2026-11-01 16:30+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -77,7 +77,7 @@ msgstr "Coach"
 #: templates/fantasy/partials/player_picker.html:97
 #: templates/fantasy/partials/roster_panel.html:5
 #: templates/nba/news_list.html:55 templates/nba/partials/player_table.html:4
-#: templates/nba/player_compare.html:97 templates/nba/player_detail.html:304
+#: templates/nba/player_compare.html:97 templates/nba/player_detail.html:306
 #: templates/nba/player_list.html:75
 #: templates/nba/season_stats_import.html:127 templates/nba/team_list.html:28
 msgid "Team"
@@ -978,11 +978,11 @@ msgstr "basketball.de-Benutzername"
 msgid "basketball.de password"
 msgstr "basketball.de-Passwort"
 
-#: apps/nba/importer.py:93 apps/nba/views.py:708
+#: apps/nba/importer.py:93 apps/nba/views.py:715
 msgid "There is no current season to import into."
 msgstr "Es gibt keine aktuelle Saison, in die importiert werden kann."
 
-#: apps/nba/importer.py:97 apps/nba/views.py:710
+#: apps/nba/importer.py:97 apps/nba/views.py:717
 msgid "Another import is still running. Please try again shortly."
 msgstr "Es läuft bereits ein Import. Bitte versuche es gleich noch einmal."
 
@@ -1283,7 +1283,7 @@ msgstr "Dreier"
 msgid "Free throws"
 msgstr "Freiwürfe"
 
-#: apps/nba/views.py:593
+#: apps/nba/views.py:600
 msgid ""
 "This month's requests to the injury service are nearly used up. The injury "
 "report can be updated again next month."
@@ -1291,7 +1291,7 @@ msgstr ""
 "Die Abrufe beim Verletzungsdienst sind für diesen Monat fast aufgebraucht. "
 "Der Verletzungsbericht kann nächsten Monat wieder aktualisiert werden."
 
-#: apps/nba/views.py:597
+#: apps/nba/views.py:604
 #, python-format
 msgid ""
 "This month's requests to the injury service are nearly used up. The injury "
@@ -1300,7 +1300,7 @@ msgstr ""
 "Die Abrufe beim Verletzungsdienst sind für diesen Monat fast aufgebraucht. "
 "Der Verletzungsbericht kann ab dem %(date)s wieder aktualisiert werden."
 
-#: apps/nba/views.py:613
+#: apps/nba/views.py:620
 msgid ""
 "The injury report was already updated today. The next update can be invoked "
 "tomorrow."
@@ -1308,13 +1308,13 @@ msgstr ""
 "Der Verletzungsbericht wurde heute bereits aktualisiert. Das nächste Update "
 "kann morgen gestartet werden."
 
-#: apps/nba/views.py:622
+#: apps/nba/views.py:629
 msgid "The injury report could not be updated. Please try again tomorrow."
 msgstr ""
 "Der Verletzungsbericht konnte nicht aktualisiert werden. Bitte versuche es "
 "morgen erneut."
 
-#: apps/nba/views.py:628
+#: apps/nba/views.py:635
 #, python-format
 msgid ""
 "Injury report updated: %(created)d created, %(updated)d updated, "
@@ -1323,17 +1323,17 @@ msgstr ""
 "Verletzungsbericht aktualisiert: %(created)d erstellt, %(updated)d "
 "aktualisiert, %(recovered)d wieder fit, %(unmatched)d nicht zugeordnet."
 
-#: apps/nba/views.py:704
+#: apps/nba/views.py:711
 msgid "This basketball.de account has not been activated yet."
 msgstr "Dieses basketball.de-Konto ist noch nicht aktiviert."
 
-#: apps/nba/views.py:706
+#: apps/nba/views.py:713
 msgid "basketball.de did not accept this username and password."
 msgstr ""
 "basketball.de hat diesen Benutzernamen und dieses Passwort nicht akzeptiert."
 
 # UX fixes, round 1
-#: apps/nba/views.py:713
+#: apps/nba/views.py:720
 msgid ""
 "There are no NBA teams in the database yet. Ask an administrator to run "
 "manage.py seed_teams first."
@@ -1341,12 +1341,12 @@ msgstr ""
 "Es sind noch keine NBA-Teams in der Datenbank. Bitte eine Administratorin "
 "oder einen Administrator, zuerst manage.py seed_teams auszuführen."
 
-#: apps/nba/views.py:716
+#: apps/nba/views.py:723
 #, python-format
 msgid "The import failed: %(reason)s"
 msgstr "Der Import ist fehlgeschlagen: %(reason)s"
 
-#: apps/nba/views.py:975
+#: apps/nba/views.py:982
 #, python-format
 msgid "From %(n)d of %(total)d player. No value on record for the rest."
 msgid_plural ""
@@ -1356,105 +1356,105 @@ msgstr[0] ""
 msgstr[1] ""
 "Aus %(n)d von %(total)d Spielern. Für den Rest ist kein Wert erfasst."
 
-#: apps/nba/views.py:1156
+#: apps/nba/views.py:1163
 msgid "Salaries"
 msgstr "Gehälter"
 
-#: apps/nba/views.py:1159
+#: apps/nba/views.py:1166
 msgid "Average"
 msgstr "Durchschnitt"
 
-#: apps/nba/views.py:1160
+#: apps/nba/views.py:1167
 msgid "Median"
 msgstr "Median"
 
-#: apps/nba/views.py:1161
+#: apps/nba/views.py:1168
 msgid "Lowest"
 msgstr "Niedrigster Wert"
 
-#: apps/nba/views.py:1162
+#: apps/nba/views.py:1169
 msgid "Highest"
 msgstr "Höchster Wert"
 
-#: apps/nba/views.py:1163
+#: apps/nba/views.py:1170
 msgid "Total"
 msgstr "Gesamt"
 
-#: apps/nba/views.py:1168 templates/nba/partials/season_stats_card.html:44
+#: apps/nba/views.py:1175 templates/nba/partials/season_stats_card.html:44
 msgid "Fantasy points"
 msgstr "Fantasy-Punkte"
 
-#: apps/nba/views.py:1171
+#: apps/nba/views.py:1178
 msgid "Avg per game"
 msgstr "Durchschnitt pro Spiel"
 
-#: apps/nba/views.py:1172
+#: apps/nba/views.py:1179
 msgid "Median per game"
 msgstr "Median pro Spiel"
 
-#: apps/nba/views.py:1173
+#: apps/nba/views.py:1180
 msgid "Fewest per game"
 msgstr "Wenigste pro Spiel"
 
-#: apps/nba/views.py:1174
+#: apps/nba/views.py:1181
 msgid "Most per game"
 msgstr "Meiste pro Spiel"
 
-#: apps/nba/views.py:1175 templates/nba/player_detail.html:239
+#: apps/nba/views.py:1182 templates/nba/player_detail.html:239
 msgid "Points total"
 msgstr "Punkte gesamt"
 
-#: apps/nba/views.py:1178
+#: apps/nba/views.py:1185
 msgid "Team per game"
 msgstr "Team pro Spiel"
 
-#: apps/nba/views.py:1183
+#: apps/nba/views.py:1190
 msgid "Player health"
 msgstr "Spielergesundheit"
 
-#: apps/nba/views.py:1186 templates/nba/partials/injury_status.html:3
+#: apps/nba/views.py:1193 templates/nba/partials/injury_status.html:3
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:90
 msgid "Healthy"
 msgstr "Gesund"
 
-#: apps/nba/views.py:1187 templates/nba/partials/injury_status.html:4
+#: apps/nba/views.py:1194 templates/nba/partials/injury_status.html:4
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:91 templates/nba/team_list.html:35
 msgid "Day-to-day"
 msgstr "Angeschlagen"
 
-#: apps/nba/views.py:1188 templates/nba/partials/injury_status.html:2
+#: apps/nba/views.py:1195 templates/nba/partials/injury_status.html:2
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:92 templates/nba/team_list.html:36
 msgid "Injured"
 msgstr "Verletzt"
 
-#: apps/nba/views.py:1215
+#: apps/nba/views.py:1222
 msgid "Only you can see these notes. They are for your own team context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Teamkontext gedacht."
 
-#: apps/nba/views.py:1218
+#: apps/nba/views.py:1225
 msgid "No private notes yet. Save one to remember your take on this team."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Teams festzuhalten."
 
-#: apps/nba/views.py:1313
+#: apps/nba/views.py:1329
 msgid "Only you can see these notes. They are for your own player context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Spielerkontext gedacht."
 
-#: apps/nba/views.py:1316
+#: apps/nba/views.py:1332
 msgid "No private notes yet. Save one to remember your take on this player."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Spielers festzuhalten."
 
-#: apps/nba/views.py:1431
+#: apps/nba/views.py:1447
 msgid "The note will be removed for good. This cannot be undone."
 msgstr ""
 "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."
@@ -1993,7 +1993,7 @@ msgstr "Punkte pro Mio. $"
 #: templates/nba/partials/player_table.html:8
 #: templates/nba/partials/scatter_chart.html:153
 #: templates/nba/partials/season_stats_card.html:57
-#: templates/nba/player_compare.html:101 templates/nba/player_detail.html:307
+#: templates/nba/player_compare.html:101 templates/nba/player_detail.html:309
 #: templates/nba/season_stats_import.html:130
 msgid "Points"
 msgstr "Punkte"
@@ -2420,6 +2420,7 @@ msgstr[1] "FP · %(counter)s Spiele"
 #: templates/fantasy/partials/latest_list.html:35
 #: templates/fantasy/partials/latest_table.html:28
 #: templates/fantasy/partials/squad_cards.html:105
+#: templates/nba/partials/player_salary_outlook.html:105
 #: templates/nba/player_detail.html:223 templates/nba/team_list.html:32
 msgid "FP/G"
 msgstr "FP/G"
@@ -2427,7 +2428,7 @@ msgstr "FP/G"
 #: templates/fantasy/partials/latest_list.html:42
 #: templates/fantasy/partials/latest_table.html:29
 #: templates/fantasy/partials/squad_cards.html:75
-#: templates/nba/player_detail.html:306 templates/nba/team_list.html:34
+#: templates/nba/player_detail.html:308 templates/nba/team_list.html:34
 msgid "Salary"
 msgstr "Gehalt"
 
@@ -2651,6 +2652,7 @@ msgid "Value"
 msgstr "Wert"
 
 #: templates/fantasy/partials/roster_panel.html:10
+#: templates/nba/partials/player_salary_outlook.html:109
 #: templates/nba/partials/player_table.html:9
 msgid "Premium"
 msgstr "Aufschlag"
@@ -2687,7 +2689,7 @@ msgstr ""
 
 #: templates/fantasy/partials/roster_panel.html:14
 #: templates/nba/partials/player_table.html:15
-#: templates/nba/player_compare.html:102 templates/nba/player_detail.html:308
+#: templates/nba/player_compare.html:102 templates/nba/player_detail.html:310
 msgid "Avg/game"
 msgstr "Ø/Spiel"
 
@@ -2695,7 +2697,7 @@ msgstr "Ø/Spiel"
 #: templates/nba/partials/player_table.html:16
 #: templates/nba/partials/season_stats_card.html:122
 #: templates/nba/player_compare.html:103 templates/nba/player_detail.html:245
-#: templates/nba/player_detail.html:309
+#: templates/nba/player_detail.html:311
 msgid "Games"
 msgstr "Spiele"
 
@@ -3665,7 +3667,7 @@ msgstr "Status"
 msgid "Signings"
 msgstr "Transferphase"
 
-#: templates/fantasy/season_list.html:30 templates/nba/player_detail.html:273
+#: templates/fantasy/season_list.html:30 templates/nba/player_detail.html:275
 msgid "Snapshots"
 msgstr "Snapshots"
 
@@ -4081,19 +4083,23 @@ msgid "vs"
 msgstr "vs"
 
 #: templates/nba/partials/next_update_strip.html:19
+#: templates/nba/partials/player_salary_outlook.html:13
 msgid "Next salary update"
 msgstr "Nächstes Gehalts-Update"
 
 #: templates/nba/partials/next_update_strip.html:23
+#: templates/nba/partials/player_salary_outlook.html:17
 #, python-format
 msgid "in %(when)s"
 msgstr "in %(when)s"
 
 #: templates/nba/partials/next_update_strip.html:26
+#: templates/nba/partials/player_salary_outlook.html:19
 msgid "No salary update left this season"
 msgstr "In dieser Saison steht kein Gehalts-Update mehr an"
 
 #: templates/nba/partials/next_update_strip.html:30
+#: templates/nba/partials/player_salary_outlook.html:71
 msgid ""
 "No update yet this season: the prediction is the expected salary for his "
 "points per game, compared with his pre-season price."
@@ -4241,6 +4247,107 @@ msgstr "Nächstes Spiel"
 #, python-format
 msgid "%(fpg)s FP/G × %(games)s games × %(percent)s%% availability"
 msgstr "%(fpg)s FP/Spiel × %(games)s Spiele × %(percent)s %% Verfügbarkeit"
+
+#: templates/nba/partials/player_salary_outlook.html:24
+msgid "Before the first update"
+msgstr "Vor dem ersten Update"
+
+#: templates/nba/partials/player_salary_outlook.html:32
+msgid "Expected change"
+msgstr "Erwartete Änderung"
+
+#: templates/nba/partials/player_salary_outlook.html:37
+#, python-format
+msgid ""
+"from %(now)s to <strong class=\"font-semibold text-tertiary-700 dark:text-"
+"neutral-100\">%(then)s</strong>"
+msgstr ""
+"von %(now)s auf <strong class=\"font-semibold text-tertiary-700 dark:text-"
+"neutral-100\">%(then)s</strong>"
+
+#: templates/nba/partials/player_salary_outlook.html:45
+#, python-format
+msgid "Expected salary for %(fp)s FP/G"
+msgstr "Erwartetes Gehalt für %(fp)s FP/G"
+
+#: templates/nba/partials/player_salary_outlook.html:51
+msgid "Pick premium"
+msgstr "Pick-Aufschlag"
+
+#: templates/nba/partials/player_salary_outlook.html:55
+msgid "Pre-season prices are set by the game, not by picks."
+msgstr "Preise vor der Saison legt das Spiel fest, nicht die Picks."
+
+#: templates/nba/partials/player_salary_outlook.html:63
+msgid "Predicted salary"
+msgstr "Prognostiziertes Gehalt"
+
+#: templates/nba/partials/player_salary_outlook.html:73
+#, python-format
+msgid ""
+"The pick premium is his salary minus the expected salary for his points per "
+"game right after the update on %(date)s — the part we put down to managers "
+"buying or selling him."
+msgstr ""
+"Der Pick-Aufschlag ist sein Gehalt minus das erwartete Gehalt für seine "
+"Punkte pro Spiel direkt nach dem Update vom %(date)s – der Teil, den wir "
+"darauf zurückführen, dass Manager ihn kaufen oder verkaufen."
+
+#: templates/nba/partials/player_salary_outlook.html:78
+msgid "No prediction for him yet."
+msgstr "Für ihn gibt es noch keine Prognose."
+
+#: templates/nba/partials/player_salary_outlook.html:81
+msgid ""
+"It needs points per game this season and a snapshot from before the season."
+msgstr ""
+"Dafür braucht es Punkte pro Spiel in dieser Saison und einen Snapshot von "
+"vor der Saison."
+
+#: templates/nba/partials/player_salary_outlook.html:83
+msgid ""
+"It needs points per game now and a snapshot right after the last update with"
+" games played."
+msgstr ""
+"Dafür braucht es aktuelle Punkte pro Spiel und einen Snapshot direkt nach "
+"dem letzten Update mit gespielten Spielen."
+
+#: templates/nba/partials/player_salary_outlook.html:92
+msgid "Past updates"
+msgstr "Bisherige Updates"
+
+#: templates/nba/partials/player_salary_outlook.html:95
+#, python-format
+msgid "Off by %(error)s on average over %(count)s update"
+msgid_plural "Off by %(error)s on average over %(count)s updates"
+msgstr[0] "Im Schnitt %(error)s Abweichung über %(count)s Update"
+msgstr[1] "Im Schnitt %(error)s Abweichung über %(count)s Updates"
+
+#: templates/nba/partials/player_salary_outlook.html:104
+msgid "Update"
+msgstr "Update"
+
+#: templates/nba/partials/player_salary_outlook.html:106
+msgid "Predicted"
+msgstr "Prognose"
+
+#: templates/nba/partials/player_salary_outlook.html:107
+msgid "Actual"
+msgstr "Tatsächlich"
+
+#: templates/nba/partials/player_salary_outlook.html:108
+msgid "Off by"
+msgstr "Abweichung"
+
+#: templates/nba/partials/player_salary_outlook.html:144
+msgid ""
+"Predicted: what this page would have said just before the update. Off by: "
+"actual minus predicted — plus means he rose more than expected, which is the"
+" picks showing."
+msgstr ""
+"Prognose: was diese Seite direkt vor dem Update gesagt hätte. Abweichung: "
+"tatsächlich minus Prognose – ein Plus heißt, er ist stärker gestiegen als "
+"erwartet; das sind die Picks."
 
 #: templates/nba/partials/player_table.html:13
 msgid "FP/$M"
@@ -4904,7 +5011,7 @@ msgstr "seit %(date)s"
 msgid "No game since %(date)s"
 msgstr "Kein Spiel seit %(date)s"
 
-#: templates/nba/player_detail.html:275
+#: templates/nba/player_detail.html:277
 msgid ""
 "One row per read, the newest on top, each with the change from the read "
 "below it. The time is shown because the source can be read more than once a "
@@ -4914,24 +5021,24 @@ msgstr ""
 "darunterliegenden Auswertung. Die Zeit wird angezeigt, weil die Quelle mehr "
 "als einmal täglich gelesen werden kann."
 
-#: templates/nba/player_detail.html:281
+#: templates/nba/player_detail.html:283
 msgid "Points per game across the season"
 msgstr "Punkte pro Spiel im Saisonverlauf"
 
-#: templates/nba/player_detail.html:288
+#: templates/nba/player_detail.html:290
 msgid "A trend line needs at least two snapshots with games played."
 msgstr ""
 "Eine Trendlinie benötigt mindestens zwei Snapshots mit gespielten Partien."
 
-#: templates/nba/player_detail.html:303
+#: templates/nba/player_detail.html:305
 msgid "As of"
 msgstr "Stand"
 
-#: templates/nba/player_detail.html:305
+#: templates/nba/player_detail.html:307
 msgid "Pos."
 msgstr "Pos."
 
-#: templates/nba/player_detail.html:354
+#: templates/nba/player_detail.html:356
 #, python-format
 msgid ""
 "%(snapshot_count)s snapshot. Points and games are season totals, so they "
@@ -4946,12 +5053,12 @@ msgstr[1] ""
 "%(snapshot_count)s Snapshots. Punkte und Spiele sind Saisonwerte und steigen"
 " daher von Snapshot zu Snapshot."
 
-#: templates/nba/player_detail.html:359
+#: templates/nba/player_detail.html:361
 #, python-format
 msgid "No snapshots on record for %(name)s yet."
 msgstr "Für %(name)s sind noch keine Snapshots erfasst."
 
-#: templates/nba/player_detail.html:362
+#: templates/nba/player_detail.html:364
 msgid "Snapshots come from the basketball.de import."
 msgstr ""
 "Snapshots kommen aus dem Import von basketball.de.Snapshots stammen aus dem "

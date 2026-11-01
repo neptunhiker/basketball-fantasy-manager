@@ -1,0 +1,150 @@
+{% load i18n money %}
+{% comment %}
+  The player page's next-update card: where Sunday's update should take his
+  salary, what that is made of, and how the same prediction did at the updates
+  already behind him. Context from `PlayerDetailView`: `salary_baseline`,
+  `salary_outlook`, `past_updates`, `average_error`. Left out without a season.
+{% endcomment %}
+{% if salary_baseline %}
+  {% with next=salary_baseline.next_update outlook=salary_outlook %}
+    <section class="card overflow-hidden" id="salary-outlook" aria-labelledby="salary-outlook-title">
+      <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+        <div class="min-w-0">
+          <h2 id="salary-outlook-title" class="text-sm font-semibold">{% translate "Next salary update" %}</h2>
+          <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+            {% if next %}
+              <time datetime="{{ next|date:'c' }}">{{ next|date:"D" }}, {{ next|date:"MONTH_DAY_FORMAT" }} · {{ next|date:"TIME_FORMAT" }}</time>
+              · {% blocktranslate with when=next|timeuntil %}in {{ when }}{% endblocktranslate %}
+            {% else %}
+              {% translate "No salary update left this season" %}
+            {% endif %}
+          </p>
+        </div>
+        {% if salary_baseline.is_preseason %}
+          <span class="badge badge-neutral">{% translate "Before the first update" %}</span>
+        {% endif %}
+      </div>
+
+      {% if outlook %}
+        <div class="grid gap-5 p-4 sm:grid-cols-2 sm:items-center sm:gap-8 sm:p-5">
+          {# The answer first: how much, which way. #}
+          <div>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Expected change" %}</p>
+            <p class="mt-1 text-3xl font-bold tracking-tight tabular-nums">
+              {% include "nba/partials/outlook_gist.html" with change=outlook.change short=True %}
+            </p>
+            <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+              {% blocktranslate with now=player.current_salary|millions then=outlook.salary|millions %}from {{ now }} to <strong class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ then }}</strong>{% endblocktranslate %}
+            </p>
+          </div>
+
+          {# Then how it is made up, as a sum read top to bottom. #}
+          <dl class="w-full rounded-xl bg-neutral-50 p-3 text-sm sm:max-w-md sm:justify-self-end ring-1 ring-inset ring-neutral-200 sm:p-4 dark:bg-neutral-800/50 dark:ring-neutral-700">
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-neutral-500 dark:text-neutral-400">
+                {% blocktranslate with fp=player.current_fp_per_game|floatformat:"2g" %}Expected salary for {{ fp }} FP/G{% endblocktranslate %}
+              </dt>
+              <dd class="font-medium tabular-nums" title="{{ outlook.expected|exact }}">{{ outlook.expected|millions }}</dd>
+            </div>
+            <div class="mt-2 flex items-baseline justify-between gap-3">
+              <dt class="text-neutral-500 dark:text-neutral-400">
+                <span class="mr-1.5 inline-block w-3 text-center font-bold text-primary-500 dark:text-primary-300" aria-hidden="true">+</span>{% translate "Pick premium" %}
+              </dt>
+              <dd class="tabular-nums">
+                {% if salary_baseline.is_preseason %}
+                  <span class="text-neutral-400 dark:text-neutral-500" title="{% translate 'Pre-season prices are set by the game, not by picks.' %}">{{ outlook.premium|millions }}</span>
+                {% else %}
+                  {% include "nba/partials/premium.html" with amount=outlook.premium %}
+                {% endif %}
+              </dd>
+            </div>
+            <div class="mt-3 flex items-baseline justify-between gap-3 border-t border-neutral-200 pt-3 dark:border-neutral-700">
+              <dt class="font-medium text-tertiary-700 dark:text-neutral-100">
+                <span class="mr-1.5 inline-block w-3 text-center font-bold text-primary-500 dark:text-primary-300" aria-hidden="true">=</span>{% translate "Predicted salary" %}
+              </dt>
+              <dd class="text-base font-bold tabular-nums" title="{{ outlook.salary|exact }}">{{ outlook.salary|millions }}</dd>
+            </div>
+          </dl>
+        </div>
+        <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
+          {% if salary_baseline.is_preseason %}
+            {% translate "No update yet this season: the prediction is the expected salary for his points per game, compared with his pre-season price." %}
+          {% else %}
+            {% blocktranslate with date=outlook.baseline.as_of|date:"MONTH_DAY_FORMAT" %}The pick premium is his salary minus the expected salary for his points per game right after the update on {{ date }} — the part we put down to managers buying or selling him.{% endblocktranslate %}
+          {% endif %}
+        </p>
+      {% else %}
+        <div class="px-4 py-8 text-center sm:px-5">
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "No prediction for him yet." %}</p>
+          <p class="mx-auto mt-1 max-w-md text-xs text-neutral-400 dark:text-neutral-500">
+            {% if salary_baseline.is_preseason %}
+              {% translate "It needs points per game this season and a snapshot from before the season." %}
+            {% else %}
+              {% translate "It needs points per game now and a snapshot right after the last update with games played." %}
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
+
+      {% if past_updates %}
+        <div class="border-t border-neutral-200 dark:border-neutral-800">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 pb-2 pt-4 sm:px-5">
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Past updates" %}</h3>
+            {% if average_error %}
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                {% blocktranslate with error=average_error.error|millions count count=average_error.count %}Off by {{ error }} on average over {{ count }} update{% plural %}Off by {{ error }} on average over {{ count }} updates{% endblocktranslate %}
+              </p>
+            {% endif %}
+          </div>
+          <div class="overflow-x-auto">
+            {# Phones scroll it sideways with the date pinned, like the Snapshots table. #}
+            <table class="w-full whitespace-nowrap text-left text-sm">
+              <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
+                <tr>
+                  <th scope="col" class="px-4 py-3 font-medium sm:pl-5 max-md:sticky max-md:left-0 max-md:z-[1] max-md:bg-white max-md:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-md:dark:bg-neutral-900 max-md:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">{% translate "Update" %}</th>
+                  <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "FP/G" %}</th>
+                  <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Predicted" %}</th>
+                  <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Actual" %}</th>
+                  <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Off by" %}</th>
+                  <th scope="col" class="px-4 py-3 text-right font-medium sm:pr-5">{% translate "Premium" %}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
+                {% for row in past_updates %}
+                  <tr class="align-top transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                    <td class="px-4 py-3 sm:pl-5 max-md:sticky max-md:left-0 max-md:z-[1] max-md:bg-white max-md:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-md:dark:bg-neutral-900 max-md:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">
+                      <span class="font-medium">{{ row.moment|date:"D" }}, {{ row.moment|date:"MONTH_DAY_FORMAT" }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-right tabular-nums">
+                      {% if row.before %}{{ row.before.fp_per_game|floatformat:"2g"|default:"–" }}{% else %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-right tabular-nums" title="{{ row.predicted|exact }}">
+                      {% if row.predicted is not None %}{{ row.predicted|millions }}{% else %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-right tabular-nums">
+                      <span class="font-medium" title="{{ row.after.salary|exact }}">{{ row.after.salary|millions }}</span>
+                      <span class="block text-xs">{% include "nba/partials/change.html" with value=row.change unit="money" %}</span>
+                    </td>
+                    <td class="px-4 py-3 text-right tabular-nums">
+                      {% if row.error is None %}
+                        <span class="text-neutral-400 dark:text-neutral-500">–</span>
+                      {% else %}
+                        <span class="text-neutral-600 dark:text-neutral-300" title="{{ row.error|exact }}">{{ row.error|signed_millions }}</span>
+                      {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-right text-xs tabular-nums sm:pr-5">
+                      {% include "nba/partials/premium.html" with amount=row.premium %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
+            {% translate "Predicted: what this page would have said just before the update. Off by: actual minus predicted — plus means he rose more than expected, which is the picks showing." %}
+          </p>
+        </div>
+      {% endif %}
+    </section>
+  {% endwith %}
+{% endif %}

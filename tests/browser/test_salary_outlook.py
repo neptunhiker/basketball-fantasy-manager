@@ -9,52 +9,60 @@ from django.utils import timezone
 
 from apps.nba.models import MILLION, predict_salary
 
-from .conftest import page_overflow, shot
+from .conftest import SCREENS, page_overflow, shot
 
 
 @pytest.fixture
 def repriced(game):
-    """The game three days after a Sunday update: every player carries a pick
-    premium out of it, and has played on since."""
+    """The game a few days after its second Sunday update: every player came
+    out of the first with a pick premium, gained or lost a little more at the
+    second, and has played on since."""
     from apps.fantasy import services
 
     season = game["season"]
     # The newest snapshot of the game is at about `now`; these come after it.
     now = timezone.now() + dt.timedelta(minutes=30)
-    # The last Sunday 22:00 at least a day back, as the official game reprices.
-    update = timezone.localtime(now - dt.timedelta(days=1)).replace(
+    # The last Sunday 22:00 at least a day back, as the official game reprices,
+    # and the one before it.
+    second = timezone.localtime(now - dt.timedelta(days=1)).replace(
         hour=22, minute=0, second=0, microsecond=0
     )
-    update -= dt.timedelta(days=(update.weekday() + 1) % 7)
-    season.trade_market_opens_at = update
-    season.save(update_fields=["trade_market_opens_at"])
-    for index, player in enumerate(game["players"]):
-        before = player.current_fp_per_game
-        premium = Decimal((index * 370_000) % 2_700_000 - 1_200_000)
-        salary = max(Decimal(500_000), predict_salary(before) * MILLION + premium)
-        games = player.current_games_played
+    second -= dt.timedelta(days=(second.weekday() + 1) % 7)
+    first = second - dt.timedelta(days=7)
+    season.trade_market_opens_at = first
+    season.starts_on = timezone.localdate(first) - dt.timedelta(days=5)
+    season.save(update_fields=["trade_market_opens_at", "starts_on"])
+
+    def read(player, when, salary, fp_per_game, games):
         services.record_snapshot(
             player,
             season,
-            update + dt.timedelta(minutes=15),
-            salary=salary,
-            total_fp=before * games,
+            when,
+            salary=max(Decimal(500_000), salary),
+            total_fp=fp_per_game * games,
             games_played=games,
             team=player.team,
             position=player.position,
         )
-        # Two games since, some well above his average and some well below.
-        swing = Decimal((index * 5) % 23 - 11)
-        services.record_snapshot(
-            player,
-            season,
-            now,
-            salary=salary,
-            total_fp=before * games + (before + swing) * 2,
-            games_played=games + 2,
-            team=player.team,
-            position=player.position,
-        )
+
+    def expected(fp_per_game):
+        return predict_salary(fp_per_game) * MILLION
+
+    for index, player in enumerate(game["players"]):
+        games = player.current_games_played
+        at_first = player.current_fp_per_game
+        premium = Decimal((index * 370_000) % 2_700_000 - 1_200_000)
+        salary = expected(at_first) + premium
+        read(player, first + dt.timedelta(minutes=15), salary, at_first, games)
+        # A week of games, some well above his average and some well below.
+        at_second = at_first + Decimal((index * 3) % 9 - 4) / 2
+        read(player, second - dt.timedelta(hours=2), salary, at_second, games + 3)
+        more_picks = Decimal((index * 130_000) % 700_000 - 300_000)
+        salary = expected(at_second) + premium + more_picks
+        read(player, second + dt.timedelta(minutes=15), salary, at_second, games + 3)
+        at_now = at_second + Decimal((index * 5) % 23 - 11) / 4
+        read(player, now, salary, at_now, games + 5)
+        player.refresh_from_db()
     return game
 
 
@@ -79,6 +87,7 @@ def test_biggest_risers_after_an_update(repriced, open_page, size):
 
     assert page.get_by_text("Next salary update").is_visible()
     assert page.get_by_role("link", name="Biggest risers").get_attribute("aria-current") == "true"
+    assert page_overflow(page) == 0
     headers = page.locator("#player-table thead th").all_inner_texts()
     assert any("PREMIUM" in header.upper() for header in headers)
     assert any("NEXT UPDATE" in header.upper() for header in headers)
@@ -164,3 +173,30 @@ def test_the_trade_dialog_weighs_both_players_next_update(repriced, open_page, s
 
     assert page_overflow(page) == 0
     shot(page, "salary-outlook", f"trade-{size}")
+
+
+# --- the player page --------------------------------------------------------------
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+def test_the_player_page_explains_his_next_update(repriced, open_page, size):
+    player = repriced["players"][3]
+    page = open_page(repriced["user"], reverse("nba:player-detail", args=[player.slug]), size)
+
+    card = page.locator("#salary-outlook")
+    assert card.get_by_text("Expected change").is_visible()
+    assert card.get_by_text("Predicted salary").is_visible()
+    assert card.locator("tbody tr").count() == 2
+    assert page_overflow(page) == 0
+    card.scroll_into_view_if_needed()
+    card.screenshot(path=str(SCREENS / "salary-outlook" / f"player-{size}.png"))
+
+
+def test_the_player_page_in_the_dark(repriced, open_page):
+    player = repriced["players"][3]
+    page = open_page(
+        repriced["user"], reverse("nba:player-detail", args=[player.slug]), "phone", True
+    )
+    page.locator("#salary-outlook").screenshot(
+        path=str(SCREENS / "salary-outlook" / "player-phone-dark.png")
+    )

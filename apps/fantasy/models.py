@@ -249,9 +249,28 @@ class Season(TimeStampedModel):
         """
         if self.weekly_trades_from is None or not self.weekly_trades_per_week:
             return []
+        return self._weekly_from(self.weekly_trades_from, until)
+
+    def salary_update_moments(self, until=None):
+        """Every Sunday salary update from `trade_market_opens_at` up to `until`.
+
+        The official game reprices everyone weekly, and the first update comes
+        with the opening of trade buying -- at the same time of day, which is
+        why that moment is where the weekly steps start.
+        """
+        if self.trade_market_opens_at is None:
+            return []
+        return self._weekly_from(self.trade_market_opens_at, until)
+
+    def _weekly_from(self, first, until=None):
+        """`first` and every 7 days after it, up to `until` and the season's end.
+
+        Stepped in local wall-clock time, not in fixed 7-day intervals, so
+        22:00 stays 22:00 across a clock change.
+        """
         until = min(until or self.season_close_at, self.season_close_at)
         zone = timezone.get_current_timezone()
-        first = timezone.localtime(self.weekly_trades_from, zone).replace(tzinfo=None)
+        first = timezone.localtime(first, zone).replace(tzinfo=None)
         moments = []
         week = 0
         while True:

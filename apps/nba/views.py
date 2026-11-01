@@ -20,7 +20,7 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db.models.functions import Coalesce, Greatest
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -47,13 +47,13 @@ from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbd
 from .models import (
     DAY_TO_DAY_INJURY_STATUSES,
     HEALTHY_INJURY_STATUSES,
-    MIN_SALARY,
     ImportRun,
     Player,
     PlayerInjury,
     PlayerNote,
     Team,
     TeamNote,
+    expected_salary_expression,
     injury_state,
     latest_fp_change,
 )
@@ -87,37 +87,10 @@ def rest_of_season_context():
 def with_expected_salary(qs):
     """Annotate `predicted_salary_amount` and `salary_difference_amount` (Value).
 
-    The database twin of `apps.nba.models.predict_salary`, so lists can sort by
-    it: the same polynomial on points per game, in millions, never below
-    `MIN_SALARY`.
-    One copy only -- three hand-kept ones once drifted, with the constant term
-    written as 4.668975 instead of 0.4668975, which put every expected salary
-    $4.2M too high in the lists while the player page showed the right figure.
+    The database twin of `Player.predicted_salary`, so lists can sort by it.
     """
-    x = F("current_fp_per_game")
-    millions = (
-        Value(Decimal("8.753479e-6")) * x * x * x * x
-        + Value(Decimal("-8.583448e-4")) * x * x * x
-        + Value(Decimal("3.058140e-2")) * x * x
-        + Value(Decimal("-5.762906e-2")) * x
-        + Value(Decimal("4.668975e-1"))
-    )
-    expected = ExpressionWrapper(
-        millions * Value(Decimal("1000000")),
-        output_field=DecimalField(max_digits=20, decimal_places=2),
-    )
-    minimum = Value(MIN_SALARY * Decimal("1000000"))
     return qs.annotate(
-        predicted_salary_amount=Case(
-            # Negative points per game get the minimum outright, as in
-            # `predict_salary`: the polynomial climbs again left of zero.
-            When(current_fp_per_game__lt=0, then=minimum),
-            When(
-                current_fp_per_game__isnull=False,
-                then=Greatest(minimum, expected),
-            ),
-            output_field=DecimalField(max_digits=20, decimal_places=2),
-        )
+        predicted_salary_amount=expected_salary_expression("current_fp_per_game")
     ).annotate(
         salary_difference_amount=ExpressionWrapper(
             F("predicted_salary_amount") - F("current_salary"),

@@ -8,7 +8,7 @@ salaries, keeps a history of both, and helps with the question that comes up
 every Sunday, when the official game reprices everyone: who is worth their
 money and who is not?
 
-In the official game a roster is 15 players for at most 60 million dollars of
+In the official game a roster is 15 players for at most 63 million dollars of
 fantasy salary, with at least five Guards, five Forwards and two Centers.
 Salaries are recalculated weekly — which is why a salary is a time series here
 and not a single value.
@@ -249,6 +249,12 @@ filled, and the rules page names the deadline while it is still ahead.
 Trading itself is not restricted to a weekday. Salaries reprice weekly on
 Sundays, which is why Sunday is when the decisions get interesting, but a trade
 can be made any day.
+
+Salaries reprice on Sundays at 22:00, so besides the daily 12:15 import the
+worker runs a second basketball.de import every Sunday at 22:15. It skips
+until the current season's *Trade buying opens* moment has passed -- the first
+salary update comes with it -- and after the season's last day, and also when
+that date is not set.
 
 ## Accounts and invitations
 

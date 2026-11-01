@@ -4,6 +4,7 @@ import datetime as dt
 from decimal import Decimal
 
 import pytest
+from django.urls import reverse
 from django.utils import timezone
 
 from apps.fantasy import services
@@ -300,3 +301,85 @@ def test_the_expected_salary_expression_matches_predict_salary(fp_per_game):
     )
 
     assert row.expected == poly(fp_per_game)
+
+
+# --- the player list --------------------------------------------------------------
+
+
+@pytest.fixture
+def signed_in(client, user, password):
+    client.login(email=user.email, password=password)
+    return client
+
+
+def three_players_after_an_update(season):
+    """Risers in the order Riser, Holder, Faller, read a day after the first update."""
+    for name, fp_now in (("Holder", 20), ("Riser", 30), ("Faller", 12)):
+        player = make_player(name)
+        read(player, season, local(2026, 11, 15, 22, 15), poly(20) + PREMIUM, 20, 10)
+        read(player, season, local(2026, 11, 16, 12, 15), poly(20) + PREMIUM, fp_now, 12)
+
+
+def names_in_order(response):
+    return [player.last_name for player in response.context["players"]]
+
+
+def pin_the_clock(monkeypatch, now):
+    """The pages read the baseline at `now` -- only the baseline, so the login
+    session does not expire under a clock moved weeks ahead."""
+    monkeypatch.setattr("apps.nba.views.salary_baseline", lambda: salary_baseline(now=now))
+
+
+@pytest.fixture
+def after_the_first_update(season, monkeypatch):
+    three_players_after_an_update(season)
+    pin_the_clock(monkeypatch, local(2026, 11, 16, 18))
+    return season
+
+
+def test_the_list_sorts_by_the_predicted_change(signed_in, after_the_first_update):
+    response = signed_in.get(reverse("nba:player-list"), {"sort": "outlook"})
+
+    assert names_in_order(response) == ["Riser", "Holder", "Faller"]
+    page = response.content.decode()
+    assert "Next salary update" in page
+    assert "Biggest risers" in page
+    assert "Premium" in page
+
+
+def test_the_list_sorts_by_the_pick_premium(signed_in, after_the_first_update):
+    other = make_player("Bargain")
+    read(other, after_the_first_update, local(2026, 11, 15, 22, 15), poly(20) - PREMIUM, 20, 10)
+
+    response = signed_in.get(reverse("nba:player-list"), {"sort": "premium", "dir": "asc"})
+
+    assert names_in_order(response)[0] == "Bargain"
+
+
+def test_the_team_page_sorts_by_the_predicted_change(signed_in, after_the_first_update):
+    response = signed_in.get(
+        reverse("nba:team-detail", args=["lal"]), {"sort": "outlook", "dir": "asc"}
+    )
+
+    assert names_in_order(response) == ["Faller", "Holder", "Riser"]
+
+
+def test_before_the_first_update_the_premium_column_stays_away(signed_in, season, monkeypatch):
+    player = make_player()
+    read(player, season, local(2026, 10, 13, 20), 4 * MILLION, 0, 0)
+    read(player, season, local(2026, 11, 1, 12), 4 * MILLION, 20, 8)
+    pin_the_clock(monkeypatch, local(2026, 11, 2))
+
+    response = signed_in.get(reverse("nba:player-list"))
+
+    page = response.content.decode()
+    assert "No update yet this season" in page
+    assert "What is Premium?" not in page
+    assert "What is Next update?" in page
+
+
+def test_without_a_season_the_list_has_no_prediction(signed_in, db):
+    response = signed_in.get(reverse("nba:player-list"))
+
+    assert response.status_code == 200
+    assert "Next salary update" not in response.content.decode()

@@ -6,6 +6,10 @@
 {% translate "Expected salary" as expected_salary_label %}
 {% translate "Value" as value_label %}
 {% translate "Points" as points_label %}
+{% translate "Premium" as premium_label %}
+{% translate "Premium is the pick premium: how far his salary was above (+) or below (−) the expected salary for his points per game right after the last update. We put that part down to managers buying or selling him, and expect it to stay." as premium_help %}
+{% translate "Next update" as outlook_label %}
+{% translate "Next update is the salary we expect after the coming Sunday update: the expected salary for his points per game now, plus his pick premium. The big figure is the change from today's salary, the small one the predicted salary." as outlook_help %}
 {% translate "FP/$M" as fp_per_million_label %}
 {% translate "FP/$M is his fantasy points this season per $1 million of his current salary. It counts total points, not points per game, so players who rarely miss a game rise to the top." as fp_per_million_help %}
 {% translate "Avg/game" as avg_game_label %}
@@ -102,6 +106,8 @@
     {% endif %}
   </div>
 
+  {% include "nba/partials/next_update_strip.html" %}
+
   {% if players %}
     {# "Status" only says something when inactive players can be listed. #}
     {% if request.GET.inactive or watchlist_page %}{% firstof "1" as show_status %}{% endif %}
@@ -143,6 +149,22 @@
                 {% include "partials/info_popover.html" with text=value_help label=value_label %}
               </span>
             </th>
+            {% if show_premium %}
+              <th scope="col" class="px-4 py-3 text-right font-medium">
+                <span class="inline-flex items-center gap-1 whitespace-nowrap">
+                  {% include "nba/partials/sort_header.html" with key="premium" label=premium_label align="right" first="desc" %}
+                  {% include "partials/info_popover.html" with text=premium_help label=premium_label %}
+                </span>
+              </th>
+            {% endif %}
+            {% if salary_baseline %}
+              <th scope="col" class="px-4 py-3 text-right font-medium">
+                <span class="inline-flex items-center gap-1 whitespace-nowrap">
+                  {% include "nba/partials/sort_header.html" with key="outlook" label=outlook_label align="right" first="desc" %}
+                  {% include "partials/info_popover.html" with text=outlook_help label=outlook_label %}
+                </span>
+              </th>
+            {% endif %}
             <th scope="col" class="px-4 py-3 text-right font-medium">
               {% include "nba/partials/sort_header.html" with key="points" label=points_label align="right" first="desc" %}
             </th>
@@ -206,8 +228,14 @@
                 {% if player.note_count %}
                   {% include "nba/partials/note_count.html" with count=player.note_count url_base=player.slug kind="player" %}
                 {% endif %}
+                {# Sorted by the prediction, a phone shows it under the name: the #}
+                {# column it is sorted by would otherwise be a swipe away. #}
+                {% if current_sort == "outlook" and player.outlook_change is not None %}
+                  <span class="mt-0.5 flex whitespace-nowrap text-[0.7rem] font-normal leading-tight tabular-nums md:hidden">
+                    {% include "nba/partials/outlook_gist.html" with change=player.outlook_change %}
+                  </span>
                 {# Below `lg` the table scrolls a long way to the projection; its gist rides under the name. #}
-                {% if show_rest_of_season and player.games_expected is not None %}
+                {% elif show_rest_of_season and player.games_expected is not None %}
                   <span class="mt-0.5 block whitespace-nowrap text-[0.7rem] font-normal leading-tight text-neutral-500 tabular-nums lg:hidden dark:text-neutral-400">
                     {% if player.projected_fp is not None %}<span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ player.projected_fp|floatformat:"0g" }}</span> {% translate "proj." %} · {% endif %}{% blocktranslate with n=player.next_days %}{{ n }} in 7 d{% endblocktranslate %}
                   </span>
@@ -254,6 +282,16 @@
               <td class="px-4 py-3 text-right tabular-nums">
                 {% include "nba/partials/value.html" with amount=player.salary_difference_amount %}
               </td>
+              {% if show_premium %}
+                <td class="px-4 py-3 text-right text-xs tabular-nums">
+                  {% include "nba/partials/premium.html" with amount=player.pick_premium %}
+                </td>
+              {% endif %}
+              {% if salary_baseline %}
+                <td class="px-4 py-3 text-right tabular-nums {% if current_sort == 'outlook' %}bg-primary-50/40 dark:bg-primary-500/5{% endif %}">
+                  {% include "nba/partials/outlook.html" with change=player.outlook_change salary=player.outlook_salary %}
+                </td>
+              {% endif %}
               <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_total_fp|floatformat:"2g"|default:"–" }}
               </td>
@@ -318,6 +356,8 @@
     {# The two derived columns, explained where every reader sees it. #}
     <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
       <strong class="font-medium">{{ value_label }}:</strong> {% translate "expected salary for his points per game minus actual salary — + means a bargain." %}
+      {% if salary_baseline %}<strong class="ml-2 font-medium">{{ outlook_label }}:</strong> {% translate "expected salary for his points per game now plus his pick premium, against today's salary." %}{% endif %}
+      {% if show_premium %}<strong class="ml-2 font-medium">{{ premium_label }}:</strong> {% translate "salary minus expected salary right after the last update — the part picks explain." %}{% endif %}
       <strong class="ml-2 font-medium">{{ fp_per_million_label }}:</strong> {% translate "season points per $1M of current salary — missed games pull it down." %}
       <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his average rose over his last 10 games." %}
       <strong class="ml-2 font-medium">{{ latest_fp_label }}:</strong> {% translate "points since the previous snapshot — – means no game." %}

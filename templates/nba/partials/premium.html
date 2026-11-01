@@ -1,0 +1,18 @@
+{% load money %}
+{% comment %}
+  The pick premium: how far his salary sat from the expected salary for his
+  points per game at the last update. Context: amount (dollars or None).
+  A tinted pill when managers have bid him up, plain when they sold him off --
+  neither is good or bad on its own, so neither is green or red.
+{% endcomment %}
+{% if amount is None %}
+  <span class="text-neutral-400 dark:text-neutral-500">–</span>
+{% elif amount > 0 %}
+  <span class="inline-flex whitespace-nowrap rounded-md bg-secondary-50 px-1.5 py-0.5 font-medium text-secondary-800 ring-1 ring-inset ring-secondary-200 dark:bg-secondary-500/10 dark:text-secondary-200 dark:ring-secondary-500/25"
+        title="{{ amount|exact }}">+{{ amount|millions }}</span>
+{% elif amount < 0 %}
+  <span class="inline-flex whitespace-nowrap rounded-md bg-neutral-100 px-1.5 py-0.5 font-medium text-neutral-600 ring-1 ring-inset ring-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:ring-neutral-700"
+        title="{{ amount|exact }}">{{ amount|millions }}</span>
+{% else %}
+  <span class="text-neutral-500 dark:text-neutral-400" title="{{ amount|exact }}">{{ amount|millions }}</span>
+{% endif %}

@@ -59,6 +59,7 @@ from .models import (
 )
 from .rest_of_season import EXPECTED_AVAILABILITY, rest_of_season, with_rest_of_season
 from .salary_charts import salary_charts
+from .salary_outlook import salary_baseline, with_salary_outlook
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
 from .services import (
     DailyApiLimitExceeded,
@@ -81,6 +82,16 @@ def rest_of_season_context():
         "show_rest_of_season": season_games().exists(),
         "availability_percent": round(EXPECTED_AVAILABILITY * 100),
         "next_days": NEXT_DAYS,
+    }
+
+
+def salary_outlook_context(baseline):
+    """What the player table needs for the next-update columns and their note."""
+    return {
+        "salary_baseline": baseline,
+        # Every premium is zero before the first update: a column of zeros
+        # says nothing, so it only appears once there is one to read.
+        "show_premium": baseline is not None and not baseline.is_preseason,
     }
 
 
@@ -353,6 +364,8 @@ class PlayerListView(LoginRequiredMixin, ListView):
         "difference": [F("salary_difference_amount")],
         "points": [F("current_total_fp")],
         "fp_per_million": [F("fp_per_million")],
+        "premium": [F("pick_premium")],
+        "outlook": [F("outlook_change")],
         "avg": [F("current_fp_per_game")],
         "latest": [F("latest_fp_gain")],
         "games": [F("current_games_played")],
@@ -455,6 +468,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
         qs = with_expected_salary(qs)
         qs = with_fp_per_million(qs)
         qs = with_latest_fp_change(qs)
+        qs = with_salary_outlook(qs, self._salary_baseline())
 
         sort, descending = self._sort_params()
         if sort == "hotness":
@@ -498,6 +512,11 @@ class PlayerListView(LoginRequiredMixin, ListView):
         if not hasattr(self, "_season"):
             self._season = newest_season()
         return self._season
+
+    def _salary_baseline(self):
+        if not hasattr(self, "_baseline"):
+            self._baseline = salary_baseline()
+        return self._baseline
 
     def _watchlist_only(self):
         return self.request.GET.get("watchlist") == "1" or getattr(self, "watchlist_page", False)
@@ -558,6 +577,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
         context["default_chart_view"] = "last" if self._preseason() else "current"
         context["current_sort"] = sort
         context.update(rest_of_season_context())
+        context.update(salary_outlook_context(self._salary_baseline()))
         context["current_dir"] = "desc" if descending else "asc"
         context["can_import_from_bbde"] = can_import_from_bbde(self.request.user)
         if context["can_import_from_bbde"] and not self.request.htmx:
@@ -1023,6 +1043,8 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         "difference": [F("salary_difference_amount")],
         "points": [F("current_total_fp")],
         "fp_per_million": [F("fp_per_million")],
+        "premium": [F("pick_premium")],
+        "outlook": [F("outlook_change")],
         "avg": [F("current_fp_per_game")],
         "latest": [F("latest_fp_gain")],
         "games": [F("current_games_played")],
@@ -1075,6 +1097,11 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
             self._season = newest_season()
         return self._season
 
+    def _salary_baseline(self):
+        if not hasattr(self, "_baseline"):
+            self._baseline = salary_baseline()
+        return self._baseline
+
     def _players(self):
         qs = (
             self.object.players.filter(is_active=True)
@@ -1097,6 +1124,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         qs = with_expected_salary(qs)
         qs = with_fp_per_million(qs)
         qs = with_latest_fp_change(qs)
+        qs = with_salary_outlook(qs, self._salary_baseline())
 
         sort, descending = self._sort_params()
         if sort == "hotness":
@@ -1184,6 +1212,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         context["default_chart_view"] = "last" if self._preseason() else "current"
         context["current_sort"] = sort
         context.update(rest_of_season_context())
+        context.update(salary_outlook_context(self._salary_baseline()))
         context["current_dir"] = "desc" if descending else "asc"
         context["notes"] = with_note_urls(
             self.object.notes.filter(user=self.request.user)

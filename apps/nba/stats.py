@@ -70,6 +70,8 @@ DESCENDING_FIRST = frozenset(
         "salary",
         "expected",
         "difference",
+        "premium",
+        "outlook",
         "points",
         "avg",
         "latest",

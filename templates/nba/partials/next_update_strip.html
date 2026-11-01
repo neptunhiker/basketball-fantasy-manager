@@ -1,0 +1,62 @@
+{% load i18n %}
+{% comment %}
+  When the next Sunday salary update is due, what the predictions are measured
+  against, and a one-tap sort by them. Context: `salary_baseline` (None leaves
+  the strip out), `current_sort`, `current_dir`.
+{% endcomment %}
+{% if salary_baseline %}
+  {% with next=salary_baseline.next_update %}
+    <div class="flex flex-col gap-3 border-b border-neutral-200 bg-linear-to-r from-primary-50/80 via-white to-secondary-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:from-primary-500/10 dark:via-neutral-900 dark:to-secondary-500/5">
+      <div class="flex min-w-0 items-start gap-3">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-primary-600 shadow-sm ring-1 ring-primary-200 dark:bg-neutral-900 dark:text-primary-300 dark:ring-primary-500/30" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 17l5-5 4 4 8-8M15 8h5v5"/>
+          </svg>
+        </span>
+        <div class="min-w-0">
+          {% if next %}
+            <p class="flex flex-wrap items-baseline gap-x-2 text-sm font-semibold text-tertiary-700 dark:text-neutral-100">
+              {% translate "Next salary update" %}
+              <span class="font-normal tabular-nums text-neutral-600 dark:text-neutral-300">
+                <time datetime="{{ next|date:'c' }}">{{ next|date:"D" }}, {{ next|date:"MONTH_DAY_FORMAT" }} · {{ next|date:"TIME_FORMAT" }}</time>
+              </span>
+              <span class="badge badge-pending whitespace-nowrap">{% blocktranslate with when=next|timeuntil %}in {{ when }}{% endblocktranslate %}</span>
+            </p>
+          {% else %}
+            <p class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "No salary update left this season" %}</p>
+          {% endif %}
+          <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+            {% if salary_baseline.is_preseason %}
+              {% translate "No update yet this season: the prediction is the expected salary for his points per game, compared with his pre-season price." %}
+            {% else %}
+              {% with last=salary_baseline.moment %}
+                {% blocktranslate with date=last|date:"MONTH_DAY_FORMAT" %}Predicted from his points per game now plus the pick premium he carried out of the update on {{ date }}.{% endblocktranslate %}
+              {% endwith %}
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      {% if next %}
+        {% querystring sort="outlook" dir="desc" page=None as risers_url %}
+        {% querystring sort="outlook" dir="asc" page=None as fallers_url %}
+        <div class="flex w-full shrink-0 rounded-lg sm:inline-flex sm:w-auto border border-neutral-200 bg-white p-0.5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900"
+             role="group" aria-label="{% translate 'Sort by the predicted change' %}">
+          <a href="{{ risers_url }}"
+             {% if current_sort == "outlook" and current_dir == "desc" %}aria-current="true"{% endif %}
+             class="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 sm:flex-none text-xs font-semibold transition max-sm:min-h-10
+                    {% if current_sort == 'outlook' and current_dir == 'desc' %}bg-emerald-50 text-emerald-800 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/30{% else %}text-neutral-600 hover:text-emerald-700 dark:text-neutral-300 dark:hover:text-emerald-300{% endif %}">
+            <svg class="h-2.5 w-2.5" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M5 1.5 9.5 8.5h-9z"/></svg>
+            {% translate "Biggest risers" %}
+          </a>
+          <a href="{{ fallers_url }}"
+             {% if current_sort == "outlook" and current_dir == "asc" %}aria-current="true"{% endif %}
+             class="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 sm:flex-none text-xs font-semibold transition max-sm:min-h-10
+                    {% if current_sort == 'outlook' and current_dir == 'asc' %}bg-rose-50 text-rose-800 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/30{% else %}text-neutral-600 hover:text-rose-700 dark:text-neutral-300 dark:hover:text-rose-300{% endif %}">
+            <svg class="h-2.5 w-2.5" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M5 8.5 9.5 1.5h-9z"/></svg>
+            {% translate "Biggest fallers" %}
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  {% endwith %}
+{% endif %}

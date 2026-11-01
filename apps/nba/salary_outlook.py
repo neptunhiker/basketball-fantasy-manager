@@ -75,7 +75,11 @@ class Baseline:
 
 
 def salary_baseline(season=None, now=None):
-    """The baseline for the current season, or None without one.
+    """The baseline for `season` (default: the current one), or None.
+
+    None without a season, and once its last update is behind it: there is
+    nothing left to predict. A season without a trade buying date yet has no
+    known updates, and keeps its pre-season baseline until it gets one.
 
     An update only counts once a snapshot has been read after it: between
     22:00 and the import at 22:15 the salaries on record are still the old
@@ -87,6 +91,8 @@ def salary_baseline(season=None, now=None):
     now = now or timezone.now()
     updates = season.salary_update_moments()
     next_update = next((moment for moment in updates if moment > now), None)
+    if updates and next_update is None:
+        return None
     newest_read = (
         PlayerSnapshot.objects.filter(season=season, as_of__lte=now)
         .order_by("-as_of")

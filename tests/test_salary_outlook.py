@@ -139,6 +139,24 @@ def test_an_update_counts_once_a_snapshot_was_read_after_it(season):
     assert baseline.next_update == SECOND_UPDATE
 
 
+def test_no_baseline_once_the_last_update_is_behind_the_season(season):
+    # The season's last day, Sunday 11 April, has the last update.
+    read(make_player(), season, local(2027, 4, 11, 22, 15), 5 * MILLION, 20, 60)
+
+    assert salary_baseline(now=local(2027, 4, 11, 21)) is not None
+    assert salary_baseline(now=local(2027, 4, 12)) is None
+
+
+def test_a_season_without_a_trade_buying_date_keeps_its_preseason_baseline(season):
+    season.trade_market_opens_at = None
+    season.save()
+
+    baseline = salary_baseline(now=local(2026, 12, 1))
+
+    assert baseline.is_preseason
+    assert baseline.next_update is None
+
+
 def test_the_newest_update_read_is_the_baseline(season):
     player = make_player()
     read(player, season, local(2026, 11, 15, 22, 15), 5 * MILLION, 20, 10)
@@ -396,7 +414,7 @@ def roster(manager, after_the_first_update, monkeypatch):
 
     monkeypatch.setattr(
         "apps.fantasy.views.salary_baseline",
-        lambda: salary_baseline(now=local(2026, 11, 16, 18)),
+        lambda season: salary_baseline(season, now=local(2026, 11, 16, 18)),
     )
     roster = Roster.objects.create(
         manager=manager, season=after_the_first_update, name="Bulla Ballers"
@@ -512,3 +530,20 @@ def test_the_player_page_shows_the_next_update_and_the_past_ones(signed_in, seas
     page = response.content.decode()
     assert "Expected change" in page
     assert "Past updates" in page
+
+
+def test_a_roster_of_a_finished_season_has_no_prediction(signed_in, manager, season):
+    from apps.fantasy.models import Roster
+
+    old = Season.objects.create(
+        label="2025-26",
+        starts_on=dt.date(2025, 10, 21),
+        ends_on=dt.date(2026, 4, 12),
+        trade_market_opens_at=local(2025, 11, 16, 22),
+    )
+    roster = Roster.objects.create(manager=manager, season=old, name="Last year")
+
+    response = signed_in.get(reverse("fantasy:roster-build", args=[roster.pk]))
+
+    assert response.context["salary_baseline"] is None
+    assert response.context["squad_outlook"] is None

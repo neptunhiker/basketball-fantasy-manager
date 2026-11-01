@@ -16,7 +16,7 @@
               <time datetime="{{ next|date:'c' }}">{{ next|date:"D" }}, {{ next|date:"MONTH_DAY_FORMAT" }} · {{ next|date:"TIME_FORMAT" }}</time>
               · {% blocktranslate with when=next|timeuntil %}in {{ when }}{% endblocktranslate %}
             {% else %}
-              {% translate "No salary update left this season" %}
+              {% translate "The date of the next salary update is not set yet" %}
             {% endif %}
           </p>
         </div>

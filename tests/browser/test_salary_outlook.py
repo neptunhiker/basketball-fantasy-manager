@@ -200,3 +200,21 @@ def test_the_player_page_in_the_dark(repriced, open_page):
     page.locator("#salary-outlook").screenshot(
         path=str(SCREENS / "salary-outlook" / "player-phone-dark.png")
     )
+
+
+def test_the_german_screens_fit_a_phone(repriced, open_page):
+    user = repriced["user"]
+    user.language = "de"
+    user.save(update_fields=["language"])
+    page = open_page(user, reverse("nba:player-list") + "?sort=outlook&dir=desc")
+
+    assert page.get_by_text("Nächstes Gehalts-Update").is_visible()
+    assert page_overflow(page) == 0
+    shot(page, "salary-outlook", "risers-phone-de")
+
+    player = repriced["players"][3]
+    page = open_page(user, reverse("nba:player-detail", args=[player.slug]))
+    assert page_overflow(page) == 0
+    page.locator("#salary-outlook").screenshot(
+        path=str(SCREENS / "salary-outlook" / "player-phone-de.png")
+    )

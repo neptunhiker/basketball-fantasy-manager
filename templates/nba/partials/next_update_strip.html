@@ -23,7 +23,7 @@
               <span class="badge badge-pending whitespace-nowrap">{% blocktranslate with when=next|timeuntil %}in {{ when }}{% endblocktranslate %}</span>
             </p>
           {% else %}
-            <p class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "No salary update left this season" %}</p>
+            <p class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "The date of the next salary update is not set yet" %}</p>
           {% endif %}
           <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
             {% if salary_baseline.is_preseason %}

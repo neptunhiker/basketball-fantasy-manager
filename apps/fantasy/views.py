@@ -989,7 +989,8 @@ def _build_context(request, roster):
         player.latest_fp_gain = change.get("fp")
         player.latest_avg_change = change.get("fp_per_game")
     _mark_kicked(request.user, [membership.player for membership in memberships])
-    baseline = salary_baseline()
+    # The roster's own season: an old roster is not repriced by this one.
+    baseline = salary_baseline(roster.season)
     squad = [membership.player for membership in memberships]
     attach_salary_outlook(squad, baseline)
     outlook_context = salary_outlook_context(baseline)
@@ -1411,7 +1412,7 @@ class RosterTradeView(OwnRosterMixin, View):
 
         preview = services.trade_preview(roster, player_out, player_in)
         filters = _picker_filters(request)
-        baseline = salary_baseline()
+        baseline = salary_baseline(roster.season)
         available = with_salary_outlook(
             _available_players(roster, filters, request.user, budget=preview["budget"]), baseline
         )[:60]

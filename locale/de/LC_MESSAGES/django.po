@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-01 16:30+0100\n"
+"POT-Creation-Date: 2026-11-01 16:40+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -684,7 +684,7 @@ msgstr "%(player)s ist nicht im Kader."
 msgid "Trades are only allowed while the season is running."
 msgstr "Trades sind nur während der laufenden Saison erlaubt."
 
-#: apps/fantasy/services.py:251 apps/fantasy/views.py:1469
+#: apps/fantasy/services.py:251 apps/fantasy/views.py:1470
 #: templates/fantasy/partials/trade_body.html:285
 msgid "No trades available for this roster."
 msgstr "Für diesen Kader sind keine Trades verfügbar."
@@ -828,73 +828,73 @@ msgstr ""
 msgid "You already have a roster called \"%(name)s\" this season."
 msgstr "Du hast in dieser Saison bereits einen Kader namens „%(name)s“."
 
-#: apps/fantasy/views.py:1002
+#: apps/fantasy/views.py:1003
 #, python-format
 msgid "Trades become available when the season starts on %(date)s."
 msgstr "Trades sind ab dem Saisonstart am %(date)s möglich."
 
-#: apps/fantasy/views.py:1005
+#: apps/fantasy/views.py:1006
 msgid "The season has ended. Trading is closed."
 msgstr "Die Saison ist beendet. Trades sind geschlossen."
 
-#: apps/fantasy/views.py:1017
+#: apps/fantasy/views.py:1018
 #, python-format
 msgid "Not enough cash (%(price)s needed)"
 msgstr "Nicht genug Cash (%(price)s nötig)"
 
-#: apps/fantasy/views.py:1027
+#: apps/fantasy/views.py:1028
 msgid "No trades available to sell"
 msgstr "Keine Trades zum Verkaufen verfügbar"
 
-#: apps/fantasy/views.py:1098 templates/fantasy/roster_latest.html:83
+#: apps/fantasy/views.py:1099 templates/fantasy/roster_latest.html:83
 #: templates/nba/partials/schedule_row.html:44
 #: templates/nba/partials/team_schedule.html:20
 msgid "Played"
 msgstr "Gespielt"
 
-#: apps/fantasy/views.py:1099
+#: apps/fantasy/views.py:1100
 msgid "Repriced without a game"
 msgstr "Neu bewertet, ohne Spiel"
 
-#: apps/fantasy/views.py:1100
+#: apps/fantasy/views.py:1101
 msgid "In the news"
 msgstr "In den News"
 
-#: apps/fantasy/views.py:1158 apps/fantasy/views.py:1510
+#: apps/fantasy/views.py:1159 apps/fantasy/views.py:1511
 #, python-format
 msgid "No salary on record for %(player)s."
 msgstr "Für %(player)s ist kein Gehalt erfasst."
 
 # UX round 2: guidance while building a roster
-#: apps/fantasy/views.py:1162
+#: apps/fantasy/views.py:1163
 #, python-format
 msgid "%(name)s signed for %(price)s."
 msgstr "%(name)s für %(price)s verpflichtet."
 
-#: apps/fantasy/views.py:1172
+#: apps/fantasy/views.py:1173
 #, python-format
 msgid "%(name)s released, %(price)s back."
 msgstr "%(name)s entlassen, %(price)s zurück."
 
-#: apps/fantasy/views.py:1207
+#: apps/fantasy/views.py:1208
 msgid "No salary on record yet."
 msgstr "Noch kein Gehalt erfasst."
 
-#: apps/fantasy/views.py:1209
+#: apps/fantasy/views.py:1210
 msgid "Roster is full."
 msgstr "Der Kader ist voll."
 
-#: apps/fantasy/views.py:1211
+#: apps/fantasy/views.py:1212
 #, python-format
 msgid "Not enough cash (%(cash)s left)."
 msgstr "Nicht genug Cash (noch %(cash)s)."
 
-#: apps/fantasy/views.py:1246
+#: apps/fantasy/views.py:1247
 #, python-format
 msgid "%(message)s Roster: %(roster)s."
 msgstr "%(message)s Kader: %(roster)s."
 
-#: apps/fantasy/views.py:1263
+#: apps/fantasy/views.py:1264
 #, python-format
 msgid ""
 "Do you really want to buy 1 extra trade for %(price)s cash? Your cash "
@@ -903,12 +903,12 @@ msgstr ""
 "Möchtest du wirklich 1 zusätzlichen Trade für %(price)s Cash kaufen? Dein "
 "Cash sinkt von %(before)s auf %(after)s."
 
-#: apps/fantasy/views.py:1274
+#: apps/fantasy/views.py:1275
 #, python-format
 msgid "Trade bought for %(price)s."
 msgstr "Trade für %(price)s gekauft."
 
-#: apps/fantasy/views.py:1295
+#: apps/fantasy/views.py:1296
 #, python-format
 msgid ""
 "Do you really want to sell 1 trade for %(price)s cash? Your available trades"
@@ -919,21 +919,21 @@ msgstr ""
 " Trades sinken von %(trades)d auf %(trades_after)d, und dein Cash steigt von"
 " %(before)s auf %(after)s."
 
-#: apps/fantasy/views.py:1309
+#: apps/fantasy/views.py:1310
 #, python-format
 msgid "Trade sold for %(price)s."
 msgstr "Trade für %(price)s verkauft."
 
-#: apps/fantasy/views.py:1471 templates/fantasy/partials/trade_body.html:311
+#: apps/fantasy/views.py:1472 templates/fantasy/partials/trade_body.html:311
 msgid "Pick a player to send out and one to bring in."
 msgstr "Wähle einen Spieler, der geht, und einen, der kommt."
 
-#: apps/fantasy/views.py:1487
+#: apps/fantasy/views.py:1488
 #, python-format
 msgid "Trade done: %(out)s out, %(in)s in."
 msgstr "Trade durchgeführt: %(out)s raus, %(in)s rein."
 
-#: apps/fantasy/views.py:1542
+#: apps/fantasy/views.py:1543
 #, python-format
 msgid ""
 "\"%(name)s\" will be deleted along with its %(count)d player and its entire "
@@ -4095,8 +4095,8 @@ msgstr "in %(when)s"
 
 #: templates/nba/partials/next_update_strip.html:26
 #: templates/nba/partials/player_salary_outlook.html:19
-msgid "No salary update left this season"
-msgstr "In dieser Saison steht kein Gehalts-Update mehr an"
+msgid "The date of the next salary update is not set yet"
+msgstr "Das Datum des nächsten Gehalts-Updates steht noch nicht fest"
 
 #: templates/nba/partials/next_update_strip.html:30
 #: templates/nba/partials/player_salary_outlook.html:71
@@ -5546,3 +5546,6 @@ msgstr "Zum hellen Design wechseln"
 #: templates/partials/theme_toggle.html:3
 msgid "Switch to dark theme"
 msgstr "Zum dunklen Design wechseln"
+
+#~ msgid "No salary update left this season"
+#~ msgstr "In dieser Saison steht kein Gehalts-Update mehr an"

@@ -383,3 +383,50 @@ def test_without_a_season_the_list_has_no_prediction(signed_in, db):
 
     assert response.status_code == 200
     assert "Next salary update" not in response.content.decode()
+
+
+# --- the roster and the trade dialog ---------------------------------------------
+
+
+@pytest.fixture
+def roster(manager, after_the_first_update, monkeypatch):
+    from apps.fantasy.models import Roster
+
+    monkeypatch.setattr(
+        "apps.fantasy.views.salary_baseline",
+        lambda: salary_baseline(now=local(2026, 11, 16, 18)),
+    )
+    roster = Roster.objects.create(
+        manager=manager, season=after_the_first_update, name="Bulla Ballers"
+    )
+    for player in Player.objects.filter(last_name__in=["Holder", "Riser"]):
+        services.buy(roster, player, player.current_salary)
+    return roster
+
+
+def test_the_roster_sorts_by_the_predicted_change(signed_in, roster):
+    response = signed_in.get(
+        reverse("fantasy:roster-build", args=[roster.pk]), {"sort": "outlook", "dir": "desc"}
+    )
+
+    names = [membership.player.last_name for membership in response.context["memberships"]]
+    assert names == ["Riser", "Holder"]
+    assert response.context["squad_outlook"] == {"change": poly(30) - poly(20), "missing": 0}
+    keys = [key for key, _label in response.context["squad_sort_options"]]
+    assert "premium" in keys and "outlook" in keys
+
+
+def test_the_trade_dialog_nets_both_players_changes(signed_in, roster):
+    out = Player.objects.get(last_name="Holder")
+    in_ = Player.objects.get(last_name="Faller")
+
+    response = signed_in.get(
+        reverse("fantasy:roster-trade", args=[roster.pk]), {"out": out.pk, "in": in_.pk}
+    )
+
+    outlook = response.context["trade_outlook"]
+    assert outlook["out"] == 0
+    assert outlook["in"] == poly(12) - poly(20)
+    assert outlook["net"] == poly(12) - poly(20)
+    available = {player.last_name: player for player in response.context["available"]}
+    assert available["Faller"].outlook_change == poly(12) - poly(20)

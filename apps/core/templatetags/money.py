@@ -66,3 +66,17 @@ def exact(value, currency="$"):
 
     places = 0 if amount == amount.to_integral_value() else 2
     return _signed(amount, currency, "", decimal_pos=places, force_grouping=True)
+
+
+@register.filter
+def signed_millions(value, currency="$"):
+    """`millions` with its direction always written: `+$0.64M`, `-$0.60M`, `±$0.00M`."""
+    formatted = millions(value, currency)
+    if formatted == MISSING:
+        return formatted
+    amount = Decimal(value)
+    if amount > 0:
+        return f"+{formatted}"
+    if amount == 0:
+        return f"±{formatted}"
+    return formatted

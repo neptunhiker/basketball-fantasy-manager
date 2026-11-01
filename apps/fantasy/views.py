@@ -42,6 +42,13 @@ from apps.core.views import (
 )
 from apps.nba.models import Player, Team
 from apps.nba.salary_charts import salary_charts
+from apps.nba.salary_outlook import (
+    attach_salary_outlook,
+    salary_baseline,
+    salary_outlook_context,
+    squad_outlook,
+    with_salary_outlook,
+)
 from apps.nba.stats import DESCENDING_FIRST
 
 from . import services
@@ -884,6 +891,8 @@ SQUAD_SORT_OPTIONS = [
     ("salary", _lazy("Actual salary")),
     ("expected", _lazy("Expected salary")),
     ("difference", _lazy("Value")),
+    ("premium", _lazy("Premium")),
+    ("outlook", _lazy("Next update")),
     ("points", _lazy("Points")),
     ("avg", _lazy("Avg/game")),
     ("latest", _lazy("Latest FP")),
@@ -899,6 +908,8 @@ ROSTER_SORT_FIELDS = {
     "salary": lambda player: player.current_salary,
     "expected": lambda player: player.predicted_salary,
     "difference": lambda player: player.salary_difference_amount,
+    "premium": lambda player: player.pick_premium,
+    "outlook": lambda player: player.outlook_change,
     "points": lambda player: player.current_total_fp,
     "avg": lambda player: player.current_fp_per_game,
     "latest": lambda player: player.latest_fp_gain,
@@ -906,6 +917,16 @@ ROSTER_SORT_FIELDS = {
     "hotness": lambda player: _hotness_value(player.hotness_score()),
     "return": lambda player: player.expected_return,
 }
+
+
+def _squad_sort_options(outlook_context):
+    """`SQUAD_SORT_OPTIONS` less the next-update figures a page is not showing."""
+    hidden = set()
+    if not outlook_context["show_premium"]:
+        hidden.add("premium")
+    if outlook_context["salary_baseline"] is None:
+        hidden.add("outlook")
+    return [option for option in SQUAD_SORT_OPTIONS if option[0] not in hidden]
 
 
 def _hotness_value(score):
@@ -968,6 +989,10 @@ def _build_context(request, roster):
         player.latest_fp_gain = change.get("fp")
         player.latest_avg_change = change.get("fp_per_game")
     _mark_kicked(request.user, [membership.player for membership in memberships])
+    baseline = salary_baseline()
+    squad = [membership.player for membership in memberships]
+    attach_salary_outlook(squad, baseline)
+    outlook_context = salary_outlook_context(baseline)
     current_sort, current_dir, memberships = _sort_roster_memberships(request, memberships)
     trading_allowed = roster.season.trading_allowed
     if not trading_allowed:
@@ -1016,8 +1041,10 @@ def _build_context(request, roster):
         "squad_chart": salary_charts([m.player for m in memberships], None)["salary_fp_chart"],
         "current_sort": current_sort,
         "current_dir": current_dir,
+        **outlook_context,
+        "squad_outlook": squad_outlook(squad, baseline),
         # The phone cards' "Sort by" list: the table's columns, in its order.
-        "squad_sort_options": SQUAD_SORT_OPTIONS,
+        "squad_sort_options": _squad_sort_options(outlook_context),
         "positions": Player.Position.choices,
         "teams": Team.objects.order_by("name"),
         "roster_size": ROSTER_SIZE,
@@ -1312,6 +1339,21 @@ def _flag_minimum_breaks(roster, player_out, candidates):
         )
 
 
+def _trade_outlook(player_out, player_in, baseline):
+    """What the trade does to team value at the next update, or None.
+
+    The incoming player's predicted change replaces the outgoing one's: a
+    trade of a faller for a riser gains both.
+    """
+    if player_out is None or player_in is None:
+        return None
+    outlooks = attach_salary_outlook([player_out, player_in], baseline)
+    out, in_ = outlooks[player_out.pk], outlooks[player_in.pk]
+    if out is None or in_ is None:
+        return None
+    return {"out": out.change, "in": in_.change, "net": in_.change - out.change}
+
+
 def _chosen_player(request, key):
     """The player named by `key` in the query string, or None.
 
@@ -1369,7 +1411,11 @@ class RosterTradeView(OwnRosterMixin, View):
 
         preview = services.trade_preview(roster, player_out, player_in)
         filters = _picker_filters(request)
-        available = _available_players(roster, filters, request.user, budget=preview["budget"])[:60]
+        baseline = salary_baseline()
+        available = with_salary_outlook(
+            _available_players(roster, filters, request.user, budget=preview["budget"]), baseline
+        )[:60]
+        attach_salary_outlook([membership.player for membership in memberships], baseline)
         # Carried through every link inside the dialog, so a trade started on a
         # player page still knows where to go when it is executed.
         return_query = "&return_to=player" if request.GET.get("return_to") == "player" else ""
@@ -1382,6 +1428,8 @@ class RosterTradeView(OwnRosterMixin, View):
             "filters": filters,
             "positions": Player.Position.choices,
             "available": available,
+            **salary_outlook_context(baseline),
+            "trade_outlook": _trade_outlook(player_out, player_in, baseline),
             **_watchlist_context(roster, request.user, filters),
             # Where to go after a trade made from somewhere other than the
             # build page (the player page), instead of swapping in its panels.

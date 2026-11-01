@@ -114,3 +114,53 @@ def test_before_the_first_update_there_is_no_premium_column(game, open_page):
     assert "NEXT UPDATE" in headers
     assert "PREMIUM" not in headers
     shot(page, "salary-outlook", "preseason-desktop")
+
+
+# --- the roster -------------------------------------------------------------------
+
+
+def build_url(game):
+    return reverse("fantasy:roster-build", args=[game["roster"].pk])
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+def test_the_roster_shows_where_each_salary_is_heading(repriced, open_page, size):
+    page = open_page(repriced["user"], build_url(repriced) + "?sort=outlook", size)
+
+    assert page.get_by_text("Team value").first.is_visible()
+    assert page_overflow(page) == 0
+    if size == "phone":
+        strip = page.locator("#roster-panel .md\\:hidden li dl").first
+        labels = [label.strip() for label in strip.locator("dt").all_inner_texts()]
+        assert labels[2:5] == ["Value", "Premium", "Next update"]
+        assert "Next update" in strip.locator("[data-sorted]").inner_text()
+        strip.scroll_into_view_if_needed()
+    shot(page, "salary-outlook", f"roster-{size}")
+
+
+@pytest.mark.parametrize("size", ["phone", "desktop"])
+def test_the_trade_dialog_weighs_both_players_next_update(repriced, open_page, size):
+    # Opened the way a user opens it: in a running season, with a trade to spend.
+    season = repriced["season"]
+    season.starts_on = season.starts_on.replace(year=season.starts_on.year - 1)
+    season.signings_open_at = season.signings_close_at = None
+    season.save()
+    roster = repriced["roster"]
+    roster.__class__.objects.filter(pk=roster.pk).update(trades_available=1)
+    page = open_page(repriced["user"], build_url(repriced), size)
+
+    if size == "phone":
+        # The header's Trade: step 1 picks who goes out.
+        page.get_by_role("button", name="Trade", exact=True).first.click()
+        page.wait_for_selector("#trade-body")
+        assert page.locator("#trade-body").get_by_text("-$0.60M").first.is_visible()
+        page.locator("#trade-body").get_by_role("button", name="Bam Adebayo").click()
+        page.get_by_text("Step 2 of 2").wait_for(state="visible", timeout=3000)
+    else:
+        page.get_by_role("button", name="Trade Bam Adebayo").click()
+        page.wait_for_selector("#trade-body")
+    page.locator("#trade-body").get_by_role("button", name="Victor Wembanyama").click()
+    page.get_by_text("Team value at the next update").wait_for(state="visible", timeout=3000)
+
+    assert page_overflow(page) == 0
+    shot(page, "salary-outlook", f"trade-{size}")

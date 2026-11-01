@@ -59,7 +59,7 @@ from .models import (
 )
 from .rest_of_season import EXPECTED_AVAILABILITY, rest_of_season, with_rest_of_season
 from .salary_charts import salary_charts
-from .salary_outlook import salary_baseline, with_salary_outlook
+from .salary_outlook import salary_baseline, salary_outlook_context, with_salary_outlook
 from .season_stats import MIN_GAMES, newest_season, short_season, with_last_season
 from .services import (
     DailyApiLimitExceeded,
@@ -82,16 +82,6 @@ def rest_of_season_context():
         "show_rest_of_season": season_games().exists(),
         "availability_percent": round(EXPECTED_AVAILABILITY * 100),
         "next_days": NEXT_DAYS,
-    }
-
-
-def salary_outlook_context(baseline):
-    """What the player table needs for the next-update columns and their note."""
-    return {
-        "salary_baseline": baseline,
-        # Every premium is zero before the first update: a column of zeros
-        # says nothing, so it only appears once there is one to read.
-        "show_premium": baseline is not None and not baseline.is_preseason,
     }
 
 

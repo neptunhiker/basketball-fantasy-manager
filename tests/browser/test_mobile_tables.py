@@ -32,6 +32,7 @@ def test_each_card_carries_every_figure_of_the_table_in_a_sideways_strip(game, o
         "Salary",
         "Expected salary",
         "Value",
+        "Next update",
         "Points",
         "FP/G",
         "Latest FP",

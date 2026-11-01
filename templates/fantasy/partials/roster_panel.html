@@ -7,6 +7,10 @@
 {% translate "Expected salary" as expected_salary_label %}
 {% translate "Value" as value_label %}
 {% translate "Points" as points_label %}
+{% translate "Premium" as premium_label %}
+{% translate "Premium is the pick premium: how far his salary was above (+) or below (−) the expected salary for his points per game right after the last update. We put that part down to managers buying or selling him, and expect it to stay." as premium_help %}
+{% translate "Next update" as outlook_label %}
+{% translate "Next update is the salary we expect after the coming Sunday update: the expected salary for his points per game now, plus his pick premium. The big figure is the change from today's salary, the small one the predicted salary." as outlook_help %}
 {% translate "Avg/game" as avg_game_label %}
 {% translate "Games" as games_label %}
 {% translate "Hotness" as hotness_label %}
@@ -71,6 +75,24 @@
            title="{{ roster.cash|exact }}">
           {{ roster.cash|millions }}
         </p>
+        {# The official game's salary cap for this roster, and where the next #}
+        {# update is expected to take it: the squad's "Next update" column, summed. #}
+        <div class="mt-2 rounded-lg bg-neutral-50 px-2.5 py-2 ring-1 ring-inset ring-neutral-200 dark:bg-neutral-800/60 dark:ring-neutral-700"
+             title="{% translate 'Current salary of every player plus cash: your personal salary cap.' %}">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Team value" %}</p>
+          <div class="mt-0.5 flex flex-wrap items-baseline gap-x-2">
+            <span class="text-sm font-semibold tabular-nums text-tertiary-700 dark:text-neutral-100"
+                  title="{{ roster.team_value|exact }}">{{ roster.team_value|millions }}</span>
+            {% if squad_outlook %}
+              <span class="text-xs tabular-nums">{% include "nba/partials/outlook_gist.html" with change=squad_outlook.change %}</span>
+            {% endif %}
+          </div>
+          {% if squad_outlook.missing %}
+            <p class="mt-0.5 text-[0.7rem] text-neutral-400 dark:text-neutral-500">
+              {% blocktranslate count count=squad_outlook.missing %}{{ count }} player without a prediction{% plural %}{{ count }} players without a prediction{% endblocktranslate %}
+            </p>
+          {% endif %}
+        </div>
       </div>
 
       {# A step down in weight from cash, deliberately: what the roster is #}
@@ -261,7 +283,7 @@
     {% if memberships %}
       {% include "fantasy/partials/squad_cards.html" %}
       <div class="hidden overflow-x-auto md:block">
-        <table class="w-full min-w-[86rem] text-left text-sm">
+        <table class="w-full {% if show_premium %}min-w-[98rem]{% elif salary_baseline %}min-w-[92rem]{% else %}min-w-[86rem]{% endif %} text-left text-sm">
           <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
             <tr>
               <th scope="col" class="px-4 py-3 font-medium sm:px-5">
@@ -285,6 +307,22 @@
                   {% include "partials/info_popover.html" with text=value_help label=value_label %}
                 </span>
               </th>
+              {% if show_premium %}
+                <th scope="col" class="px-4 py-3 text-right font-medium">
+                  <span class="inline-flex items-center gap-1 whitespace-nowrap">
+                    {% include "nba/partials/sort_header.html" with key="premium" label=premium_label align="right" first="desc" %}
+                    {% include "partials/info_popover.html" with text=premium_help label=premium_label %}
+                  </span>
+                </th>
+              {% endif %}
+              {% if salary_baseline %}
+                <th scope="col" class="px-4 py-3 text-right font-medium">
+                  <span class="inline-flex items-center gap-1 whitespace-nowrap">
+                    {% include "nba/partials/sort_header.html" with key="outlook" label=outlook_label align="right" first="desc" %}
+                    {% include "partials/info_popover.html" with text=outlook_help label=outlook_label %}
+                  </span>
+                </th>
+              {% endif %}
               <th scope="col" class="px-4 py-3 text-right font-medium">
                 {% include "nba/partials/sort_header.html" with key="points" label=points_label align="right" first="desc" %}
               </th>
@@ -352,6 +390,16 @@
                 <td class="px-4 py-3 text-right tabular-nums">
                   {% include "nba/partials/value.html" with amount=membership.player.salary_difference_amount %}
                 </td>
+                {% if show_premium %}
+                  <td class="px-4 py-3 text-right text-xs tabular-nums">
+                    {% include "nba/partials/premium.html" with amount=membership.player.pick_premium %}
+                  </td>
+                {% endif %}
+                {% if salary_baseline %}
+                  <td class="px-4 py-3 text-right tabular-nums">
+                    {% include "nba/partials/outlook.html" with change=membership.player.outlook_change salary=membership.player.outlook_salary %}
+                  </td>
+                {% endif %}
                 <td class="px-4 py-3 text-right tabular-nums">
                   {{ membership.player.current_total_fp|floatformat:"2g"|default:"–" }}
                 </td>

@@ -99,6 +99,16 @@ def salary_baseline(season=None, now=None):
     return Baseline(season, PRESEASON, season.season_open_at, next_update)
 
 
+def salary_outlook_context(baseline):
+    """What a page needs for the next-update figures and their note."""
+    return {
+        "salary_baseline": baseline,
+        # Every premium is zero before the first update: a column of zeros
+        # says nothing, so it only appears once there is one to read.
+        "show_premium": baseline is not None and not baseline.is_preseason,
+    }
+
+
 def baseline_snapshot(snapshots, baseline):
     """The player's snapshot the baseline points at, from all of his snapshots."""
     own = [snapshot for snapshot in snapshots if snapshot.season_id == baseline.season.pk]
@@ -226,3 +236,32 @@ def with_salary_outlook(qs, baseline):
             F("outlook_salary") - F("current_salary"), output_field=DOLLARS
         )
     )
+
+
+def attach_salary_outlook(players, baseline):
+    """Set the names `with_salary_outlook` annotates on players already loaded,
+    so the shared templates read either. Returns the outlooks by player id."""
+    outlooks = {}
+    for player in players:
+        outlook = salary_outlook(player, baseline)
+        outlooks[player.pk] = outlook
+        player.pick_premium = outlook.premium if outlook else None
+        player.outlook_salary = outlook.salary if outlook else None
+        player.outlook_change = outlook.change if outlook else None
+    return outlooks
+
+
+def squad_outlook(players, baseline):
+    """The squad's predicted change at the next update, summed over its players.
+
+    `missing` counts the players without a prediction, who are left out of the
+    sum -- and the screen says so, rather than reading them as unchanged.
+    None without a baseline, or when nobody on the squad has a prediction.
+    """
+    if baseline is None:
+        return None
+    changes = [player.outlook_change for player in players]
+    known = [change for change in changes if change is not None]
+    if not known:
+        return None
+    return {"change": sum(known, Decimal("0")), "missing": len(changes) - len(known)}

@@ -9,7 +9,7 @@ import pytest
 from django.template import Context, Template
 from django.urls import reverse
 
-from apps.core.templatetags.money import MISSING, exact, millions
+from apps.core.templatetags.money import MISSING, exact, millions, signed_millions
 from apps.fantasy import services
 from apps.fantasy.models import Roster, Season
 from apps.nba.models import Player
@@ -129,3 +129,11 @@ def test_the_exact_filter_keeps_cents_only_where_there_are_any():
     """A derived figure has a remainder; a salary does not."""
     assert exact(Decimal("60000000.00")) == "$60,000,000"
     assert exact(Decimal("9286666.67")) == "$9,286,666.67"
+
+
+@pytest.mark.parametrize(
+    ("amount", "expected"),
+    [(640_000, "+$0.64M"), (-600_000, "-$0.60M"), (0, "±$0.00M"), (None, MISSING)],
+)
+def test_signed_millions_always_writes_the_direction(amount, expected):
+    assert signed_millions(amount) == expected

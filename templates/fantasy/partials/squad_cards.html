@@ -53,7 +53,7 @@
           </div>
 
           {# Every figure the table has, in the table's order: the salary #}
-          {# three, then the scoring five, split by a hairline. A phone swipes #}
+          {# figures, then the scoring five, split by a hairline. A phone swipes #}
           {# them sideways, edge to edge of the card; from `sm` there is room #}
           {# for all of them in two rows, and no scrolling. The tile the list #}
           {# is sorted by is tinted, and brought into view on load -- sort by #}
@@ -66,7 +66,7 @@
           <div class="relative mt-3"
                x-data="{ left: false, right: false, measure(el) { this.left = el.scrollLeft > 8; this.right = el.scrollLeft + el.clientWidth < el.scrollWidth - 8 } }">
           <dl class="scroll-strip -mx-4 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 pb-0.5 text-xs
-                     sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0
+                     sm:mx-0 sm:grid {% if salary_baseline %}sm:grid-cols-5{% else %}sm:grid-cols-4{% endif %} sm:overflow-visible sm:px-0
                      [&_dd>span]:items-start [&_dt]:flex [&_dt]:items-center [&_dt]:gap-1 [&_dt]:whitespace-nowrap [&_dt]:text-neutral-500 dark:[&_dt]:text-neutral-400"
               x-init="const sorted = $el.querySelector('[data-sorted]'); if (sorted && $el.scrollWidth > $el.clientWidth) $el.scrollLeft = sorted.offsetLeft - 16; measure($el)"
               @scroll.passive="measure($el)"
@@ -85,6 +85,18 @@
               <dt>{{ value_label }} {% include "partials/info_popover.html" with text=value_help label=value_label %}</dt>
               <dd class="text-sm tabular-nums">{% include "nba/partials/value.html" with amount=player.salary_difference_amount %}</dd>
             </div>
+            {% if show_premium %}
+              <div class="stat-tile sm:min-w-0 {% if current_sort == 'premium' %}stat-tile-sorted{% endif %}" {% if current_sort == 'premium' %}data-sorted{% endif %}>
+                <dt>{{ premium_label }} {% include "partials/info_popover.html" with text=premium_help label=premium_label %}</dt>
+                <dd class="text-sm tabular-nums">{% include "nba/partials/premium.html" with amount=player.pick_premium %}</dd>
+              </div>
+            {% endif %}
+            {% if salary_baseline %}
+              <div class="stat-tile sm:min-w-0 {% if current_sort == 'outlook' %}stat-tile-sorted{% endif %}" {% if current_sort == 'outlook' %}data-sorted{% endif %}>
+                <dt>{{ outlook_label }} {% include "partials/info_popover.html" with text=outlook_help label=outlook_label %}</dt>
+                <dd class="text-sm tabular-nums [&>span]:items-start">{% include "nba/partials/outlook.html" with change=player.outlook_change salary=player.outlook_salary %}</dd>
+              </div>
+            {% endif %}
             <div class="stat-tile relative ms-3 before:absolute before:inset-y-2 before:-left-2.5 before:w-px before:bg-neutral-200 sm:ms-0 sm:min-w-0 sm:before:hidden dark:before:bg-neutral-700 {% if current_sort == 'points' %}stat-tile-sorted{% endif %}" {% if current_sort == 'points' %}data-sorted{% endif %}>
               <dt>{{ points_label }}</dt>
               <dd class="text-sm font-semibold tabular-nums">{{ player.current_total_fp|floatformat:"2g"|default:"–" }}</dd>

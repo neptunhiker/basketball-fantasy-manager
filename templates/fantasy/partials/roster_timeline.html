@@ -1,0 +1,83 @@
+{% load i18n static %}
+{% comment %}
+  The roster timeline on the history page: fifteen spots across the season,
+  each cut wherever a trade handed it to the next player. Context: `timeline`
+  (apps.fantasy.timeline.Timeline.as_json).
+
+  Drawn in the browser by static/js/roster_timeline.js rather than in the
+  template like the other charts, because both of its layouts depend on the
+  width it actually gets: "Whole season" fits the season into the card, and
+  "Scroll" keeps a fixed scale and pins the current players' names to the
+  visible edge while the chart scrolls underneath them.
+
+  Every string the script shows is translated here and handed over in
+  `timeline-text`, so the script carries no language of its own. `{date}`,
+  `{partner}` and the like are filled in by the script.
+
+  The moves table below stays the accessible version of the same history, as
+  with the other charts: the drawing is one `role="img"` with a summary.
+{% endcomment %}
+<section class="card overflow-hidden" data-roster-timeline aria-labelledby="roster-timeline-title">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3 sm:px-5 dark:border-neutral-800">
+    <div class="min-w-0">
+      <h2 id="roster-timeline-title" class="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{% translate "Roster timeline" %}</h2>
+      <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+        {% blocktranslate count trades=timeline.tradeCount %}The starting squad and {{ trades }} trade since.{% plural %}The starting squad and {{ trades }} trades since.{% endblocktranslate %}
+      </p>
+    </div>
+    <div class="timeline-modes" role="group" aria-label="{% translate 'Timeline layout' %}">
+      <button type="button" class="timeline-mode" data-mode="fit" aria-pressed="false">{% translate "Whole season" %}</button>
+      <button type="button" class="timeline-mode" data-mode="scroll" aria-pressed="false">{% translate "Scroll" %}</button>
+    </div>
+  </div>
+
+  <div class="space-y-3 px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
+    <ul class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400" aria-label="{% translate 'Legend' %}">
+      <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-pos-G"></span>{% translate "Guard" %}</li>
+      <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-pos-F"></span>{% translate "Forward" %}</li>
+      <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-pos-C"></span>{% translate "Center" %}</li>
+      <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-past-G"></span>{% translate "Earlier player" %}</li>
+      {% if timeline.tradeFreeUntil %}
+        <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-swatch-phase"></span>{% translate "Trade-free phase" %}</li>
+      {% endif %}
+    </ul>
+
+    <p class="timeline-mix text-xs text-neutral-500 dark:text-neutral-400" hidden></p>
+
+    <div class="timeline-chart" data-chart></div>
+
+    <p class="timeline-hint text-xs text-neutral-500 dark:text-neutral-400" hidden></p>
+
+    <div class="timeline-detail" data-detail hidden aria-live="polite"></div>
+  </div>
+
+  {{ timeline|json_script:"roster-timeline-data" }}
+  <script type="application/json" id="roster-timeline-text">
+    {
+      "chartLabel": "{% filter escapejs %}{% blocktranslate count trades=timeline.tradeCount %}Roster timeline: 15 spots from the starting squad on, {{ trades }} trade.{% plural %}Roster timeline: 15 spots from the starting squad on, {{ trades }} trades.{% endblocktranslate %}{% endfilter %}",
+      "scrollLabel": "{% filter escapejs %}{% translate 'Roster timeline, scrolls sideways' %}{% endfilter %}",
+      "today": "{% filter escapejs %}{% translate 'Today' %}{% endfilter %}",
+      "tradesPerDay": "{% filter escapejs %}{% translate 'Trades per day' %}{% endfilter %}",
+      "tradesPerWeek": "{% filter escapejs %}{% translate 'Trades per week' %}{% endfilter %}",
+      "positionMix": "{% filter escapejs %}{% translate 'Position mix' %}{% endfilter %}",
+      "mixNow": "{% filter escapejs %}{% blocktranslate %}Now: {mix}{% endblocktranslate %}{% endfilter %}",
+      "scrollHint": "{% filter escapejs %}{% translate 'Scroll sideways for earlier weeks.' %}{% endfilter %}",
+      "swipeHint": "{% filter escapejs %}{% translate 'Swipe sideways for earlier weeks. Tap a bar for details.' %}{% endfilter %}",
+      "tapHint": "{% filter escapejs %}{% translate 'Tap a bar for details.' %}{% endfilter %}",
+      "clickHint": "{% filter escapejs %}{% translate 'Click to open the player.' %}{% endfilter %}",
+      "positions": {
+        "G": "{% filter escapejs %}{% translate 'Guard' %}{% endfilter %}",
+        "F": "{% filter escapejs %}{% translate 'Forward' %}{% endfilter %}",
+        "C": "{% filter escapejs %}{% translate 'Center' %}{% endfilter %}"
+      },
+      "startingSquad": "{% filter escapejs %}{% translate 'In the starting squad' %}{% endfilter %}",
+      "tradedIn": "{% filter escapejs %}{% blocktranslate %}Traded in on {date} for {partner}{% endblocktranslate %}{% endfilter %}",
+      "tradedOut": "{% filter escapejs %}{% blocktranslate %}Traded out on {date} for {partner}{% endblocktranslate %}{% endfilter %}",
+      "onRoster": "{% filter escapejs %}{% translate 'On the roster now' %}{% endfilter %}",
+      "days": "{% filter escapejs %}{% blocktranslate %}Days on the roster: {days}{% endblocktranslate %}{% endfilter %}",
+      "points": "{% filter escapejs %}{% blocktranslate %}approx. {points} points for this roster{% endblocktranslate %}{% endfilter %}",
+      "noPoints": "{% filter escapejs %}{% translate 'Points not available yet' %}{% endfilter %}",
+      "openPlayer": "{% filter escapejs %}{% translate 'Open player' %}{% endfilter %}"
+    }
+  </script>
+</section>

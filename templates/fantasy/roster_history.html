@@ -30,7 +30,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-4xl space-y-6">
+<div class="mx-auto max-w-5xl space-y-6">
 
   {# What the log adds up to #}
   <div class="card overflow-hidden">
@@ -105,6 +105,11 @@
       {% endif %}
     </div>
   </div>
+
+  {# Who held each spot when, from the starting squad on #}
+  {% if timeline %}
+    {% include "fantasy/partials/roster_timeline.html" %}
+  {% endif %}
 
   {# The ledger itself #}
   <div class="card overflow-hidden">
@@ -202,4 +207,11 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  {% if timeline %}
+    <script src="{% static 'js/roster_timeline.js' %}" defer></script>
+  {% endif %}
 {% endblock %}

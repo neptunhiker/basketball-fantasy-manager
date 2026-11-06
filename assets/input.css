@@ -3,6 +3,7 @@
 /* Templates and Python files that can contain class names. */
 @source "../templates";
 @source "../apps";
+@source "../static/js/roster_timeline.js";
 
 /* Dark mode is toggled by a class on <html>, not by the OS alone, so the
    user's choice can win. See the theme toggle in templates/base.html. */
@@ -258,6 +259,242 @@
 
   .btn-danger {
     @apply bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:outline-red-600;
+  }
+
+  /* Roster timeline, for templates/fantasy/partials/roster_timeline.html and
+     static/js/roster_timeline.js. Colours by role, so the script only sets
+     class names: one hue per position, full strength for the player holding a
+     spot today, washed out for everyone who held it before. The swatches in
+     the legend use the same classes as the bars, which is why each rule sets
+     both `fill` and `background-color`. */
+  .timeline-pos-G {
+    fill: var(--color-primary-600);
+    background-color: var(--color-primary-600);
+    @variant dark {
+      fill: var(--color-primary-400);
+      background-color: var(--color-primary-400);
+    }
+  }
+  .timeline-pos-F {
+    fill: var(--color-secondary-600);
+    background-color: var(--color-secondary-600);
+    @variant dark {
+      fill: var(--color-secondary-400);
+      background-color: var(--color-secondary-400);
+    }
+  }
+  .timeline-pos-C {
+    fill: var(--color-tertiary-500);
+    background-color: var(--color-tertiary-500);
+    @variant dark {
+      fill: var(--color-tertiary-300);
+      background-color: var(--color-tertiary-300);
+    }
+  }
+  .timeline-past-G,
+  .timeline-past-F,
+  .timeline-past-C {
+    --timeline-card: var(--color-white);
+    @variant dark {
+      --timeline-card: var(--color-neutral-900);
+    }
+  }
+  .timeline-past-G {
+    fill: color-mix(in srgb, var(--color-primary-500) 24%, var(--timeline-card));
+    background-color: color-mix(in srgb, var(--color-primary-500) 24%, var(--timeline-card));
+  }
+  .timeline-past-F {
+    fill: color-mix(in srgb, var(--color-secondary-500) 24%, var(--timeline-card));
+    background-color: color-mix(in srgb, var(--color-secondary-500) 24%, var(--timeline-card));
+  }
+  .timeline-past-C {
+    fill: color-mix(in srgb, var(--color-tertiary-400) 24%, var(--timeline-card));
+    background-color: color-mix(in srgb, var(--color-tertiary-400) 24%, var(--timeline-card));
+  }
+
+  .timeline-swatch {
+    @apply inline-block h-2.5 w-3.5 rounded-[3px];
+  }
+  .timeline-swatch-phase {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--color-primary-200) 0 2px,
+      var(--color-primary-50) 2px 5px
+    );
+    @variant dark {
+      background: repeating-linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--color-primary-500) 30%, transparent) 0 2px,
+        transparent 2px 5px
+      );
+    }
+  }
+
+  /* The two-way switch, the same look as the player list's season switch. */
+  .timeline-modes {
+    @apply inline-flex shrink-0 rounded-lg border border-neutral-200 bg-neutral-100 p-0.5
+      dark:border-neutral-700 dark:bg-neutral-800;
+  }
+  .timeline-mode {
+    @apply rounded-md px-3 py-1.5 text-xs font-semibold text-neutral-500 transition
+      hover:text-tertiary-700 focus-visible:outline-2 focus-visible:outline-primary-500
+      max-sm:min-h-10 max-sm:px-4 dark:text-neutral-400 dark:hover:text-neutral-100;
+  }
+  .timeline-mode[aria-pressed="true"] {
+    @apply bg-white text-tertiary-700 shadow-sm dark:bg-neutral-900 dark:text-neutral-100;
+  }
+
+  .timeline-chart {
+    @apply -mx-1 px-1;
+  }
+  .timeline-chart.is-scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    @apply rounded-md focus-visible:outline-2 focus-visible:outline-primary-500;
+  }
+  /* Earlier weeks are off to the left: fade that edge once there is any. */
+  .timeline-chart.is-scrolled {
+    mask-image: linear-gradient(90deg, transparent 0, #000 1.5rem);
+  }
+  .timeline-chart svg {
+    display: block;
+    overflow: visible;
+  }
+
+  .timeline-chart .tl-label {
+    fill: var(--color-neutral-500);
+    font-size: 10px;
+    font-weight: 600;
+    @variant dark {
+      fill: var(--color-neutral-400);
+    }
+  }
+  /* The strip labels sit over dots and gridlines, pinned to the visible
+     edge while the chart scrolls: a halo in the card's colour keeps them
+     legible over whatever passes underneath. */
+  .timeline-chart .tl-caps {
+    letter-spacing: 0.06em;
+    font-size: 9.5px;
+    paint-order: stroke;
+    stroke: var(--color-white);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    @variant dark {
+      stroke: var(--color-neutral-900);
+    }
+  }
+  .timeline-chart .tl-mix-divider {
+    stroke: var(--color-primary-200);
+    @variant dark {
+      stroke: color-mix(in srgb, var(--color-primary-500) 35%, transparent);
+    }
+  }
+  .timeline-chart .tl-name {
+    fill: var(--color-white);
+    font-size: 10.5px;
+    font-weight: 600;
+    pointer-events: none;
+    @variant dark {
+      fill: var(--color-tertiary-900);
+    }
+  }
+  .timeline-chart .tl-past-name {
+    fill: var(--color-neutral-500);
+    font-size: 10px;
+    font-weight: 500;
+    pointer-events: none;
+    @variant dark {
+      fill: var(--color-neutral-400);
+    }
+  }
+  .timeline-chart .tl-grid {
+    stroke: var(--color-neutral-100);
+    @variant dark {
+      stroke: var(--color-neutral-800);
+    }
+  }
+  .timeline-chart .tl-month {
+    stroke: var(--color-neutral-200);
+    @variant dark {
+      stroke: var(--color-neutral-700);
+    }
+  }
+  .timeline-chart .tl-future {
+    fill: var(--color-neutral-50);
+    @variant dark {
+      fill: color-mix(in srgb, var(--color-neutral-800) 45%, transparent);
+    }
+  }
+  .timeline-chart .tl-hatch-bg {
+    fill: var(--color-primary-50);
+    @variant dark {
+      fill: color-mix(in srgb, var(--color-primary-500) 6%, transparent);
+    }
+  }
+  .timeline-chart .tl-hatch-line {
+    stroke: var(--color-primary-100);
+    stroke-width: 2;
+    @variant dark {
+      stroke: color-mix(in srgb, var(--color-primary-500) 16%, transparent);
+    }
+  }
+  .timeline-chart .tl-today {
+    stroke: var(--color-secondary-600);
+    stroke-width: 1.5;
+    @variant dark {
+      stroke: var(--color-secondary-400);
+    }
+  }
+  .timeline-chart .tl-today-label {
+    fill: var(--color-secondary-700);
+    font-size: 10px;
+    font-weight: 700;
+    @variant dark {
+      fill: var(--color-secondary-400);
+    }
+  }
+  .timeline-chart .tl-dot {
+    fill: var(--color-tertiary-700);
+    @variant dark {
+      fill: var(--color-neutral-300);
+    }
+  }
+  .timeline-chart .tl-mix {
+    fill: var(--color-primary-50);
+    stroke: var(--color-primary-100);
+    @variant dark {
+      fill: color-mix(in srgb, var(--color-primary-500) 12%, transparent);
+      stroke: color-mix(in srgb, var(--color-primary-500) 25%, transparent);
+    }
+  }
+  .timeline-chart .tl-now {
+    stroke: var(--color-white);
+    stroke-width: 2;
+    @variant dark {
+      stroke: var(--color-neutral-900);
+    }
+  }
+  .timeline-chart .tl-bar {
+    cursor: pointer;
+    outline: none;
+  }
+  .timeline-chart .tl-bar:focus-visible,
+  .timeline-chart .tl-bar.is-selected {
+    stroke: var(--color-tertiary-700);
+    stroke-width: 2;
+    @variant dark {
+      stroke: var(--color-white);
+    }
+  }
+
+  .timeline-tip {
+    @apply pointer-events-none fixed z-50 max-w-64 rounded-lg bg-tertiary-700 px-3 py-2 text-xs
+      leading-relaxed text-white shadow-lg dark:bg-neutral-100 dark:text-neutral-900;
+  }
+  .timeline-detail {
+    @apply rounded-xl bg-neutral-100/70 px-3 py-2.5 text-xs leading-relaxed text-neutral-600
+      dark:bg-neutral-800/60 dark:text-neutral-300;
   }
 
   /* Surfaces ---------------------------------------------------------- */

@@ -270,3 +270,19 @@ def test_someone_elses_timeline_stays_hidden(signed_in, season, other_manager):
     squad(theirs)
 
     assert signed_in.get(history_url(theirs)).status_code == 404
+
+
+def test_the_timeline_speaks_german_to_german_users(signed_in, roster, user):
+    user.language = "de"
+    user.save(update_fields=["language"])
+    players = squad(roster)
+    trade(roster, players[0], player("G", "Newcomer"), at(11, 3))
+
+    response = signed_in.get(history_url(roster))
+    body = response.content.decode()
+
+    assert "Kader-Zeitleiste" in body
+    assert "Der Startkader und 1 Trade seither." in body
+    # The strings the script fills in arrive translated, placeholders intact.
+    assert "Am {date} für {partner} geholt" in body
+    assert response.context["timeline"]["spots"][0]["stints"][0]["came"] is None

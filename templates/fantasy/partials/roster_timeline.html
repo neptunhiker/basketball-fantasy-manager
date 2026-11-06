@@ -36,7 +36,9 @@
       <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-pos-G"></span>{% translate "Guard" %}</li>
       <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-pos-F"></span>{% translate "Forward" %}</li>
       <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-pos-C"></span>{% translate "Center" %}</li>
-      <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-past-G"></span>{% translate "Earlier player" %}</li>
+      {% if timeline.tradeCount %}
+        <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-past-G"></span>{% translate "Earlier player" %}</li>
+      {% endif %}
       {% if timeline.tradeFreeUntil %}
         <li class="inline-flex items-center gap-1.5"><span class="timeline-swatch timeline-swatch-phase"></span>{% translate "Trade-free phase" %}</li>
       {% endif %}

@@ -281,3 +281,43 @@ def test_hovering_shows_a_tooltip_with_a_mouse(browser, live_server, season_of_t
     shot(page, FOLDER, "desktop-tooltip")
     card_shot(page, "desktop-tooltip")
     context.close()
+
+
+@pytest.mark.parametrize("size", ["phone", "desktop"])
+def test_german_labels_fit(browser, live_server, season_of_trades, size):
+    user = season_of_trades["user"]
+    user.language = "de"
+    user.save(update_fields=["language"])
+    context, page = open_history(browser, live_server, season_of_trades, size)
+    card = page.locator("[data-roster-timeline]")
+
+    expect(card).to_contain_text("Kader-Zeitleiste")
+    expect(card.locator('[data-mode="fit"]')).to_have_text("Ganze Saison")
+    assert page_overflow(page) == 0
+    card_shot(page, f"{size}-german")
+    context.close()
+
+
+def test_the_first_day_without_trades_still_draws(browser, live_server, season_of_trades):
+    from apps.fantasy.models import RosterPlayer, Transaction
+
+    roster = season_of_trades["roster"]
+    # Back to the morning after signings closed: the starting fifteen only.
+    Transaction.objects.filter(roster=roster).delete()
+    RosterPlayer.objects.filter(
+        roster=roster, added_at__gt=roster.season.signings_close_at
+    ).delete()
+    RosterPlayer.objects.filter(
+        roster=roster, removed_at__gt=roster.season.signings_close_at
+    ).update(removed_at=None)
+    roster.cash = roster.starting_cash
+    roster.save(update_fields=["cash"])
+
+    for size in ("phone", "desktop"):
+        context, page = open_history(browser, live_server, season_of_trades, size)
+        card = page.locator("[data-roster-timeline]")
+        expect(card.locator(".tl-name")).to_have_count(15)
+        expect(card).to_contain_text("The starting squad and 0 trades since.")
+        assert page_overflow(page) == 0
+        card_shot(page, f"{size}-no-trades")
+        context.close()

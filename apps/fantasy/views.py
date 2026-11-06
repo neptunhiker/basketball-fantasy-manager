@@ -68,6 +68,7 @@ from .models import (
     TradeGrant,
     WatchlistEntry,
 )
+from .timeline import roster_timeline
 
 
 def _count_per_season(model):
@@ -773,6 +774,10 @@ class RosterHistoryView(OwnRosterMixin, TemplateView):
         # Rows that predate per-side prices, counted so the page can admit to
         # them instead of quietly showing a blank column.
         context["unpriced"] = sum(1 for move in moves if not move.is_priced)
+        # Who held each spot when; None until signings close and there is a
+        # starting squad to begin from.
+        timeline = roster_timeline(roster)
+        context["timeline"] = timeline.as_json() if timeline else None
         return context
 
 

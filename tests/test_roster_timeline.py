@@ -11,6 +11,8 @@ from zoneinfo import ZoneInfo
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from django.urls import reverse
+from django.utils import timezone
 
 from apps.fantasy.models import PlayerSnapshot, Roster, RosterPlayer, Season, Transaction
 from apps.fantasy.timeline import roster_timeline
@@ -227,3 +229,44 @@ def test_the_query_count_does_not_grow_with_the_trades(roster):
     for day, out in zip(range(16, 30), players, strict=False):
         trade(roster, out, player(out.position), at(11, day))
     assert count_queries(roster) == few
+
+
+# --- the history page ---------------------------------------------------------
+
+
+@pytest.fixture
+def signed_in(client, user, password, db):
+    client.login(email=user.email, password=password)
+    return client
+
+
+def history_url(roster):
+    return reverse("fantasy:roster-history", args=[roster.pk])
+
+
+def test_the_history_page_carries_the_timeline_once_signings_closed(signed_in, roster):
+    squad(roster)
+
+    response = signed_in.get(history_url(roster))
+
+    timeline = response.context["timeline"]
+    assert len(timeline["spots"]) == 15
+    assert timeline["startsOn"] == "2026-10-20"
+    assert timeline["tradeFreeUntil"] == "2026-11-15"
+
+
+def test_the_history_page_has_no_timeline_before_signings_close(signed_in, roster, season):
+    season.signings_close_at = timezone.now() + dt.timedelta(days=3)
+    season.save()
+    squad(roster)
+
+    response = signed_in.get(history_url(roster))
+
+    assert response.context["timeline"] is None
+
+
+def test_someone_elses_timeline_stays_hidden(signed_in, season, other_manager):
+    theirs = Roster.objects.create(manager=other_manager, season=season, name="Theirs")
+    squad(theirs)
+
+    assert signed_in.get(history_url(theirs)).status_code == 404

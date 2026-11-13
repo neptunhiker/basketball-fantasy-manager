@@ -1,0 +1,41 @@
+{% load i18n %}
+{% comment %}
+  A planned move's status badge and its two actions -- another day, remove.
+  Context: outcome, plan, roster, read_only; `labelled` for the phone row,
+  where the buttons say what they do instead of relying on an icon.
+{% endcomment %}
+{% with step=outcome.step %}
+<span>
+  {% if outcome.status == 'done' %}
+    <span class="badge badge-success">{% translate "Done" %}</span>
+  {% elif outcome.status == 'missed' %}
+    <span class="badge badge-neutral">{% translate "Missed" %}</span>
+  {% elif outcome.status == 'stale' %}
+    <span class="badge whitespace-nowrap bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">{% translate "Not possible" %}</span>
+  {% endif %}
+</span>
+{% if not read_only %}
+  <div class="flex items-center {% if labelled %}gap-1{% endif %}">
+    {% if outcome.status != 'done' %}
+      <button type="button"
+              hx-get="{% url 'fantasy:plan-step-move' roster.pk plan.pk step.pk %}"
+              hx-target="#modal-root"
+              hx-swap="innerHTML"
+              class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100 {% if labelled %}min-h-10 px-2.5 text-xs font-medium text-neutral-500 dark:text-neutral-400{% else %}p-1.5{% endif %}"
+              aria-label="{% translate 'Move to another day' %}">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path stroke-linecap="round" d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+        {% if labelled %}<span aria-hidden="true">{% translate "Other day" %}</span>{% endif %}
+      </button>
+    {% endif %}
+    <button type="button"
+            hx-post="{% url 'fantasy:plan-step-delete' roster.pk plan.pk step.pk %}"
+            hx-target="#plan-body"
+            hx-swap="outerHTML"
+            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg text-neutral-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 {% if labelled %}min-h-10 px-2.5 text-xs font-medium text-neutral-500 dark:text-neutral-400{% else %}-mr-1.5 p-1.5{% endif %}"
+            aria-label="{% translate 'Remove move' %}">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+      {% if labelled %}<span aria-hidden="true">{% translate "Remove" %}</span>{% endif %}
+    </button>
+  </div>
+{% endif %}
+{% endwith %}

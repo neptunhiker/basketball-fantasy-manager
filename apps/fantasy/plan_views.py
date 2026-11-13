@@ -7,6 +7,7 @@ to the plan itself, through `services`. Nothing touches the roster.
 
 import datetime as dt
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db.models import Prefetch, Q
 from django.http import HttpResponse
@@ -493,3 +494,56 @@ class PlanStepMoveView(OwnPlanMixin, View):
         response["HX-Retarget"] = "#plan-body"
         response["HX-Reswap"] = "outerHTML"
         return response
+
+
+# --- sharing ----------------------------------------------------------------------
+
+
+class PlanShareView(OwnPlanMixin, View):
+    """Start or stop sharing a plan read-only by link."""
+
+    template_name = "fantasy/plan_share.html"
+
+    def get_context(self):
+        plan = self.get_plan()
+        url = None
+        if plan.is_shared:
+            url = self.request.build_absolute_uri(
+                reverse("fantasy:plan-shared", args=[plan.share_token])
+            )
+        return {"plan": plan, "roster": plan.roster, "share_url": url}
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context())
+
+    def post(self, request, *args, **kwargs):
+        plan = self.get_plan()
+        if request.POST.get("action") == "stop":
+            services.stop_sharing_plan(plan)
+            message = _("The link no longer works.")
+        else:
+            services.share_plan(plan)
+            message = _("Link created.")
+        return add_toast(render(request, self.template_name, self.get_context()), message)
+
+
+class SharedPlanView(LoginRequiredMixin, TemplateView):
+    """A shared plan, read-only, for anyone signed in who has the link.
+
+    Signed in because the whole app is invitation-only; the link is the only
+    other key. Nothing on the page writes, and nothing of the viewer's own --
+    stars, kick marks -- is mixed into someone else's plan.
+    """
+
+    template_name = "fantasy/plan_detail.html"
+
+    def get_context_data(self, **kwargs):
+        plan = get_object_or_404(
+            TradePlan.objects.select_related("roster__season", "roster__manager"),
+            share_token=self.kwargs["token"],
+        )
+        return {
+            **super().get_context_data(**kwargs),
+            **plan_context(plan, read_only=True),
+            "is_owner": plan.roster.manager.user_id == self.request.user.pk,
+        }

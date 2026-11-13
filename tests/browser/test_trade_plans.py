@@ -7,6 +7,7 @@ can no longer happen. Screenshots land in tmp/screens/trade-plans/.
 """
 
 import datetime as dt
+import re
 from decimal import Decimal
 
 import pytest
@@ -284,5 +285,42 @@ def test_moving_a_move_to_another_day(browser, live_server, planned):
         dialog.locator("label").nth(6).click()
         dialog.get_by_role("button", name="Move", exact=True).click()
         expect(page.get_by_role("dialog")).to_have_count(0)
+    finally:
+        context.close()
+
+
+@pytest.mark.parametrize("size", ["phone", "desktop"])
+def test_a_shared_plan_reads_well(browser, live_server, planned, size):
+    from apps.fantasy import services
+
+    plan = services.share_plan(planned["good"])
+    viewer = User.objects.create_user(email="friend@example.com", password="pw-for-tests")
+    context, page = open_logged_in(
+        browser, live_server, viewer, reverse("fantasy:plan-shared", args=[plan.share_token]), size
+    )
+    try:
+        expect(page.get_by_text("Shared by")).to_be_visible()
+        expect(page.get_by_role("button", name="Add move")).to_have_count(0)
+        assert page_overflow(page) == 0
+        shot(page, FOLDER, f"shared-{size}")
+    finally:
+        context.close()
+
+
+def test_the_share_dialog(browser, live_server, planned):
+    roster, plan = planned["roster"], planned["good"]
+    context, page = open_logged_in(
+        browser,
+        live_server,
+        planned["user"],
+        reverse("fantasy:plan-detail", args=[roster.pk, plan.pk]),
+        "phone",
+    )
+    try:
+        page.get_by_role("button", name="Share", exact=True).click()
+        page.get_by_role("button", name="Create link").click()
+        expect(page.locator("#share-url")).to_have_value(re.compile(r"/plans/shared/"))
+        page.wait_for_timeout(250)
+        shot(page, FOLDER, "share-phone")
     finally:
         context.close()

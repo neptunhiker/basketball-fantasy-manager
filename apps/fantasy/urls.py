@@ -77,6 +77,12 @@ urlpatterns = [
         name="plan-delete",
     ),
     path(
+        "rosters/<uuid:pk>/plans/<uuid:plan_pk>/share/",
+        plan_views.PlanShareView.as_view(),
+        name="plan-share",
+    ),
+    path("plans/shared/<uuid:token>/", plan_views.SharedPlanView.as_view(), name="plan-shared"),
+    path(
         "rosters/<uuid:pk>/plans/<uuid:plan_pk>/steps/new/",
         plan_views.PlanStepEditorView.as_view(),
         name="plan-step-new",

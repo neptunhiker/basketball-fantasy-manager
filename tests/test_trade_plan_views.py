@@ -367,3 +367,71 @@ def test_a_step_cannot_be_moved_into_the_past(signed_in, plan, players, day):
 def test_someone_elses_editor_is_a_404(client, plan, other_manager):
     client.force_login(other_manager.user)
     assert client.get(editor_url(plan)).status_code == 404
+
+
+# --- sharing -----------------------------------------------------------------
+
+
+def share_url(plan):
+    return reverse("fantasy:plan-share", args=[plan.roster_id, plan.pk])
+
+
+def test_sharing_makes_a_link_and_stopping_retires_it(signed_in, plan):
+    response = signed_in.post(share_url(plan), {"action": "share"}, HTTP_HX_REQUEST="true")
+    plan.refresh_from_db()
+    first = plan.share_token
+    assert first is not None
+    assert reverse("fantasy:plan-shared", args=[first]) in response.content.decode()
+
+    signed_in.post(share_url(plan), {"action": "stop"}, HTTP_HX_REQUEST="true")
+    plan.refresh_from_db()
+    assert plan.share_token is None
+
+    signed_in.post(share_url(plan), {"action": "share"}, HTTP_HX_REQUEST="true")
+    plan.refresh_from_db()
+    assert plan.share_token not in (None, first)
+
+
+def test_sharing_twice_keeps_the_same_link(plan):
+    token = services.share_plan(plan).share_token
+    assert services.share_plan(plan).share_token == token
+
+
+def test_a_shared_plan_is_read_only_for_someone_else(client, plan, players, day, other_manager):
+    add_trade(plan, day, players["G"][0], players["G"][7])
+    services.share_plan(plan)
+    client.force_login(other_manager.user)
+    response = client.get(reverse("fantasy:plan-shared", args=[plan.share_token]))
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Shared by" in content and "Bulla" in content
+    assert players["G"][7].full_name in content
+    # No way to change it from there.
+    for action in ("steps/", "rename/", "delete/", "share/"):
+        assert f"/plans/{plan.pk}/{action}" not in content
+    # And the owner's screens stay closed to them.
+    assert client.get(detail_url(plan)).status_code == 404
+
+
+def test_a_retired_link_is_a_404(client, plan, other_manager):
+    token = services.share_plan(plan).share_token
+    services.stop_sharing_plan(plan)
+    client.force_login(other_manager.user)
+    assert client.get(reverse("fantasy:plan-shared", args=[token])).status_code == 404
+
+
+def test_the_shared_page_needs_a_sign_in(client, plan):
+    services.share_plan(plan)
+    response = client.get(reverse("fantasy:plan-shared", args=[plan.share_token]))
+    assert response.status_code == 302
+
+
+def test_the_owner_opening_their_own_link_is_offered_the_editor(signed_in, plan):
+    services.share_plan(plan)
+    response = signed_in.get(reverse("fantasy:plan-shared", args=[plan.share_token]))
+    assert "Open to edit" in response.content.decode()
+
+
+def test_only_the_owner_can_share(client, plan, other_manager):
+    client.force_login(other_manager.user)
+    assert client.post(share_url(plan), {"action": "share"}).status_code == 404

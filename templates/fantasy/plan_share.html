@@ -1,0 +1,48 @@
+{% extends "partials/modal.html" %}
+{% load i18n %}
+
+{% comment %}
+  Share a plan read-only. One link per share: stopping retires it, and
+  sharing again makes a new one, so an old link never comes back to life.
+{% endcomment %}
+
+{% block modal_title %}{% translate "Share this variant" %}{% endblock %}
+
+{% block modal_content %}
+  {% if share_url %}
+    <p>{% translate "Anyone signed in to this app who has the link can look at this variant. They see it as it works out at the moment they open it, and cannot change anything." %}</p>
+    <div x-data="{ copied: false }" class="mt-4">
+      <label for="share-url" class="form-label">{% translate "Link" %}</label>
+      <div class="flex gap-2">
+        <input id="share-url" type="text" readonly value="{{ share_url }}" @focus="$el.select()"
+               class="block w-full min-w-0 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-base text-neutral-700 sm:text-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200">
+        <button type="button"
+                @click="navigator.clipboard.writeText('{{ share_url|escapejs }}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                class="btn btn-primary shrink-0">
+          <span x-show="!copied">{% translate "Copy" %}</span>
+          <span x-show="copied" x-cloak>{% translate "Copied" %}</span>
+        </button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button"
+              hx-post="{% url 'fantasy:plan-share' roster.pk plan.pk %}"
+              hx-vals='{"action": "stop"}'
+              hx-target="#modal-root"
+              hx-swap="innerHTML"
+              class="btn btn-ghost text-red-600 hover:text-red-700 dark:text-red-400">{% translate "Stop sharing" %}</button>
+      <button type="button" @click="open = false" class="btn btn-secondary">{% translate "Done" %}</button>
+    </div>
+  {% else %}
+    <p>{% translate "Create a read-only link to this variant — to talk it through with someone before Sunday. Anyone signed in to this app who has the link can look; nobody else can change it." %}</p>
+    <div class="modal-actions">
+      <button type="button" @click="open = false" class="btn btn-secondary">{% translate "Cancel" %}</button>
+      <button type="button"
+              hx-post="{% url 'fantasy:plan-share' roster.pk plan.pk %}"
+              hx-vals='{"action": "share"}'
+              hx-target="#modal-root"
+              hx-swap="innerHTML"
+              class="btn btn-primary">{% translate "Create link" %}</button>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,9 +1,10 @@
 """Phase 2 of the mobile plan (my_docs/MOBILE_EXP.md): tables on small screens,
 checked in a real browser."""
 
+import pytest
 from django.urls import reverse
 
-from .conftest import page_overflow, shot
+from .conftest import SCREENS, page_overflow, shot
 
 
 def build_url(game):
@@ -134,3 +135,25 @@ def test_the_snapshots_show_every_column_on_a_phone_with_the_date_pinned(game, o
     assert date_cell.bounding_box()["x"] == before
     frame.scroll_into_view_if_needed()
     shot(page, "phase2", "snapshots-phone")
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+def test_the_team_roster_keeps_names_pinned_on_every_screen(game, open_page, size):
+    team = next(p.team for p in game["players"] if p.team_id)
+    page = open_page(
+        game["user"], reverse("nba:team-detail", args=[team.abbreviation.lower()]), size=size
+    )
+
+    scroller = page.locator("#player-table .overflow-x-auto")
+    scroller.evaluate("el => { el.scrollLeft = el.scrollWidth }")
+    row = page.locator("#player-table tbody tr").first
+    frame = scroller.bounding_box()
+    star = row.locator("td").nth(0).bounding_box()
+    name = row.locator("td").nth(1).bounding_box()
+
+    # Star at the left edge, name right after it -- however far the figures scrolled.
+    assert abs(star["x"] - frame["x"]) < 1, "the star column scrolled away"
+    assert abs(name["x"] - (star["x"] + star["width"])) < 1, "name and star overlap or drift"
+    assert page_overflow(page) == 0
+    shot(page, "sticky-names", f"team-{size}")
+    scroller.screenshot(path=str(SCREENS / "sticky-names" / f"team-{size}-table.png"))

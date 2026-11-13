@@ -95,7 +95,7 @@ def test_the_comparison_is_transposed_on_phones(signed_in, roster):
 def test_the_players_table_keeps_names_in_view_and_every_column(signed_in, roster):
     body = signed_in.get(reverse("nba:player-list")).text
 
-    assert "max-md:sticky max-md:left-12" in body
+    assert "sticky left-12" in body  # pinned on every screen, not just phones
     # Phones get the same columns as the desktop; they scroll sideways.
     assert "md:table-cell" not in body
 

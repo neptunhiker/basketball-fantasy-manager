@@ -111,16 +111,18 @@
   {% if players %}
     {# "Status" only says something when inactive players can be listed. #}
     {% if request.GET.inactive or watchlist_page %}{% firstof "1" as show_status %}{% endif %}
-    {# Below `md` the watch and name columns stay put while the figures #}
-    {# scroll, so a row never loses its player. Phones get every column. #}
+    {# The watch and name columns stay put while the figures scroll, so a #}
+    {# row never loses its player -- on every screen. The star column is a #}
+    {# fixed 3rem (`w-12`, slim padding) because the name is pinned at #}
+    {# `left-12`; widen one and the other must follow. Phones get every column. #}
     <div class="overflow-x-auto">
       <table class="w-full text-left text-sm">
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
           <tr>
-            <th scope="col" class="w-12 px-4 py-3 text-center font-medium max-md:sticky max-md:left-0 max-md:z-[1] max-md:px-1 max-md:bg-white max-md:dark:bg-neutral-900">
+            <th scope="col" class="py-3 font-medium sticky left-0 z-[1] w-12 min-w-12 px-1 text-center bg-white dark:bg-neutral-900">
               <span class="sr-only">{{ watchlist_label }}</span>
             </th>
-            <th scope="col" class="px-4 py-3 font-medium max-md:sticky max-md:left-12 max-md:z-[1] max-md:pl-1 max-md:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-md:bg-white max-md:dark:bg-neutral-900 max-md:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">
+            <th scope="col" class="py-3 font-medium sticky left-12 z-[1] px-4 max-md:pl-1 bg-white shadow-[inset_-1px_0_0_var(--color-neutral-200)] dark:bg-neutral-900 dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">
               {% include "nba/partials/sort_header.html" with key="name" label=player_label %}
             </th>
             <th scope="col" class="px-4 py-3 text-center font-medium">
@@ -218,11 +220,11 @@
         </thead>
         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
           {% for player in players %}
-            <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
-              <td class="px-4 py-3 text-center max-md:sticky max-md:left-0 max-md:z-[1] max-md:px-1 max-md:bg-white max-md:dark:bg-neutral-900">
+            <tr class="group transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+              <td class="py-3 transition sticky left-0 z-[1] w-12 min-w-12 px-1 text-center bg-white dark:bg-neutral-900 group-hover:bg-neutral-50 dark:group-hover:bg-[color-mix(in_oklab,var(--color-neutral-800)_50%,var(--color-neutral-900))]">
                 {% include "nba/partials/player_marks.html" with is_watched=player.is_watched is_kicked=player.is_kicked remove_row=watchlist_only %}
               </td>
-              <td class="px-4 py-3 font-medium max-md:sticky max-md:left-12 max-md:z-[1] max-md:min-w-[8.5rem] max-md:pl-1 max-md:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-md:bg-white max-md:dark:bg-neutral-900 max-md:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">
+              <td class="py-3 font-medium transition max-md:min-w-[8.5rem] sticky left-12 z-[1] px-4 max-md:pl-1 bg-white shadow-[inset_-1px_0_0_var(--color-neutral-200)] dark:bg-neutral-900 dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)] group-hover:bg-neutral-50 dark:group-hover:bg-[color-mix(in_oklab,var(--color-neutral-800)_50%,var(--color-neutral-900))]">
                 <a href="{% url 'nba:player-detail' player.slug %}"
                    class="hover:text-primary-600 hover:underline dark:hover:text-primary-400">{{ player.full_name }}</a>
                 {% if player.note_count %}

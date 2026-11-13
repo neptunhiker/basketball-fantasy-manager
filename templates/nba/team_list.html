@@ -16,17 +16,22 @@
     <div class="overflow-x-auto">
       {% comment %}
         Phones: team, FP/G and games left; injuries and the next game show
-        under the name. Tablets add salary, injuries and the next seven days;
-        players, day-to-day and the next game as a column wait for `lg`.
+        under the name. Tablets add total FP, salary, injuries and the next
+        seven days; players, day-to-day and the next game as a column wait
+        for `lg`.
       {% endcomment %}
-      <table class="w-full text-left text-sm max-sm:[&_tr>*:nth-child(4)]:hidden max-sm:[&_tr>*:nth-child(5)]:hidden max-sm:[&_tr>*:nth-child(6)]:hidden max-sm:[&_tr>*:nth-child(8)]:hidden max-lg:[&_tr>*:nth-child(2)]:hidden max-lg:[&_tr>*:nth-child(5)]:hidden max-lg:[&_tr>*:nth-child(9)]:hidden">
+      <table class="w-full text-left text-sm max-sm:[&_tr>*:nth-child(3)]:hidden max-sm:[&_tr>*:nth-child(5)]:hidden max-sm:[&_tr>*:nth-child(6)]:hidden max-sm:[&_tr>*:nth-child(7)]:hidden max-sm:[&_tr>*:nth-child(9)]:hidden max-lg:[&_tr>*:nth-child(2)]:hidden max-lg:[&_tr>*:nth-child(6)]:hidden max-lg:[&_tr>*:nth-child(10)]:hidden">
         <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
           <tr>
-            {# "Team" returns to the divisions, "FP/G" ranks all 30 teams. #}
+            {# "Team" returns to the divisions, "FP" and "FP/G" rank all 30 teams. #}
             <th scope="col" class="px-4 py-3 font-medium">
               <a href="{% url 'nba:team-list' %}" class="hover:text-primary-600 dark:hover:text-primary-400 {% if not ranked %}text-primary-600 dark:text-primary-400{% endif %}">{% translate "Team" %}</a>
             </th>
             <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Players" %}</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">
+              <a href="?sort=fp" class="whitespace-nowrap hover:text-primary-600 dark:hover:text-primary-400 {% if sort == 'fp' %}text-primary-600 dark:text-primary-400{% endif %}"
+                 title="{% translate 'Total fantasy points of the active roster' %}">{% translate "FP" %}{% if sort == 'fp' %} &#9660;{% endif %}</a>
+            </th>
             <th scope="col" class="px-4 py-3 text-right font-medium max-sm:px-2">
               <a href="?sort=fpg" class="whitespace-nowrap hover:text-primary-600 dark:hover:text-primary-400 {% if sort == 'fpg' %}text-primary-600 dark:text-primary-400{% endif %}">{% translate "FP/G" %}{% if sort == 'fpg' %} &#9660;{% endif %}</a>
             </th>
@@ -51,7 +56,7 @@
             {% if not ranked %}
               {% ifchanged team.division %}
                 <tr class="bg-neutral-50 dark:bg-neutral-800/40">
-                  <th colspan="{% if has_schedule %}9{% else %}6{% endif %}" scope="colgroup"
+                  <th colspan="{% if has_schedule %}10{% else %}7{% endif %}" scope="colgroup"
                       class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                     {{ team.get_conference_display }} · {{ team.get_division_display }}
                   </th>
@@ -80,6 +85,7 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400">{{ team.active_players }}</td>
+              <td class="px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400" title="{{ team.team_points|floatformat:'2g' }}">{{ team.team_points|floatformat:"0g"|default:"–" }}</td>
               <td class="px-4 py-3 text-right font-medium tabular-nums max-sm:px-2">{{ team.fp_per_game|floatformat:"2g"|default:"–" }}</td>
               <td class="px-4 py-3 text-right tabular-nums text-neutral-600 dark:text-neutral-400" title="{{ team.total_salary|exact }}">{{ team.total_salary|millions }}</td>
               <td class="px-4 py-3 text-right tabular-nums {% if team.day_to_day_count %}text-amber-800 dark:text-amber-300{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">{{ team.day_to_day_count }}</td>

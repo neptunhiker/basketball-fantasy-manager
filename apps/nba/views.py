@@ -312,6 +312,7 @@ class TeamListView(LoginRequiredMixin, ListView):
     # ?sort=...: one flat ranking, highest first, instead of the divisions. A
     # team without the figure (no points yet, no schedule loaded) goes last.
     RANKINGS = {
+        "fp": lambda team: (team.team_points is None, -(team.team_points or 0)),
         "fpg": lambda team: (team.fp_per_game is None, -(team.fp_per_game or 0)),
         "left": lambda team: (team.schedule is None, -(team.schedule.left if team.schedule else 0)),
         "next": lambda team: (

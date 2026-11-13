@@ -181,6 +181,20 @@ def test_the_team_list_can_rank_by_points_per_game(signed_in, teams):
     assert response.context["ranked"]
 
 
+def test_the_team_list_can_rank_by_total_points(signed_in, teams):
+    # Boston scores more per game, Miami more in total -- the two rankings differ.
+    make_player("Busy", team=teams["MIA"], fp=500, games=50)
+    make_player("Sharp", team=teams["BOS"], fp=300, games=10)
+
+    response = signed_in.get(reverse("nba:team-list"), {"sort": "fp"})
+
+    ranked = [team.abbreviation for team in response.context["teams"]]
+    assert ranked[:2] == ["MIA", "BOS"]
+    assert ranked[-1] not in {"MIA", "BOS"}  # teams without points go last
+    assert response.context["ranked"]
+    assert 'href="?sort=fp"' in response.text
+
+
 # --- Notes -----------------------------------------------------------------------------------
 
 

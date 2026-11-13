@@ -105,7 +105,7 @@ def test_the_players_table_keeps_names_in_view_and_every_column(signed_in, roste
     [
         ("fantasy:season-list", True, "max-sm:[&amp;_tr&gt;*:nth-child(6)]:hidden"),
         ("accounts:user-list", True, "max-sm:[&amp;_tr&gt;*:nth-child(3)]:hidden"),
-        ("nba:team-list", False, "max-sm:[&amp;_tr&gt;*:nth-child(4)]:hidden"),
+        ("nba:team-list", False, "max-sm:[&amp;_tr&gt;*:nth-child(5)]:hidden"),
     ],
 )
 def test_secondary_columns_are_hidden_on_phones(client, user, password, url_name, staff, marker):

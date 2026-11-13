@@ -119,6 +119,8 @@ def test_the_list_compares_every_variant(signed_in, plan, roster, players, day):
     assert "Squad value" in content
     assert "Team value" in content
     assert "1 used" in content
+    assert "Last move" in content
+    assert f"{day:%a}, {day.day} {day:%b}" in content
     assert "Next salary update" in content
     assert "cap hit" not in content.lower()
 
@@ -462,3 +464,15 @@ def test_the_owner_opening_their_own_link_is_offered_the_editor(signed_in, plan)
 def test_only_the_owner_can_share(client, plan, other_manager):
     client.force_login(other_manager.user)
     assert client.post(share_url(plan), {"action": "share"}).status_code == 404
+
+
+def test_how_far_away_a_day_is():
+    from apps.fantasy.templatetags.plan_tags import days_away
+
+    today = timezone.localdate()
+    assert days_away(today) == "Today"
+    assert days_away(today + dt.timedelta(days=1)) == "Tomorrow"
+    assert days_away(today - dt.timedelta(days=1)) == "Yesterday"
+    assert days_away(today + dt.timedelta(days=10)) == "in 10 days"
+    assert days_away(today - dt.timedelta(days=3)) == "3 days ago"
+    assert days_away(None) == ""

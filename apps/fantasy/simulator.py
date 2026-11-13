@@ -225,6 +225,11 @@ class PlanResult:
         return bool(self.step_results)
 
     @property
+    def last_day(self):
+        """The variant's last processing day: what its end figures are as of."""
+        return self.days[-1] if self.days else None
+
+    @property
     def has_predicted_prices(self):
         return any(day.is_predicted and day.steps for day in self.future_days)
 

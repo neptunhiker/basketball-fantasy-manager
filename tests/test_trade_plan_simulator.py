@@ -251,6 +251,13 @@ def test_a_plan_ending_after_an_update_is_valued_at_the_next_one(plan, squad, ma
     assert result.value_end_source == simulator.PREDICTED_FAR
 
 
+def test_the_last_day_is_what_the_end_figures_are_as_of(plan, squad, market):
+    assert run(plan).last_day is None
+    trade(plan, MON, squad["G"][0], market["cheap_guard"])
+    trade(plan, SAT, squad["G"][1], market["forward"])
+    assert run(plan).last_day.date == MON
+
+
 def test_an_empty_plan_gains_no_team_value(plan):
     result = run(plan)
     assert result.team_value_end == result.team_value_idle

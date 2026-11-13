@@ -6,6 +6,7 @@ from decimal import Decimal
 from django import template
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 register = template.Library()
 
@@ -42,6 +43,23 @@ def relative_day(day):
     if day == today + dt.timedelta(days=1):
         return _("Tomorrow")
     return ""
+
+
+@register.filter
+def days_away(day):
+    """How far `day` is from today: `Today`, `Tomorrow`, `in 10 days`, `3 days ago`."""
+    if not day:
+        return ""
+    days = (day - timezone.localdate()).days
+    if days == 0:
+        return _("Today")
+    if days == 1:
+        return _("Tomorrow")
+    if days == -1:
+        return _("Yesterday")
+    if days > 0:
+        return ngettext("in %(count)d day", "in %(count)d days", days) % {"count": days}
+    return ngettext("%(count)d day ago", "%(count)d days ago", -days) % {"count": -days}
 
 
 @register.simple_tag

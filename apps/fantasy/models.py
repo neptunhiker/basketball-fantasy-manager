@@ -55,6 +55,8 @@ STARTING_CASH = Decimal("63000000")
 STARTING_TRADES = 0
 TRADE_BUY_PRICE = Decimal("1500000")
 TRADE_SELL_PRICE = Decimal("1000000")
+# Confirmed trades are processed once a day at this local time, as one batch.
+TRADE_PROCESSING_TIME = dt.time(22, 0)
 ROSTER_ICON_CHOICES = [
     ("bear", _("Bear")),
     ("bunny", _("Bunny")),
@@ -1044,3 +1046,110 @@ class PlayerSnapshot(TimeStampedModel):
 
     def __str__(self):
         return f"{self.player} @ {self.as_of:%Y-%m-%d}"
+
+
+class TradePlan(TimeStampedModel):
+    """A what-if for a roster: trades it might make over the coming days.
+
+    Deliberately not a `Roster` and nothing it holds is a `Transaction`: a plan
+    is a hypothesis, and the ledger only records what happened. A plan stores
+    no prices and no balances either -- `apps.fantasy.simulator` replays its
+    steps against the roster as it stands whenever the plan is looked at, so a
+    variant written on Friday shows Sunday's budget without anyone touching it.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    roster = models.ForeignKey(
+        Roster, verbose_name="Roster", on_delete=models.CASCADE, related_name="trade_plans"
+    )
+    name = models.CharField("Name", max_length=80)
+    note = models.TextField("Note", blank=True)
+    # Set while the plan is shared read-only by link, None while it is not.
+    # A fresh token per share, so stopping and restarting a share retires the
+    # old link rather than reviving it.
+    share_token = models.UUIDField("Share token", null=True, blank=True, unique=True)
+
+    class Meta:
+        ordering = ["created_at"]
+        verbose_name = "Trade plan"
+        verbose_name_plural = "Trade plans"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["roster", "name"], name="unique_trade_plan_name_per_roster"
+            ),
+        ]
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def is_shared(self):
+        return self.share_token is not None
+
+
+class PlanStep(TimeStampedModel):
+    """One move in a trade plan, on the day the game would process it.
+
+    The official game processes confirmed trades once a day at 22:00, as one
+    batch -- so a step belongs to a processing day, and the simulator checks
+    cash and positions per day rather than per step.
+    """
+
+    class Kind(models.TextChoices):
+        TRADE = "TRADE", _("Trade")
+        BUY_TRADE = "BUY_TRADE", _("Buy Trade")
+        SELL_TRADE = "SELL_TRADE", _("Sell Trade")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    plan = models.ForeignKey(
+        TradePlan, verbose_name="Plan", on_delete=models.CASCADE, related_name="steps"
+    )
+    processing_date = models.DateField("Processing day")
+    # Display order within the day. The batch rule makes it irrelevant to the
+    # arithmetic; it only keeps the list in the order the steps were written.
+    order = models.PositiveSmallIntegerField("Order", default=0)
+    kind = models.CharField("Kind", max_length=20, choices=Kind.choices, default=Kind.TRADE)
+    player_out = models.ForeignKey(
+        Player,
+        verbose_name="Player out",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="plan_steps_out",
+    )
+    player_in = models.ForeignKey(
+        Player,
+        verbose_name="Player in",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="plan_steps_in",
+    )
+
+    class Meta:
+        ordering = ["processing_date", "order", "created_at"]
+        verbose_name = "Plan step"
+        verbose_name_plural = "Plan steps"
+        constraints = [
+            # A trade names both sides; buying or selling a trade names nobody.
+            models.CheckConstraint(
+                condition=(
+                    Q(kind="TRADE", player_in__isnull=False, player_out__isnull=False)
+                    | Q(
+                        kind__in=["BUY_TRADE", "SELL_TRADE"],
+                        player_in__isnull=True,
+                        player_out__isnull=True,
+                    )
+                ),
+                name="a_plan_step_names_the_players_its_kind_needs",
+            ),
+            models.CheckConstraint(
+                condition=Q(player_in__isnull=True) | ~Q(player_in=F("player_out")),
+                name="a_plan_step_does_not_swap_a_player_for_himself",
+            ),
+        ]
+
+    def __str__(self):
+        if self.kind == self.Kind.TRADE:
+            return f"{self.processing_date}: {self.player_out} → {self.player_in}"
+        return f"{self.processing_date}: {self.get_kind_display()}"

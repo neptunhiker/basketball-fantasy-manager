@@ -4,11 +4,13 @@ from django.utils import timezone
 
 from .models import (
     Manager,
+    PlanStep,
     PlayerSnapshot,
     Roster,
     RosterPlayer,
     Season,
     TradeGrant,
+    TradePlan,
     Transaction,
 )
 
@@ -148,3 +150,33 @@ class PlayerSnapshotAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+class PlanStepInline(admin.TabularInline):
+    model = PlanStep
+    extra = 0
+    fields = ["processing_date", "order", "kind", "player_out", "player_in"]
+    autocomplete_fields = ["player_out", "player_in"]
+
+
+@admin.register(TradePlan)
+class TradePlanAdmin(admin.ModelAdmin):
+    """Plans are the manager's own scratch work; here only to look into one."""
+
+    list_display = ["name", "roster", "step_count", "is_shared", "updated_at"]
+    list_filter = ["roster__season"]
+    search_fields = ["name", "roster__name", "roster__manager__nick_name"]
+    list_select_related = ["roster"]
+    readonly_fields = ["created_at", "updated_at"]
+    inlines = [PlanStepInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_steps=Count("steps"))
+
+    @admin.display(description="Steps", ordering="_steps")
+    def step_count(self, obj):
+        return obj._steps
+
+    @admin.display(boolean=True, description="Shared")
+    def is_shared(self, obj):
+        return obj.is_shared

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 20:53+0100\n"
+"POT-Creation-Date: 2026-11-13 21:01+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -4320,18 +4320,14 @@ msgid "Trade simulator"
 msgstr "Trade-Simulator"
 
 #: templates/fantasy/plan_list.html:57
-msgid "Play your next trades through"
-msgstr "Spiel deine nächsten Trades durch"
+msgid "Simulate your next trades"
+msgstr "Simuliere deine Trades"
 
 #: templates/fantasy/plan_list.html:59
-msgid ""
-"Plan this week's and next week's trades as variants and see whether each "
-"would work as things stand — cash, trades and positions after every "
-"processing day. Nothing here changes your roster."
+msgid "Simulate your trades as variants — nothing here changes your roster."
 msgstr ""
-"Plane die Trades dieser und der nächsten Woche als Varianten und sieh, ob "
-"jede nach aktuellem Stand aufgeht – Cash, Trades und Positionen nach jedem "
-"Verarbeitungstag. Hier ändert sich nichts an deinem Kader."
+"Simuliere deine Trades als Varianten – hier ändert sich nichts an deinem "
+"Kader."
 
 #: templates/fantasy/plan_list.html:66
 msgid "Cash now"

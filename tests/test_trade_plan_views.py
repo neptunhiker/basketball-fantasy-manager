@@ -246,3 +246,124 @@ def test_a_move_cannot_be_planned_for_a_day_already_processed(plan, players):
     yesterday = timezone.localdate() - dt.timedelta(days=1)
     with pytest.raises(services.ValidationError):
         add_trade(plan, yesterday, players["G"][0], players["G"][7])
+
+
+# --- the step editor ---------------------------------------------------------
+
+
+def editor_url(plan):
+    return reverse("fantasy:plan-step-new", args=[plan.roster_id, plan.pk])
+
+
+def test_the_editor_opens_on_the_next_processing_day(signed_in, plan, players):
+    response = signed_in.get(editor_url(plan))
+    assert response.status_code == 200
+    context = response.context
+    assert context["day"] == next_processing_day()
+    assert players["G"][0] in context["squad"]
+    assert all(player.pk != players["G"][0].pk for player in context["available"])
+
+
+def test_the_editor_answers_for_the_chosen_day(signed_in, plan, players, day):
+    """A player planned in on Saturday is in the squad from Sunday on, not before."""
+    add_trade(plan, day, players["G"][0], players["G"][7])
+    later = day + dt.timedelta(days=1)
+    context = signed_in.get(editor_url(plan), {"day": later.isoformat()}).context
+    assert players["G"][7] in context["squad"]
+    assert players["G"][0] not in context["squad"]
+    assert any(player.pk == players["G"][0].pk for player in context["available"])
+
+    context = signed_in.get(editor_url(plan), {"day": day.isoformat()}).context
+    # On the day itself both are taken by the move already planned.
+    busy = {player.pk for player in context["squad"] if player.is_busy}
+    assert players["G"][0].pk in busy
+    assert all(player.pk != players["G"][7].pk for player in context["available"])
+
+
+def test_a_day_not_on_offer_falls_back_to_the_first(signed_in, plan):
+    context = signed_in.get(editor_url(plan), {"day": "2001-01-01"}).context
+    assert context["day"] == next_processing_day()
+
+
+def test_choosing_both_sides_previews_the_day(signed_in, plan, players, day):
+    context = signed_in.get(
+        editor_url(plan),
+        {"day": day.isoformat(), "out": players["G"][0].pk, "in": players["G"][7].pk, "body": 1},
+    ).context
+    preview = context["preview"]
+    assert preview["outcome"].cash_delta == 0
+    assert preview["day"].trades_after == 1
+    assert not PlanStep.objects.exists()
+
+
+def test_adding_a_trade_returns_the_plan_and_closes_the_dialog(signed_in, plan, players, day):
+    response = signed_in.post(
+        editor_url(plan)
+        + f"?kind=TRADE&day={day.isoformat()}&out={players['G'][0].pk}&in={players['G'][7].pk}",
+        HTTP_HX_REQUEST="true",
+    )
+    assert response.status_code == 200
+    assert response["HX-Trigger"] == "close-modal"
+    assert 'id="plan-body"' in response.content.decode()
+    (step,) = plan.steps.all()
+    assert (step.player_out, step.player_in, step.processing_date) == (
+        players["G"][0],
+        players["G"][7],
+        day,
+    )
+
+
+def test_a_half_made_trade_stays_in_the_dialog(signed_in, plan, players, day):
+    response = signed_in.post(
+        editor_url(plan) + f"?kind=TRADE&day={day.isoformat()}&out={players['G'][0].pk}",
+        HTTP_HX_REQUEST="true",
+    )
+    assert response["HX-Retarget"] == "#plan-editor"
+    assert "Pick a player to send out and one to bring in." in response.content.decode()
+    assert not PlanStep.objects.exists()
+
+
+def test_a_player_not_on_the_squad_that_day_cannot_be_sent_out(signed_in, plan, players, day):
+    response = signed_in.post(
+        editor_url(plan)
+        + f"?kind=TRADE&day={day.isoformat()}&out={players['G'][7].pk}&in={players['G'][6].pk}",
+        HTTP_HX_REQUEST="true",
+    )
+    assert response["HX-Retarget"] == "#plan-editor"
+    assert not PlanStep.objects.exists()
+
+
+def test_buying_a_trade_in_one_click(signed_in, plan, day):
+    response = signed_in.post(
+        editor_url(plan) + f"?direct=1&kind=BUY_TRADE&day={day.isoformat()}",
+        HTTP_HX_REQUEST="true",
+    )
+    assert response.status_code == 200
+    (step,) = plan.steps.all()
+    assert step.kind == PlanStep.Kind.BUY_TRADE
+
+
+def test_moving_a_step_to_another_day(signed_in, plan, players, day):
+    step = add_trade(plan, day, players["G"][0], players["G"][7])
+    url = reverse("fantasy:plan-step-move", args=[plan.roster_id, plan.pk, step.pk])
+    assert signed_in.get(url).status_code == 200
+    later = day + dt.timedelta(days=2)
+    response = signed_in.post(url, {"day": later.isoformat()}, HTTP_HX_REQUEST="true")
+    assert response["HX-Retarget"] == "#plan-body"
+    step.refresh_from_db()
+    assert step.processing_date == later
+
+
+def test_a_step_cannot_be_moved_into_the_past(signed_in, plan, players, day):
+    step = add_trade(plan, day, players["G"][0], players["G"][7])
+    url = reverse("fantasy:plan-step-move", args=[plan.roster_id, plan.pk, step.pk])
+    yesterday = timezone.localdate() - dt.timedelta(days=1)
+    response = signed_in.post(url, {"day": yesterday.isoformat()}, HTTP_HX_REQUEST="true")
+    assert "earlier batches have been processed" in response.content.decode()
+    step.refresh_from_db()
+    assert step.processing_date == day
+
+
+def test_someone_elses_editor_is_a_404(client, plan, other_manager):
+    client.force_login(other_manager.user)
+    assert client.get(editor_url(plan)).status_code == 404

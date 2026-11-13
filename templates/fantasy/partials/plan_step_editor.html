@@ -1,0 +1,274 @@
+{% load i18n money plan_tags player_stats %}
+{% comment %}
+  The step editor's body. Swaps itself: every choice is an hx-get back to the
+  same view with the choice in the query string. Everything on it is answered
+  for the chosen day -- the squad as the plan leaves it by then, that day's
+  cap hits and that day's budget.
+{% endcomment %}
+<div id="plan-editor">
+
+  {% if error %}
+    <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200" role="alert">{{ error }}</div>
+  {% endif %}
+
+  {% if not days %}
+    <p class="rounded-xl border border-neutral-200 px-4 py-8 text-center text-sm dark:border-neutral-800">{% translate "There is no processing day left this season." %}</p>
+  {% else %}
+
+  {# --- the day ---------------------------------------------------------- #}
+  <div class="{% if mobile_step == 2 %}max-sm:hidden{% endif %}">
+    <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Processing day" %}</h3>
+    <div class="scroll-strip -mx-1 mt-1 flex snap-x scroll-px-1 gap-1.5 overflow-x-auto px-1 pb-1 pt-2 pr-2" role="radiogroup" aria-label="{% translate 'Processing day' %}">
+      {% for option in days %}
+        <button type="button"
+                role="radio"
+                aria-checked="{% if option.date == day %}true{% else %}false{% endif %}"
+                hx-get="{{ editor_url }}?body=1&amp;day={{ option.date|date:'Y-m-d' }}&amp;kind={{ kind }}{{ keep_out }}{{ keep_in }}"
+                hx-target="#plan-editor"
+                hx-swap="outerHTML"
+                class="relative flex w-14 shrink-0 snap-start flex-col items-center rounded-xl border py-2 text-center transition
+                  {% if option.date == day %}border-primary-500 bg-primary-500 text-white shadow-sm{% else %}border-neutral-200 bg-white hover:border-primary-300 hover:bg-primary-50 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-primary-500/40 dark:hover:bg-primary-500/10{% endif %}">
+          <span class="text-[0.65rem] font-semibold uppercase tracking-wide {% if option.date == day %}text-white/80{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ option.date|date:"D" }}</span>
+          <span class="text-lg font-bold leading-tight tabular-nums">{{ option.date|date:"j" }}</span>
+          <span class="text-[0.65rem] {% if option.date == day %}text-white/80{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ option.date|date:"M" }}</span>
+          {% if option.is_update %}
+            <span class="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full ring-2 {% if option.date == day %}bg-white ring-primary-500{% else %}bg-primary-500 ring-white dark:ring-neutral-900{% endif %}" title="{% translate 'Cap-hit update' %}"></span>
+          {% endif %}
+          {% if option.moves %}
+            <span class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary-500 px-1 text-[0.6rem] font-bold text-white">{{ option.moves }}</span>
+          {% endif %}
+        </button>
+      {% endfor %}
+    </div>
+    <p class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
+      <span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ day|date:"l" }}, {{ day|short_month_day }}</span>
+      <span aria-hidden="true">·</span>
+      {% if source == 'known' %}
+        {% translate "current cap hits" %}
+      {% elif source == 'predicted' %}
+        <span class="font-medium text-primary-700 dark:text-primary-300">{% translate "new cap hits, predicted" %}</span>
+      {% else %}
+        <span class="font-medium text-amber-700 dark:text-amber-300">{% translate "cap hits two updates out, a rough guess" %}</span>
+      {% endif %}
+      <span aria-hidden="true">·</span>
+      {% blocktranslate count counter=trades_before %}{{ counter }} trade available{% plural %}{{ counter }} trades available{% endblocktranslate %}
+      <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-primary-500" aria-hidden="true"></span>{% translate "= cap-hit update" %}</span>
+    </p>
+  </div>
+
+  {# --- what kind of move ------------------------------------------------- #}
+  <div class="mt-4 {% if mobile_step == 2 %}max-sm:hidden{% endif %}">
+    <div class="timeline-modes" role="group" aria-label="{% translate 'Kind of move' %}">
+      {% for value, label in kinds %}
+        <button type="button"
+                aria-pressed="{% if kind == value %}true{% else %}false{% endif %}"
+                hx-get="{{ editor_url }}?body=1&amp;kind={{ value }}{{ keep_day }}{{ keep_out }}{{ keep_in }}"
+                hx-target="#plan-editor"
+                hx-swap="outerHTML"
+                class="timeline-mode">{{ label }}</button>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if kind == 'TRADE' %}
+    <p class="mt-4 text-xs font-semibold uppercase tracking-wide text-primary-700 sm:hidden dark:text-primary-300">
+      {% if mobile_step == 1 %}{% translate "Step 1 of 2 · Who goes out?" %}{% else %}{% translate "Step 2 of 2 · Who comes in?" %}{% endif %}
+    </p>
+
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      {# --- who leaves --------------------------------------------------- #}
+      <section class="min-w-0 {% if mobile_step == 2 %}max-sm:hidden{% endif %}">
+        <div class="flex items-baseline justify-between gap-2">
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Player out" %}</h3>
+          <span class="text-xs text-neutral-400 dark:text-neutral-500">{% translate "squad on that day" %}</span>
+        </div>
+        <div class="mt-2 max-h-64 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
+          <ul class="divide-y divide-neutral-200 dark:divide-neutral-800">
+            {% for player in squad %}
+              <li>
+                <button type="button"
+                        {% if player.is_busy %}disabled{% endif %}
+                        hx-get="{{ editor_url }}?body=1&amp;kind=TRADE&amp;out={{ player.pk }}{{ keep_day }}{{ keep_in }}"
+                        hx-include="#plan-editor-filters"
+                        hx-target="#plan-editor"
+                        hx-swap="outerHTML"
+                        aria-pressed="{% if player_out.pk == player.pk %}true{% else %}false{% endif %}"
+                        class="flex w-full items-center gap-2.5 border-l-2 px-3 py-2 text-left transition disabled:opacity-45
+                          {% if player_out.pk == player.pk %}border-primary-500 bg-primary-50 dark:bg-primary-500/10
+                          {% elif player.is_kicked %}border-rose-400 bg-rose-50/50 hover:bg-rose-50 dark:bg-rose-500/[0.06] dark:hover:bg-rose-500/10
+                          {% else %}border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/60{% endif %}">
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ player.position }}</span>
+                  <span class="min-w-0 flex-1">
+                    <span class="flex items-center gap-1 text-sm font-medium">
+                      <span class="truncate">{{ player.full_name }}</span>
+                      {% if player.is_kicked %}{% include "nba/partials/kick_marker.html" %}{% endif %}
+                    </span>
+                    <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
+                      {% if player.team %}{{ player.team.abbreviation }}{% else %}{% translate "Free Agent" %}{% endif %}
+                      {% if player.is_busy %}· {% translate "already moving that day" %}{% endif %}
+                    </span>
+                  </span>
+                  <span class="shrink-0 text-right text-xs tabular-nums text-neutral-500 dark:text-neutral-400" title="{{ player.day_price|exact }}">{{ player.day_price|millions }}</span>
+                </button>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+
+      {# --- who arrives -------------------------------------------------- #}
+      <section class="min-w-0 {% if mobile_step == 1 %}max-sm:hidden{% endif %}">
+        {% if player_out %}
+          <button type="button"
+                  hx-get="{{ editor_url }}?body=1&amp;kind=TRADE{{ keep_day }}{{ keep_in }}"
+                  hx-target="#plan-editor"
+                  hx-swap="outerHTML"
+                  class="btn btn-ghost mb-3 w-full justify-start !px-2 text-sm sm:hidden">
+            <span aria-hidden="true">←</span>
+            {% blocktranslate with name=player_out.full_name %}Change player out ({{ name }}){% endblocktranslate %}
+          </button>
+        {% endif %}
+        <div class="flex items-baseline justify-between gap-2">
+          <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Player in" %}</h3>
+          <span class="text-xs text-neutral-400 dark:text-neutral-500" title="{{ budget|exact }}">{% translate "Budget that day" %} {{ budget|millions }}</span>
+        </div>
+
+        <form id="plan-editor-filters" class="mt-2 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_auto_auto]"
+              hx-get="{{ editor_url }}?body=1&amp;kind=TRADE{{ keep_day }}{{ keep_out }}{{ keep_in }}"
+              hx-trigger="input changed delay:300ms from:input[type=search], change from:select, change from:input[type=checkbox], search"
+              hx-target="#plan-editor"
+              hx-swap="outerHTML">
+          <label for="plan-editor-search" class="sr-only">{% translate "Search by name" %}</label>
+          <input type="search" id="plan-editor-search" name="q" value="{{ filters.q }}"
+                 placeholder="{% translate 'Search by name' %}…"
+                 class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-base shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 sm:text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+          <label for="plan-editor-position" class="sr-only">{% translate "Position" %}</label>
+          <select id="plan-editor-position" name="position"
+                  class="block rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-base shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 sm:text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+            <option value="">{% translate "All pos." %}</option>
+            {% for value, label in positions %}
+              <option value="{{ value }}" {% if filters.position == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <div class="col-span-2 sm:col-span-1">{% include "fantasy/partials/watchlist_chip.html" %}</div>
+        </form>
+
+        {% if available %}
+          <div class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
+            <ul class="divide-y divide-neutral-200 dark:divide-neutral-800">
+              {% for player in available %}
+                <li>
+                  <button type="button"
+                          hx-get="{{ editor_url }}?body=1&amp;kind=TRADE&amp;in={{ player.pk }}{{ keep_day }}{{ keep_out }}"
+                          hx-include="#plan-editor-filters"
+                          hx-target="#plan-editor"
+                          hx-swap="outerHTML"
+                          aria-pressed="{% if player_in.pk == player.pk %}true{% else %}false{% endif %}"
+                          class="flex w-full items-center gap-2.5 border-l-2 px-3 py-2 text-left transition
+                            {% if player_in.pk == player.pk %}border-primary-500 bg-primary-50 dark:bg-primary-500/10{% else %}border-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/60{% endif %}
+                            {% if not player.affordable %}opacity-55{% endif %}">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ player.position }}</span>
+                    <span class="min-w-0 flex-1">
+                      <span class="flex items-center gap-1 text-sm font-medium">
+                        <span class="truncate">{{ player.full_name }}</span>
+                        {% if player.is_watched %}
+                          <svg class="h-3.5 w-3.5 shrink-0 text-primary-500 dark:text-primary-300" fill="currentColor" viewBox="0 0 24 24" role="img" aria-label="{% translate 'On your watchlist' %}"><path d="m12 3.8 2.5 5.1 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8L12 3.8Z"/></svg>
+                        {% elif player.is_kicked %}
+                          {% include "nba/partials/kick_marker.html" %}
+                        {% endif %}
+                      </span>
+                      <span class="block truncate text-xs text-neutral-500 dark:text-neutral-400">
+                        {% if player.team %}{{ player.team.abbreviation }}{% else %}{% translate "Free Agent" %}{% endif %}
+                        {% if player.current_fp_per_game is not None %}· {% blocktranslate with fp=player.current_fp_per_game|floatformat:1 %}{{ fp }} FP/G{% endblocktranslate %}{% endif %}
+                        {% if player.leaves_short %}<span class="badge badge-warning ml-1">{% translate "leaves a position short" %}</span>{% endif %}
+                      </span>
+                    </span>
+                    <span class="shrink-0 text-right text-xs tabular-nums {% if player.affordable %}text-neutral-500 dark:text-neutral-400{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">
+                      <span class="block" title="{{ player.day_price|exact }}">{{ player.day_price|millions }}</span>
+                      {% if source != 'known' and player.day_price != player.current_salary %}
+                        <span class="block text-[0.65rem] text-neutral-400 dark:text-neutral-500">{% blocktranslate with now=player.current_salary|millions %}now {{ now }}{% endblocktranslate %}</span>
+                      {% endif %}
+                    </span>
+                  </button>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% else %}
+          <p class="mt-2 rounded-xl border border-neutral-200 px-3 py-8 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+            {% if filters.watchlist %}{% include "fantasy/partials/watchlist_empty.html" %}{% elif filters.q or filters.position %}{% translate "Nothing matches those filters." %}{% else %}{% translate "No players with a salary on record." %}{% endif %}
+          </p>
+        {% endif %}
+      </section>
+    </div>
+  {% else %}
+    <div class="mt-4 rounded-xl border border-neutral-200 p-4 text-sm dark:border-neutral-800">
+      {% if kind == 'BUY_TRADE' %}
+        {% blocktranslate with price=trade_buy_price|millions %}Buy one extra trade for {{ price }} of cash. It counts for this day's batch already.{% endblocktranslate %}
+      {% else %}
+        {% blocktranslate with price=trade_sell_price|millions %}Sell one of your trades for {{ price }} of cash.{% endblocktranslate %}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {# --- what the day would come to ---------------------------------------- #}
+  {% if preview %}
+    {% with entry=preview.day outcome=preview.outcome %}
+      <div class="mt-4 rounded-xl border p-4 {% if outcome.status == 'stale' %}border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10{% elif entry.problems %}border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10{% else %}border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950/40{% endif %}">
+        <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+          <div class="min-w-0">
+            <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Cash flow" %}</dt>
+            <dd class="mt-0.5 text-sm font-semibold tabular-nums">{{ outcome.cash_delta|signed_millions }}</dd>
+          </div>
+          <div class="min-w-0">
+            <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Cash after that day" %}</dt>
+            <dd class="mt-0.5 text-sm font-bold tabular-nums {% if entry.cash_after < 0 %}text-rose-600 dark:text-rose-400{% endif %}" title="{{ entry.cash_after|exact }}">{{ entry.cash_after|millions }}</dd>
+          </div>
+          <div class="min-w-0">
+            <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Trades left" %}</dt>
+            <dd class="mt-0.5 text-sm font-semibold tabular-nums {% if entry.trades_after < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ entry.trades_after }}</dd>
+          </div>
+          <div class="min-w-0">
+            <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "FP, rest of season" %}</dt>
+            <dd class="mt-0.5 text-sm font-semibold tabular-nums {% if outcome.fp_rest and outcome.fp_rest > 0 %}text-emerald-600 dark:text-emerald-400{% elif outcome.fp_rest and outcome.fp_rest < 0 %}text-rose-600 dark:text-rose-400{% endif %}">
+              {% if outcome.is_trade %}{{ outcome.fp_rest|signed_points }}{% else %}–{% endif %}
+            </dd>
+          </div>
+        </dl>
+        {% if outcome.status == 'stale' %}
+          <p class="mt-3 text-xs font-medium text-rose-700 dark:text-rose-300">{{ outcome.reason }}</p>
+        {% elif entry.problems %}
+          <ul class="mt-3 space-y-1 text-xs text-amber-800 dark:text-amber-200">
+            {% for problem in entry.problems %}<li>{{ problem }}</li>{% endfor %}
+            <li class="text-amber-700/80 dark:text-amber-300/80">{% translate "You can still add it — and fix the day with another move." %}</li>
+          </ul>
+        {% elif existing %}
+          <p class="mt-3 text-xs text-neutral-500 dark:text-neutral-400">{% translate "Counted together with the day's other moves: the batch only has to add up at 22:00." %}</p>
+        {% endif %}
+      </div>
+    {% endwith %}
+  {% endif %}
+
+  {% endif %}
+
+  <div class="modal-actions">
+    {% if kind == 'TRADE' %}
+      <p class="order-last text-xs text-neutral-600 sm:hidden dark:text-neutral-300">
+        <span class="font-medium">{% if player_out %}{{ player_out.full_name }}{% else %}…{% endif %}</span>
+        <span aria-hidden="true">→</span>
+        <span class="font-medium">{% if player_in %}{{ player_in.full_name }}{% else %}…{% endif %}</span>
+        {% if preview %}· {% translate "Cash after" %} <span class="font-semibold tabular-nums {% if preview.day.cash_after < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ preview.day.cash_after|millions }}</span>{% endif %}
+      </p>
+    {% endif %}
+    <button type="button" @click="open = false" class="btn btn-secondary">{% translate "Cancel" %}</button>
+    {% if ready and preview.outcome.status != 'stale' %}
+      <button type="button"
+              hx-post="{{ editor_url }}?kind={{ kind }}{{ keep_day }}{{ keep_out }}{{ keep_in }}"
+              hx-target="#plan-body"
+              hx-swap="outerHTML"
+              class="btn btn-primary">{% translate "Add to plan" %}</button>
+    {% else %}
+      <button type="button" disabled class="btn btn-primary">{% translate "Add to plan" %}</button>
+    {% endif %}
+  </div>
+</div>

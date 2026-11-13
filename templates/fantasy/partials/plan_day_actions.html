@@ -1,3 +1,25 @@
+{% load i18n money %}
 {% comment %}
-  The ways to add to a day, under its moves. Filled in with the step editor.
+  Under a day's moves: add another on the same day, and -- when the day is
+  short of trades -- the one-click fix of buying what is missing.
+  Context: day, plan, roster.
 {% endcomment %}
+<div class="mt-3 flex flex-wrap items-center gap-2">
+  <button type="button"
+          hx-get="{% url 'fantasy:plan-step-new' roster.pk plan.pk %}?day={{ day.date|date:'Y-m-d' }}"
+          hx-target="#modal-root"
+          hx-swap="innerHTML"
+          class="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-50 max-sm:min-h-10 dark:text-primary-300 dark:hover:bg-primary-500/10">
+    {% include "partials/icon.html" with name="plus" class="h-3.5 w-3.5" %}
+    {% translate "Add a move on this day" %}
+  </button>
+  {% if day.trades_short %}
+    <button type="button"
+            hx-post="{% url 'fantasy:plan-step-new' roster.pk plan.pk %}?direct=1&amp;kind=BUY_TRADE&amp;day={{ day.date|date:'Y-m-d' }}"
+            hx-target="#plan-body"
+            hx-swap="outerHTML"
+            class="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-amber-100 px-2.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-200 max-sm:min-h-10 dark:bg-amber-500/15 dark:text-amber-200 dark:hover:bg-amber-500/25">
+      {% blocktranslate with price=trade_buy_price|millions %}Buy a trade ({{ price }}){% endblocktranslate %}
+    </button>
+  {% endif %}
+</div>

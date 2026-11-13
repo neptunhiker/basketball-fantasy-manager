@@ -1,0 +1,14 @@
+{% extends "partials/modal.html" %}
+{% load i18n %}
+
+{% comment %}
+  The shell for the step editor. Everything that changes as the user picks a
+  day and the two sides lives in `partials/plan_step_editor.html`, which swaps
+  itself -- so the modal's open animation runs once.
+{% endcomment %}
+
+{% block modal_title %}{% blocktranslate with name=plan.name %}Add a move to {{ name }}{% endblocktranslate %}{% endblock %}
+
+{% block modal_content %}
+  {% include "fantasy/partials/plan_step_editor.html" %}
+{% endblock %}

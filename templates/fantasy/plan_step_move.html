@@ -1,0 +1,54 @@
+{% extends "partials/modal.html" %}
+{% load i18n player_stats %}
+
+{% comment %}
+  Put one move on another processing day. The same day strip as the editor,
+  as radio buttons in a plain form.
+{% endcomment %}
+
+{% block modal_title %}{% translate "Move to another day" %}{% endblock %}
+
+{% block modal_content %}
+  <form hx-post="{% url 'fantasy:plan-step-move' roster.pk plan.pk step.pk %}"
+        hx-target="#modal-root"
+        hx-swap="innerHTML">
+    <p>
+      {% if step.kind == 'TRADE' %}
+        {% blocktranslate with out=step.player_out.full_name in=step.player_in.full_name %}{{ out }} out, {{ in }} in.{% endblocktranslate %}
+      {% elif step.kind == 'BUY_TRADE' %}
+        {% translate "Buy a trade" %}
+      {% else %}
+        {% translate "Sell a trade" %}
+      {% endif %}
+      {% blocktranslate with date=step.processing_date|date:"l" short=step.processing_date|short_month_day %}Now on {{ date }}, {{ short }}.{% endblocktranslate %}
+    </p>
+    {% if error %}
+      <p class="form-error" role="alert">{{ error }}</p>
+    {% endif %}
+    <fieldset class="mt-4">
+      <legend class="sr-only">{% translate "Processing day" %}</legend>
+      <div class="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
+        {% for option in days %}
+          <label class="relative flex flex-col items-center rounded-xl border border-neutral-200 py-2 text-center transition has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500 has-[:checked]:text-white hover:border-primary-300 dark:border-neutral-800 dark:hover:border-primary-500/40">
+            <input type="radio" name="day" value="{{ option.date|date:'Y-m-d' }}" class="sr-only"
+                   {% if option.date == step.processing_date %}checked{% endif %}>
+            <span class="text-[0.65rem] font-semibold uppercase tracking-wide opacity-75">{{ option.date|date:"D" }}</span>
+            <span class="text-base font-bold leading-tight tabular-nums">{{ option.date|date:"j" }}</span>
+            <span class="text-[0.65rem] opacity-75">{{ option.date|date:"M" }}</span>
+            {% if option.is_update %}
+              <span class="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-primary-500 ring-2 ring-white dark:ring-neutral-900" title="{% translate 'Cap-hit update' %}"></span>
+            {% endif %}
+          </label>
+        {% endfor %}
+      </div>
+      <p class="form-help flex items-center gap-1.5 text-xs">
+        <span class="h-1.5 w-1.5 rounded-full bg-primary-500" aria-hidden="true"></span>
+        {% translate "Cap-hit update: from that day's batch on, trades use the new cap hits." %}
+      </p>
+    </fieldset>
+    <div class="modal-actions">
+      <button type="button" @click="open = false" class="btn btn-secondary">{% translate "Cancel" %}</button>
+      <button type="submit" class="btn btn-primary">{% translate "Move" %}</button>
+    </div>
+  </form>
+{% endblock %}

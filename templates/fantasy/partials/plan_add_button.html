@@ -1,3 +1,13 @@
+{% load i18n %}
 {% comment %}
-  The button that opens the step editor. Filled in with the step editor.
+  Opens the step editor. Context: roster, plan, `prominent` for the empty
+  state's big button, `day` to start the editor on a given day.
 {% endcomment %}
+<button type="button"
+        hx-get="{% url 'fantasy:plan-step-new' roster.pk plan.pk %}{% if day %}?day={{ day|date:'Y-m-d' }}{% endif %}"
+        hx-target="#modal-root"
+        hx-swap="innerHTML"
+        class="btn {% if prominent %}btn-primary{% else %}btn-secondary text-xs{% endif %}">
+  {% include "partials/icon.html" with name="plus" class="h-4 w-4" %}
+  {% if prominent %}{% translate "Add your first move" %}{% else %}{% translate "Add move" %}{% endif %}
+</button>

@@ -225,3 +225,64 @@ def test_the_verdicts_read_right(browser, live_server, planned):
         expect(table.get_by_role("row", name="Garland first")).to_contain_text("Breaks on")
     finally:
         context.close()
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+def test_adding_a_move_through_the_editor(browser, live_server, planned, size):
+    roster, plan = planned["roster"], planned["greedy"]
+    context, page = open_logged_in(
+        browser,
+        live_server,
+        planned["user"],
+        reverse("fantasy:plan-detail", args=[roster.pk, plan.pk]),
+        size,
+    )
+    try:
+        before = plan.steps.count()
+        page.get_by_role("button", name="Add move").first.click()
+        dialog = page.get_by_role("dialog")
+        expect(dialog).to_be_visible()
+        expect(dialog.get_by_role("radiogroup")).to_be_visible()
+        page.wait_for_timeout(250)
+        shot(page, FOLDER, f"editor-open-{size}")
+
+        dialog.get_by_role("button", name="Jarrett Allen").click()
+        expect(dialog.get_by_role("button", name="Jarrett Allen")).to_have_attribute(
+            "aria-pressed", "true"
+        ) if size != "phone" else None
+        dialog.get_by_role("button", name="Paolo Banchero").click()
+        expect(dialog.get_by_text("Cash after that day")).to_be_visible()
+        page.wait_for_timeout(250)
+        assert page_overflow(page) == 0
+        shot(page, FOLDER, f"editor-ready-{size}")
+
+        dialog.get_by_role("button", name="Add to plan").click()
+        expect(page.get_by_role("dialog")).to_have_count(0)
+        expect(page.locator("#plan-body")).to_contain_text("Paolo Banchero")
+        assert plan.steps.count() == before + 1
+        page.wait_for_timeout(300)
+        shot(page, FOLDER, f"editor-added-{size}")
+    finally:
+        context.close()
+
+
+def test_moving_a_move_to_another_day(browser, live_server, planned):
+    roster, plan = planned["roster"], planned["good"]
+    context, page = open_logged_in(
+        browser,
+        live_server,
+        planned["user"],
+        reverse("fantasy:plan-detail", args=[roster.pk, plan.pk]),
+        "phone",
+    )
+    try:
+        page.get_by_role("button", name="Move to another day").first.click()
+        dialog = page.get_by_role("dialog")
+        expect(dialog).to_be_visible()
+        page.wait_for_timeout(250)
+        shot(page, FOLDER, "move-phone")
+        dialog.locator("label").nth(6).click()
+        dialog.get_by_role("button", name="Move", exact=True).click()
+        expect(page.get_by_role("dialog")).to_have_count(0)
+    finally:
+        context.close()

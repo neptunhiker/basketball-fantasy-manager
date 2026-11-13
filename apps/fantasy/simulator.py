@@ -262,7 +262,7 @@ class Prices:
         return self._predicted[player.pk]
 
 
-def _players(ids):
+def load_players(ids):
     """The players a plan names, loaded the way the outlook and the screens read them."""
     return {
         player.pk: player
@@ -351,7 +351,7 @@ def simulate(plan, now=None, extra_steps=(), steps=None):
     players = {membership.player_id: membership.player for membership in memberships}
     missing = named - players.keys()
     if missing:
-        players.update(_players(missing))
+        players.update(load_players(missing))
 
     # The screens read `step.player_out` and `step.player_in`: hand them the
     # players loaded here rather than a query per step.

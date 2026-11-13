@@ -77,6 +77,16 @@ urlpatterns = [
         name="plan-delete",
     ),
     path(
+        "rosters/<uuid:pk>/plans/<uuid:plan_pk>/steps/new/",
+        plan_views.PlanStepEditorView.as_view(),
+        name="plan-step-new",
+    ),
+    path(
+        "rosters/<uuid:pk>/plans/<uuid:plan_pk>/steps/<uuid:step_pk>/move/",
+        plan_views.PlanStepMoveView.as_view(),
+        name="plan-step-move",
+    ),
+    path(
         "rosters/<uuid:pk>/plans/<uuid:plan_pk>/steps/<uuid:step_pk>/delete/",
         plan_views.PlanStepDeleteView.as_view(),
         name="plan-step-delete",

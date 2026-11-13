@@ -144,7 +144,13 @@ def with_latest_fp_change(qs):
     points = DecimalField(max_digits=8, decimal_places=2)
     qs = qs.annotate(
         latest_snapshot_season=Subquery(newest.values("season_id")[:1]),
+        # When and for whom: `apps.nba.game_status` lays the schedule over the
+        # window between the two reads to tell a rest day from a DNP.
+        latest_snapshot_as_of=Subquery(newest.values("as_of")[:1]),
+        latest_snapshot_team_id=Subquery(newest.values("team_id")[:1]),
     ).annotate(
+        previous_as_of=Subquery(previous.values("as_of")),
+        previous_team_id=Subquery(previous.values("team_id")),
         previous_total_fp=Subquery(previous.values("total_fp"), output_field=points),
         previous_fp_per_game=Subquery(previous.values("fp_per_game"), output_field=points),
         previous_games_played=Subquery(previous.values("games_played")),

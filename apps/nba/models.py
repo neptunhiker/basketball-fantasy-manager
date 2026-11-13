@@ -943,6 +943,10 @@ REGULAR_SEASON_GAMES = 82
 # How long after tip-off a game counts as played. The schedule is loaded
 # rarely and carries no results, so the clock decides.
 GAME_LENGTH = dt.timedelta(hours=3)
+# How long basketball.de takes to count a finished game. A game belongs to the
+# first snapshot read this long after it ended (see `apps.nba.game_status`);
+# `manage.py game_status_audit` measures whether it needs to be more than 0.
+SOURCE_DELAY = dt.timedelta(0)
 # ESPN's status names for a game that will not be played when it was set for.
 CALLED_OFF_STATUSES = frozenset({"STATUS_POSTPONED", "STATUS_CANCELED", "STATUS_SUSPENDED"})
 

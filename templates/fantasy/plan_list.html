@@ -119,9 +119,6 @@
             <div>
               <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Team value" %}</dt>
               <dd class="font-semibold tabular-nums">{{ result.team_value_end|millions }}</dd>
-              {% if result.has_steps %}
-                <dd class="text-xs tabular-nums {% if result.team_value_gain > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.team_value_gain < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{% blocktranslate with gain=result.team_value_gain|signed_millions %}{{ gain }} vs. no moves{% endblocktranslate %}</dd>
-              {% endif %}
             </div>
             <div>
               <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Trades" %}</dt>
@@ -187,9 +184,6 @@
                 </td>
                 <td class="whitespace-nowrap px-2.5 py-3.5 text-right tabular-nums" title="{{ result.team_value_end|exact }}">
                   <span class="font-semibold">{{ result.team_value_end|millions }}</span>
-                  {% if result.has_steps %}
-                    <span class="block text-xs {% if result.team_value_gain > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.team_value_gain < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{% blocktranslate with gain=result.team_value_gain|signed_millions %}{{ gain }} vs. no moves{% endblocktranslate %}</span>
-                  {% endif %}
                 </td>
                 <td class="whitespace-nowrap px-2.5 py-3.5 text-right tabular-nums">
                   <span class="font-semibold">{% blocktranslate count counter=result.trades_used %}{{ counter }} used{% plural %}{{ counter }} used{% endblocktranslate %}</span>

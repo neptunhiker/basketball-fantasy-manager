@@ -157,7 +157,7 @@ def test_an_update_day_shows_the_team_value_after_it(signed_in, plan, players, s
     content = signed_in.get(detail_url(plan)).content.decode()
     assert "After the 22:00 update" in content
     assert "Expected team value" in content
-    assert "vs. no moves" in content
+    assert "vs. no moves" not in content
     assert "Cash doesn't move with the update." in content
 
 

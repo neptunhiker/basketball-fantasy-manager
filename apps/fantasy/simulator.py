@@ -159,7 +159,7 @@ class PlanResult:
     # without a schedule to count games from.
     fp_rest: Decimal | None = None
     fp_week: Decimal | None = None
-    # Some player had no points per game or no team, and counted as zero.
+    # Some trade had a side without projected points, and is left out of the sums.
     fp_incomplete: bool = False
 
     @property
@@ -353,6 +353,14 @@ def simulate(plan, now=None, extra_steps=(), steps=None):
     if missing:
         players.update(_players(missing))
 
+    # The screens read `step.player_out` and `step.player_in`: hand them the
+    # players loaded here rather than a query per step.
+    for step in steps:
+        if step.player_out_id in players:
+            step.player_out = players[step.player_out_id]
+        if step.player_in_id in players:
+            step.player_in = players[step.player_in_id]
+
     prices = Prices(season, now)
     grants = _unpaid_grants(roster)
     trades = roster.trades_available + sum(
@@ -504,22 +512,24 @@ def _score(result, season, now):
 
     week_end = now + FP_WEEK
 
-    def points(player, start, end=None):
-        value = counter.projected_fp(player, start, end)
-        if value is None:
-            result.fp_incomplete = True
-            return ZERO
-        return value
-
     result.fp_rest = result.fp_week = ZERO
     for day, step in trades:
         out, in_ = players[step.step.player_out_id], players[step.step.player_in_id]
-        step.fp_rest = points(in_, day.moment) - points(out, day.moment)
-        step.fp_week = (
-            points(in_, day.moment, week_end) - points(out, day.moment, week_end)
-            if day.moment < week_end
-            else ZERO
-        )
+        rest = (counter.projected_fp(in_, day.moment), counter.projected_fp(out, day.moment))
+        if None in rest:
+            # Unknown is not zero: a newcomer without games, a player without a
+            # team or a team without a schedule. Said, and left out of the sum.
+            result.fp_incomplete = True
+            continue
+        step.fp_rest = rest[0] - rest[1]
+        if day.moment < week_end:
+            week = (
+                counter.projected_fp(in_, day.moment, week_end),
+                counter.projected_fp(out, day.moment, week_end),
+            )
+            step.fp_week = week[0] - week[1]
+        else:
+            step.fp_week = ZERO
         result.fp_rest += step.fp_rest
         result.fp_week += step.fp_week
 

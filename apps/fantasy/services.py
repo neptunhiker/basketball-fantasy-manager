@@ -10,6 +10,7 @@ records of the same event, so every change is atomic and goes through here.
 player is on, so writing one may update `Player` too.
 """
 
+import uuid
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -18,7 +19,7 @@ from django.db.models import Exists, OuterRef
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from apps.core.dates import local_moment
+from apps.core.dates import local_date, local_moment
 from apps.core.templatetags.money import millions
 
 from .models import (
@@ -27,9 +28,11 @@ from .models import (
     TRADE_BUY_PRICE,
     TRADE_SELL_PRICE,
     Manager,
+    PlanStep,
     PlayerSnapshot,
     Roster,
     RosterPlayer,
+    TradePlan,
     Transaction,
     WatchlistEntry,
     position_shortfalls,
@@ -662,3 +665,161 @@ def add_to_kick_list(user, player):
 def remove_from_kick_list(user, player):
     """Remove only this account's kick mark for the player."""
     return clear_player_stance(user, player, WatchlistEntry.Stance.KICK)
+
+
+# --- trade plans ---------------------------------------------------------------
+#
+# A plan is a hypothesis, so none of this touches the roster, its cash or its
+# log. What these functions guard is only what a plan may say: a name the
+# screens can tell apart, steps on a day still to come, and a trade that names
+# two different players.
+
+
+def default_plan_name(roster):
+    """`Variant 1`, `Variant 2`, ...: the lowest number the roster has not used."""
+
+    def name(index):
+        return _("Variant %(number)d") % {"number": index}
+
+    taken = {value.casefold() for value in roster.trade_plans.values_list("name", flat=True)}
+    index = 1
+    while name(index).casefold() in taken:
+        index += 1
+    return name(index)
+
+
+def _clean_plan_name(roster, name, plan=None):
+    name = (name or "").strip()[:80]
+    if not name:
+        raise ValidationError(_("Please enter a name."))
+    others = roster.trade_plans.filter(name__iexact=name)
+    if plan is not None:
+        others = others.exclude(pk=plan.pk)
+    if others.exists():
+        raise ValidationError(
+            _("This roster already has a plan called “%(name)s”.") % {"name": name}
+        )
+    return name
+
+
+def create_plan(roster, name):
+    return TradePlan.objects.create(roster=roster, name=_clean_plan_name(roster, name))
+
+
+def rename_plan(plan, name):
+    plan.name = _clean_plan_name(plan.roster, name, plan)
+    plan.save(update_fields=["name", "updated_at"])
+    return plan
+
+
+def _copy_name(plan):
+    """`Variant 1 (copy)`, then `Variant 1 (copy 2)` and on."""
+    taken = {value.casefold() for value in plan.roster.trade_plans.values_list("name", flat=True)}
+    candidate = _("%(name)s (copy)") % {"name": plan.name}
+    number = 2
+    while candidate.casefold() in taken:
+        candidate = _("%(name)s (copy %(number)d)") % {"name": plan.name, "number": number}
+        number += 1
+    return candidate[:80]
+
+
+@transaction.atomic
+def duplicate_plan(plan):
+    """A copy of `plan` under a new name, with every step -- the way variants are made.
+
+    The steps keep their original `created_at`. That is not cosmetics: a step
+    counts as done when the roster made the move after it was planned, so a copy
+    stamped now would see a trade made yesterday as never made -- and call the
+    step stale.
+    """
+    copy = TradePlan.objects.create(roster=plan.roster, name=_copy_name(plan), note=plan.note)
+    originals = list(plan.steps.all())
+    copies = PlanStep.objects.bulk_create(
+        PlanStep(
+            plan=copy,
+            processing_date=step.processing_date,
+            order=step.order,
+            kind=step.kind,
+            player_out_id=step.player_out_id,
+            player_in_id=step.player_in_id,
+        )
+        for step in originals
+    )
+    # `auto_now_add` stamps the bulk insert; `bulk_update` writes the value as given.
+    for step, original in zip(copies, originals, strict=True):
+        step.created_at = original.created_at
+    PlanStep.objects.bulk_update(copies, ["created_at"])
+    return copy
+
+
+def _require_upcoming(day, now=None):
+    from .simulator import next_processing_day
+
+    first = next_processing_day(now)
+    if day < first:
+        raise ValidationError(
+            _("Pick a day from %(date)s on: earlier batches have been processed.")
+            % {"date": local_date(first)}
+        )
+
+
+def add_plan_step(plan, day, kind=PlanStep.Kind.TRADE, player_out=None, player_in=None, now=None):
+    """Add one move to `plan` on processing day `day`, after that day's others.
+
+    Whether the move works is the simulator's question, not this one's: a step
+    that leaves the plan short of cash is still a step someone may want to
+    write down and fix with the next one.
+    """
+    _require_upcoming(day, now)
+    if kind == PlanStep.Kind.TRADE:
+        if player_out is None or player_in is None:
+            raise ValidationError(_("Pick a player to send out and one to bring in."))
+        if player_out == player_in:
+            raise ValidationError(_("The player in and the player out cannot be the same."))
+    else:
+        player_out = player_in = None
+    last = plan.steps.filter(processing_date=day).order_by("-order").first()
+    step = PlanStep.objects.create(
+        plan=plan,
+        processing_date=day,
+        order=last.order + 1 if last else 0,
+        kind=kind,
+        player_out=player_out,
+        player_in=player_in,
+    )
+    plan.save(update_fields=["updated_at"])
+    return step
+
+
+def move_plan_step(step, day, now=None):
+    """Put a step on another processing day, at the end of that day's moves."""
+    _require_upcoming(day, now)
+    last = (
+        step.plan.steps.filter(processing_date=day).exclude(pk=step.pk).order_by("-order").first()
+    )
+    step.processing_date = day
+    step.order = last.order + 1 if last else 0
+    step.save(update_fields=["processing_date", "order", "updated_at"])
+    step.plan.save(update_fields=["updated_at"])
+    return step
+
+
+def delete_plan_step(step):
+    plan = step.plan
+    step.delete()
+    plan.save(update_fields=["updated_at"])
+
+
+def share_plan(plan):
+    """Give `plan` a read-only link, or keep the one it has."""
+    if plan.share_token is None:
+        plan.share_token = uuid.uuid4()
+        plan.save(update_fields=["share_token", "updated_at"])
+    return plan
+
+
+def stop_sharing_plan(plan):
+    """Retire the link. Sharing again makes a new one, so the old stays dead."""
+    plan.share_token = None
+    plan.save(update_fields=["share_token", "updated_at"])
+    return plan

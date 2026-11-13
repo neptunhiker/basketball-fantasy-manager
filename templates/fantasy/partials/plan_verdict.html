@@ -1,0 +1,21 @@
+{% load i18n player_stats %}
+{% comment %}
+  The one-word answer to "does this variant work?". Context: result (a
+  simulator.PlanResult), `large` for the hero version on the plan page.
+{% endcomment %}
+{% if not result.has_steps %}
+  <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-neutral-100 font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 {% if large %}px-3.5 py-1.5 text-sm{% else %}px-2.5 py-0.5 text-xs{% endif %}">
+    <span class="h-1.5 w-1.5 rounded-full bg-neutral-400" aria-hidden="true"></span>
+    {% translate "No moves yet" %}
+  </span>
+{% elif result.works %}
+  <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30 {% if large %}px-3.5 py-1.5 text-sm{% else %}px-2.5 py-0.5 text-xs{% endif %}">
+    <svg class="{% if large %}h-4 w-4{% else %}h-3.5 w-3.5{% endif %}" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+    {% translate "Works" %}
+  </span>
+{% else %}
+  <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-rose-50 font-semibold text-rose-700 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30 {% if large %}px-3.5 py-1.5 text-sm{% else %}px-2.5 py-0.5 text-xs{% endif %}">
+    <svg class="{% if large %}h-4 w-4{% else %}h-3.5 w-3.5{% endif %}" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M12 7v6M12 16.5h.01"/></svg>
+    {% with day=result.first_failure.date %}{% blocktranslate with date=day|date:"D" short=day|short_month_day %}Breaks on {{ date }}, {{ short }}{% endblocktranslate %}{% endwith %}
+  </span>
+{% endif %}

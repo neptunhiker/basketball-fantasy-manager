@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import plan_views, views
 
 app_name = "fantasy"
 
@@ -53,4 +53,32 @@ urlpatterns = [
     path("rosters/<uuid:pk>/trade/", views.RosterTradeView.as_view(), name="roster-trade"),
     path("rosters/<uuid:pk>/history/", views.RosterHistoryView.as_view(), name="roster-history"),
     path("rosters/<uuid:pk>/latest/", views.RosterLatestView.as_view(), name="roster-latest"),
+    # --- trade plans ---
+    path("rosters/<uuid:pk>/plans/", plan_views.PlanListView.as_view(), name="plan-list"),
+    path("rosters/<uuid:pk>/plans/new/", plan_views.PlanCreateView.as_view(), name="plan-create"),
+    path(
+        "rosters/<uuid:pk>/plans/<uuid:plan_pk>/",
+        plan_views.PlanDetailView.as_view(),
+        name="plan-detail",
+    ),
+    path(
+        "rosters/<uuid:pk>/plans/<uuid:plan_pk>/rename/",
+        plan_views.PlanRenameView.as_view(),
+        name="plan-rename",
+    ),
+    path(
+        "rosters/<uuid:pk>/plans/<uuid:plan_pk>/duplicate/",
+        plan_views.PlanDuplicateView.as_view(),
+        name="plan-duplicate",
+    ),
+    path(
+        "rosters/<uuid:pk>/plans/<uuid:plan_pk>/delete/",
+        plan_views.PlanDeleteView.as_view(),
+        name="plan-delete",
+    ),
+    path(
+        "rosters/<uuid:pk>/plans/<uuid:plan_pk>/steps/<uuid:step_pk>/delete/",
+        plan_views.PlanStepDeleteView.as_view(),
+        name="plan-step-delete",
+    ),
 ]

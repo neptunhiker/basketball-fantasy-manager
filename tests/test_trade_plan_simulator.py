@@ -441,3 +441,17 @@ def test_without_a_schedule_the_points_are_unknown(plan, squad, market):
 def test_a_plan_without_trades_gains_nothing(plan):
     market_step(plan, SAT, PlanStep.Kind.SELL_TRADE)
     assert run(plan).fp_rest == 0
+
+
+def test_a_newcomer_without_games_is_unknown_not_zero(plan, squad, market, schedule):
+    mine, _ = schedule
+    rookie = Player.objects.create(
+        first_name="New", last_name="Guy", position="G", team=mine, current_salary=1 * M
+    )
+    trade(plan, SAT, squad["G"][0], market["cheap_guard"], order=0)
+    trade(plan, SAT, squad["G"][1], rookie, order=1)
+    result = run(plan)
+    known, unknown = result.days[0].steps
+    assert unknown.fp_rest is None
+    assert result.fp_incomplete
+    assert result.fp_rest == known.fp_rest

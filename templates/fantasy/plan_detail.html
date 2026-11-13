@@ -1,0 +1,69 @@
+{% extends "app.html" %}
+{% load i18n static %}
+
+{% comment %}
+  One trade plan. The body swaps itself after each edit; the header stays, and
+  carries what is done to the plan as a whole -- rename, copy, delete.
+{% endcomment %}
+
+{% block title %}{{ plan.name }} · {% translate "Trade plans" %} · {{ SITE_NAME }}{% endblock %}
+
+{% block back_link %}
+  {% url 'fantasy:plan-list' roster.pk as back_url %}
+  {% translate "All variants" as back_label %}
+  {% include "partials/back_link.html" with href=back_url label=back_label %}
+{% endblock %}
+
+{% block page_title %}
+  <span class="flex min-w-0 items-center gap-3">
+    <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png" alt=""
+         class="hidden h-10 w-10 shrink-0 rounded-xl border-2 border-white object-cover shadow-md sm:block dark:border-neutral-800">
+    <span class="min-w-0">
+      <span class="block truncate">{{ plan.name }}</span>
+      <span class="block truncate text-xs font-normal text-neutral-500 dark:text-neutral-400">{{ roster.name }}</span>
+    </span>
+  </span>
+{% endblock %}
+
+{% block header_actions %}
+  {% if not read_only %}
+    <a href="{% url 'fantasy:plan-list' roster.pk %}" class="btn btn-ghost hidden text-xs sm:inline-flex sm:!px-3">
+      {% translate "All variants" %}
+    </a>
+    {% block plan_share_action %}{% endblock %}
+    <button type="button"
+            hx-get="{% url 'fantasy:plan-rename' roster.pk plan.pk %}"
+            hx-target="#modal-root"
+            hx-swap="innerHTML"
+            aria-label="{% translate 'Rename variant' %}"
+            class="btn btn-ghost h-10 w-10 !px-0">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m14.5 5.5 4 4M4 20l1-5L15.5 4.5a1.4 1.4 0 0 1 2 0l2 2a1.4 1.4 0 0 1 0 2L9 19l-5 1Z"/>
+      </svg>
+    </button>
+    <button type="button"
+            hx-post="{% url 'fantasy:plan-duplicate' roster.pk plan.pk %}"
+            aria-label="{% translate 'Duplicate variant' %}"
+            class="btn btn-secondary h-10 w-10 !px-0 text-xs sm:h-auto sm:w-auto sm:!px-3">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="8" y="8" width="12" height="12" rx="2"/><path stroke-linecap="round" d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>
+      </svg>
+      <span class="hidden sm:inline">{% translate "Duplicate" %}</span>
+    </button>
+    <button type="button"
+            hx-get="{% url 'fantasy:plan-delete' roster.pk plan.pk %}"
+            hx-target="#modal-root"
+            hx-swap="innerHTML"
+            class="btn btn-ghost h-10 w-10 !px-0 text-neutral-400 hover:text-red-600 dark:hover:text-red-400"
+            aria-label="{% translate 'Delete variant' %}">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/>
+      </svg>
+    </button>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% block plan_banner %}{% endblock %}
+  {% include "fantasy/partials/plan_body.html" %}
+{% endblock %}

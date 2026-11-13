@@ -1,0 +1,30 @@
+{% load i18n money %}
+{% comment %}
+  One side of a planned trade. Context: player, price (dollars at that day's
+  cap hits, or None), direction ("out" or "in").
+{% endcomment %}
+<div class="flex min-w-0 items-center gap-3">
+  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl
+    {% if direction == 'out' %}bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300{% else %}bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300{% endif %}"
+        aria-hidden="true">
+    {% if direction == 'out' %}
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0-5.5 5.5M12 5l5.5 5.5"/></svg>
+    {% else %}
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m0 0-5.5-5.5M12 19l5.5-5.5"/></svg>
+    {% endif %}
+  </span>
+  <div class="min-w-0 flex-1">
+    <p class="sr-only">{% if direction == 'out' %}{% translate "Player out" %}{% else %}{% translate "Player in" %}{% endif %}:</p>
+    <a href="{% url 'nba:player-detail' player.slug %}"
+       class="block truncate text-sm font-semibold transition hover:text-primary-600 dark:hover:text-primary-300">{{ player.full_name }}</a>
+    <p class="flex items-center gap-1.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
+      <span class="inline-flex h-4 min-w-4 items-center justify-center rounded bg-neutral-100 px-1 text-[0.65rem] font-bold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ player.position }}</span>
+      {% if player.team %}{{ player.team.abbreviation }}{% else %}{% translate "Free Agent" %}{% endif %}
+      {% if player.current_fp_per_game is not None %}
+        <span aria-hidden="true">·</span>
+        {% blocktranslate with fp=player.current_fp_per_game|floatformat:1 %}{{ fp }} FP/G{% endblocktranslate %}
+      {% endif %}
+    </p>
+  </div>
+  <span class="shrink-0 text-right text-sm font-semibold tabular-nums" title="{{ price|exact }}">{{ price|millions }}</span>
+</div>

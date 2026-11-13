@@ -1,0 +1,221 @@
+{% extends "app.html" %}
+{% load i18n static money plan_tags player_stats %}
+
+{% comment %}
+  A roster's trade plans side by side. The comparison is the point of the
+  page: which variants still work at today's cap hits, what each leaves in
+  cash and trades, and which gains the most points. A table from `md`, one
+  card per variant below it -- seven columns do not fit a phone.
+{% endcomment %}
+
+{% block title %}{% translate "Trade plans" %} · {{ roster.name }} · {{ SITE_NAME }}{% endblock %}
+
+{% block back_link %}
+  {% url 'fantasy:roster-build' roster.pk as back_url %}
+  {% translate "Back to roster" as back_label %}
+  {% include "partials/back_link.html" with href=back_url label=back_label %}
+{% endblock %}
+
+{% block page_title %}
+  <span class="flex min-w-0 items-center gap-3">
+    <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png" alt=""
+         class="hidden h-10 w-10 shrink-0 rounded-xl border-2 border-white object-cover shadow-md sm:block dark:border-neutral-800">
+    <span class="min-w-0">
+      <span class="block truncate">{% translate "Trade plans" %}</span>
+      <span class="block truncate text-xs font-normal text-neutral-500 dark:text-neutral-400">{{ roster.name }}</span>
+    </span>
+  </span>
+{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'fantasy:roster-build' roster.pk %}" class="btn btn-ghost hidden text-xs sm:inline-flex sm:!px-3">
+    {% translate "Back to roster" %}
+  </a>
+  <button type="button"
+          hx-get="{% url 'fantasy:plan-create' roster.pk %}"
+          hx-target="#modal-root"
+          hx-swap="innerHTML"
+          aria-label="{% translate 'New variant' %}"
+          class="btn btn-primary h-10 w-10 !px-0 sm:h-auto sm:w-auto sm:!px-4">
+    {% include "partials/icon.html" with name="plus" class="h-4 w-4" %}
+    <span class="hidden sm:inline">{% translate "New variant" %}</span>
+  </button>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# --- what the plans start from ------------------------------------------- #}
+  <section class="card overflow-hidden">
+    <div class="gradient-rule h-1"></div>
+    <div class="p-5 sm:p-6">
+      <div class="flex items-start gap-4">
+        <img src="{% static 'img/pengi_bookkeeper.png' %}" alt="" class="hidden h-20 w-20 shrink-0 object-contain sm:block">
+        <div class="min-w-0">
+          <p class="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">{% translate "Trade simulator" %}</p>
+          <h2 class="mt-1 text-xl font-bold tracking-tight sm:text-2xl dark:text-neutral-100">{% translate "Play your next trades through" %}</h2>
+          <p class="mt-1 max-w-2xl text-sm text-neutral-500 dark:text-neutral-400">
+            {% translate "Plan this week's and next week's trades as variants and see whether each would work as things stand — cash, trades and positions after every processing day. Nothing here changes your roster." %}
+          </p>
+        </div>
+      </div>
+
+      <dl class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="stat-tile min-w-0">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Cash now" %}</dt>
+          <dd class="text-lg font-bold tabular-nums" title="{{ roster.cash|exact }}">{{ roster.cash|millions }}</dd>
+        </div>
+        <div class="stat-tile min-w-0">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Trades available" %}</dt>
+          <dd class="text-lg font-bold tabular-nums">{{ roster.trades_available }}</dd>
+        </div>
+        <div class="stat-tile min-w-0">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Next batch" %}</dt>
+          <dd class="truncate text-sm font-semibold">
+            {% with relative=first_day|relative_day %}{% if relative %}{{ relative }}{% else %}{{ first_day|date:"D" }}, {{ first_day|short_month_day }}{% endif %}{% endwith %}
+            <span class="block text-xs font-normal text-neutral-500 dark:text-neutral-400">{% translate "at 22:00" %}</span>
+          </dd>
+        </div>
+        <div class="stat-tile min-w-0">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Next cap-hit update" %}</dt>
+          <dd class="truncate text-sm font-semibold">
+            {% if next_update %}
+              {{ next_update|date:"D" }}, {{ next_update|short_month_day }}
+              <span class="block text-xs font-normal text-neutral-500 dark:text-neutral-400">{% blocktranslate with time=next_update|date:"TIME_FORMAT" %}at {{ time }}{% endblocktranslate %}</span>
+            {% else %}
+              <span class="text-neutral-400 dark:text-neutral-500">–</span>
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  {% if results %}
+    {# --- phones and small tablets: one card per variant --------------------- #}
+    <ul class="grid gap-4 sm:grid-cols-2 md:hidden">
+      {% for result in results %}
+        <li class="card relative flex flex-col p-4 transition hover:border-primary-300 hover:shadow-md dark:hover:border-primary-500/40 {% if result == best %}ring-2 ring-primary-400/60{% endif %}">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <a href="{% url 'fantasy:plan-detail' roster.pk result.plan.pk %}" class="block truncate font-semibold after:absolute after:inset-0 after:content-['']">{{ result.plan.name }}</a>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                {% blocktranslate count counter=result.step_results|length %}{{ counter }} move{% plural %}{{ counter }} moves{% endblocktranslate %}
+                {% if result == best %}· <span class="font-semibold text-primary-600 dark:text-primary-300">{% translate "Most points" %}</span>{% endif %}
+              </p>
+            </div>
+            {% include "fantasy/partials/plan_verdict.html" %}
+          </div>
+          <dl class="mt-4 grid grid-cols-2 gap-x-3 gap-y-2.5 text-sm">
+            <div>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Cash at the end" %}</dt>
+              <dd class="font-semibold tabular-nums {% if result.cash_end < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.cash_end|millions }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Trades left" %}</dt>
+              <dd class="font-semibold tabular-nums">{{ result.trades_end }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "FP, rest of season" %}</dt>
+              <dd class="font-semibold tabular-nums {% if result.fp_rest and result.fp_rest > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.fp_rest and result.fp_rest < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.fp_rest|signed_points }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "FP, next 7 days" %}</dt>
+              <dd class="font-semibold tabular-nums">{{ result.fp_week|signed_points }}</dd>
+            </div>
+          </dl>
+          {% if result.has_predicted_prices %}
+            <p class="mt-3 text-xs text-primary-700 dark:text-primary-300">{% translate "Includes predicted cap hits" %}</p>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+
+    {# --- from `md`: the comparison table ------------------------------------ #}
+    <div class="card hidden overflow-hidden md:block">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+              <th scope="col" class="px-5 py-3 font-medium">{% translate "Variant" %}</th>
+              <th scope="col" class="px-3 py-3 font-medium">{% translate "Status" %}</th>
+              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Cash at the end" %}</th>
+              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Trades left" %}</th>
+              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "FP, rest of season" %}</th>
+              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "FP, 7 days" %}</th>
+              <th scope="col" class="px-4 py-3"><span class="sr-only">{% translate "Actions" %}</span></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
+            {% for result in results %}
+              <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/40 {% if result == best %}bg-primary-50/50 dark:bg-primary-500/[0.06]{% endif %}">
+                <td class="max-w-[16rem] px-5 py-3.5">
+                  <a href="{% url 'fantasy:plan-detail' roster.pk result.plan.pk %}" class="block truncate font-semibold transition hover:text-primary-600 dark:hover:text-primary-300">{{ result.plan.name }}</a>
+                  <span class="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                    {% blocktranslate count counter=result.step_results|length %}{{ counter }} move{% plural %}{{ counter }} moves{% endblocktranslate %}
+                    {% if result == best %}
+                      <span class="badge bg-primary-100 px-2 py-0 text-[0.65rem] text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">{% translate "Most points" %}</span>
+                    {% endif %}
+                    {% if result.plan.is_shared %}
+                      <span class="badge badge-neutral px-2 py-0 text-[0.65rem]">{% translate "Shared" %}</span>
+                    {% endif %}
+                  </span>
+                </td>
+                <td class="px-3 py-3.5">
+                  {% include "fantasy/partials/plan_verdict.html" %}
+                  {% if result.has_predicted_prices %}
+                    <span class="mt-1 block text-[0.7rem] text-primary-700 dark:text-primary-300">{% translate "predicted cap hits" %}</span>
+                  {% endif %}
+                </td>
+                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums" title="{{ result.cash_end|exact }}">
+                  <span class="font-semibold {% if result.cash_end < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.cash_end|millions }}</span>
+                  <span class="block text-xs text-neutral-500 dark:text-neutral-400">{{ result.cash_change|signed_millions }}</span>
+                </td>
+                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums">
+                  <span class="font-semibold">{{ result.trades_end }}</span>
+                  {% if result.trades_bought %}
+                    <span class="block text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate count counter=result.trades_bought %}{{ counter }} bought{% plural %}{{ counter }} bought{% endblocktranslate %}</span>
+                  {% endif %}
+                </td>
+                <td class="whitespace-nowrap px-3 py-3.5 text-right font-semibold tabular-nums {% if result.fp_rest and result.fp_rest > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.fp_rest and result.fp_rest < 0 %}text-rose-600 dark:text-rose-400{% endif %}">
+                  {{ result.fp_rest|signed_points }}
+                </td>
+                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums text-neutral-600 dark:text-neutral-300">
+                  {{ result.fp_week|signed_points }}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                  <button type="button"
+                          hx-post="{% url 'fantasy:plan-duplicate' roster.pk result.plan.pk %}"
+                          class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                          aria-label="{% blocktranslate with name=result.plan.name %}Duplicate {{ name }}{% endblocktranslate %}"
+                          title="{% translate 'Duplicate' %}">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="8" y="8" width="12" height="12" rx="2"/><path stroke-linecap="round" d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <section class="card px-6 py-14 text-center">
+      <img src="{% static 'img/pengi.png' %}" alt="" class="mx-auto h-28 w-28 object-contain">
+      <h2 class="mt-4 text-base font-semibold">{% translate "No variants yet" %}</h2>
+      <p class="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
+        {% translate "Start with one variant — say, this Sunday's trades plus next week's — then duplicate it to try the alternatives." %}
+      </p>
+      <button type="button"
+              hx-get="{% url 'fantasy:plan-create' roster.pk %}"
+              hx-target="#modal-root"
+              hx-swap="innerHTML"
+              class="btn btn-primary mt-6">
+        {% include "partials/icon.html" with name="plus" class="h-4 w-4" %}
+        {% translate "Create your first variant" %}
+      </button>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

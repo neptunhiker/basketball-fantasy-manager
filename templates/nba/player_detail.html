@@ -270,12 +270,17 @@
 
   {% include "nba/partials/notes.html" %}
 
-  <div class="card overflow-hidden">
-    <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-      <h2 class="text-sm font-semibold">{% translate "Snapshots" %}</h2>
-      <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-        {% translate "One row per read, the newest on top, each with the change from the read below it. The time is shown because the source can be read more than once a day." %}
-      </p>
+  <div id="snapshots" class="card overflow-hidden">
+    <div class="flex flex-col gap-4 border-b border-neutral-200 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-8 dark:border-neutral-800">
+      <div class="min-w-0">
+        <h2 class="text-sm font-semibold">{% translate "Snapshots" %}</h2>
+        <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+          {% translate "One row per read, the newest on top, each with the change from the read below it and whether his team played in between. The time is shown because the source can be read more than once a day." %}
+        </p>
+      </div>
+      {% if game_summary %}
+        {% include "nba/partials/game_summary.html" with summary=game_summary %}
+      {% endif %}
     </div>
 
     <div class="border-b border-neutral-200 px-4 pb-2 pt-4 dark:border-neutral-800">
@@ -294,15 +299,22 @@
 
     {% if rows %}
       <div class="overflow-x-auto">
-        {# Every column at every width. A phone scrolls the table sideways #}
-        {# with the date pinned on the left, the way the Players table keeps #}
-        {# its names in view, so each figure is still read against its read. #}
-        {# `whitespace-nowrap` keeps the columns at their natural width rather #}
-        {# than squeezing seven of them into 375px. #}
+        {% comment %}
+          Every column at every width. Below `lg` the table scrolls sideways
+          with the date pinned on the left, so each figure is still read
+          against its read. On phones the game status rides in that pinned
+          cell, under the date, and its own column steps aside: the reason a
+          row did not move stays in view however far the figures scroll.
+          `whitespace-nowrap` keeps the columns at their natural width rather
+          than squeezing eight of them into 375px. Rows without a team game
+          are greyed by text colour, never by opacity: a see-through pinned
+          cell would let the scrolling figures show through.
+        {% endcomment %}
         <table class="w-full whitespace-nowrap text-left text-sm">
           <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
             <tr>
-              <th scope="col" class="px-4 py-3 font-medium max-md:sticky max-md:left-0 max-md:z-[1] max-md:bg-white max-md:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-md:dark:bg-neutral-900 max-md:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">{% translate "As of" %}</th>
+              <th scope="col" class="px-4 py-3 font-medium max-lg:sticky max-lg:left-0 max-lg:z-[1] max-lg:bg-white max-lg:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-lg:dark:bg-neutral-900 max-lg:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">{% translate "As of" %}</th>
+              <th scope="col" class="px-4 py-3 font-medium max-sm:hidden">{% translate "Game" %}</th>
               <th scope="col" class="px-4 py-3 font-medium">{% translate "Team" %}</th>
               <th scope="col" class="px-4 py-3 font-medium">{% translate "Pos." %}</th>
               <th scope="col" class="px-4 py-3 text-right font-medium">{% translate "Salary" %}</th>
@@ -313,16 +325,27 @@
           </thead>
           <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
             {% for row in rows %}
-              <tr class="align-top transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
-                <td class="px-4 py-3 max-md:sticky max-md:left-0 max-md:z-[1] max-md:bg-white max-md:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-md:dark:bg-neutral-900 max-md:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">
-                  <span class="font-medium">{{ row.snapshot.as_of|date:"SHORT_DATE_FORMAT" }}</span>
-                  <span class="block text-xs text-neutral-400 dark:text-neutral-500">
-                    {{ row.snapshot.as_of|date:"D, H:i" }} · {{ row.snapshot.season.label }}
-                  </span>
+              {% if several_seasons %}
+                {% ifchanged row.snapshot.season_id %}
+                  <tr class="bg-neutral-50 dark:bg-neutral-800/40">
+                    <th colspan="8" scope="colgroup" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                      <span class="max-lg:sticky max-lg:left-4">{{ row.snapshot.season.label }}</span>
+                    </th>
+                  </tr>
+                {% endifchanged %}
+              {% endif %}
+              <tr class="group align-top transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50"{% if row.status.is_quiet %} data-quiet{% endif %}>
+                <td class="px-4 py-3 transition max-sm:min-w-[8.5rem] max-lg:sticky max-lg:left-0 max-lg:z-[1] max-lg:bg-white max-lg:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-lg:dark:bg-neutral-900 max-lg:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)] max-lg:group-hover:bg-neutral-50 max-lg:dark:group-hover:bg-[color-mix(in_oklab,var(--color-neutral-800)_50%,var(--color-neutral-900))]">
+                  <span class="font-medium {% if row.status.is_quiet %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ row.snapshot.as_of|date:"SHORT_DATE_FORMAT" }}</span>
+                  <span class="block text-xs text-neutral-400 tabular-nums dark:text-neutral-500">{{ row.snapshot.as_of|date:"D, H:i" }}</span>
+                  {% if row.status.kind != "season_start" %}<span class="mt-1.5 block sm:hidden">{% include "nba/partials/game_status.html" with status=row.status variant="compact" %}</span>{% endif %}
                 </td>
-                <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">
+                <td class="px-4 py-3 max-sm:hidden">
+                  {% include "nba/partials/game_status.html" with status=row.status variant="full" %}
+                </td>
+                <td class="px-4 py-3 {% if row.status.is_quiet %}text-neutral-400 dark:text-neutral-500{% else %}text-neutral-600 dark:text-neutral-400{% endif %}">
                   {% if row.snapshot.team %}
-                    {# The team as the source reported it that Sunday: a move stays visible. #}
+                    {# The team as the source reported it that day: a move stays visible. #}
                     <a href="{% url 'nba:team-detail' row.snapshot.team.abbreviation|lower %}"
                        class="font-medium hover:text-primary-600 hover:underline dark:hover:text-primary-400"
                        title="{{ row.snapshot.team.name }}">{{ row.snapshot.team.abbreviation }}</a>
@@ -330,20 +353,21 @@
                     <span class="text-neutral-400 dark:text-neutral-500">–</span>
                   {% endif %}
                 </td>
-                <td class="px-4 py-3 text-neutral-600 dark:text-neutral-400">{{ row.snapshot.position }}</td>
-                <td class="px-4 py-3 text-right tabular-nums">
+                <td class="px-4 py-3 {% if row.status.is_quiet %}text-neutral-400 dark:text-neutral-500{% else %}text-neutral-600 dark:text-neutral-400{% endif %}">{{ row.snapshot.position }}</td>
+                {# A Sunday repricing on a day off is news: the salary keeps its contrast then. #}
+                <td class="px-4 py-3 text-right tabular-nums {% if row.status.is_quiet and not row.salary_change %}text-neutral-400 dark:text-neutral-500{% endif %}">
                   <span class="font-medium" title="{{ row.snapshot.salary|exact }}">{{ row.snapshot.salary|millions }}</span>
                   <span class="block text-xs">{% include "nba/partials/change.html" with value=row.salary_change unit="money" %}</span>
                 </td>
-                <td class="px-4 py-3 text-right tabular-nums">
+                <td class="px-4 py-3 text-right tabular-nums {% if row.status.is_quiet %}text-neutral-400 dark:text-neutral-500{% endif %}">
                   <span class="font-medium">{{ row.snapshot.total_fp|floatformat:"2g" }}</span>
                   <span class="block text-xs">{% include "nba/partials/change.html" with value=row.total_fp_change unit="points" %}</span>
                 </td>
-                <td class="px-4 py-3 text-right tabular-nums">
+                <td class="px-4 py-3 text-right tabular-nums {% if row.status.is_quiet %}text-neutral-400 dark:text-neutral-500{% endif %}">
                   <span class="font-medium">{{ row.snapshot.fp_per_game|floatformat:"2g"|default:"–" }}</span>
                   <span class="block text-xs">{% include "nba/partials/change.html" with value=row.fp_per_game_change unit="points" %}</span>
                 </td>
-                <td class="px-4 py-3 text-right tabular-nums">
+                <td class="px-4 py-3 text-right tabular-nums {% if row.status.is_quiet %}text-neutral-400 dark:text-neutral-500{% endif %}">
                   <span class="font-medium">{{ row.snapshot.games_played }}</span>
                   <span class="block text-xs">{% include "nba/partials/change.html" with value=row.games_played_change unit="count" %}</span>
                 </td>
@@ -352,8 +376,9 @@
           </tbody>
         </table>
       </div>
-      <div class="border-t border-neutral-200 px-4 py-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-        {% blocktranslate count snapshot_count=rows|length %}{{ snapshot_count }} snapshot. Points and games are season totals, so they grow from one snapshot to the next.{% plural %}{{ snapshot_count }} snapshots. Points and games are season totals, so they grow from one snapshot to the next.{% endblocktranslate %}
+      <div class="flex flex-col gap-2 border-t border-neutral-200 px-4 py-3 text-xs text-neutral-500 lg:flex-row lg:items-center lg:justify-between lg:gap-6 dark:border-neutral-800 dark:text-neutral-400">
+        <p>{% blocktranslate count snapshot_count=rows|length %}{{ snapshot_count }} snapshot. Points and games are season totals, so they grow from one snapshot to the next.{% plural %}{{ snapshot_count }} snapshots. Points and games are season totals, so they grow from one snapshot to the next.{% endblocktranslate %}</p>
+        {% include "nba/partials/game_status_legend.html" %}
       </div>
     {% else %}
       <div class="px-4 py-16 text-center">

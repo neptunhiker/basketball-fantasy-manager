@@ -1,0 +1,12 @@
+{% load i18n %}
+{% comment %}
+  Why he sat out, from the injury report current at tip-off. Context: status,
+  full ("full" names the injured body part as the feed gives it).
+{% endcomment %}
+{% if status.is_injured %}
+  <span class="font-medium text-red-700 dark:text-red-300">{% translate "Injured" %}{% if full == "full" and status.injury_location %} ({{ status.injury_location }}){% endif %}</span>
+{% elif status.is_day_to_day %}
+  <span class="font-medium text-amber-700 dark:text-amber-300">{% translate "Day-to-day" %}{% if full == "full" and status.injury_location %} ({{ status.injury_location }}){% endif %}</span>
+{% else %}
+  <span>{% translate "No injury report" %}</span>
+{% endif %}

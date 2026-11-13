@@ -45,6 +45,9 @@ CORRECTED = "corrected"
 # Nothing happened on the court that involved him: the screens grey these out.
 QUIET = frozenset({NO_GAME, NO_TEAM, SEASON_START, CORRECTED})
 
+# How many opponents a row names before "+2" takes over.
+OPPONENTS_SHOWN = 3
+
 # One reading frame before any real game, for "everything up to the first snapshot".
 _DAWN = dt.datetime(1900, 1, 1, tzinfo=dt.UTC)
 
@@ -225,6 +228,23 @@ class GameStatus:
                 )
             )
         return result
+
+    @property
+    def opponent_preview(self):
+        return self.opponents[:OPPONENTS_SHOWN]
+
+    @property
+    def opponent_overflow(self):
+        return max(len(self.games) - OPPONENTS_SHOWN, 0)
+
+    @property
+    def lone_opponent(self):
+        """The opponent when exactly one game is in question, else None."""
+        return self.opponents[0] if self.game_count == 1 and len(self.games) == 1 else None
+
+    @property
+    def injury_location(self):
+        return (self.injury.injury_location or self.injury.injury_type) if self.injury else ""
 
     @property
     def injury_state(self):

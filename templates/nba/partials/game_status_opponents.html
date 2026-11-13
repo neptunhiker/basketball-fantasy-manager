@@ -1,0 +1,3 @@
+{% load i18n %}
+{# "vs LAL · @ PHX · +2": the opponents of a GameStatus, oldest first. Context: status. #}
+{% for opponent in status.opponent_preview %}{% if not forloop.first %}<span class="text-neutral-300 dark:text-neutral-600" aria-hidden="true"> · </span>{% endif %}<span class="tracking-wide" title="{{ opponent.team.name }}">{% if opponent.is_home %}{% translate "vs" %}{% else %}@{% endif %} {{ opponent.team.abbreviation }}</span>{% endfor %}{% if status.opponent_overflow %}<span class="text-neutral-300 dark:text-neutral-600" aria-hidden="true"> · </span>+{{ status.opponent_overflow }}{% endif %}

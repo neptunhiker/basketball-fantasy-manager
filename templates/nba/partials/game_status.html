@@ -1,0 +1,65 @@
+{% load i18n %}
+{% comment %}
+  What happened between two snapshots, from an `apps.nba.game_status.GameStatus`.
+  Context: status (or None), variant ("full" for the snapshots table, "compact"
+  for the pinned date cell on phones and the Latest FP column).
+
+  A green chip with a filled dot for games he played, an amber chip with a
+  hollow ring for a DNP -- the dot's shape tells the two apart without colour.
+  Rows without a team game get no chip, only grey text, so they recede.
+  Every chip carries a sentence for screen readers; "DNP" and "@ BOS" are
+  shorthand that a screen reader would spell out letter by letter.
+{% endcomment %}
+{% with full=variant|default:"full" %}
+{% if status.is_played or status.is_partly %}
+  <span class="inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/30">
+    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500 dark:bg-emerald-400" aria-hidden="true"></span>
+    {% if status.is_partly %}
+      <span aria-hidden="true" class="tabular-nums">{% blocktranslate with played=status.played total=status.game_count %}{{ played }} of {{ total }}{% endblocktranslate %}</span>
+      <span class="sr-only">{% blocktranslate count total=status.game_count with played=status.played %}Played {{ played }} of {{ total }} game{% plural %}Played {{ played }} of {{ total }} games{% endblocktranslate %}</span>
+    {% elif status.lone_opponent %}
+      {% with opponent=status.lone_opponent %}
+        <span aria-hidden="true" class="tracking-wide" title="{{ opponent.team.name }}">{% if opponent.is_home %}{% translate "vs" %}{% else %}@{% endif %} {{ opponent.team.abbreviation }}</span>
+        <span class="sr-only">{% if opponent.is_home %}{% blocktranslate with team=opponent.team.name %}Played at home against {{ team }}{% endblocktranslate %}{% else %}{% blocktranslate with team=opponent.team.name %}Played away at {{ team }}{% endblocktranslate %}{% endif %}</span>
+      {% endwith %}
+    {% else %}
+      <span class="tabular-nums">{% blocktranslate count count=status.game_count %}{{ count }} game{% plural %}{{ count }} games{% endblocktranslate %}</span>
+    {% endif %}
+  </span>
+{% elif status.is_missed %}
+  <span class="inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-full bg-amber-50 px-2.5 text-xs font-semibold tracking-wide text-amber-800 ring-1 ring-inset ring-amber-600/25 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/30"
+        title="{% translate 'Did not play: his team played without him' %}">
+    <span class="h-1.5 w-1.5 shrink-0 rounded-full border-[1.5px] border-amber-500 dark:border-amber-400" aria-hidden="true"></span>
+    <span aria-hidden="true">{% translate "DNP" %}</span>
+    <span class="sr-only">{% blocktranslate count count=status.game_count %}Did not play: his team played without him{% plural %}Did not play: his team played {{ count }} games without him{% endblocktranslate %}</span>
+  </span>
+{% elif status.is_no_game %}
+  <span class="inline-flex h-6 items-center gap-1.5 whitespace-nowrap text-xs text-neutral-400 dark:text-neutral-500">
+    <span class="h-px w-2.5 shrink-0 bg-current" aria-hidden="true"></span>{% translate "No game" %}
+  </span>
+{% elif status.kind == "no_team" %}
+  <span class="inline-flex h-6 items-center whitespace-nowrap text-xs text-neutral-400 dark:text-neutral-500">{% translate "No team" %}</span>
+{% elif status.kind == "corrected" %}
+  <span class="inline-flex h-6 items-center whitespace-nowrap text-xs text-neutral-400 dark:text-neutral-500"
+        title="{% translate 'The source lowered his games count' %}">{% translate "Corrected" %}</span>
+{% elif full == "full" %}
+  {# The season's first read: nothing to compare with. Phones leave the line out. #}
+  <span class="inline-flex h-6 items-center text-neutral-300 dark:text-neutral-600" title="{% translate 'No earlier snapshot this season to compare with' %}">–<span class="sr-only">{% translate "No earlier snapshot this season to compare with" %}</span></span>
+{% endif %}
+
+{# The line beneath: whom he played or missed, and why he sat out. #}
+{% if status.is_missed %}
+  <span class="mt-1 block whitespace-nowrap text-xs leading-snug text-neutral-500 dark:text-neutral-400">
+    {% if status.opponents %}{% include "nba/partials/game_status_opponents.html" %}<span class="text-neutral-300 dark:text-neutral-600" aria-hidden="true"> · </span>{% endif %}{% include "nba/partials/game_status_reason.html" %}
+  </span>
+{% elif full == "full" and status.opponents and not status.lone_opponent %}
+  <span class="mt-1 block whitespace-nowrap text-xs leading-snug text-neutral-500 dark:text-neutral-400">
+    {% include "nba/partials/game_status_opponents.html" %}
+  </span>
+{% endif %}
+{% if status.is_partly %}
+  <span class="mt-0.5 block whitespace-nowrap text-xs leading-snug text-neutral-500 dark:text-neutral-400">
+    <span class="font-semibold tracking-wide text-amber-700 dark:text-amber-300" title="{% translate 'Did not play: his team played without him' %}">{% blocktranslate count count=status.missed %}{{ count }} DNP{% plural %}{{ count }} DNP{% endblocktranslate %}</span><span class="text-neutral-300 dark:text-neutral-600" aria-hidden="true"> · </span>{% include "nba/partials/game_status_reason.html" %}
+  </span>
+{% endif %}
+{% endwith %}

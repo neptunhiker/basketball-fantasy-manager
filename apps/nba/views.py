@@ -43,6 +43,7 @@ from apps.fantasy.views import player_roster_options
 from . import charts, stats
 from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
+from .game_status import snapshot_history
 from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
 from .models import (
     DAY_TO_DAY_INJURY_STATUSES,
@@ -1284,6 +1285,10 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
         # that makes each row's predecessor the next item in the list.
         snapshots = list(self.object.snapshots.select_related("season", "team").order_by("-as_of"))
 
+        # Played, DNP or no game per row, laid over the schedule: a row whose
+        # points did not move says why. Two queries however long the history.
+        statuses, context["game_summary"] = snapshot_history(self.object, snapshots)
+
         rows = []
         for index, snapshot in enumerate(snapshots):
             # The row beneath this one in the table: the Sunday before. The
@@ -1294,9 +1299,11 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
                 f"{field}_change": _change(getattr(snapshot, field), getattr(previous, field, None))
                 for field in ("salary", "total_fp", "fp_per_game", "games_played")
             }
-            rows.append({"snapshot": snapshot, **changes})
+            rows.append({"snapshot": snapshot, "status": statuses[index], **changes})
 
         context["rows"] = rows
+        # A season divider between rows only says something across seasons.
+        context["several_seasons"] = len({snapshot.season_id for snapshot in snapshots}) > 1
         stance = _player_stance(self.request.user, self.object)
         context["is_watched"] = stance == WatchlistEntry.Stance.WATCH
         context["is_kicked"] = stance == WatchlistEntry.Stance.KICK

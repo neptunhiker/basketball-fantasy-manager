@@ -15,6 +15,7 @@ dependencies = [
     "beautifulsoup4>=4.15.0",
     "croniter>=6.2.4",
     "scipy>=1.14",
+    "openpyxl>=3.1",
 ]
 
 [dependency-groups]

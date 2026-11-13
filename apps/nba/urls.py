@@ -48,6 +48,13 @@ urlpatterns = [
     ),
     path("players/", views.PlayerListView.as_view(), name="player-list"),
     path("players/watchlist/", views.WatchlistView.as_view(), name="watchlist"),
+    # Before `players/<slug>/`, which would otherwise take "export" for a player.
+    path("players/export/", views.PlayerExportView.as_view(), name="player-export"),
+    path(
+        "players/watchlist/export/",
+        views.WatchlistExportView.as_view(),
+        name="watchlist-export",
+    ),
     path(
         "players/<slug:slug>/watchlist/",
         views.WatchlistToggleView.as_view(),

@@ -110,7 +110,9 @@ def test_the_active_column_still_flips_on_a_second_click(signed_in):
     player("Anyone")
     body = signed_in.get(reverse("nba:player-list"), {"sort": "salary", "dir": "desc"}).text
 
-    salary_link = re.search(r'href="([^"]*sort=salary[^"]*)"', body).group(1)
+    # The header's own link (relative, "?..."), not the Excel download, which
+    # carries the current sort along unchanged.
+    salary_link = re.search(r'href="(\?[^"]*sort=salary[^"]*)"', body).group(1)
     assert "dir=asc" in salary_link
 
 

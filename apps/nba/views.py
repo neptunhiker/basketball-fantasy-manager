@@ -40,7 +40,7 @@ from apps.fantasy import services
 from apps.fantasy.models import PlayerSnapshot, Roster, Season, WatchlistEntry
 from apps.fantasy.views import player_roster_options
 
-from . import charts, stats
+from . import charts, player_export, stats
 from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
 from .game_status import attach_latest_status, snapshot_history
@@ -548,6 +548,9 @@ class PlayerListView(LoginRequiredMixin, ListView):
         )
         context["watchlist_only"] = self._watchlist_only() and not context["kicklist_only"]
         context["watchlist_page"] = getattr(self, "watchlist_page", False)
+        context["export_url"] = reverse(
+            "nba:watchlist-export" if context["watchlist_page"] else "nba:player-export"
+        )
         context["positions"] = Player.Position.choices
         context["teams"] = Team.objects.order_by("name")
         # How many filters besides the search are set, for the phone's
@@ -601,6 +604,61 @@ class PlayerListView(LoginRequiredMixin, ListView):
 class WatchlistView(PlayerListView):
     watchlist_page = True
     template_name = "nba/player_list.html"
+
+
+class PlayerExportView(PlayerListView):
+    """The player list as an Excel file: every row the filters match, in the
+    table's order and with the table's columns -- not just one page."""
+
+    paginate_by = None
+
+    def get(self, request, *args, **kwargs):
+        players = list(self.get_queryset())
+        # Latest FP's DNP / no-game reading, for every row this time.
+        attach_latest_status(players)
+        last_season = self._last_season()
+        watchlist_page = getattr(self, "watchlist_page", False)
+        kicklist_only = self._kicklist_only()
+        options = {
+            "last_season": last_season,
+            "last_season_short": short_season(last_season),
+            "last_season_min_games": MIN_GAMES,
+            "show_status": bool(request.GET.get("inactive")) or watchlist_page,
+            **rest_of_season_context(),
+            **salary_outlook_context(self._salary_baseline()),
+        }
+        if watchlist_page:
+            title = _("Watchlist")
+        elif kicklist_only:
+            title = _("Kick list")
+        else:
+            title = _("Players")
+        cols = player_export.columns(options)
+        sort, descending = self._sort_params()
+        content = player_export.build_workbook(
+            players,
+            request=request,
+            options=options,
+            title=title,
+            filters=player_export.describe_filters(
+                request,
+                watchlist_page=watchlist_page,
+                kicklist_only=kicklist_only,
+                last_season_short=options["last_season_short"],
+                min_games=MIN_GAMES,
+                next_days=options["next_days"],
+            ),
+            sort_text=player_export.describe_sort(cols, sort, descending),
+        )
+        response = HttpResponse(content, content_type=player_export.CONTENT_TYPE)
+        response["Content-Disposition"] = f'attachment; filename="{player_export.filename(title)}"'
+        # Marks and notes are the viewer's own: no shared cache keeps a copy.
+        response["Cache-Control"] = "private, no-store"
+        return response
+
+
+class WatchlistExportView(PlayerExportView):
+    watchlist_page = True
 
 
 def reserve_reached_message(quota):

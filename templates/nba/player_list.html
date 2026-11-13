@@ -34,8 +34,23 @@
   {# Filters reload the page they are on: the watchlist stays the watchlist. #}
   {# On phones only the search shows; the other filters fold behind one button #}
   {# that counts the active ones. From `sm` everything is laid out as before. #}
+  {# The Excel buttons fetch what the table shows. Filters swap only the table #}
+  {# and push their query into the address bar, so the link reads it from there #}
+  {# -- on every push and again on click -- rather than from this render. #}
+  {% translate "Download as Excel: every player matching these filters, in this order" as export_label %}
   <form class="border-b border-neutral-200 p-4 dark:border-neutral-800"
-        x-data="{ filtersOpen: false }"
+        data-export-url="{{ export_url }}"
+        x-data="{
+          filtersOpen: false,
+          exportHref: '{{ export_url|escapejs }}{% querystring page=None %}',
+          exportUrl() {
+            const query = new URLSearchParams(window.location.search);
+            query.delete('page');
+            const search = query.toString();
+            return this.$root.dataset.exportUrl + (search ? '?' + search : '');
+          },
+        }"
+        @htmx:pushed-into-history.window="exportHref = exportUrl()"
         hx-get="{{ request.path }}"
         hx-trigger="input changed delay:300ms from:input[type=search], input changed delay:300ms from:input[type=number], change from:select, change from:input[type=date], change delay:10ms from:input[type=checkbox], search"
         hx-target="#player-table"
@@ -57,6 +72,14 @@
           {% translate "Filters" %}
           {% if active_filter_count %}<span class="badge badge-pending tabular-nums">{{ active_filter_count }}</span>{% endif %}
         </button>
+        {# Phones: a square beside "Filters", so it never folds away with them #}
+        {# and the search keeps the room to show its placeholder. #}
+        <a :href="exportHref" href="{{ export_url }}{% querystring page=None %}" download
+           @click="$el.href = exportUrl()"
+           class="btn btn-secondary group h-[2.625rem] w-[2.625rem] shrink-0 !p-0 sm:hidden"
+           aria-label="{{ export_label }}" title="{{ export_label }}">
+          {% include "nba/partials/excel_icon.html" with icon_class="h-5 w-5" %}
+        </a>
       </div>
 
       <div id="player-filters" x-show="filtersOpen" x-cloak class="space-y-3 sm:!contents">
@@ -198,7 +221,17 @@
           </label>
         {% endif %}
       </div>
-      <span id="player-indicator" class="htmx-indicator text-xs text-neutral-500">{% translate "Searching" %}…</span>
+      <div class="flex shrink-0 items-center gap-3">
+        <span id="player-indicator" class="htmx-indicator text-xs text-neutral-500">{% translate "Searching" %}…</span>
+        {# Tablets and desktops: at the end of the filter bar. #}
+        <a :href="exportHref" href="{{ export_url }}{% querystring page=None %}" download
+           @click="$el.href = exportUrl()"
+           class="btn btn-secondary group hidden !px-3 !py-1.5 text-xs sm:inline-flex"
+           aria-label="{{ export_label }}" title="{{ export_label }}">
+          {% include "nba/partials/excel_icon.html" %}
+          <span>{% translate "Excel" %}</span>
+        </a>
+      </div>
     </div>
   </form>
 

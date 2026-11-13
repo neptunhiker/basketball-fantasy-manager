@@ -129,7 +129,9 @@ def test_without_a_stored_season_there_is_no_column_and_no_sort(signed_in, teams
     assert response.status_code == 200
     assert response.context["current_sort"] == "avg"
     page = response.content.decode()
-    assert "sort=last_fp" not in page
+    # No header links to it. (The Excel link repeats the query as given; the
+    # export resolves it the same way, to the default sort.)
+    assert 'href="?sort=last_fp' not in page
     assert 'name="last_min_games"' not in page
 
 

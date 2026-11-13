@@ -62,6 +62,23 @@ def days_away(day):
     return ngettext("%(count)d day ago", "%(count)d days ago", -days) % {"count": -days}
 
 
+@register.filter
+def short_name(player):
+    """`D. Mitchell` for Donovan Mitchell: enough to tell players apart in a line.
+
+    A first name that is already initials (AJ, CJ) stays as it is, and a
+    player without one is his last name alone.
+    """
+    if player is None:
+        return ""
+    first, last = (player.first_name or "").strip(), (player.last_name or "").strip()
+    if not first:
+        return last
+    if len(first) <= 3 and first.isupper():
+        return f"{first} {last}"
+    return f"{first[0]}. {last}"
+
+
 @register.simple_tag
 def plan_player(result, pk):
     """The player behind an id in a plan result."""

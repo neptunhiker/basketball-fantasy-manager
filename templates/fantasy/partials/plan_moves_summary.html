@@ -1,0 +1,57 @@
+{% load i18n money plan_tags player_stats %}
+{% comment %}
+  A variant's moves at a glance, for the list of variants: each on one line,
+  its processing day on the left, who goes and who comes on the right. Read
+  from the simulation, in the order it replays them. Context: result
+  (simulator.PlanResult), stacked.
+
+  The position badge carries the direction -- red for the player leaving,
+  green for the one coming in -- so a line needs no arrows of its own. A move
+  that cannot happen is struck through; one already made or missed is quiet.
+  With `stacked` (the cards, which can be narrow) the incoming player always
+  sits under the outgoing one, so every move reads the same; the table puts
+  them side by side.
+{% endcomment %}
+<ul class="divide-y divide-neutral-200/70 text-sm dark:divide-neutral-800">
+  {% for outcome in result.step_results %}
+    {% with step=outcome.step status=outcome.status %}
+      <li class="grid grid-cols-[4.75rem_minmax(0,1fr)] items-baseline gap-x-3 py-2 first:pt-0 last:pb-0">
+        <span class="text-[0.7rem] font-medium tabular-nums text-neutral-500 dark:text-neutral-400">{{ step.processing_date|date:"D" }}, {{ step.processing_date|short_month_day }}</span>
+        <div class="flex min-w-0 {% if stacked %}flex-col items-start gap-1{% else %}flex-wrap items-center gap-x-2 gap-y-1{% endif %} {% if status == 'done' or status == 'missed' %}opacity-60{% endif %}">
+          {% if outcome.is_trade %}
+            <span class="sr-only">{% translate "Player out" %}:</span>
+            <span class="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+              <span class="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded bg-rose-100 px-1 text-[0.6rem] font-bold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" title="{{ step.player_out.get_position_display }}">{{ step.player_out.position }}</span>
+              <span class="truncate text-neutral-600 dark:text-neutral-300 {% if status == 'stale' or status == 'missed' %}line-through decoration-rose-400/80{% endif %}">{{ step.player_out|short_name }}</span>
+            </span>
+            <span class="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+              <svg class="h-3.5 w-3.5 shrink-0 text-neutral-300 dark:text-neutral-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12h15m0 0-5-5m5 5-5 5"/></svg>
+              <span class="sr-only">{% translate "Player in" %}:</span>
+              <span class="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded bg-emerald-100 px-1 text-[0.6rem] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" title="{{ step.player_in.get_position_display }}">{{ step.player_in.position }}</span>
+              <span class="truncate font-semibold {% if status == 'stale' or status == 'missed' %}line-through decoration-rose-400/80{% endif %}">{{ step.player_in|short_name }}</span>
+            </span>
+          {% else %}
+            <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
+              <svg class="h-3.5 w-3.5 shrink-0 text-amber-500 dark:text-amber-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5V10a2 2 0 0 0 0 4v1.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 15.5V14a2 2 0 0 0 0-4V8.5ZM14 7v10"/></svg>
+              <span class="font-semibold {% if status == 'stale' or status == 'missed' %}line-through decoration-rose-400/80{% endif %}">
+                {% if step.kind == 'BUY_TRADE' %}{% translate "Trade bought" %}{% else %}{% translate "Trade sold" %}{% endif %}
+              </span>
+              {% if status == 'ok' %}<span class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">{{ outcome.cash_delta|signed_millions }}</span>{% endif %}
+            </span>
+          {% endif %}
+
+          {% if status == 'stale' %}
+            <span class="badge whitespace-nowrap bg-rose-100 px-2 py-0 text-[0.65rem] text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" title="{{ outcome.reason }}">{% translate "Not possible" %}</span>
+          {% elif status == 'done' %}
+            <span class="badge badge-success inline-flex items-center gap-1 whitespace-nowrap px-2 py-0 text-[0.65rem]">
+              <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+              {% translate "Done" %}
+            </span>
+          {% elif status == 'missed' %}
+            <span class="badge badge-neutral whitespace-nowrap px-2 py-0 text-[0.65rem]">{% translate "Missed" %}</span>
+          {% endif %}
+        </div>
+      </li>
+    {% endwith %}
+  {% endfor %}
+</ul>

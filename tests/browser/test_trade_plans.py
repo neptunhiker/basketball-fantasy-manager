@@ -339,8 +339,44 @@ def test_the_german_pages_fit_too(browser, live_server, planned, size):
     }.items():
         context, page = open_logged_in(browser, live_server, user, path, size)
         try:
+            # Every variant's moves open: the longest the list can get.
+            for toggle in page.locator("button[aria-controls^='moves-']:visible").all():
+                toggle.click()
+            page.wait_for_timeout(350)
             shot(page, FOLDER, f"de-{name}-{size}")
             assert page.locator("html").get_attribute("lang") == "de"
             assert page_overflow(page) == 0, f"{name} scrolls sideways at {size} in German"
         finally:
             context.close()
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+@pytest.mark.parametrize("dark", [False, True], ids=["light", "dark"])
+def test_a_variant_opens_its_moves_in_place(browser, live_server, planned, size, dark):
+    """The moves count opens the variant's moves under it, on the list itself."""
+    roster, stale = planned["roster"], planned["stale"]
+    path = reverse("fantasy:plan-list", args=[roster.pk])
+    context, page = open_logged_in(browser, live_server, planned["user"], path, size, dark)
+    try:
+        # Cards below 1360px, the table above: whichever is on screen.
+        toggle = page.locator(f"button[aria-controls$='{stale.pk}']:visible")
+        panel = page.locator(f"#{toggle.get_attribute('aria-controls')}")
+        expect(toggle).to_have_attribute("aria-expanded", "false")
+        expect(panel.get_by_text("D. Mitchell").first).not_to_be_visible()
+
+        toggle.click()
+        expect(toggle).to_have_attribute("aria-expanded", "true")
+        expect(panel.get_by_text("D. Garland")).to_be_visible()
+        expect(panel.get_by_text("C. Cunningham")).to_be_visible()
+        expect(panel.get_by_text("Not possible")).to_be_visible()
+        expect(panel.get_by_text("Trade bought")).to_be_visible()
+        assert page.url.endswith(path), "opening the moves must not open the variant"
+        page.wait_for_timeout(350)  # the panel slides open
+        assert page_overflow(page) == 0
+        shot(page, FOLDER, f"moves-{size}-{'dark' if dark else 'light'}")
+
+        toggle.click()
+        expect(toggle).to_have_attribute("aria-expanded", "false")
+        expect(panel.get_by_text("D. Garland")).not_to_be_visible()
+    finally:
+        context.close()

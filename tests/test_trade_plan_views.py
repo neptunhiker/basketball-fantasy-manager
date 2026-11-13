@@ -125,6 +125,29 @@ def test_the_list_compares_every_variant(signed_in, plan, roster, players, day):
     assert "cap hit" not in content.lower()
 
 
+def test_each_variant_carries_its_moves_to_open_in_place(signed_in, plan, roster, players, day):
+    from apps.fantasy.templatetags.plan_tags import short_name
+
+    add_trade(plan, day, players["G"][0], players["G"][7])
+    # Someone the roster does not have: a move that cannot happen.
+    PlanStep.objects.create(
+        plan=plan, processing_date=day, player_out=players["C"][5], player_in=players["C"][6]
+    )
+    content = signed_in.get(reverse("fantasy:plan-list", args=[roster.pk])).content.decode()
+    # A toggle for the cards and one for the table, both closed.
+    assert f'aria-controls="moves-card-{plan.pk}"' in content
+    assert f'aria-controls="moves-row-{plan.pk}"' in content
+    assert 'aria-expanded="false"' in content
+    assert short_name(players["G"][7]) in content
+    assert "Not possible" in content
+
+
+def test_a_variant_without_moves_has_nothing_to_open(signed_in, plan, roster):
+    content = signed_in.get(reverse("fantasy:plan-list", args=[roster.pk])).content.decode()
+    assert "moves-card-" not in content
+    assert "0 moves" in content
+
+
 def test_an_empty_list_offers_the_first_variant(signed_in, roster):
     response = signed_in.get(reverse("fantasy:plan-list", args=[roster.pk]))
     assert "Create your first variant" in response.content.decode()
@@ -476,3 +499,14 @@ def test_how_far_away_a_day_is():
     assert days_away(today + dt.timedelta(days=10)) == "in 10 days"
     assert days_away(today - dt.timedelta(days=3)) == "3 days ago"
     assert days_away(None) == ""
+
+
+def test_a_short_name_is_the_initial_and_the_last_name():
+    from apps.fantasy.templatetags.plan_tags import short_name
+
+    assert short_name(Player(first_name="Donovan", last_name="Mitchell")) == "D. Mitchell"
+    assert short_name(Player(first_name="Day'Ron", last_name="Sharpe")) == "D. Sharpe"
+    assert short_name(Player(first_name="Darius", last_name="Acuff Jr.")) == "D. Acuff Jr."
+    assert short_name(Player(first_name="AJ", last_name="Dybantsa")) == "AJ Dybantsa"
+    assert short_name(Player(first_name="", last_name="Nene")) == "Nene"
+    assert short_name(None) == ""

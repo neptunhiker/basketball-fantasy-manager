@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 21:01+0100\n"
+"POT-Creation-Date: 2026-11-13 21:18+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -433,8 +433,8 @@ msgstr "Der Trade-Kauf muss nach seinem Beginn enden."
 msgid "Paid out at"
 msgstr "Ausgeschüttet am"
 
-#: apps/fantasy/forms.py:223 templates/fantasy/plan_list.html:135
-#: templates/fantasy/plan_list.html:164
+#: apps/fantasy/forms.py:223 templates/fantasy/plan_list.html:160
+#: templates/fantasy/plan_list.html:189
 #: templates/fantasy/roster_history.html:80
 #: templates/fantasy/roster_rules.html:101
 msgid "Trades"
@@ -1601,7 +1601,7 @@ msgstr "Rückkehr"
 #: apps/nba/player_export.py:366 templates/accounts/partials/user_table.html:10
 #: templates/accounts/user_detail.html:31
 #: templates/fantasy/partials/roster_panel.html:351
-#: templates/fantasy/plan_list.html:159
+#: templates/fantasy/plan_list.html:184
 #: templates/nba/partials/injury_status.html:63
 #: templates/nba/partials/player_table.html:218
 #: templates/nba/player_compare.html:106 templates/nba/player_detail.html:99
@@ -2359,6 +2359,7 @@ msgid "Back to sign in"
 msgstr "Zurück zur Anmeldung"
 
 #: templates/accounts/password_reset_complete.html:4
+#: templates/fantasy/partials/plan_moves_summary.html:48
 #: templates/fantasy/partials/plan_step_actions.html:10
 #: templates/fantasy/plan_share.html:34
 msgid "Done"
@@ -2943,7 +2944,7 @@ msgstr "Cash"
 #: templates/fantasy/manager_list.html:87
 #: templates/fantasy/partials/plan_day.html:89
 #: templates/fantasy/partials/roster_panel.html:82
-#: templates/fantasy/plan_list.html:131 templates/fantasy/plan_list.html:163
+#: templates/fantasy/plan_list.html:156 templates/fantasy/plan_list.html:188
 #: templates/fantasy/roster_list.html:80
 #: templates/fantasy/roster_rules.html:145
 msgid "Team value"
@@ -3113,7 +3114,8 @@ msgid "Trade plan · %(name)s"
 msgstr "Trade-Plan · %(name)s"
 
 #: templates/fantasy/partials/plan_body.html:25
-#: templates/fantasy/plan_list.html:104 templates/fantasy/plan_list.html:175
+#: templates/fantasy/plan_list.html:116 templates/fantasy/plan_list.html:120
+#: templates/fantasy/plan_list.html:209 templates/fantasy/plan_list.html:213
 #, python-format
 msgid "%(counter)s move"
 msgid_plural "%(counter)s moves"
@@ -3136,7 +3138,7 @@ msgid "Nothing planned yet."
 msgstr "Noch nichts geplant."
 
 #: templates/fantasy/partials/plan_body.html:46
-#: templates/fantasy/plan_list.html:180
+#: templates/fantasy/plan_list.html:219
 msgid "Shared"
 msgstr "Geteilt"
 
@@ -3149,7 +3151,7 @@ msgid "Rename"
 msgstr "Umbenennen"
 
 #: templates/fantasy/partials/plan_body.html:61
-#: templates/fantasy/plan_list.html:123 templates/fantasy/plan_list.html:161
+#: templates/fantasy/plan_list.html:148 templates/fantasy/plan_list.html:186
 msgid "Cash at the end"
 msgstr "Cash am Ende"
 
@@ -3171,7 +3173,7 @@ msgid "Trades left"
 msgstr "Trades übrig"
 
 #: templates/fantasy/partials/plan_body.html:79
-#: templates/fantasy/plan_list.html:136 templates/fantasy/plan_list.html:211
+#: templates/fantasy/plan_list.html:161 templates/fantasy/plan_list.html:250
 #, python-format
 msgid "%(counter)s used"
 msgid_plural "%(counter)s used"
@@ -3179,7 +3181,7 @@ msgstr[0] "%(counter)s genutzt"
 msgstr[1] "%(counter)s genutzt"
 
 #: templates/fantasy/partials/plan_body.html:79
-#: templates/fantasy/plan_list.html:137 templates/fantasy/plan_list.html:212
+#: templates/fantasy/plan_list.html:162 templates/fantasy/plan_list.html:251
 #, python-format
 msgid "%(counter)s bought"
 msgid_plural "%(counter)s bought"
@@ -3187,7 +3189,7 @@ msgstr[0] "%(counter)s gekauft"
 msgstr[1] "%(counter)s gekauft"
 
 #: templates/fantasy/partials/plan_body.html:79
-#: templates/fantasy/plan_list.html:137 templates/fantasy/plan_list.html:212
+#: templates/fantasy/plan_list.html:162 templates/fantasy/plan_list.html:251
 #, python-format
 msgid "%(counter)s sold"
 msgid_plural "%(counter)s sold"
@@ -3349,6 +3351,7 @@ msgstr "Move an diesem Tag hinzufügen"
 msgid "Buy a trade (%(price)s)"
 msgstr "Trade kaufen (%(price)s)"
 
+#: templates/fantasy/partials/plan_moves_summary.html:22
 #: templates/fantasy/partials/plan_player.html:17
 #: templates/fantasy/partials/plan_step_editor.html:82
 #: templates/fantasy/partials/trade_body.html:48
@@ -3357,6 +3360,7 @@ msgstr "Trade kaufen (%(price)s)"
 msgid "Player out"
 msgstr "Spieler raus"
 
+#: templates/fantasy/partials/plan_moves_summary.html:29
 #: templates/fantasy/partials/plan_player.html:17
 #: templates/fantasy/partials/plan_step_editor.html:132
 #: templates/fantasy/partials/trade_body.html:122
@@ -3364,6 +3368,24 @@ msgstr "Spieler raus"
 #: templates/fantasy/roster_history.html:126
 msgid "Player in"
 msgstr "Spieler rein"
+
+#: templates/fantasy/partials/plan_moves_summary.html:37
+msgid "Trade bought"
+msgstr "Trade gekauft"
+
+#: templates/fantasy/partials/plan_moves_summary.html:37
+msgid "Trade sold"
+msgstr "Trade verkauft"
+
+#: templates/fantasy/partials/plan_moves_summary.html:44
+#: templates/fantasy/partials/plan_step_actions.html:14
+msgid "Not possible"
+msgstr "Nicht möglich"
+
+#: templates/fantasy/partials/plan_moves_summary.html:51
+#: templates/fantasy/partials/plan_step_actions.html:12
+msgid "Missed"
+msgstr "Verpasst"
 
 #: templates/fantasy/partials/plan_player.html:25
 #: templates/fantasy/partials/plan_step_editor.html:182
@@ -3392,14 +3414,6 @@ msgstr "%(fp)s nächste 7 Tage"
 #: templates/fantasy/partials/plan_step.html:57
 msgid "FP unknown"
 msgstr "FP unbekannt"
-
-#: templates/fantasy/partials/plan_step_actions.html:12
-msgid "Missed"
-msgstr "Verpasst"
-
-#: templates/fantasy/partials/plan_step_actions.html:14
-msgid "Not possible"
-msgstr "Nicht möglich"
 
 #: templates/fantasy/partials/plan_step_actions.html:25
 #: templates/fantasy/plan_step_move.html:9
@@ -3532,7 +3546,7 @@ msgid "Cash after that day"
 msgstr "Cash nach diesem Tag"
 
 #: templates/fantasy/partials/plan_step_editor.html:232
-#: templates/fantasy/plan_list.html:140 templates/fantasy/plan_list.html:165
+#: templates/fantasy/plan_list.html:165 templates/fantasy/plan_list.html:190
 msgid "FP, rest of season"
 msgstr "FP, Rest der Saison"
 
@@ -3907,7 +3921,7 @@ msgstr[0] "%(count)s angeschlagen"
 msgstr[1] "%(count)s angeschlagen"
 
 #: templates/fantasy/partials/roster_panel.html:352
-#: templates/fantasy/plan_list.html:166 templates/fantasy/season_list.html:33
+#: templates/fantasy/plan_list.html:191 templates/fantasy/season_list.html:33
 msgid "Actions"
 msgstr "Aktionen"
 
@@ -4294,7 +4308,7 @@ msgstr "Variante teilen"
 msgid "Duplicate variant"
 msgstr "Variante duplizieren"
 
-#: templates/fantasy/plan_detail.html:65 templates/fantasy/plan_list.html:223
+#: templates/fantasy/plan_detail.html:65 templates/fantasy/plan_list.html:262
 msgid "Duplicate"
 msgstr "Duplizieren"
 
@@ -4356,53 +4370,53 @@ msgstr "Nächstes Gehalts-Update"
 msgid "at %(time)s"
 msgstr "um %(time)s Uhr"
 
-#: templates/fantasy/plan_list.html:105 templates/fantasy/plan_list.html:177
+#: templates/fantasy/plan_list.html:122 templates/fantasy/plan_list.html:216
 msgid "Most points"
 msgstr "Meiste Punkte"
 
-#: templates/fantasy/plan_list.html:112 templates/fantasy/plan_list.html:160
+#: templates/fantasy/plan_list.html:137 templates/fantasy/plan_list.html:185
 msgid "Last move"
 msgstr "Letzter Move"
 
-#: templates/fantasy/plan_list.html:127 templates/fantasy/plan_list.html:162
+#: templates/fantasy/plan_list.html:152 templates/fantasy/plan_list.html:187
 #: templates/fantasy/roster_latest.html:87
 msgid "Squad value"
 msgstr "Kaderwert"
 
-#: templates/fantasy/plan_list.html:137 templates/fantasy/plan_list.html:212
+#: templates/fantasy/plan_list.html:162 templates/fantasy/plan_list.html:251
 #, python-format
 msgid "%(counter)s left"
 msgid_plural "%(counter)s left"
 msgstr[0] "%(counter)s übrig"
 msgstr[1] "%(counter)s übrig"
 
-#: templates/fantasy/plan_list.html:142 templates/fantasy/plan_list.html:216
+#: templates/fantasy/plan_list.html:167 templates/fantasy/plan_list.html:255
 #, python-format
 msgid "%(points)s in 7 days"
 msgstr "%(points)s in 7 Tagen"
 
-#: templates/fantasy/plan_list.html:146
+#: templates/fantasy/plan_list.html:171
 msgid "Includes predicted salaries"
 msgstr "Mit prognostizierten Gehältern"
 
-#: templates/fantasy/plan_list.html:158
+#: templates/fantasy/plan_list.html:183
 msgid "Variant"
 msgstr "Variante"
 
-#: templates/fantasy/plan_list.html:187
+#: templates/fantasy/plan_list.html:226
 msgid "predicted salaries"
 msgstr "prognostizierte Gehälter"
 
-#: templates/fantasy/plan_list.html:222
+#: templates/fantasy/plan_list.html:261
 #, python-format
 msgid "Duplicate %(name)s"
 msgstr "%(name)s duplizieren"
 
-#: templates/fantasy/plan_list.html:238
+#: templates/fantasy/plan_list.html:293
 msgid "No variants yet"
 msgstr "Noch keine Varianten"
 
-#: templates/fantasy/plan_list.html:240
+#: templates/fantasy/plan_list.html:295
 msgid ""
 "Start with one variant — say, this Sunday's trades plus next week's — then "
 "duplicate it to try the alternatives."
@@ -4410,7 +4424,7 @@ msgstr ""
 "Fang mit einer Variante an – etwa den Trades bis Sonntag plus denen der "
 "Woche danach – und dupliziere sie, um Alternativen auszuprobieren."
 
-#: templates/fantasy/plan_list.html:248
+#: templates/fantasy/plan_list.html:303
 msgid "Create your first variant"
 msgstr "Erste Variante erstellen"
 

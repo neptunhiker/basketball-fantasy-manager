@@ -12,12 +12,17 @@ The official game's rules, as this module reads them:
   as one batch. Cash and the position minimums are therefore checked once per
   processing day, after all of that day's steps -- a day may dip below zero
   in between as long as it ends at or above it.
-- Salaries reprice on Sundays at 22:00, and a trade processed then already
-  uses the *new* salaries. So a step is priced at the salaries of the latest
-  update at or before its processing moment: today's if no update lies in
-  between (`KNOWN`), the salary outlook's prediction for the next one
-  (`PREDICTED`), and the same prediction, less trustworthy, beyond that
-  (`PREDICTED_FAR`) -- the outlook only looks one update ahead.
+- Salaries reprice on Sundays at 22:00, right after that evening's batch: a
+  trade processed then still uses the *old* salaries. So a step is priced at
+  the salaries of the latest update before its processing moment: today's if
+  no update lies in between (`KNOWN`), the salary outlook's prediction for
+  the next one (`PREDICTED`), and the same prediction, less trustworthy,
+  beyond that (`PREDICTED_FAR`) -- the outlook only looks one update ahead.
+- An update moves no cash, only team value (squad value plus cash): the
+  players held are worth their new salaries. A day on which salaries reprice
+  says what the squad it leaves behind is expected to be worth after it, and
+  a plan says what its final squad is worth after the update that follows
+  its last batch.
 - Free trades granted at a moment are usable from the next processing after
   it. The Sunday 22:00 weekly trade arrives with that evening's batch, not in
   time for it.
@@ -114,6 +119,13 @@ class DayResult:
     squad_after: list = field(default_factory=list)
     cash_before: Decimal = ZERO
     cash_after: Decimal = ZERO
+    # Squad value plus cash, at the prices this batch trades at.
+    value_before: Decimal = ZERO
+    value_after: Decimal = ZERO
+    # When salaries reprice right after this batch: the moment, and what the
+    # squad it leaves is expected to be worth then.
+    update_at: dt.datetime | None = None
+    value_after_update: Decimal | None = None
     trades_before: int = 0
     trades_after: int = 0
     problems: list = field(default_factory=list)
@@ -133,6 +145,17 @@ class DayResult:
         return self.cash_after - self.cash_before
 
     @property
+    def value_change(self):
+        return self.value_after - self.value_before
+
+    @property
+    def update_change(self):
+        """How much the update itself moves the team value."""
+        if self.value_after_update is None:
+            return None
+        return self.value_after_update - self.value_after
+
+    @property
     def granted(self):
         return sum(grant.trades for grant in self.grants)
 
@@ -149,7 +172,13 @@ class PlanResult:
     squad_end: list = field(default_factory=list)
     cash_end: Decimal = ZERO
     trades_end: int = 0
+    # The final squad and cash, valued after the update that follows the last
+    # batch (`value_end_at`; None when no update is left), and the roster as it
+    # stands valued the same way -- what doing nothing would be worth then.
     team_value_end: Decimal = ZERO
+    team_value_idle: Decimal = ZERO
+    value_end_at: dt.datetime | None = None
+    value_end_source: str = KNOWN
     trades_used: int = 0
     trades_bought: int = 0
     trades_sold: int = 0
@@ -207,6 +236,15 @@ class PlanResult:
     def team_value_change(self):
         return self.team_value_end - self.team_value_start
 
+    @property
+    def team_value_gain(self):
+        """What the plan adds over making none of its moves, valued alike."""
+        return self.team_value_end - self.team_value_idle
+
+    @property
+    def has_predicted_values(self):
+        return self.has_steps and self.value_end_source != KNOWN
+
     def state_before(self, day):
         """(squad, cash, trades) going into `day`'s batch, before its own steps.
 
@@ -242,11 +280,28 @@ class Prices:
             ]
         self._predicted = {}
 
-    def source(self, moment):
-        ahead = sum(1 for update in self.updates if update <= moment)
+    @staticmethod
+    def _level(ahead):
         if ahead == 0:
             return KNOWN
         return PREDICTED if ahead == 1 else PREDICTED_FAR
+
+    def source(self, moment):
+        """The prices a batch at `moment` trades at: before that evening's update."""
+        return self._level(sum(1 for update in self.updates if update < moment))
+
+    def update_at(self, moment):
+        """The first salary update at or after `moment`, or None."""
+        return min((update for update in self.updates if update >= moment), default=None)
+
+    def source_after_update(self, moment):
+        """The prices once the first update at or after `moment` has run."""
+        until = self.update_at(moment) or moment
+        return self._level(sum(1 for update in self.updates if update <= until))
+
+    def value(self, squad, cash, players, source):
+        """Squad value plus cash; a player without a salary counts nothing."""
+        return cash + sum((self.price(players[pk], source) or ZERO for pk in squad), ZERO)
 
     def price(self, player, source):
         """In dollars, or None when the player has no salary on record."""
@@ -406,6 +461,7 @@ def simulate(plan, now=None, extra_steps=(), steps=None):
         day.squad_before = list(squad)
         day.cash_before = cash
         day.trades_before = trades
+        day.value_before = prices.value(squad, cash, players, day.price_source)
 
         on_roster = set(squad)
         seen = set()
@@ -463,16 +519,27 @@ def simulate(plan, now=None, extra_steps=(), steps=None):
         day.cash_after = cash
         day.trades_after = trades
         day.counts_after = _counts(squad, players)
+        day.value_after = prices.value(squad, cash, players, day.price_source)
+        if prices.update_at(moment) == moment:
+            day.update_at = moment
+            day.value_after_update = prices.value(
+                squad, cash, players, prices.source_after_update(moment)
+            )
         if not is_past:
             _check_day(day, start_gaps)
         result.days.append(day)
 
-    last_source = result.days[-1].price_source if result.days else KNOWN
     result.squad_end = list(squad)
     result.cash_end = cash
     result.trades_end = trades
-    result.team_value_end = cash + sum(
-        (prices.price(players[pk], last_source) or ZERO for pk in squad), ZERO
+    # Valued after the update that follows the last batch -- the first one
+    # still ahead when the plan has no days at all.
+    last = result.days[-1].moment if result.days else now
+    result.value_end_at = prices.update_at(last)
+    result.value_end_source = prices.source_after_update(last)
+    result.team_value_end = prices.value(squad, cash, players, result.value_end_source)
+    result.team_value_idle = prices.value(
+        squad_ids, result.cash_start, players, result.value_end_source
     )
     result.players = players
     result.grants = upcoming_grants

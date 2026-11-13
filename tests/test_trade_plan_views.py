@@ -141,6 +141,28 @@ def test_the_plan_page_shows_each_day_and_move(signed_in, plan, players, day):
     assert "Day by day" in content
 
 
+def test_an_update_day_shows_the_team_value_after_it(signed_in, plan, players, season):
+    """Cap hits change at 22:00 right after a day's batch: that day says so."""
+    from apps.fantasy.simulator import processing_moment
+
+    season.trade_market_opens_at = processing_moment(timezone.localdate() - dt.timedelta(days=5))
+    season.save()
+    update_day = timezone.localdate() + dt.timedelta(days=2)
+    add_trade(plan, update_day, players["G"][0], players["G"][7])
+    content = signed_in.get(detail_url(plan)).content.decode()
+    assert "After the 22:00 update" in content
+    assert "Expected team value" in content
+    assert "vs. no moves" in content
+    assert "Cash doesn't move with the update." in content
+
+
+def test_a_day_without_an_update_has_no_after_update_value(signed_in, plan, players, day):
+    add_trade(plan, day, players["G"][0], players["G"][7])
+    content = signed_in.get(detail_url(plan)).content.decode()
+    assert "Team value" in content
+    assert "After the 22:00 update" not in content
+
+
 def test_an_empty_plan_says_so(signed_in, plan):
     assert "Nothing planned yet" in signed_in.get(detail_url(plan)).content.decode()
 

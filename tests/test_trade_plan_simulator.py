@@ -2,9 +2,10 @@
 
 Every test runs at one fixed moment -- Friday 20 November 2026, noon in Berlin
 -- with the trade market open since Sunday the 15th. That places the next
-salary update on Sunday the 22nd and the one after on the 29th, so a step on
-Saturday is priced at today's salaries, one on Sunday at the prediction, and
-one a week later at the same prediction, less trusted.
+salary update on Sunday the 22nd and the one after on the 29th. The Sunday
+batch runs before its update, so a step up to and including Sunday is priced
+at today's salaries, one on Monday at the prediction, and one a week later at
+the same prediction, less trusted.
 """
 
 import datetime as dt
@@ -158,16 +159,27 @@ def test_before_the_next_update_a_trade_is_priced_at_todays_salaries(plan, squad
     assert "Cash would end the day" in day.problems[0]
 
 
-def test_a_sunday_trade_uses_the_new_salaries(plan, squad, market):
-    """Processed at 22:00 with the update: the prediction, not today's price."""
+def predicted_riser():
+    return 3 * M + expected_amount(Decimal(30)) - expected_amount(Decimal(20))
+
+
+def test_a_sunday_trade_still_uses_todays_salaries(plan, squad, market):
+    """The batch runs at 22:00 before that evening's update: the old price."""
     trade(plan, SUN, squad["G"][0], market["riser"])
     result = run(plan)
     (day,) = result.days
+    assert day.price_source == simulator.KNOWN
+    assert day.steps[0].price_in == market["riser"].current_salary
+    assert not result.has_predicted_prices
+
+
+def test_a_trade_the_day_after_an_update_uses_the_new_salaries(plan, squad, market):
+    trade(plan, MON, squad["G"][0], market["riser"])
+    result = run(plan)
+    (day,) = result.days
     assert day.price_source == simulator.PREDICTED
-    riser = market["riser"]
-    predicted = 3 * M + expected_amount(Decimal(30)) - expected_amount(Decimal(20))
-    assert day.steps[0].price_in == predicted
-    assert predicted > riser.current_salary
+    assert day.steps[0].price_in == predicted_riser()
+    assert predicted_riser() > market["riser"].current_salary
     assert result.has_predicted_prices
 
 
@@ -180,8 +192,68 @@ def test_a_player_without_a_prediction_keeps_todays_price(plan, squad, season):
     rookie = Player.objects.create(
         first_name="New", last_name="Guy", position="G", current_salary=1 * M
     )
-    trade(plan, SUN, squad["G"][0], rookie)
+    trade(plan, MON, squad["G"][0], rookie)
     assert run(plan).days[0].steps[0].price_in == 1 * M
+
+
+# --- team value ----------------------------------------------------------------
+
+
+def test_a_swap_moves_cash_but_not_team_value(plan, squad, market):
+    trade(plan, SAT, squad["G"][0], market["cheap_guard"])
+    (day,) = run(plan).days
+    assert day.cash_before == 3 * M
+    assert day.cash_after == 4 * M
+    assert day.value_before == day.value_after == 33 * M
+    assert day.value_change == 0
+
+
+def test_a_bought_trade_costs_team_value(plan):
+    market_step(plan, SAT, PlanStep.Kind.BUY_TRADE)
+    (day,) = run(plan).days
+    assert day.value_after == day.value_before - Decimal("1.5") * M
+
+
+def test_only_a_day_with_an_update_says_what_it_brings(plan, squad, market):
+    trade(plan, SAT, squad["G"][0], market["cheap_guard"])
+    trade(plan, SUN, squad["G"][1], market["riser"])
+    sat, sun = run(plan).days
+    assert sat.update_at is None
+    assert sat.value_after_update is None
+    assert sat.update_change is None
+    assert sun.update_at == berlin(2026, 11, 22, 22, 0)
+    # Bought at 3M before the update, worth the prediction after it; cash stays.
+    assert sun.value_after == 33 * M
+    assert sun.value_after_update == 33 * M - 3 * M + predicted_riser()
+    assert sun.update_change == predicted_riser() - 3 * M
+
+
+def test_the_plan_is_valued_after_the_update_that_follows_it(plan, squad, market):
+    trade(plan, SAT, squad["G"][0], market["riser"])  # 2M out, 3M in
+    result = run(plan)
+    assert result.value_end_at == berlin(2026, 11, 22, 22, 0)
+    assert result.value_end_source == simulator.PREDICTED
+    assert result.has_predicted_values
+    assert result.team_value_start == 33 * M
+    assert result.cash_end == 2 * M
+    assert result.team_value_end == 33 * M - 3 * M + predicted_riser()
+    # Doing nothing keeps the squad at 2M apiece: the riser is the whole gain.
+    assert result.team_value_idle == 33 * M
+    assert result.team_value_gain == predicted_riser() - 3 * M
+
+
+def test_a_plan_ending_after_an_update_is_valued_at_the_next_one(plan, squad, market):
+    trade(plan, MON, squad["G"][0], market["cheap_guard"])
+    result = run(plan)
+    assert result.value_end_at == berlin(2026, 11, 29, 22, 0)
+    assert result.value_end_source == simulator.PREDICTED_FAR
+
+
+def test_an_empty_plan_gains_no_team_value(plan):
+    result = run(plan)
+    assert result.team_value_end == result.team_value_idle
+    assert result.team_value_gain == 0
+    assert not result.has_predicted_values
 
 
 # --- the daily batch ---------------------------------------------------------

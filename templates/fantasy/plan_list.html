@@ -4,7 +4,7 @@
 {% comment %}
   A roster's trade plans side by side. The comparison is the point of the
   page: which variants still work at today's cap hits, what each leaves in
-  cash and trades, and which gains the most points. A table from `md`, one
+  cash and trades, and which gains the most points. A table from `lg`, one
   card per variant below it -- seven columns do not fit a phone.
 {% endcomment %}
 
@@ -93,7 +93,7 @@
 
   {% if results %}
     {# --- phones and small tablets: one card per variant --------------------- #}
-    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:hidden">
+    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:hidden">
       {% for result in results %}
         <li class="card relative flex min-w-0 flex-col p-4 transition hover:border-primary-300 hover:shadow-md dark:hover:border-primary-500/40 {% if result == best %}ring-2 ring-primary-400/60{% endif %}">
           <div class="flex items-start justify-between gap-3">
@@ -112,16 +112,20 @@
               <dd class="font-semibold tabular-nums {% if result.cash_end < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.cash_end|millions }}</dd>
             </div>
             <div>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Expected team value" %}</dt>
+              <dd class="font-semibold tabular-nums">{{ result.team_value_end|millions }}</dd>
+              {% if result.has_steps %}
+                <dd class="text-xs tabular-nums {% if result.team_value_gain > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.team_value_gain < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{% blocktranslate with gain=result.team_value_gain|signed_millions %}{{ gain }} vs. no moves{% endblocktranslate %}</dd>
+              {% endif %}
+            </div>
+            <div>
               <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Trades left" %}</dt>
               <dd class="font-semibold tabular-nums">{{ result.trades_end }}</dd>
             </div>
             <div>
               <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "FP, rest of season" %}</dt>
               <dd class="font-semibold tabular-nums {% if result.fp_rest and result.fp_rest > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.fp_rest and result.fp_rest < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.fp_rest|signed_points }}</dd>
-            </div>
-            <div>
-              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "FP, next 7 days" %}</dt>
-              <dd class="font-semibold tabular-nums">{{ result.fp_week|signed_points }}</dd>
+              <dd class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">{% blocktranslate with points=result.fp_week|signed_points %}{{ points }} in 7 days{% endblocktranslate %}</dd>
             </div>
           </dl>
           {% if result.has_predicted_prices %}
@@ -131,8 +135,8 @@
       {% endfor %}
     </ul>
 
-    {# --- from `md`: the comparison table ------------------------------------ #}
-    <div class="card hidden overflow-hidden md:block">
+    {# --- from `lg`: the comparison table ------------------------------------ #}
+    <div class="card hidden overflow-hidden lg:block">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -140,9 +144,9 @@
               <th scope="col" class="px-5 py-3 font-medium">{% translate "Variant" %}</th>
               <th scope="col" class="px-3 py-3 font-medium">{% translate "Status" %}</th>
               <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Cash at the end" %}</th>
+              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Expected team value" %}</th>
               <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Trades left" %}</th>
               <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "FP, rest of season" %}</th>
-              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "FP, 7 days" %}</th>
               <th scope="col" class="px-4 py-3"><span class="sr-only">{% translate "Actions" %}</span></th>
             </tr>
           </thead>
@@ -171,17 +175,21 @@
                   <span class="font-semibold {% if result.cash_end < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.cash_end|millions }}</span>
                   <span class="block text-xs text-neutral-500 dark:text-neutral-400">{{ result.cash_change|signed_millions }}</span>
                 </td>
+                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums" title="{{ result.team_value_end|exact }}">
+                  <span class="font-semibold">{{ result.team_value_end|millions }}</span>
+                  {% if result.has_steps %}
+                    <span class="block text-xs {% if result.team_value_gain > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.team_value_gain < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{% blocktranslate with gain=result.team_value_gain|signed_millions %}{{ gain }} vs. no moves{% endblocktranslate %}</span>
+                  {% endif %}
+                </td>
                 <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums">
                   <span class="font-semibold">{{ result.trades_end }}</span>
                   {% if result.trades_bought %}
                     <span class="block text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate count counter=result.trades_bought %}{{ counter }} bought{% plural %}{{ counter }} bought{% endblocktranslate %}</span>
                   {% endif %}
                 </td>
-                <td class="whitespace-nowrap px-3 py-3.5 text-right font-semibold tabular-nums {% if result.fp_rest and result.fp_rest > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.fp_rest and result.fp_rest < 0 %}text-rose-600 dark:text-rose-400{% endif %}">
-                  {{ result.fp_rest|signed_points }}
-                </td>
-                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums text-neutral-600 dark:text-neutral-300">
-                  {{ result.fp_week|signed_points }}
+                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums">
+                  <span class="font-semibold {% if result.fp_rest and result.fp_rest > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.fp_rest and result.fp_rest < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.fp_rest|signed_points }}</span>
+                  <span class="block text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate with points=result.fp_week|signed_points %}{{ points }} in 7 days{% endblocktranslate %}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3.5 text-right">
                   <button type="button"

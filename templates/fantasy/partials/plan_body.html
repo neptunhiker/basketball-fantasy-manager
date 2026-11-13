@@ -1,4 +1,4 @@
-{% load i18n static money plan_tags %}
+{% load i18n static money plan_tags player_stats %}
 {% comment %}
   A trade plan's summary and its days. Swaps itself (`#plan-body`) after every
   edit made on the page, so the figures can never lag behind the moves.
@@ -65,6 +65,18 @@
             {% blocktranslate with now=result.cash_start|millions %}now {{ now }}{% endblocktranslate %}
           </dd>
         </div>
+        <div class="rounded-xl px-3.5 py-3 {% if result.has_steps and result.team_value_gain > 0 %}bg-emerald-50 dark:bg-emerald-500/10{% elif result.has_steps and result.team_value_gain < 0 %}bg-rose-50 dark:bg-rose-500/10{% else %}bg-neutral-100/70 dark:bg-neutral-800/60{% endif %}">
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Expected team value" %}</dt>
+          <dd class="mt-1 text-lg font-bold tabular-nums sm:text-xl" title="{{ result.team_value_end|exact }}">{{ result.team_value_end|millions }}</dd>
+          <dd class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+            {% blocktranslate with now=result.team_value_start|millions %}now {{ now }}{% endblocktranslate %}
+          </dd>
+          {% if result.has_steps %}
+            <dd class="text-xs font-semibold tabular-nums {% if result.team_value_gain > 0 %}text-emerald-700 dark:text-emerald-300{% elif result.team_value_gain < 0 %}text-rose-700 dark:text-rose-300{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">
+              {% blocktranslate with gain=result.team_value_gain|signed_millions %}{{ gain }} vs. no moves{% endblocktranslate %}
+            </dd>
+          {% endif %}
+        </div>
         <div class="rounded-xl bg-neutral-100/70 px-3.5 py-3 dark:bg-neutral-800/60">
           <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Trades left" %}</dt>
           <dd class="mt-1 text-lg font-bold tabular-nums sm:text-xl {% if result.trades_end < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.trades_end }}</dd>
@@ -75,29 +87,32 @@
         <div class="rounded-xl px-3.5 py-3 {% if result.fp_rest and result.fp_rest > 0 %}bg-emerald-50 dark:bg-emerald-500/10{% elif result.fp_rest and result.fp_rest < 0 %}bg-rose-50 dark:bg-rose-500/10{% else %}bg-neutral-100/70 dark:bg-neutral-800/60{% endif %}">
           <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Projected FP, rest of season" %}</dt>
           <dd class="mt-1 text-lg font-bold tabular-nums sm:text-xl {% if result.fp_rest and result.fp_rest > 0 %}text-emerald-700 dark:text-emerald-300{% elif result.fp_rest and result.fp_rest < 0 %}text-rose-700 dark:text-rose-300{% endif %}">{{ result.fp_rest|signed_points }}</dd>
-          <dd class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "vs. making none of these moves" %}</dd>
-        </div>
-        <div class="rounded-xl bg-neutral-100/70 px-3.5 py-3 dark:bg-neutral-800/60">
-          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Projected FP, next 7 days" %}</dt>
-          <dd class="mt-1 text-lg font-bold tabular-nums sm:text-xl {% if result.fp_week and result.fp_week > 0 %}text-emerald-700 dark:text-emerald-300{% elif result.fp_week and result.fp_week < 0 %}text-rose-700 dark:text-rose-300{% endif %}">{{ result.fp_week|signed_points }}</dd>
           <dd class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
-            {% blocktranslate with value=result.team_value_end|millions %}Team value after: {{ value }}{% endblocktranslate %}
+            {% blocktranslate with points=result.fp_week|signed_points %}{{ points }} in the next 7 days{% endblocktranslate %}
           </dd>
         </div>
       </dl>
 
       {# The caveats, said once and plainly. #}
-      {% if result.has_predicted_prices or result.fp_incomplete or result.fp_rest is None and result.has_steps or result.missed_steps %}
+      {% if result.has_predicted_prices or result.has_predicted_values or result.fp_incomplete or result.fp_rest is None and result.has_steps or result.missed_steps %}
         <ul class="mt-5 space-y-2 border-t border-neutral-200 pt-4 text-xs text-neutral-600 dark:border-neutral-800 dark:text-neutral-300">
           {% if result.has_predicted_prices %}
             <li class="flex items-start gap-2">
               <svg class="mt-px h-3.5 w-3.5 shrink-0 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l5-5 3.5 3.5L20 7"/></svg>
               <span>
                 {% if next_update %}
-                  {% blocktranslate with date=next_update|date:"l" time=next_update|date:"TIME_FORMAT" %}Cap hits change on {{ date }} at {{ time }}, and a trade processed then already pays the new ones. Moves from that day on are priced with the predicted cap hits, so their figures will move once the real ones are in.{% endblocktranslate %}
+                  {% blocktranslate with date=next_update|date:"l" time=next_update|date:"TIME_FORMAT" %}Cap hits change on {{ date }} at {{ time }}, right after that evening's batch, which still trades at the current ones. Moves from the day after are priced with the predicted cap hits, so their figures will move once the real ones are in.{% endblocktranslate %}
                 {% else %}
                   {% translate "Some moves fall after a cap-hit update and are priced with predicted cap hits." %}
                 {% endif %}
+              </span>
+            </li>
+          {% endif %}
+          {% if result.has_predicted_values and result.value_end_at %}
+            <li class="flex items-start gap-2">
+              <svg class="mt-px h-3.5 w-3.5 shrink-0 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M7 15l3-4 3 2 4-6"/></svg>
+              <span>
+                {% blocktranslate with date=result.value_end_at|date:"D" short=result.value_end_at|short_month_day time=result.value_end_at|date:"TIME_FORMAT" %}The expected team value is what the squad and cash at the end are worth once cap hits change on {{ date }}, {{ short }} at {{ time }} — with predicted cap hits. Cash doesn't move with the update.{% endblocktranslate %}
               </span>
             </li>
           {% endif %}

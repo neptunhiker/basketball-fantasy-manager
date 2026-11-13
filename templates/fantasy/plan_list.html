@@ -3,9 +3,10 @@
 
 {% comment %}
   A roster's trade plans side by side. The comparison is the point of the
-  page: which variants still work at today's cap hits, what each leaves in
-  cash and trades, and which gains the most points. A table from `lg`, one
-  card per variant below it -- seven columns do not fit a phone.
+  page: which variants still work at today's salaries, what each leaves in
+  cash, squad and team value and trades, and which gains the most points. A
+  table from `xl`, one card per variant below it -- eight columns do not fit
+  a phone or a tablet.
 {% endcomment %}
 
 {% block title %}{% translate "Trade plans" %} · {{ roster.name }} · {{ SITE_NAME }}{% endblock %}
@@ -77,7 +78,7 @@
           </dd>
         </div>
         <div class="stat-tile min-w-0">
-          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Next cap-hit update" %}</dt>
+          <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Next salary update" %}</dt>
           <dd class="truncate text-sm font-semibold">
             {% if next_update %}
               {{ next_update|date:"D" }}, {{ next_update|short_month_day }}
@@ -93,11 +94,11 @@
 
   {% if results %}
     {# --- phones and small tablets: one card per variant --------------------- #}
-    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:hidden">
+    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:hidden">
       {% for result in results %}
         <li class="card relative flex min-w-0 flex-col p-4 transition hover:border-primary-300 hover:shadow-md dark:hover:border-primary-500/40 {% if result == best %}ring-2 ring-primary-400/60{% endif %}">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
+          <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+            <div class="min-w-[9rem] flex-1">
               <a href="{% url 'fantasy:plan-detail' roster.pk result.plan.pk %}" class="line-clamp-2 break-words font-semibold after:absolute after:inset-0 after:content-['']">{{ result.plan.name }}</a>
               <p class="text-xs text-neutral-500 dark:text-neutral-400">
                 {% blocktranslate count counter=result.step_results|length %}{{ counter }} move{% plural %}{{ counter }} moves{% endblocktranslate %}
@@ -112,15 +113,20 @@
               <dd class="font-semibold tabular-nums {% if result.cash_end < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.cash_end|millions }}</dd>
             </div>
             <div>
-              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Expected team value" %}</dt>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Squad value" %}</dt>
+              <dd class="font-semibold tabular-nums">{{ result.squad_value_end|millions }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Team value" %}</dt>
               <dd class="font-semibold tabular-nums">{{ result.team_value_end|millions }}</dd>
               {% if result.has_steps %}
                 <dd class="text-xs tabular-nums {% if result.team_value_gain > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.team_value_gain < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{% blocktranslate with gain=result.team_value_gain|signed_millions %}{{ gain }} vs. no moves{% endblocktranslate %}</dd>
               {% endif %}
             </div>
             <div>
-              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Trades left" %}</dt>
-              <dd class="font-semibold tabular-nums">{{ result.trades_end }}</dd>
+              <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Trades" %}</dt>
+              <dd class="font-semibold tabular-nums {% if result.trades_end < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{% blocktranslate count counter=result.trades_used %}{{ counter }} used{% plural %}{{ counter }} used{% endblocktranslate %}</dd>
+              <dd class="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">{% blocktranslate count counter=result.trades_end %}{{ counter }} left{% plural %}{{ counter }} left{% endblocktranslate %}{% if result.trades_bought %} · {% blocktranslate count counter=result.trades_bought %}{{ counter }} bought{% plural %}{{ counter }} bought{% endblocktranslate %}{% endif %}{% if result.trades_sold %} · {% blocktranslate count counter=result.trades_sold %}{{ counter }} sold{% plural %}{{ counter }} sold{% endblocktranslate %}{% endif %}</dd>
             </div>
             <div>
               <dt class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "FP, rest of season" %}</dt>
@@ -129,31 +135,32 @@
             </div>
           </dl>
           {% if result.has_predicted_prices %}
-            <p class="mt-3 text-xs text-primary-700 dark:text-primary-300">{% translate "Includes predicted cap hits" %}</p>
+            <p class="mt-3 text-xs text-primary-700 dark:text-primary-300">{% translate "Includes predicted salaries" %}</p>
           {% endif %}
         </li>
       {% endfor %}
     </ul>
 
-    {# --- from `lg`: the comparison table ------------------------------------ #}
-    <div class="card hidden overflow-hidden lg:block">
+    {# --- from `xl`: the comparison table ------------------------------------ #}
+    <div class="card hidden overflow-hidden xl:block">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-              <th scope="col" class="px-5 py-3 font-medium">{% translate "Variant" %}</th>
-              <th scope="col" class="px-3 py-3 font-medium">{% translate "Status" %}</th>
-              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Cash at the end" %}</th>
-              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Expected team value" %}</th>
-              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Trades left" %}</th>
-              <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "FP, rest of season" %}</th>
-              <th scope="col" class="px-4 py-3"><span class="sr-only">{% translate "Actions" %}</span></th>
+              <th scope="col" class="px-4 py-3 font-medium">{% translate "Variant" %}</th>
+              <th scope="col" class="px-2.5 py-3 font-medium">{% translate "Status" %}</th>
+              <th scope="col" class="px-2.5 py-3 text-right font-medium">{% translate "Cash at the end" %}</th>
+              <th scope="col" class="px-2.5 py-3 text-right font-medium">{% translate "Squad value" %}</th>
+              <th scope="col" class="px-2.5 py-3 text-right font-medium">{% translate "Team value" %}</th>
+              <th scope="col" class="px-2.5 py-3 text-right font-medium">{% translate "Trades" %}</th>
+              <th scope="col" class="px-2.5 py-3 text-right font-medium">{% translate "FP, rest of season" %}</th>
+              <th scope="col" class="px-3 py-3"><span class="sr-only">{% translate "Actions" %}</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
             {% for result in results %}
               <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/40 {% if result == best %}bg-primary-50/50 dark:bg-primary-500/[0.06]{% endif %}">
-                <td class="max-w-[16rem] px-5 py-3.5">
+                <td class="max-w-[16rem] px-4 py-3.5">
                   <a href="{% url 'fantasy:plan-detail' roster.pk result.plan.pk %}" class="block truncate font-semibold transition hover:text-primary-600 dark:hover:text-primary-300">{{ result.plan.name }}</a>
                   <span class="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
                     {% blocktranslate count counter=result.step_results|length %}{{ counter }} move{% plural %}{{ counter }} moves{% endblocktranslate %}
@@ -165,33 +172,34 @@
                     {% endif %}
                   </span>
                 </td>
-                <td class="px-3 py-3.5">
+                <td class="px-2.5 py-3.5">
                   {% include "fantasy/partials/plan_verdict.html" %}
                   {% if result.has_predicted_prices %}
-                    <span class="mt-1 block text-[0.7rem] text-primary-700 dark:text-primary-300">{% translate "predicted cap hits" %}</span>
+                    <span class="mt-1 block text-[0.7rem] text-primary-700 dark:text-primary-300">{% translate "predicted salaries" %}</span>
                   {% endif %}
                 </td>
-                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums" title="{{ result.cash_end|exact }}">
+                <td class="whitespace-nowrap px-2.5 py-3.5 text-right tabular-nums" title="{{ result.cash_end|exact }}">
                   <span class="font-semibold {% if result.cash_end < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.cash_end|millions }}</span>
                   <span class="block text-xs text-neutral-500 dark:text-neutral-400">{{ result.cash_change|signed_millions }}</span>
                 </td>
-                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums" title="{{ result.team_value_end|exact }}">
+                <td class="whitespace-nowrap px-2.5 py-3.5 text-right font-semibold tabular-nums" title="{{ result.squad_value_end|exact }}">
+                  {{ result.squad_value_end|millions }}
+                </td>
+                <td class="whitespace-nowrap px-2.5 py-3.5 text-right tabular-nums" title="{{ result.team_value_end|exact }}">
                   <span class="font-semibold">{{ result.team_value_end|millions }}</span>
                   {% if result.has_steps %}
                     <span class="block text-xs {% if result.team_value_gain > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.team_value_gain < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{% blocktranslate with gain=result.team_value_gain|signed_millions %}{{ gain }} vs. no moves{% endblocktranslate %}</span>
                   {% endif %}
                 </td>
-                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums">
-                  <span class="font-semibold">{{ result.trades_end }}</span>
-                  {% if result.trades_bought %}
-                    <span class="block text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate count counter=result.trades_bought %}{{ counter }} bought{% plural %}{{ counter }} bought{% endblocktranslate %}</span>
-                  {% endif %}
+                <td class="whitespace-nowrap px-2.5 py-3.5 text-right tabular-nums">
+                  <span class="font-semibold">{% blocktranslate count counter=result.trades_used %}{{ counter }} used{% plural %}{{ counter }} used{% endblocktranslate %}</span>
+                  <span class="block text-xs {% if result.trades_end < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{% blocktranslate count counter=result.trades_end %}{{ counter }} left{% plural %}{{ counter }} left{% endblocktranslate %}{% if result.trades_bought %} · {% blocktranslate count counter=result.trades_bought %}{{ counter }} bought{% plural %}{{ counter }} bought{% endblocktranslate %}{% endif %}{% if result.trades_sold %} · {% blocktranslate count counter=result.trades_sold %}{{ counter }} sold{% plural %}{{ counter }} sold{% endblocktranslate %}{% endif %}</span>
                 </td>
-                <td class="whitespace-nowrap px-3 py-3.5 text-right tabular-nums">
+                <td class="whitespace-nowrap px-2.5 py-3.5 text-right tabular-nums">
                   <span class="font-semibold {% if result.fp_rest and result.fp_rest > 0 %}text-emerald-600 dark:text-emerald-400{% elif result.fp_rest and result.fp_rest < 0 %}text-rose-600 dark:text-rose-400{% endif %}">{{ result.fp_rest|signed_points }}</span>
                   <span class="block text-xs text-neutral-500 dark:text-neutral-400">{% blocktranslate with points=result.fp_week|signed_points %}{{ points }} in 7 days{% endblocktranslate %}</span>
                 </td>
-                <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                <td class="whitespace-nowrap px-3 py-3.5 text-right">
                   <button type="button"
                           hx-post="{% url 'fantasy:plan-duplicate' roster.pk result.plan.pk %}"
                           class="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-tertiary-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
@@ -208,6 +216,10 @@
         </table>
       </div>
     </div>
+    <p class="mt-3 flex items-start gap-1.5 px-1 text-xs text-neutral-500 dark:text-neutral-400">
+      <svg class="mt-px h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 11v5M12 8h.01"/></svg>
+      <span>{% translate "Squad value is what the players are worth; team value adds the cash. Both are expected values, after the salary update that follows a variant's last move." %}</span>
+    </p>
   {% else %}
     <section class="card px-6 py-14 text-center">
       <img src="{% static 'img/pengi.png' %}" alt="" class="mx-auto h-28 w-28 object-contain">

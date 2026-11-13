@@ -276,7 +276,7 @@ read the official game:
 - **One batch a day.** Confirmed trades are processed at 22:00
   (`TRADE_PROCESSING_TIME`). Cash and the position minimums only have to hold
   at the end of a day's batch, not after each move in it.
-- **Sunday trades still pay the old cap hits.** Cap hits change at 22:00
+- **Sunday trades still pay the old salaries.** Salaries change at 22:00
   right after that evening's batch. A move is priced at the salaries of the
   latest update before its processing moment: today's when no update lies in
   between (so up to and including the coming Sunday), the salary outlook's
@@ -284,7 +284,7 @@ read the official game:
   guess -- beyond it.
 - **An update moves team value, not cash.** Every day shows cash and team
   value (squad value plus cash) before and after its batch; a Sunday also
-  shows what the squad is expected to be worth once the cap hits change. The
+  shows what the squad is expected to be worth once the salaries change. The
   plan's *expected team value* is its final squad and cash valued after the
   update that follows its last batch, next to the roster as it stands valued
   the same way -- what the plan gains over making no moves.

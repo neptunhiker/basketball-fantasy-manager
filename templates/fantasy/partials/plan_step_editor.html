@@ -3,7 +3,7 @@
   The step editor's body. Swaps itself: every choice is an hx-get back to the
   same view with the choice in the query string. Everything on it is answered
   for the chosen day -- the squad as the plan leaves it by then, that day's
-  cap hits and that day's budget.
+  salaries and that day's budget.
 {% endcomment %}
 <div id="plan-editor">
 
@@ -32,7 +32,7 @@
           <span class="text-lg font-bold leading-tight tabular-nums">{{ option.date|date:"j" }}</span>
           <span class="text-[0.65rem] {% if option.date == day %}text-white/80{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ option.date|date:"M" }}</span>
           {% if option.is_update %}
-            <span class="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full ring-2 {% if option.date == day %}bg-white ring-primary-500{% else %}bg-primary-500 ring-white dark:ring-neutral-900{% endif %}" title="{% translate 'Cap-hit update' %}"></span>
+            <span class="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full ring-2 {% if option.date == day %}bg-white ring-primary-500{% else %}bg-primary-500 ring-white dark:ring-neutral-900{% endif %}" title="{% translate 'Salary update' %}"></span>
           {% endif %}
           {% if option.moves %}
             <span class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary-500 px-1 text-[0.6rem] font-bold text-white">{{ option.moves }}</span>
@@ -44,15 +44,15 @@
       <span class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ day|date:"l" }}, {{ day|short_month_day }}</span>
       <span aria-hidden="true">·</span>
       {% if source == 'known' %}
-        {% translate "current cap hits" %}
+        {% translate "current salaries" %}
       {% elif source == 'predicted' %}
-        <span class="font-medium text-primary-700 dark:text-primary-300">{% translate "new cap hits, predicted" %}</span>
+        <span class="font-medium text-primary-700 dark:text-primary-300">{% translate "new salaries, predicted" %}</span>
       {% else %}
-        <span class="font-medium text-amber-700 dark:text-amber-300">{% translate "cap hits two updates out, a rough guess" %}</span>
+        <span class="font-medium text-amber-700 dark:text-amber-300">{% translate "salaries two updates out, a rough guess" %}</span>
       {% endif %}
       <span aria-hidden="true">·</span>
       {% blocktranslate count counter=trades_before %}{{ counter }} trade available{% plural %}{{ counter }} trades available{% endblocktranslate %}
-      <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-primary-500" aria-hidden="true"></span>{% translate "= cap hits change after the batch" %}</span>
+      <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-primary-500" aria-hidden="true"></span>{% translate "= salaries change after the batch" %}</span>
     </p>
   </div>
 

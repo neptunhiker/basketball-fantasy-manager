@@ -101,9 +101,9 @@
               <svg class="mt-px h-3.5 w-3.5 shrink-0 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l5-5 3.5 3.5L20 7"/></svg>
               <span>
                 {% if next_update %}
-                  {% blocktranslate with date=next_update|date:"l" time=next_update|date:"TIME_FORMAT" %}Cap hits change on {{ date }} at {{ time }}, right after that evening's batch, which still trades at the current ones. Moves from the day after are priced with the predicted cap hits, so their figures will move once the real ones are in.{% endblocktranslate %}
+                  {% blocktranslate with date=next_update|date:"l" time=next_update|date:"TIME_FORMAT" %}Salaries change on {{ date }} at {{ time }}, right after that evening's batch, which still trades at the current ones. Moves from the day after are priced with the predicted salaries, so their figures will move once the real ones are in.{% endblocktranslate %}
                 {% else %}
-                  {% translate "Some moves fall after a cap-hit update and are priced with predicted cap hits." %}
+                  {% translate "Some moves fall after a salary update and are priced with predicted salaries." %}
                 {% endif %}
               </span>
             </li>
@@ -112,7 +112,7 @@
             <li class="flex items-start gap-2">
               <svg class="mt-px h-3.5 w-3.5 shrink-0 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M7 15l3-4 3 2 4-6"/></svg>
               <span>
-                {% blocktranslate with date=result.value_end_at|date:"D" short=result.value_end_at|short_month_day time=result.value_end_at|date:"TIME_FORMAT" %}The expected team value is what the squad and cash at the end are worth once cap hits change on {{ date }}, {{ short }} at {{ time }} — with predicted cap hits. Cash doesn't move with the update.{% endblocktranslate %}
+                {% blocktranslate with date=result.value_end_at|date:"D" short=result.value_end_at|short_month_day time=result.value_end_at|date:"TIME_FORMAT" %}The expected team value is what the squad and cash at the end are worth once salaries change on {{ date }}, {{ short }} at {{ time }} — with predicted salaries. Cash doesn't move with the update.{% endblocktranslate %}
               </span>
             </li>
           {% endif %}
@@ -158,7 +158,7 @@
       <img src="{% static 'img/pengi_bookkeeper.png' %}" alt="" class="mx-auto h-28 w-28 object-contain sm:h-32 sm:w-32">
       <h2 class="mt-4 text-base font-semibold">{% translate "Nothing planned yet" %}</h2>
       <p class="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
-        {% translate "Add the trades you are thinking about, on the day they would be processed. The plan checks your cash, trades and positions after every day — at the cap hits that apply then." %}
+        {% translate "Add the trades you are thinking about, on the day they would be processed. The plan checks your cash, trades and positions after every day — at the salaries that apply then." %}
       </p>
       {% if not read_only %}
         <div class="mt-6 flex justify-center">{% include "fantasy/partials/plan_add_button.html" with prominent=True %}</div>

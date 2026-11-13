@@ -237,6 +237,11 @@ class PlanResult:
         return self.team_value_end - self.team_value_start
 
     @property
+    def squad_value_end(self):
+        """The final squad alone, valued like `team_value_end` -- without the cash."""
+        return self.team_value_end - self.cash_end
+
+    @property
     def team_value_gain(self):
         """What the plan adds over making none of its moves, valued alike."""
         return self.team_value_end - self.team_value_idle

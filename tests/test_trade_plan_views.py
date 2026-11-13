@@ -116,6 +116,11 @@ def test_the_list_compares_every_variant(signed_in, plan, roster, players, day):
     assert "Variant 1" in content and "Too greedy" in content
     assert "Works" in content
     assert "Breaks on" in content
+    assert "Squad value" in content
+    assert "Team value" in content
+    assert "1 used" in content
+    assert "Next salary update" in content
+    assert "cap hit" not in content.lower()
 
 
 def test_an_empty_list_offers_the_first_variant(signed_in, roster):
@@ -142,7 +147,7 @@ def test_the_plan_page_shows_each_day_and_move(signed_in, plan, players, day):
 
 
 def test_an_update_day_shows_the_team_value_after_it(signed_in, plan, players, season):
-    """Cap hits change at 22:00 right after a day's batch: that day says so."""
+    """Salaries change at 22:00 right after a day's batch: that day says so."""
     from apps.fantasy.simulator import processing_moment
 
     season.trade_market_opens_at = processing_moment(timezone.localdate() - dt.timedelta(days=5))

@@ -240,6 +240,8 @@ def test_the_plan_is_valued_after_the_update_that_follows_it(plan, squad, market
     # Doing nothing keeps the squad at 2M apiece: the riser is the whole gain.
     assert result.team_value_idle == 33 * M
     assert result.team_value_gain == predicted_riser() - 3 * M
+    # The squad alone: the same valuation, without the cash.
+    assert result.squad_value_end == 28 * M + predicted_riser()
 
 
 def test_a_plan_ending_after_an_update_is_valued_at_the_next_one(plan, squad, market):

@@ -324,3 +324,23 @@ def test_the_share_dialog(browser, live_server, planned):
         shot(page, FOLDER, "share-phone")
     finally:
         context.close()
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+def test_the_german_pages_fit_too(browser, live_server, planned, size):
+    """German runs longer than English: the same pages, in German, still fit."""
+    user = planned["user"]
+    user.language = "de"
+    user.save(update_fields=["language"])
+    roster = planned["roster"]
+    for name, path in {
+        "list": reverse("fantasy:plan-list", args=[roster.pk]),
+        "detail": reverse("fantasy:plan-detail", args=[roster.pk, planned["stale"].pk]),
+    }.items():
+        context, page = open_logged_in(browser, live_server, user, path, size)
+        try:
+            shot(page, FOLDER, f"de-{name}-{size}")
+            assert page.locator("html").get_attribute("lang") == "de"
+            assert page_overflow(page) == 0, f"{name} scrolls sideways at {size} in German"
+        finally:
+            context.close()

@@ -15,7 +15,7 @@
   {% endif %}
 </span>
 {% if not read_only %}
-  <div class="flex items-center {% if labelled %}gap-1{% endif %}">
+  <div class="ml-auto flex items-center {% if labelled %}gap-1{% endif %}">
     {% if outcome.status != 'done' %}
       <button type="button"
               hx-get="{% url 'fantasy:plan-step-move' roster.pk plan.pk step.pk %}"

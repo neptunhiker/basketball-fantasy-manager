@@ -256,6 +256,43 @@ until the current season's *Trade buying opens* moment has passed -- the first
 salary update comes with it -- and after the season's last day, and also when
 that date is not set.
 
+## Trade plans
+
+**Plans** on a roster page is the trade simulator: variants of the trades the
+roster might make over the coming days, each replayed against the roster as it
+stands whenever it is opened. A plan stores its moves and nothing else -- no
+prices, no balances -- so a variant written on Friday shows Sunday's budget
+without anyone touching it, and nothing on a plan ever changes the roster.
+
+The page per roster puts the variants side by side (works or breaks, cash and
+trades left, projected points); the page per variant walks through it one
+processing day at a time. Variants can be copied with their moves, which is
+how the alternatives get made, and shared read-only by link with anyone signed
+in.
+
+`apps/fantasy/simulator.py` does the replaying. The rules it follows, as we
+read the official game:
+
+- **One batch a day.** Confirmed trades are processed at 22:00
+  (`TRADE_PROCESSING_TIME`). Cash and the position minimums only have to hold
+  at the end of a day's batch, not after each move in it.
+- **Sunday trades pay the new cap hits.** A move is priced at the salaries of
+  the latest update at or before its processing moment: today's when no update
+  lies in between, the salary outlook's prediction for the next one, and that
+  same prediction -- flagged as a rough guess -- beyond it.
+- **Free trades arrive after the batch.** A grant at Sunday 22:00 can be used
+  from Monday's batch on.
+- **Buying (1.5M) and selling (1.0M) trades** are moves too, while the season's
+  trade market is open.
+- A planned move the roster has since made counts as **done**; one on a day
+  that has passed without it as **missed**. Neither is replayed.
+
+Projected points come from `apps.nba.rest_of_season.GameCounter`: points per
+game × the player's games between two moments × the league's availability,
+with the same injury rule as the rest of the season. A trade gains the
+newcomer's games from its day on and loses the leaver's, which makes a chain
+of trades add up by itself.
+
 ## Accounts and invitations
 
 There is no public sign-up. Team members (`is_staff`) invite people under
@@ -411,7 +448,8 @@ take traffic. Two processes are defined: `app` (Gunicorn) and `worker`
   whether their pages expose a stable player ID — without one, matching has to
   go by name, and names arrive misspelled and inconsistent — and whether the
   fantasy scoring formula is published anywhere.
-- No scoring, standings, per-game logs or optimizer layer yet.
+- No scoring, standings or per-game logs yet. Trade plans simulate, they do not
+  optimize: suggesting the best variant is still open.
 - The sending domain has to be verified in Resend, or invitations land in spam.
 - Internal identifiers are still called `crossover-manager` (Fly app, package
   name, database name). That is deliberate — renaming the Fly app would change

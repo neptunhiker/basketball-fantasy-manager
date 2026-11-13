@@ -47,18 +47,19 @@
   <span class="inline-flex h-6 items-center text-neutral-300 dark:text-neutral-600" title="{% translate 'No earlier snapshot this season to compare with' %}">–<span class="sr-only">{% translate "No earlier snapshot this season to compare with" %}</span></span>
 {% endif %}
 
-{# The line beneath: whom he played or missed, and why he sat out. #}
+{# The line beneath: whom he played or missed, and why he sat out. In the #}
+{# pinned phone cell it wraps, so a long German reason cannot widen the column. #}
 {% if status.is_missed %}
-  <span class="mt-1 block whitespace-nowrap text-xs leading-snug text-neutral-500 dark:text-neutral-400">
+  <span class="mt-1 block {% if full == "full" %}whitespace-nowrap{% else %}whitespace-normal{% endif %} text-xs leading-snug text-neutral-500 dark:text-neutral-400">
     {% if status.opponents %}{% include "nba/partials/game_status_opponents.html" %}<span class="text-neutral-300 dark:text-neutral-600" aria-hidden="true"> · </span>{% endif %}{% include "nba/partials/game_status_reason.html" %}
   </span>
 {% elif full == "full" and status.opponents and not status.lone_opponent %}
-  <span class="mt-1 block whitespace-nowrap text-xs leading-snug text-neutral-500 dark:text-neutral-400">
+  <span class="mt-1 block {% if full == "full" %}whitespace-nowrap{% else %}whitespace-normal{% endif %} text-xs leading-snug text-neutral-500 dark:text-neutral-400">
     {% include "nba/partials/game_status_opponents.html" %}
   </span>
 {% endif %}
 {% if status.is_partly %}
-  <span class="mt-0.5 block whitespace-nowrap text-xs leading-snug text-neutral-500 dark:text-neutral-400">
+  <span class="mt-0.5 block {% if full == "full" %}whitespace-nowrap{% else %}whitespace-normal{% endif %} text-xs leading-snug text-neutral-500 dark:text-neutral-400">
     <span class="font-semibold tracking-wide text-amber-700 dark:text-amber-300" title="{% translate 'Did not play: his team played without him' %}">{% blocktranslate count count=status.missed %}{{ count }} DNP{% plural %}{{ count }} DNP{% endblocktranslate %}</span><span class="text-neutral-300 dark:text-neutral-600" aria-hidden="true"> · </span>{% include "nba/partials/game_status_reason.html" %}
   </span>
 {% endif %}

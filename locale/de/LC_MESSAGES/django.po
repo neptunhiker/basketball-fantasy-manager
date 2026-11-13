@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 20:33+0100\n"
+"POT-Creation-Date: 2026-11-13 20:39+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -4395,21 +4395,11 @@ msgstr "prognostizierte Gehälter"
 msgid "Duplicate %(name)s"
 msgstr "%(name)s duplizieren"
 
-#: templates/fantasy/plan_list.html:221
-msgid ""
-"Squad value is what the players are worth; team value adds the cash. Both "
-"are expected values, after the salary update that follows a variant's last "
-"move."
-msgstr ""
-"Der Kaderwert ist, was die Spieler wert sind; der Teamwert rechnet das Cash "
-"dazu. Beides sind erwartete Werte – nach dem Gehalts-Update, das auf den "
-"letzten Move einer Variante folgt."
-
-#: templates/fantasy/plan_list.html:226
+#: templates/fantasy/plan_list.html:222
 msgid "No variants yet"
 msgstr "Noch keine Varianten"
 
-#: templates/fantasy/plan_list.html:228
+#: templates/fantasy/plan_list.html:224
 msgid ""
 "Start with one variant — say, this Sunday's trades plus next week's — then "
 "duplicate it to try the alternatives."
@@ -4417,7 +4407,7 @@ msgstr ""
 "Fang mit einer Variante an – etwa den Trades bis Sonntag plus denen der "
 "Woche danach – und dupliziere sie, um Alternativen auszuprobieren."
 
-#: templates/fantasy/plan_list.html:236
+#: templates/fantasy/plan_list.html:232
 msgid "Create your first variant"
 msgstr "Erste Variante erstellen"
 

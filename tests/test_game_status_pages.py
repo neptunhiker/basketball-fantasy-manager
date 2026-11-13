@@ -102,3 +102,13 @@ def test_the_player_page_in_german(signed_in, flagg, user):
     assert "Kein Spiel" in body
     assert "6 Teamspielen" in body
     assert "Verletzt" in body
+
+
+def test_the_chart_rings_the_game_he_sat_out(signed_in, flagg):
+    body = page(signed_in, flagg)
+    start = body.index('id="fp-per-game-fill"')
+    chart = body[start : body.index("</svg>", start)]
+
+    assert "text-amber-500" in chart  # the ring and the tick
+    assert "DNP · vs LAL · Injured" in re.sub(r"\s+", " ", chart)
+    assert "did not play, his team did" in body

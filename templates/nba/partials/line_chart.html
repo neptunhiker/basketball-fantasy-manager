@@ -81,11 +81,28 @@
                 cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="10"
                 fill="currentColor" />
 
-        <circle class="chart-dot fill-white dark:fill-neutral-900"
-                cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}"
-                r="{% if forloop.last %}5{% else %}3.5{% endif %}"
-                stroke="currentColor"
-                stroke-width="2" />
+        {% if dot.status.missed %}
+          {# A game he sat out: an amber ring, and a tick on the time axis beneath it. #}
+          <line class="text-amber-500 dark:text-amber-400"
+                x1="{{ dot.x|unlocalize }}" y1="{{ chart.baseline|unlocalize }}"
+                x2="{{ dot.x|unlocalize }}" y2="{{ chart.baseline|add:5|unlocalize }}"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <circle class="chart-dot fill-white text-amber-500 dark:fill-neutral-900 dark:text-amber-400"
+                  cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}"
+                  r="{% if forloop.last %}5.5{% else %}4.5{% endif %}"
+                  stroke="currentColor"
+                  stroke-width="2.5" />
+        {% elif dot.status.is_no_game and not forloop.last %}
+          {# No game for his team: the average cannot have moved, so the dot steps back. #}
+          <circle class="chart-dot fill-neutral-300 dark:fill-neutral-600"
+                  cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="2" />
+        {% else %}
+          <circle class="chart-dot fill-white dark:fill-neutral-900"
+                  cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}"
+                  r="{% if forloop.last %}5{% else %}3.5{% endif %}"
+                  stroke="currentColor"
+                  stroke-width="2" />
+        {% endif %}
 
         {# The readout: a thick stroke in the page colour, painted first, instead of a box behind the text. #}
         <text class="chart-readout fill-neutral-900 stroke-white dark:fill-white dark:stroke-neutral-900"
@@ -95,6 +112,15 @@
               paint-order="stroke"
               stroke-width="4"
               stroke-linejoin="round">{{ dot.value|floatformat:"2g" }}</text>
+        {% if dot.status.missed %}
+          <text class="chart-readout fill-amber-700 stroke-white dark:fill-amber-300 dark:stroke-neutral-900"
+                x="{{ dot.x|unlocalize }}" y="{{ dot.note_y|unlocalize }}"
+                text-anchor="{{ dot.label_anchor }}"
+                font-size="11" font-weight="600"
+                paint-order="stroke"
+                stroke-width="4"
+                stroke-linejoin="round">{% if dot.status.is_partly %}{% blocktranslate count count=dot.status.missed %}{{ count }} DNP{% plural %}{{ count }} DNP{% endblocktranslate %}{% else %}{% translate "DNP" %}{% endif %}{% if dot.status.games|length == 1 %}{% with opponent=dot.status.opponents.0 %} · {% if opponent.is_home %}{% translate "vs" %}{% else %}@{% endif %} {{ opponent.team.abbreviation }}{% endwith %}{% else %} {% blocktranslate count count=dot.status.games|length %}in {{ count }} game{% plural %}in {{ count }} games{% endblocktranslate %}{% endif %}{% if dot.status.is_injured %} · {% translate "Injured" %}{% elif dot.status.is_day_to_day %} · {% translate "Day-to-day" %}{% endif %}</text>
+        {% endif %}
       </g>
     {% endfor %}
   </g>

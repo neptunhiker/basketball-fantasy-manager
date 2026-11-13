@@ -33,6 +33,8 @@ CURVE_SAMPLES = 64
 # How far the hover readout sits from its dot, and how close to an edge a dot
 # has to be before the readout is anchored inwards instead of centred.
 LABEL_OFFSET = 14
+# Between the readout's value and its second line.
+NOTE_GAP = 15
 LABEL_INSET = 40
 
 # A scatter chart's hover name always sits above its dot, so the plot starts
@@ -104,6 +106,11 @@ def _add_hover_bands(dots):
         # the top of the drawing, in which case it goes below instead.
         above = dot["y"] - LABEL_OFFSET
         dot["label_y"] = above if above > PAD_TOP + LABEL_OFFSET else dot["y"] + LABEL_OFFSET + 4
+        # A second line (a DNP's opponent) goes on the far side of the value
+        # from the dot, so the two never cover each other.
+        dot["note_y"] = (
+            dot["label_y"] - NOTE_GAP if dot["label_y"] < dot["y"] else dot["label_y"] + NOTE_GAP
+        )
         # And it is pulled inside the edges rather than being clipped by them.
         dot["label_anchor"] = (
             "start"
@@ -117,6 +124,10 @@ def _add_hover_bands(dots):
 def line_chart(points, ticks=4):
     """A line chart over `(label, value)` pairs given oldest first.
 
+    A point may carry a third item, an `apps.nba.game_status.GameStatus`: the
+    template then rings the dots of games he sat out and shrinks the ones
+    with no game, and `has_dnp` says whether the legend is needed.
+
     Points whose value is None are left out of the line rather than drawn at
     zero: a week nobody has measured is a gap, not a week of scoring nothing.
     Their place on the x axis is kept, so a gap shows as a longer stretch of
@@ -125,15 +136,16 @@ def line_chart(points, ticks=4):
     Returns None when fewer than two figures survive. A line needs two ends,
     and a caller with one point should say so in words.
     """
+    points = [(point[0], point[1], point[2] if len(point) > 2 else None) for point in points]
     measured = [
-        (index, label, Decimal(value))
-        for index, (label, value) in enumerate(points)
+        (index, label, Decimal(value), status)
+        for index, (label, value, status) in enumerate(points)
         if value is not None
     ]
     if len(measured) < 2:
         return None
 
-    low, high, step = _bounds([value for _, _, value in measured], ticks)
+    low, high, step = _bounds([value for _, _, value, _ in measured], ticks)
     plot_width = WIDTH - PAD_LEFT - PAD_RIGHT
     plot_height = HEIGHT - PAD_TOP - PAD_BOTTOM
     last_index = max(len(points) - 1, 1)
@@ -145,8 +157,8 @@ def line_chart(points, ticks=4):
         return round(PAD_TOP + plot_height * float((high - value) / (high - low)), 2)
 
     dots = [
-        {"x": x_of(index), "y": y_of(value), "label": label, "value": value}
-        for index, label, value in measured
+        {"x": x_of(index), "y": y_of(value), "label": label, "value": value, "status": status}
+        for index, label, value, status in measured
     ]
     _add_hover_bands(dots)
 
@@ -174,8 +186,9 @@ def line_chart(points, ticks=4):
                 # hang off the edge of the drawing.
                 "anchor": "start" if index == 0 else "end" if index == last_index else "middle",
             }
-            for index, (label, _) in enumerate(points)
+            for index, (label, _, _) in enumerate(points)
         ],
+        "has_dnp": any(dot["status"] is not None and dot["status"].missed for dot in dots),
         "width": WIDTH,
         "height": HEIGHT,
         "baseline": HEIGHT - PAD_BOTTOM,

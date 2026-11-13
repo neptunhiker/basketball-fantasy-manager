@@ -1358,13 +1358,15 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
         # `fp_per_game` is already an average -- points over games played to
         # that Sunday -- so the line is the running average, not six weekly
         # readings, and it moves less the further into the season it gets.
+        # Each point carries its row's game status, so a DNP shows on the line.
         context["fp_chart"] = charts.line_chart(
             [
                 (
                     formats.date_format(timezone.localtime(snapshot.as_of), "d.m."),
                     snapshot.fp_per_game,
+                    status,
                 )
-                for snapshot in reversed(snapshots)
+                for snapshot, status in zip(reversed(snapshots), reversed(statuses), strict=True)
             ]
         )
         # The headline of the page. Only meaningful with two snapshots to

@@ -253,3 +253,25 @@ def test_scatter_chart_turns_names_inwards_at_the_sides():
     )
 
     assert [dot["label_anchor"] for dot in chart["dots"]] == ["start", "middle", "end"]
+
+
+def test_points_may_carry_a_game_status():
+    from apps.nba.game_status import MISSED, NO_GAME, GameStatus
+
+    missed = GameStatus(MISSED, games=(object(),))
+    chart = charts.line_chart(
+        [("1.", Decimal("10"), None), ("2.", Decimal("12"), missed), ("3.", Decimal("12"))]
+    )
+
+    assert [dot["status"] for dot in chart["dots"]] == [None, missed, None]
+    assert chart["has_dnp"]
+    rested = charts.line_chart([("1.", Decimal("10"), GameStatus(NO_GAME)), ("2.", Decimal("12"))])
+    assert not rested["has_dnp"]
+
+
+def test_a_second_readout_line_sits_on_the_far_side_of_the_value():
+    chart = charts.line_chart(series(Decimal("10"), Decimal("30")))
+
+    for dot in chart["dots"]:
+        above = dot["label_y"] < dot["y"]
+        assert (dot["note_y"] < dot["label_y"]) == above

@@ -40,6 +40,7 @@ from apps.core.views import (
     StaffRequiredMixin,
     TypedConfirmView,
 )
+from apps.nba.game_status import attach_latest_status
 from apps.nba.models import Player, Team
 from apps.nba.salary_charts import salary_charts
 from apps.nba.salary_outlook import (
@@ -993,6 +994,9 @@ def _build_context(request, roster):
         change = player.latest_fp_change() or {}
         player.latest_fp_gain = change.get("fp")
         player.latest_avg_change = change.get("fp_per_game")
+    # Played, DNP or no game since the previous read, from the prefetched
+    # snapshots and injuries: one query for the schedule, nothing per row.
+    attach_latest_status([membership.player for membership in memberships])
     _mark_kicked(request.user, [membership.player for membership in memberships])
     # The roster's own season: an old roster is not repriced by this one.
     baseline = salary_baseline(roster.season)

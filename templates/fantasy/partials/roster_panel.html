@@ -15,7 +15,7 @@
 {% translate "Games" as games_label %}
 {% translate "Hotness" as hotness_label %}
 {% translate "Latest FP" as latest_fp_label %}
-{% translate "Latest FP is what a player scored between the two newest snapshots, with the change in his points per game beneath it. A dash means he did not play in between; 0.0 means he played and scored nothing." as latest_fp_help %}
+{% translate "Latest FP is what a player scored between the two newest snapshots, with the change in his points per game beneath it. DNP means his team played without him, with the injury report at tip-off beneath it; a dash means his team had no game. 0.0 means he played and scored nothing." as latest_fp_help %}
 {% translate "Return" as return_label %}
 {% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
 {% translate "Hotness shows how often a player's points per game went up after his recent games. We look at his last 10 games: each time his season average rose after a game, that counts as a rise. Days without a game don't count. Hot: a rise in at least 6 of 10 games. Cold: 4 or fewer. Steady: in between. With fewer than 3 games to compare, only the count is shown." as hotness_help %}
@@ -407,7 +407,7 @@
                   {{ membership.player.current_fp_per_game|floatformat:"2g"|default:"–" }}
                 </td>
                 <td class="px-4 py-3 text-right tabular-nums">
-                  {% include "nba/partials/latest_fp.html" with gain=membership.player.latest_fp_gain avg_change=membership.player.latest_avg_change %}
+                  {% include "nba/partials/latest_fp.html" with gain=membership.player.latest_fp_gain avg_change=membership.player.latest_avg_change status=membership.player.latest_status %}
                 </td>
                 <td class="px-4 py-3 text-right tabular-nums">
                   {{ membership.player.current_games_played|default_if_none:"–" }}

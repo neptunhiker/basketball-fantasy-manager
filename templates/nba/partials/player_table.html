@@ -16,7 +16,7 @@
 {% translate "Games" as games_label %}
 {% translate "Hotness" as hotness_label %}
 {% translate "Latest FP" as latest_fp_label %}
-{% translate "Latest FP is what a player scored between the two newest snapshots, with the change in his points per game beneath it. A dash means he did not play in between; 0.0 means he played and scored nothing." as latest_fp_help %}
+{% translate "Latest FP is what a player scored between the two newest snapshots, with the change in his points per game beneath it. DNP means his team played without him, with the injury report at tip-off beneath it; a dash means his team had no game. 0.0 means he played and scored nothing." as latest_fp_help %}
 {% translate "Return" as return_label %}
 {% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
 {% translate "Hotness shows how often a player's points per game went up after his recent games. We look at his last 10 games: each time his season average rose after a game, that counts as a rise. Days without a game don't count. Hot: a rise in at least 6 of 10 games. Cold: 4 or fewer. Steady: in between. With fewer than 3 games to compare, only the count is shown." as hotness_help %}
@@ -236,6 +236,20 @@
                   <span class="mt-0.5 flex whitespace-nowrap text-[0.7rem] font-normal leading-tight tabular-nums md:hidden">
                     {% include "nba/partials/outlook_gist.html" with change=player.outlook_change %}
                   </span>
+                {# Sorted by Latest FP, a phone shows it under the name too: a DNP is the news. #}
+                {% elif current_sort == "latest" and player.latest_status %}
+                  <span class="mt-0.5 flex items-center gap-1 whitespace-nowrap text-[0.7rem] font-normal leading-tight tabular-nums md:hidden">
+                    {% if player.latest_fp_gain is not None %}
+                      <span class="font-semibold {% if player.latest_fp_gain < 0 %}text-rose-600 dark:text-rose-400{% else %}text-tertiary-700 dark:text-neutral-100{% endif %}">{% if player.latest_fp_gain > 0 %}+{% endif %}{{ player.latest_fp_gain|floatformat:"1g" }}</span>
+                      <span class="text-neutral-500 dark:text-neutral-400">{% translate "latest" %}</span>
+                      {% if player.latest_status.is_partly %}<span class="text-neutral-300 dark:text-neutral-600" aria-hidden="true">·</span><span class="font-semibold tracking-wide text-amber-700 dark:text-amber-300">{% blocktranslate count count=player.latest_status.missed %}{{ count }} DNP{% plural %}{{ count }} DNP{% endblocktranslate %}</span>{% endif %}
+                    {% elif player.latest_status.is_missed %}
+                      <span class="font-semibold tracking-wide text-amber-700 dark:text-amber-300" title="{% translate 'Did not play: his team played without him' %}">{% translate "DNP" %}</span>
+                      {% if player.latest_status.is_injured or player.latest_status.is_day_to_day %}<span class="text-neutral-300 dark:text-neutral-600" aria-hidden="true">·</span>{% include "nba/partials/game_status_reason.html" with status=player.latest_status full="compact" %}{% endif %}
+                    {% else %}
+                      <span class="text-neutral-400 dark:text-neutral-500">{% translate "no game" %}</span>
+                    {% endif %}
+                  </span>
                 {# Below `lg` the table scrolls a long way to the projection; its gist rides under the name. #}
                 {% elif show_rest_of_season and player.games_expected is not None %}
                   <span class="mt-0.5 block whitespace-nowrap text-[0.7rem] font-normal leading-tight text-neutral-500 tabular-nums lg:hidden dark:text-neutral-400">
@@ -327,7 +341,7 @@
                 </td>
               {% endif %}
               <td class="px-4 py-3 text-right tabular-nums">
-                {% include "nba/partials/latest_fp.html" with gain=player.latest_fp_gain avg_change=player.latest_avg_change %}
+                {% include "nba/partials/latest_fp.html" with gain=player.latest_fp_gain avg_change=player.latest_avg_change status=player.latest_status %}
               </td>
               <td class="px-4 py-3 text-right tabular-nums">
                 {{ player.current_games_played|default_if_none:"–" }}
@@ -362,7 +376,7 @@
       {% if show_premium %}<strong class="ml-2 font-medium">{{ premium_label }}:</strong> {% translate "salary minus expected salary right after the last update — the part picks explain." %}{% endif %}
       <strong class="ml-2 font-medium">{{ fp_per_million_label }}:</strong> {% translate "season points per $1M of current salary — missed games pull it down." %}
       <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his average rose over his last 10 games." %}
-      <strong class="ml-2 font-medium">{{ latest_fp_label }}:</strong> {% translate "points since the previous snapshot — – means no game." %}
+      <strong class="ml-2 font-medium">{{ latest_fp_label }}:</strong> {% translate "points since the previous snapshot — DNP: his team played without him, – : his team had no game." %}
       {% if show_rest_of_season %}<strong class="ml-2 font-medium">{{ projected_label }}:</strong> {% blocktranslate with percent=availability_percent %}points per game × games he can still play × {{ percent }}% availability.{% endblocktranslate %}{% endif %}
       {% if last_season %}<strong class="ml-2 font-medium">{{ last_fp_label }}:</strong> {% translate "fantasy points per game last season, by this game's rules." %}{% endif %}
     </p>

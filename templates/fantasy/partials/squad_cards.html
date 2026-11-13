@@ -107,7 +107,7 @@
             </div>
             <div class="stat-tile sm:min-w-0 {% if current_sort == 'latest' %}stat-tile-sorted{% endif %}" {% if current_sort == 'latest' %}data-sorted{% endif %}>
               <dt>{{ latest_fp_label }} {% include "partials/info_popover.html" with text=latest_fp_help label=latest_fp_label %}</dt>
-              <dd class="text-sm tabular-nums">{% include "nba/partials/latest_fp.html" with gain=player.latest_fp_gain avg_change=player.latest_avg_change %}</dd>
+              <dd class="text-sm tabular-nums">{% include "nba/partials/latest_fp.html" with gain=player.latest_fp_gain avg_change=player.latest_avg_change status=player.latest_status %}</dd>
             </div>
             <div class="stat-tile sm:min-w-0 {% if current_sort == 'games' %}stat-tile-sorted{% endif %}" {% if current_sort == 'games' %}data-sorted{% endif %}>
               <dt>{{ games_label }}</dt>

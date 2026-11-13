@@ -43,7 +43,7 @@ from apps.fantasy.views import player_roster_options
 from . import charts, stats
 from .bbde import BbdeAccountNotActivated, BbdeError, BbdeLoginError
 from .forms import BbdeLoginForm, PlayerNoteForm, TeamNoteForm
-from .game_status import snapshot_history
+from .game_status import attach_latest_status, snapshot_history
 from .importer import ImportAlreadyRunning, NoCurrentSeason, NoTeams, import_bbde
 from .models import (
     DAY_TO_DAY_INJURY_STATUSES,
@@ -534,6 +534,8 @@ class PlayerListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Latest FP tells a rest day from a DNP: only for the page's rows.
+        attach_latest_status(context["players"])
         context["kicklist_only"] = self._kicklist_only()
         # Why a kick-list-only table came up empty: no kick marks at all, or
         # none that match the other filters.
@@ -1158,7 +1160,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        players = self._players()
+        players = attach_latest_status(self._players())
         salary = stats.summarise(player.current_salary for player in players)
         per_game = stats.summarise(player.current_fp_per_game for player in players)
         points = stats.summarise(player.current_total_fp for player in players)
@@ -1288,6 +1290,7 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
         # Played, DNP or no game per row, laid over the schedule: a row whose
         # points did not move says why. Two queries however long the history.
         statuses, context["game_summary"] = snapshot_history(self.object, snapshots)
+        context["latest_status"] = statuses[0] if statuses else None
 
         rows = []
         for index, snapshot in enumerate(snapshots):

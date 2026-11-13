@@ -41,6 +41,7 @@ from django.utils.translation import ngettext
 
 from apps.core.templatetags.money import millions
 from apps.nba.models import Player, PlayerInjury
+from apps.nba.rest_of_season import GameCounter
 from apps.nba.salary_outlook import salary_baseline, salary_outlook
 
 from .models import (
@@ -86,6 +87,10 @@ class StepResult:
     price_out: Decimal | None = None
     price_in: Decimal | None = None
     cash_delta: Decimal = ZERO
+    # Projected points the trade gains (incoming less outgoing), to the end of
+    # the season and over the next seven days. None until scored.
+    fp_rest: Decimal | None = None
+    fp_week: Decimal | None = None
 
     @property
     def is_trade(self):
@@ -150,6 +155,12 @@ class PlanResult:
     trades_sold: int = 0
     players: dict = field(default_factory=dict)  # every player the plan touches, by pk
     grants: list = field(default_factory=list)  # free trades still to come after `now`
+    # Projected points the plan gains over making none of its moves. None
+    # without a schedule to count games from.
+    fp_rest: Decimal | None = None
+    fp_week: Decimal | None = None
+    # Some player had no points per game or no team, and counted as zero.
+    fp_incomplete: bool = False
 
     @property
     def future_days(self):
@@ -457,7 +468,60 @@ def simulate(plan, now=None, extra_steps=(), steps=None):
     )
     result.players = players
     result.grants = upcoming_grants
+    _score(result, season, now)
     return result
+
+
+FP_WEEK = dt.timedelta(days=7)
+
+
+def _score(result, season, now):
+    """Projected points each trade gains: his games from the day on, less the other's.
+
+    Summed over a plan this handles chains by itself: a player who comes in
+    on Saturday and leaves on Monday adds his Saturday-on games and takes away
+    his Monday-on games, which leaves exactly the ones in between.
+    """
+    trades = [
+        (day, step)
+        for day in result.days
+        for step in day.steps
+        if step.is_trade and step.status == OK
+    ]
+    if not trades:
+        result.fp_rest = result.fp_week = ZERO
+        return
+    players = result.players
+    teams = {
+        players[pk].team_id
+        for _, step in trades
+        for pk in (step.step.player_out_id, step.step.player_in_id)
+        if players[pk].team_id
+    }
+    counter = GameCounter(teams, season)
+    if not counter.has_schedule:
+        return
+
+    week_end = now + FP_WEEK
+
+    def points(player, start, end=None):
+        value = counter.projected_fp(player, start, end)
+        if value is None:
+            result.fp_incomplete = True
+            return ZERO
+        return value
+
+    result.fp_rest = result.fp_week = ZERO
+    for day, step in trades:
+        out, in_ = players[step.step.player_out_id], players[step.step.player_in_id]
+        step.fp_rest = points(in_, day.moment) - points(out, day.moment)
+        step.fp_week = (
+            points(in_, day.moment, week_end) - points(out, day.moment, week_end)
+            if day.moment < week_end
+            else ZERO
+        )
+        result.fp_rest += step.fp_rest
+        result.fp_week += step.fp_week
 
 
 def _season_problem(season, date):

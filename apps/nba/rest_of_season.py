@@ -31,7 +31,7 @@ from django.db.models import (
 from django.db.models.functions import Cast, Coalesce, Greatest, Round
 from django.utils import timezone
 
-from .models import DAY_TO_DAY_INJURY_STATUSES, GAME_LENGTH
+from .models import DAY_TO_DAY_INJURY_STATUSES, GAME_LENGTH, REGULAR_SEASON_GAMES
 from .team_schedule import NEXT_DAYS, TeamSchedule, season_games, team_schedules
 
 EXPECTED_AVAILABILITY = Decimal("0.85")
@@ -202,3 +202,74 @@ def rest_of_season(player, now=None):
         team_schedule=schedule,
         next_game=next_game,
     )
+
+
+class GameCounter:
+    """How many games a player can play between two moments, and the points.
+
+    The question a trade plan asks: a player who joins at Sunday's processing
+    and leaves at Wednesday's scores in the games in between, not in his
+    team's season. Built once from the schedule for a set of teams, so a plan
+    with a dozen players costs one query rather than one per player.
+
+    The same two rules as `rest_of_season`, applied to a window:
+
+    - To the end of the season it is 82 less the games played by `start`,
+      not the games on the schedule -- the schedule is loaded a month at a
+      time, and the NBA Cup's last games are only set in December.
+    - A player out with a return date misses his team's games before it.
+      Day-to-day, or out with no date, costs nothing.
+
+    A game counts for the window it tips off in: after `start`, at or before
+    `end`. A trade processed at 22:00 is in time for that night's games,
+    which tip off after midnight in Berlin.
+    """
+
+    def __init__(self, team_ids, season=None):
+        self.tips = {}
+        rows = (
+            season_games(season)
+            .filter(Q(home_team_id__in=team_ids) | Q(away_team_id__in=team_ids))
+            .values_list("home_team_id", "away_team_id", "tip_off")
+        )
+        for home, away, tip_off in rows:
+            for team_id in (home, away):
+                self.tips.setdefault(team_id, []).append(tip_off)
+        for tips in self.tips.values():
+            tips.sort()
+
+    @property
+    def has_schedule(self):
+        return bool(self.tips)
+
+    def games(self, player, start, end=None):
+        """Games he can play in (start, end]; to the season's end when `end` is None.
+
+        None without a team or a schedule for it: unknown, not zero.
+        """
+        tips = self.tips.get(player.team_id)
+        if player.team_id is None or not tips:
+            return None
+        after = [tip for tip in tips if tip > start]
+        if end is None:
+            gone = len(tips) - len(after)
+            window = max(REGULAR_SEASON_GAMES - gone, 0)
+            scheduled = after
+        else:
+            scheduled = [tip for tip in after if tip <= end]
+            window = len(scheduled)
+        if player.is_injured and player.expected_return:
+            back = player.expected_return
+            window -= sum(1 for tip in scheduled if timezone.localtime(tip).date() < back)
+        return max(window, 0)
+
+    def projected_fp(self, player, start, end=None):
+        """Points per game x games in the window x the league's availability.
+
+        Unrounded, so a plan can add up many small windows without the
+        rounding of each piece adding up too. None when either is unknown.
+        """
+        games = self.games(player, start, end)
+        if games is None or player.current_fp_per_game is None:
+            return None
+        return player.current_fp_per_game * games * EXPECTED_AVAILABILITY

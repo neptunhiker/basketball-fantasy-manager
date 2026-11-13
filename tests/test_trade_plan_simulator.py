@@ -371,3 +371,73 @@ def test_an_unsaved_step_is_previewed_without_being_stored(plan, squad, market):
 def test_next_processing_day_turns_at_ten_in_the_evening():
     assert simulator.next_processing_day(berlin(2026, 11, 20, 21, 59)) == dt.date(2026, 11, 20)
     assert simulator.next_processing_day(berlin(2026, 11, 20, 22, 0)) == dt.date(2026, 11, 21)
+
+
+# --- projected points --------------------------------------------------------
+
+
+@pytest.fixture
+def schedule(season, squad, market):
+    """G0's team plays twice this week, Cheap's three times; Cheap scores more."""
+    from django.core.management import call_command
+
+    from apps.nba.models import Game, Team
+
+    call_command("seed_teams", verbosity=0)
+    mine, theirs = Team.objects.order_by("abbreviation")[:2]
+    Player.objects.filter(pk=squad["G"][0].pk).update(team=mine)
+    Player.objects.filter(pk=market["cheap_guard"].pk).update(
+        team=theirs, current_fp_per_game=Decimal(30)
+    )
+    other = Team.objects.order_by("abbreviation")[5]
+    for number, (team, when) in enumerate(
+        [
+            (mine, berlin(2026, 11, 22, 1, 30)),
+            (mine, berlin(2026, 11, 24, 1, 30)),
+            (theirs, berlin(2026, 11, 22, 2, 0)),
+            (theirs, berlin(2026, 11, 23, 2, 0)),
+            (theirs, berlin(2026, 11, 25, 2, 0)),
+        ]
+    ):
+        Game.objects.create(
+            espn_id=f"sim{number}",
+            season_year=2027,
+            tip_off=when,
+            home_team=team,
+            away_team=other,
+            status="STATUS_SCHEDULED",
+        )
+    return mine, theirs
+
+
+AVAILABILITY = Decimal("0.85")
+
+
+def test_a_trade_gains_the_newcomers_points_less_the_leavers(plan, squad, market, schedule):
+    trade(plan, SAT, squad["G"][0], market["cheap_guard"])
+    result = run(plan)
+    assert result.fp_week == (3 * 30 - 2 * 20) * AVAILABILITY
+    assert result.fp_rest == 82 * (30 - 20) * AVAILABILITY
+    assert result.days[0].steps[0].fp_week == result.fp_week
+    assert not result.fp_incomplete
+
+
+def test_a_player_kept_for_two_days_scores_only_in_between(plan, squad, market, schedule):
+    trade(plan, SAT, squad["G"][0], market["cheap_guard"])
+    trade(plan, MON, market["cheap_guard"], squad["G"][0])
+    result = run(plan)
+    # Cheap plays Sunday and Monday night, G0 would have played Saturday night.
+    assert result.fp_week == (2 * 30 - 1 * 20) * AVAILABILITY
+    assert result.fp_rest == result.fp_week
+
+
+def test_without_a_schedule_the_points_are_unknown(plan, squad, market):
+    trade(plan, SAT, squad["G"][0], market["cheap_guard"])
+    result = run(plan)
+    assert result.fp_rest is None
+    assert result.days[0].steps[0].fp_rest is None
+
+
+def test_a_plan_without_trades_gains_nothing(plan):
+    market_step(plan, SAT, PlanStep.Kind.SELL_TRADE)
+    assert run(plan).fp_rest == 0

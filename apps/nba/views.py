@@ -779,6 +779,32 @@ def reserve_reached_message(quota):
     ) % {"date": local_date(quota.resets_at)}
 
 
+class PlayerInjuryView(LoginRequiredMixin, View):
+    """One player's latest injury report, as a modal (nba/injury_modal.html).
+
+    Loaded when his status button is pressed, wherever that button sits --
+    player tables, the roster screens, the comparison. Rendering it hidden
+    into every row instead cost 5 KB per player per response.
+    """
+
+    def get(self, request, slug):
+        player = get_object_or_404(
+            Player.objects.prefetch_related(
+                Prefetch(
+                    "injuries",
+                    queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
+                    to_attr="injury_history",
+                )
+            ),
+            slug=slug,
+        )
+        return render(
+            request,
+            "nba/injury_modal.html",
+            {"player": player, "panel_class": "sm:max-w-lg"},
+        )
+
+
 class InjuryRefreshView(LoginRequiredMixin, View):
     """Synchronize injuries once per day and return the action state for HTMX."""
 

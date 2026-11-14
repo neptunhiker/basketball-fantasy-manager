@@ -14,6 +14,14 @@ def teams(db):
     call_command("seed_teams", verbosity=0)
 
 
+def injury_modal(client):
+    """The injury modal a player list row opens, for LeBron James."""
+    from apps.nba.models import Player
+
+    slug = Player.objects.get(last_name="James").slug
+    return client.get(reverse("nba:player-injury", args=[slug]))
+
+
 def test_team_list_requires_login(client, teams):
     response = client.get(reverse("nba:team-list"))
     assert response.status_code == 302
@@ -192,14 +200,14 @@ def test_player_list_injury_status_shows_the_latest_api_request(signed_in, roste
         request_count=1,
     )
 
-    response = signed_in.get(reverse("nba:player-list"))
+    response = injury_modal(signed_in)
 
     assert response.context["last_injury_api_call"] == usage.updated_at
     assert "Last API request:" in response.content.decode()
 
 
 def test_player_list_allows_an_injury_refresh_before_todays_call(signed_in, roster):
-    response = signed_in.get(reverse("nba:player-list"))
+    response = injury_modal(signed_in)
 
     body = response.content.decode()
     assert "Update injuries" in body
@@ -215,7 +223,7 @@ def test_player_list_disables_injury_refresh_after_todays_call(signed_in, roster
         request_count=1,
     )
 
-    body = signed_in.get(reverse("nba:player-list")).content.decode()
+    body = injury_modal(signed_in).content.decode()
 
     assert 'disabled aria-describedby="injury-refresh-limit"' in body
     assert "The next update can be invoked tomorrow." in body
@@ -676,9 +684,14 @@ def test_player_list_shows_latest_injury_in_clickable_column(signed_in, roster):
 
     body = signed_in.get(reverse("nba:player-list")).content.decode()
 
+    # The row carries the status and a link to the report, not the report.
     assert "Injured" in body
-    assert "Latest injury report" in body
-    assert "Test injury" in body
+    assert f'hx-get="{reverse("nba:player-injury", args=[player.slug])}"' in body
+    assert "Test injury" not in body
+
+    modal = injury_modal(signed_in).content.decode()
+    assert "Latest injury report" in modal
+    assert "Test injury" in modal
 
 
 def test_empty_state_mentions_the_missing_import(signed_in, teams):

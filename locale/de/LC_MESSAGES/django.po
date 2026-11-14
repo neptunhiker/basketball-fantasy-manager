@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 09:09+0100\n"
+"POT-Creation-Date: 2026-11-14 09:25+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -574,7 +574,7 @@ msgid "Signings cannot close after the season ends."
 msgstr "Die Transferphase kann nicht nach Saisonende enden."
 
 #: apps/fantasy/models.py:456 apps/nba/player_export.py:218
-#: apps/nba/views.py:732 templates/app.html:108
+#: apps/nba/views.py:736 templates/app.html:108
 #: templates/nba/partials/player_table.html:23
 #: templates/nba/player_compare.html:93 templates/nba/player_list.html:4
 #: templates/nba/player_list.html:5
@@ -582,7 +582,7 @@ msgid "Watchlist"
 msgstr "Watchlist"
 
 #: apps/fantasy/models.py:457 apps/nba/player_export.py:118
-#: apps/nba/views.py:734
+#: apps/nba/views.py:738
 msgid "Kick list"
 msgstr "Abschussliste"
 
@@ -934,7 +934,7 @@ msgid "Yesterday"
 msgstr "Gestern"
 
 #: apps/fantasy/templatetags/plan_tags.py:61
-#: apps/nba/templatetags/player_stats.py:40
+#: apps/nba/templatetags/player_stats.py:43
 #, python-format
 msgid "in %(count)d day"
 msgid_plural "in %(count)d days"
@@ -942,7 +942,7 @@ msgstr[0] "in %(count)d Tag"
 msgstr[1] "in %(count)d Tagen"
 
 #: apps/fantasy/templatetags/plan_tags.py:62
-#: apps/nba/templatetags/player_stats.py:41
+#: apps/nba/templatetags/player_stats.py:44
 #, python-format
 msgid "%(count)d day ago"
 msgid_plural "%(count)d days ago"
@@ -1192,11 +1192,11 @@ msgstr "basketball.de-Benutzername"
 msgid "basketball.de password"
 msgstr "basketball.de-Passwort"
 
-#: apps/nba/importer.py:93 apps/nba/views.py:884
+#: apps/nba/importer.py:93 apps/nba/views.py:914
 msgid "There is no current season to import into."
 msgstr "Es gibt keine aktuelle Saison, in die importiert werden kann."
 
-#: apps/nba/importer.py:97 apps/nba/views.py:886
+#: apps/nba/importer.py:97 apps/nba/views.py:916
 msgid "Another import is still running. Please try again shortly."
 msgstr "Es läuft bereits ein Import. Bitte versuche es gleich noch einmal."
 
@@ -1299,8 +1299,7 @@ msgstr "Center"
 #: apps/nba/models.py:643 apps/nba/player_export.py:362
 #: templates/fantasy/partials/latest_news_button.html:12
 #: templates/fantasy/partials/roster_panel.html:350
-#: templates/nba/partials/injury_status.html:86
-#: templates/nba/partials/news_item.html:39
+#: templates/nba/injury_modal.html:47 templates/nba/partials/news_item.html:39
 #: templates/nba/partials/player_table.html:142
 #: templates/nba/player_compare.html:105 templates/nba/player_detail.html:122
 msgid "Injury"
@@ -1401,9 +1400,9 @@ msgid "DNP"
 msgstr "DNP"
 
 #: apps/nba/player_export.py:162 apps/nba/player_export.py:201
-#: apps/nba/player_export.py:402 apps/nba/views.py:1343
+#: apps/nba/player_export.py:402 apps/nba/views.py:1373
 #: templates/nba/partials/game_status_reason.html:7
-#: templates/nba/partials/injury_status.html:2
+#: templates/nba/partials/injury_status.html:6
 #: templates/nba/partials/latest_fp.html:25
 #: templates/nba/partials/line_chart.html:122
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
@@ -1412,9 +1411,9 @@ msgid "Injured"
 msgstr "Verletzt"
 
 #: apps/nba/player_export.py:164 apps/nba/player_export.py:203
-#: apps/nba/player_export.py:402 apps/nba/views.py:1342
+#: apps/nba/player_export.py:402 apps/nba/views.py:1372
 #: templates/nba/partials/game_status_reason.html:9
-#: templates/nba/partials/injury_status.html:4
+#: templates/nba/partials/injury_status.html:8
 #: templates/nba/partials/latest_fp.html:27
 #: templates/nba/partials/line_chart.html:122
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
@@ -1443,7 +1442,7 @@ msgid "unknown"
 msgstr "unbekannt"
 
 #: apps/nba/player_export.py:204 apps/nba/player_export.py:402
-#: apps/nba/views.py:1341 templates/nba/partials/injury_status.html:3
+#: apps/nba/views.py:1371 templates/nba/partials/injury_status.html:7
 #: templates/nba/player_detail.html:48 templates/nba/player_detail.html:49
 #: templates/nba/player_list.html:117
 msgid "Healthy"
@@ -1601,8 +1600,7 @@ msgstr "Rückkehr"
 #: apps/nba/player_export.py:367 templates/accounts/partials/user_table.html:10
 #: templates/accounts/user_detail.html:31
 #: templates/fantasy/partials/roster_panel.html:351
-#: templates/fantasy/plan_list.html:184
-#: templates/nba/partials/injury_status.html:63
+#: templates/fantasy/plan_list.html:184 templates/nba/injury_modal.html:24
 #: templates/nba/partials/player_table.html:143
 #: templates/nba/player_compare.html:106 templates/nba/player_detail.html:99
 #: templates/nba/season_stats_upload.html:187 templates/perf/dashboard.html:195
@@ -1929,15 +1927,15 @@ msgstr "%(count)d Spieler für %(season)s importiert."
 msgid "The preview was discarded. Nothing was saved."
 msgstr "Die Vorschau wurde verworfen. Es wurde nichts gespeichert."
 
-#: apps/nba/templatetags/player_stats.py:34
+#: apps/nba/templatetags/player_stats.py:37
 msgid "today"
 msgstr "heute"
 
-#: apps/nba/templatetags/player_stats.py:36
+#: apps/nba/templatetags/player_stats.py:39
 msgid "tomorrow"
 msgstr "morgen"
 
-#: apps/nba/templatetags/player_stats.py:38
+#: apps/nba/templatetags/player_stats.py:41
 msgid "yesterday"
 msgstr "gestern"
 
@@ -1953,7 +1951,7 @@ msgstr "Dreier"
 msgid "Free throws"
 msgstr "Freiwürfe"
 
-#: apps/nba/views.py:736 templates/app.html:88
+#: apps/nba/views.py:740 templates/app.html:88
 #: templates/fantasy/manager_detail.html:60
 #: templates/fantasy/manager_list.html:91
 #: templates/fantasy/partials/roster_panel.html:120
@@ -1963,7 +1961,7 @@ msgstr "Freiwürfe"
 msgid "Players"
 msgstr "Spieler"
 
-#: apps/nba/views.py:769
+#: apps/nba/views.py:773
 msgid ""
 "This month's requests to the injury service are nearly used up. The injury "
 "report can be updated again next month."
@@ -1971,7 +1969,7 @@ msgstr ""
 "Die Abrufe beim Verletzungsdienst sind für diesen Monat fast aufgebraucht. "
 "Der Verletzungsbericht kann nächsten Monat wieder aktualisiert werden."
 
-#: apps/nba/views.py:773
+#: apps/nba/views.py:777
 #, python-format
 msgid ""
 "This month's requests to the injury service are nearly used up. The injury "
@@ -1980,7 +1978,7 @@ msgstr ""
 "Die Abrufe beim Verletzungsdienst sind für diesen Monat fast aufgebraucht. "
 "Der Verletzungsbericht kann ab dem %(date)s wieder aktualisiert werden."
 
-#: apps/nba/views.py:789
+#: apps/nba/views.py:819
 msgid ""
 "The injury report was already updated today. The next update can be invoked "
 "tomorrow."
@@ -1988,13 +1986,13 @@ msgstr ""
 "Der Verletzungsbericht wurde heute bereits aktualisiert. Das nächste Update "
 "kann morgen gestartet werden."
 
-#: apps/nba/views.py:798
+#: apps/nba/views.py:828
 msgid "The injury report could not be updated. Please try again tomorrow."
 msgstr ""
 "Der Verletzungsbericht konnte nicht aktualisiert werden. Bitte versuche es "
 "morgen erneut."
 
-#: apps/nba/views.py:804
+#: apps/nba/views.py:834
 #, python-format
 msgid ""
 "Injury report updated: %(created)d created, %(updated)d updated, "
@@ -2003,17 +2001,17 @@ msgstr ""
 "Verletzungsbericht aktualisiert: %(created)d erstellt, %(updated)d "
 "aktualisiert, %(recovered)d wieder fit, %(unmatched)d nicht zugeordnet."
 
-#: apps/nba/views.py:880
+#: apps/nba/views.py:910
 msgid "This basketball.de account has not been activated yet."
 msgstr "Dieses basketball.de-Konto ist noch nicht aktiviert."
 
-#: apps/nba/views.py:882
+#: apps/nba/views.py:912
 msgid "basketball.de did not accept this username and password."
 msgstr ""
 "basketball.de hat diesen Benutzernamen und dieses Passwort nicht akzeptiert."
 
 # UX fixes, round 1
-#: apps/nba/views.py:889
+#: apps/nba/views.py:919
 msgid ""
 "There are no NBA teams in the database yet. Ask an administrator to run "
 "manage.py seed_teams first."
@@ -2021,12 +2019,12 @@ msgstr ""
 "Es sind noch keine NBA-Teams in der Datenbank. Bitte eine Administratorin "
 "oder einen Administrator, zuerst manage.py seed_teams auszuführen."
 
-#: apps/nba/views.py:892
+#: apps/nba/views.py:922
 #, python-format
 msgid "The import failed: %(reason)s"
 msgstr "Der Import ist fehlgeschlagen: %(reason)s"
 
-#: apps/nba/views.py:1151
+#: apps/nba/views.py:1181
 #, python-format
 msgid "From %(n)d of %(total)d player. No value on record for the rest."
 msgid_plural ""
@@ -2036,87 +2034,87 @@ msgstr[0] ""
 msgstr[1] ""
 "Aus %(n)d von %(total)d Spielern. Für den Rest ist kein Wert erfasst."
 
-#: apps/nba/views.py:1311
+#: apps/nba/views.py:1341
 msgid "Salaries"
 msgstr "Gehälter"
 
-#: apps/nba/views.py:1314
+#: apps/nba/views.py:1344
 msgid "Average"
 msgstr "Durchschnitt"
 
-#: apps/nba/views.py:1315
+#: apps/nba/views.py:1345
 msgid "Median"
 msgstr "Median"
 
-#: apps/nba/views.py:1316
+#: apps/nba/views.py:1346
 msgid "Lowest"
 msgstr "Niedrigster Wert"
 
-#: apps/nba/views.py:1317
+#: apps/nba/views.py:1347
 msgid "Highest"
 msgstr "Höchster Wert"
 
-#: apps/nba/views.py:1318
+#: apps/nba/views.py:1348
 msgid "Total"
 msgstr "Gesamt"
 
-#: apps/nba/views.py:1323 templates/nba/partials/season_stats_card.html:44
+#: apps/nba/views.py:1353 templates/nba/partials/season_stats_card.html:44
 msgid "Fantasy points"
 msgstr "Fantasy-Punkte"
 
-#: apps/nba/views.py:1326
+#: apps/nba/views.py:1356
 msgid "Avg per game"
 msgstr "Durchschnitt pro Spiel"
 
-#: apps/nba/views.py:1327
+#: apps/nba/views.py:1357
 msgid "Median per game"
 msgstr "Median pro Spiel"
 
-#: apps/nba/views.py:1328
+#: apps/nba/views.py:1358
 msgid "Fewest per game"
 msgstr "Wenigste pro Spiel"
 
-#: apps/nba/views.py:1329
+#: apps/nba/views.py:1359
 msgid "Most per game"
 msgstr "Meiste pro Spiel"
 
-#: apps/nba/views.py:1330 templates/nba/player_detail.html:247
+#: apps/nba/views.py:1360 templates/nba/player_detail.html:247
 msgid "Points total"
 msgstr "Punkte gesamt"
 
-#: apps/nba/views.py:1333
+#: apps/nba/views.py:1363
 msgid "Team per game"
 msgstr "Team pro Spiel"
 
-#: apps/nba/views.py:1338
+#: apps/nba/views.py:1368
 msgid "Player health"
 msgstr "Spielergesundheit"
 
-#: apps/nba/views.py:1370
+#: apps/nba/views.py:1400
 msgid "Only you can see these notes. They are for your own team context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Teamkontext gedacht."
 
-#: apps/nba/views.py:1373
+#: apps/nba/views.py:1403
 msgid "No private notes yet. Save one to remember your take on this team."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Teams festzuhalten."
 
-#: apps/nba/views.py:1484
+#: apps/nba/views.py:1514
 msgid "Only you can see these notes. They are for your own player context."
 msgstr ""
 "Nur du kannst diese Notizen sehen. Sie sind für deinen persönlichen "
 "Spielerkontext gedacht."
 
-#: apps/nba/views.py:1487
+#: apps/nba/views.py:1517
 msgid "No private notes yet. Save one to remember your take on this player."
 msgstr ""
 "Noch keine privaten Notizen. Speichere eine, um deine Einschätzung dieses "
 "Spielers festzuhalten."
 
-#: apps/nba/views.py:1604
+#: apps/nba/views.py:1634
 msgid "The note will be removed for good. This cannot be undone."
 msgstr ""
 "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."
@@ -5041,6 +5039,52 @@ msgstr ""
 msgid "Create the first season"
 msgstr "Erste Saison erstellen"
 
+#: templates/nba/injury_modal.html:8 templates/nba/player_detail.html:86
+msgid "Injury Status"
+msgstr "Verletzungsstatus"
+
+#: templates/nba/injury_modal.html:11 templates/nba/player_detail.html:87
+msgid "Latest injury report"
+msgstr "Aktueller Verletzungsbericht"
+
+#: templates/nba/injury_modal.html:14 templates/nba/player_detail.html:90
+msgid "Last API request:"
+msgstr "Letzte API-Anfrage:"
+
+#: templates/nba/injury_modal.html:29 templates/nba/player_detail.html:104
+msgid "Fantasy status"
+msgstr "Fantasy-Status"
+
+#: templates/nba/injury_modal.html:35 templates/nba/player_detail.html:110
+msgid "Report type"
+msgstr "Berichtstyp"
+
+#: templates/nba/injury_modal.html:41 templates/nba/player_detail.html:116
+msgid "Player status"
+msgstr "Spielerstatus"
+
+#: templates/nba/injury_modal.html:55
+#: templates/nba/partials/return_date.html:11
+#: templates/nba/player_detail.html:130 templates/nba/player_list.html:153
+msgid "Expected return"
+msgstr "Voraussichtliche Rückkehr"
+
+#: templates/nba/injury_modal.html:60 templates/nba/player_detail.html:135
+msgid "Observed"
+msgstr "Beobachtet"
+
+#: templates/nba/injury_modal.html:65 templates/nba/player_detail.html:140
+msgid "Reported"
+msgstr "Gemeldet"
+
+#: templates/nba/injury_modal.html:71 templates/nba/player_detail.html:146
+msgid "Source"
+msgstr "Quelle"
+
+#: templates/nba/injury_modal.html:84 templates/nba/player_detail.html:159
+msgid "No injury report has been recorded for this player."
+msgstr "Für diesen Spieler wurde noch kein Verletzungsbericht erfasst."
+
 #: templates/nba/news_list.html:11
 msgid "Player news"
 msgstr "Spielernews"
@@ -5155,7 +5199,7 @@ msgstr "Letzter Import von basketball.de: %(when)s"
 msgid "No import from basketball.de yet."
 msgstr "Noch kein Import von basketball.de."
 
-#: templates/nba/partials/chart_loader.html:39
+#: templates/nba/partials/chart_loader.html:35
 msgid "Loading chart…"
 msgstr "Diagramm wird geladen …"
 
@@ -5310,67 +5354,6 @@ msgstr "Verletzungen aktualisieren"
 #: templates/nba/partials/injury_refresh.html:3
 msgid "The next update can be invoked tomorrow."
 msgstr "Das nächste Update kann morgen gestartet werden."
-
-#: templates/nba/partials/injury_status.html:5
-#: templates/nba/player_detail.html:74 templates/nba/player_detail.html:81
-msgid "Close injury details"
-msgstr "Verletzungsdetails schließen"
-
-#: templates/nba/partials/injury_status.html:49
-#: templates/nba/player_detail.html:86
-msgid "Injury Status"
-msgstr "Verletzungsstatus"
-
-#: templates/nba/partials/injury_status.html:50
-#: templates/nba/player_detail.html:87
-msgid "Latest injury report"
-msgstr "Aktueller Verletzungsbericht"
-
-#: templates/nba/partials/injury_status.html:53
-#: templates/nba/player_detail.html:90
-msgid "Last API request:"
-msgstr "Letzte API-Anfrage:"
-
-#: templates/nba/partials/injury_status.html:68
-#: templates/nba/player_detail.html:104
-msgid "Fantasy status"
-msgstr "Fantasy-Status"
-
-#: templates/nba/partials/injury_status.html:74
-#: templates/nba/player_detail.html:110
-msgid "Report type"
-msgstr "Berichtstyp"
-
-#: templates/nba/partials/injury_status.html:80
-#: templates/nba/player_detail.html:116
-msgid "Player status"
-msgstr "Spielerstatus"
-
-#: templates/nba/partials/injury_status.html:94
-#: templates/nba/partials/return_date.html:11
-#: templates/nba/player_detail.html:130 templates/nba/player_list.html:153
-msgid "Expected return"
-msgstr "Voraussichtliche Rückkehr"
-
-#: templates/nba/partials/injury_status.html:99
-#: templates/nba/player_detail.html:135
-msgid "Observed"
-msgstr "Beobachtet"
-
-#: templates/nba/partials/injury_status.html:104
-#: templates/nba/player_detail.html:140
-msgid "Reported"
-msgstr "Gemeldet"
-
-#: templates/nba/partials/injury_status.html:110
-#: templates/nba/player_detail.html:146
-msgid "Source"
-msgstr "Quelle"
-
-#: templates/nba/partials/injury_status.html:123
-#: templates/nba/player_detail.html:159
-msgid "No injury report has been recorded for this player."
-msgstr "Für diesen Spieler wurde noch kein Verletzungsbericht erfasst."
 
 #: templates/nba/partials/kick_button.html:7
 msgid "Remove from kick list"
@@ -6269,6 +6252,10 @@ msgstr ""
 #, python-format
 msgid "Points per game for %(name)s"
 msgstr "Punkte pro Spiel für %(name)s"
+
+#: templates/nba/player_detail.html:74 templates/nba/player_detail.html:81
+msgid "Close injury details"
+msgstr "Verletzungsdetails schließen"
 
 #: templates/nba/player_detail.html:165
 msgid "Compare"

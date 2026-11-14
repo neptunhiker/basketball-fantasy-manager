@@ -63,6 +63,11 @@ urlpatterns = [
         name="watchlist-toggle",
     ),
     path(
+        "players/<slug:slug>/injury/",
+        views.PlayerInjuryView.as_view(),
+        name="player-injury",
+    ),
+    path(
         "players/<slug:slug>/kick/",
         views.KickToggleView.as_view(),
         name="kick-toggle",

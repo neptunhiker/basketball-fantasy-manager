@@ -310,7 +310,7 @@ def test_the_build_page_names_the_injured_players(signed_in, roster):
 
     assert response.context["injured_players"] == [hurt]
     assert "1 injured" in response.content.decode()
-    assert f'aria-labelledby="injury-modal-title-{hurt.pk}-injured"' in response.content.decode()
+    assert f'hx-get="{reverse("nba:player-injury", args=[hurt.slug])}"' in response.content.decode()
 
 
 def test_release_disappears_once_selling_is_closed(signed_in, roster, season):

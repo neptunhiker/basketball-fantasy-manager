@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView, View
 
+from apps.core.search import search_query
 from apps.core.views import StaffRequiredMixin, SuperuserRequiredMixin
 from apps.fantasy.models import Manager
 
@@ -115,7 +116,7 @@ class UserListView(StaffRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if query := self.request.GET.get("q", "").strip():
+        if query := search_query(self.request.GET):
             qs = qs.filter(email__icontains=query)
         return qs
 
@@ -144,12 +145,16 @@ class UserDetailView(StaffRequiredMixin, DetailView):
     context_object_name = "person"
 
     def get_queryset(self):
-        return super().get_queryset().prefetch_related(
-            Prefetch(
-                "manager_profiles",
-                queryset=Manager.objects.annotate(roster_count=Count("rosters")).order_by(
-                    "nick_name"
-                ),
+        return (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    "manager_profiles",
+                    queryset=Manager.objects.annotate(roster_count=Count("rosters")).order_by(
+                        "nick_name"
+                    ),
+                )
             )
         )
 

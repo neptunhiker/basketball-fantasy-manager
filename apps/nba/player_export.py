@@ -28,6 +28,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
+from apps.core.search import search_query
 from apps.fantasy.models import Roster
 
 from .models import HEALTHY, Player, Team
@@ -390,7 +391,7 @@ def describe_filters(
     """The active filters as short phrases, in the filter bar's order."""
     get = request.GET.get
     parts = []
-    if query := get("q", "").strip():
+    if query := search_query(request.GET):
         parts.append(f"{_('Search by name')}: “{query}”")
     if (position := get("position")) in Player.Position.values:
         parts.append(f"{_('Position')}: {Player.Position(position).label}")

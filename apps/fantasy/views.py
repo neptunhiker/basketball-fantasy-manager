@@ -31,6 +31,7 @@ from django.views.generic import DetailView, ListView, TemplateView
 
 from apps.core.dates import local_date
 from apps.core.htmx import add_toast
+from apps.core.search import search_query
 from apps.core.templatetags.money import millions
 from apps.core.views import (
     AdminRequiredMixin,
@@ -790,7 +791,7 @@ def _picker_filters(request):
     """
     data = request.POST if request.method == "POST" else request.GET
     return {
-        "q": data.get("q", "").strip(),
+        "q": search_query(data),
         "position": data.get("position", ""),
         "team": data.get("team", "").strip(),
         "watchlist": data.get("watchlist") == "1",

@@ -35,6 +35,7 @@ from django.views.decorators.debug import sensitive_post_parameters, sensitive_v
 from django.views.generic import DetailView, ListView
 
 from apps.core.dates import local_date
+from apps.core.search import search_query
 from apps.core.views import ConfirmView, StaffRequiredMixin
 from apps.fantasy import services
 from apps.fantasy.models import PlayerSnapshot, Roster, Season, WatchlistEntry
@@ -418,7 +419,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
 
         # Each term has to match somewhere, so "james l" finds LeBron James
         # while a single "james" still matches the surname on its own.
-        for term in self.request.GET.get("q", "").split():
+        for term in search_query(self.request.GET).split():
             qs = qs.filter(Q(first_name__icontains=term) | Q(last_name__icontains=term))
 
         if (position := self.request.GET.get("position")) in Player.Position.values:
@@ -817,7 +818,7 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
             .select_related("team")
             .order_by("last_name", "first_name")
         )
-        query = self.request.GET.get("q", "").strip()
+        query = search_query(self.request.GET)
         if query:
             for term in query.split():
                 qs = qs.filter(Q(first_name__icontains=term) | Q(last_name__icontains=term))
@@ -879,7 +880,7 @@ class PlayerCompareView(LoginRequiredMixin, ListView):
         context["selected_slug_set"] = set(selected_slugs)
         context["selected_slugs"] = selected_slugs
         context["modal_query"] = modal_query
-        context["search_query"] = self.request.GET.get("q", "").strip()
+        context["search_query"] = search_query(self.request.GET)
         context["max_compare_players"] = 5
         context["can_add_more"] = len(selected_slugs) < 5
         context["search_results"] = list(self.get_queryset())
@@ -906,14 +907,14 @@ class PlayerCompareModalView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         selected_slugs = self._selected_slugs()
-        search_query = request.GET.get("q", "").strip()
+        query = search_query(request.GET)
 
         qs = Player.objects.filter(is_active=True).select_related("team")
         if selected_slugs:
             qs = qs.exclude(slug__in=selected_slugs)
 
-        if search_query:
-            for term in search_query.split():
+        if query:
+            for term in query.split():
                 qs = qs.filter(
                     Q(first_name__icontains=term)
                     | Q(last_name__icontains=term)
@@ -934,7 +935,7 @@ class PlayerCompareModalView(LoginRequiredMixin, View):
             )
 
         context = {
-            "search_query": search_query,
+            "search_query": query,
             "matching_players": matching_players,
             "selected_slugs": selected_slugs,
             "selected_count": len(selected_slugs),

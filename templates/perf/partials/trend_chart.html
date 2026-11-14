@@ -1,0 +1,96 @@
+{% load i18n l10n perf player_stats %}
+{% comment %}
+  The trend: p95 and p50 per bucket, from apps.perf.charts.trend_chart.
+  Context: chart, bucket ("hour" or "day"), chart_label.
+
+  Coordinates go through `unlocalize` -- in German a plain `{{ point.x }}`
+  renders as `52,5` and the browser refuses to draw it.
+
+  Hover works like the player chart's: each bucket owns a transparent column
+  (`.chart-hit`), and hovering it shows that bucket's markers and readout
+  (`.chart-readout`, rules in assets/input.css). The values are also in the
+  table underneath, which is this drawing's accessible twin.
+
+  Gridlines are solid hairlines; text uses ink colours, never a series colour
+  -- the small dots beside the end labels carry which line is which.
+{% endcomment %}
+<svg viewBox="0 0 {{ chart.width|unlocalize }} {{ chart.height|unlocalize }}"
+     class="h-auto w-full select-none"
+     role="img"
+     aria-label="{{ chart_label }}">
+  <g class="text-neutral-200 dark:text-neutral-800">
+    {% for tick in chart.y_ticks %}
+      <line x1="{{ chart.plot_left|unlocalize }}" y1="{{ tick.y|unlocalize }}"
+            x2="{{ chart.plot_right|unlocalize }}" y2="{{ tick.y|unlocalize }}"
+            stroke="currentColor" stroke-width="1" />
+    {% endfor %}
+  </g>
+
+  <g class="fill-neutral-500 dark:fill-neutral-400" font-size="11">
+    {% for tick in chart.y_ticks %}
+      <text x="{{ chart.label_right|unlocalize }}" y="{{ tick.y|unlocalize }}"
+            text-anchor="end" dominant-baseline="middle">{{ tick.value|axis_duration }}</text>
+    {% endfor %}
+    {% for label in chart.x_labels %}
+      <text x="{{ label.x|unlocalize }}" y="{{ chart.label_bottom|unlocalize }}"
+            text-anchor="middle">{% if bucket == "hour" %}{{ label.at|date:"H:i" }}{% else %}{{ label.at|short_month_day }}{% endif %}</text>
+    {% endfor %}
+  </g>
+
+  <path d="{{ chart.p50_path }}" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"
+        class="text-secondary-600 dark:text-secondary-700" />
+  <path d="{{ chart.p95_path }}" fill="none" stroke="currentColor" stroke-width="2.25"
+        stroke-linecap="round" stroke-linejoin="round"
+        class="text-primary-600" />
+
+  {# A bucket with empty neighbours has no line through it: a dot instead. #}
+  {% for point in chart.points %}
+    {% if point.alone50 %}
+      <circle cx="{{ point.x|unlocalize }}" cy="{{ point.y50|unlocalize }}" r="4" stroke-width="2"
+              class="fill-secondary-600 stroke-white dark:fill-secondary-700 dark:stroke-neutral-900" />
+    {% endif %}
+    {% if point.alone95 %}
+      <circle cx="{{ point.x|unlocalize }}" cy="{{ point.y95|unlocalize }}" r="4" stroke-width="2"
+              class="fill-primary-600 stroke-white dark:stroke-neutral-900" />
+    {% endif %}
+  {% endfor %}
+
+  {% if chart.ends %}
+    <g font-size="11" font-weight="600" class="fill-neutral-600 dark:fill-neutral-300">
+      <circle cx="{{ chart.ends.x|unlocalize }}" cy="{{ chart.ends.y95|unlocalize }}" r="3" class="fill-primary-600" />
+      <text x="{{ chart.ends.x|add:7|unlocalize }}" y="{{ chart.ends.y95|unlocalize }}" dominant-baseline="middle">p95</text>
+      <circle cx="{{ chart.ends.x|unlocalize }}" cy="{{ chart.ends.y50|unlocalize }}" r="3" class="fill-secondary-600 dark:fill-secondary-700" />
+      <text x="{{ chart.ends.x|add:7|unlocalize }}" y="{{ chart.ends.y50|unlocalize }}" dominant-baseline="middle">p50</text>
+    </g>
+  {% endif %}
+
+  {% for point in chart.points %}
+    {% if point.p95 is not None %}
+      {# Order matters: the hit area first, the rules are sibling selectors on it. #}
+      <g>
+        <rect class="chart-hit"
+              x="{{ point.band_x|unlocalize }}" y="{{ chart.plot_top|unlocalize }}"
+              width="{{ point.band_width|unlocalize }}" height="{{ chart.plot_height|unlocalize }}" />
+        <line class="chart-guide text-neutral-400 dark:text-neutral-500"
+              x1="{{ point.x|unlocalize }}" y1="{{ chart.plot_top|unlocalize }}"
+              x2="{{ point.x|unlocalize }}" y2="{{ chart.plot_bottom|unlocalize }}"
+              stroke="currentColor" stroke-width="1" />
+        {% if point.y50 is not None %}
+          <circle class="chart-readout fill-secondary-600 stroke-white dark:fill-secondary-700 dark:stroke-neutral-900"
+                  cx="{{ point.x|unlocalize }}" cy="{{ point.y50|unlocalize }}" r="4.5" stroke-width="2" />
+        {% endif %}
+        <circle class="chart-readout fill-primary-600 stroke-white dark:stroke-neutral-900"
+                cx="{{ point.x|unlocalize }}" cy="{{ point.y95|unlocalize }}" r="4.5" stroke-width="2" />
+        <text class="chart-readout fill-neutral-900 stroke-white dark:fill-white dark:stroke-neutral-900"
+              x="{{ point.x|unlocalize }}" y="{{ chart.readout_y|unlocalize }}"
+              text-anchor="{{ point.anchor }}" font-size="12" font-weight="600"
+              paint-order="stroke" stroke-width="4" stroke-linejoin="round">p95 {{ point.p95|duration }} · p50 {{ point.p50|duration }}</text>
+        <text class="chart-readout fill-neutral-500 stroke-white dark:fill-neutral-400 dark:stroke-neutral-900"
+              x="{{ point.x|unlocalize }}" y="{{ chart.readout_note_y|unlocalize }}"
+              text-anchor="{{ point.anchor }}" font-size="11"
+              paint-order="stroke" stroke-width="4" stroke-linejoin="round">{% if bucket == "hour" %}{{ point.bucket|date:"H:i" }}{% else %}{{ point.bucket|short_month_day }}{% endif %} · {% blocktranslate count count=point.requests %}{{ count }} request{% plural %}{{ count }} requests{% endblocktranslate %}</text>
+      </g>
+    {% endif %}
+  {% endfor %}
+</svg>

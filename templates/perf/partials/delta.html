@@ -1,0 +1,21 @@
+{% load i18n perf %}
+{% comment %}
+  How a figure moved against the window before, e.g. "▲ +12% vs previous".
+  Context: change (from stats.change, or None), period, on_dark.
+  Rose means worse, emerald better, grey a figure where neither applies
+  (request volume) -- and the arrow and sign say the direction either way.
+{% endcomment %}
+{% if change %}
+  <span class="inline-flex items-center gap-1 text-xs font-medium
+    {% if on_dark %}
+      {% if change.tone == "bad" %}text-rose-300{% elif change.tone == "good" %}text-emerald-300{% else %}text-white/60{% endif %}
+    {% else %}
+      {% if change.tone == "bad" %}text-rose-600 dark:text-rose-400{% elif change.tone == "good" %}text-emerald-600 dark:text-emerald-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}
+    {% endif %}">
+    <svg class="h-3 w-3 {% if change.flat %}hidden{% elif not change.up %}rotate-180{% endif %}" fill="currentColor" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2.5 10.5 9h-9L6 2.5Z"/></svg>
+    <span class="tabular-nums">{{ change|signed_percent }}</span>
+    <span class="{% if on_dark %}text-white/50{% else %}text-neutral-400 max-sm:hidden dark:text-neutral-500{% endif %} font-normal">{% blocktranslate with period=period.label %}vs. previous {{ period }}{% endblocktranslate %}</span>
+  </span>
+{% else %}
+  <span class="text-xs {% if on_dark %}text-white/40{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">{% translate "No earlier figure to compare" %}</span>
+{% endif %}

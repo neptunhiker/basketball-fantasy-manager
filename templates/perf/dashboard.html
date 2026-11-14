@@ -1,0 +1,349 @@
+{% extends "app.html" %}
+{% load i18n perf player_stats %}
+
+{% block title %}{% translate "Performance" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Performance" %}{% endblock %}
+
+{% block content %}
+{% translate "Slowest first, by p95. Pages and HTMX updates are listed apart: a filter swap and a full page are different jobs." as routes_help %}
+{% translate "p95 is the time 95 out of 100 requests stayed under; p50 is the typical request. Measured inside the app, from the first middleware to the last byte of the response — network and the browser come on top." as p95_help %}
+
+{# --- Hero: the one number, and the window it covers ----------------------- #}
+<section class="relative isolate overflow-hidden rounded-xl border border-black/10 bg-[#17111f] text-white shadow-xl shadow-tertiary-700/10 animate-season-rise motion-reduce:animate-none">
+  <div class="pointer-events-none absolute inset-0 hidden opacity-[.16] sm:block"
+       style="background-image: linear-gradient(rgba(255,255,255,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.14) 1px, transparent 1px); background-size: 40px 40px;"></div>
+  <div class="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary-500/25 blur-3xl"></div>
+
+  <div class="relative flex flex-col gap-6 p-5 sm:p-8 lg:flex-row lg:items-start lg:justify-between lg:p-10">
+    <div class="min-w-0 lg:order-1">
+      <div class="flex items-center gap-2.5 font-mono text-[0.65rem] font-bold uppercase tracking-[.22em] text-secondary-300">
+        <span class="h-[7px] w-[7px] rounded-full bg-secondary-300 shadow-[0_0_0_4px_rgba(255,172,228,.18)] {% if recording %}motion-safe:sm:animate-pulse{% endif %}"></span>
+        {% blocktranslate with period=period.label %}Response time · last {{ period }}{% endblocktranslate %}
+      </div>
+      <div class="mt-4 flex flex-wrap items-end gap-x-4 gap-y-3">
+        <p class="text-5xl font-extrabold leading-none tracking-[-.04em] sm:text-7xl">{{ summary.p95|duration }}</p>
+        <div class="flex items-center gap-2 pb-1 sm:pb-2">
+          <span class="font-mono text-xs font-bold uppercase tracking-[.18em] text-white/50">p95</span>
+          {% include "perf/partials/status.html" with status=status on_dark=True %}
+        </div>
+      </div>
+      <p class="mt-4 max-w-[52ch] text-sm leading-6 text-white/60">{{ p95_help }}</p>
+      <div class="mt-3">{% include "perf/partials/delta.html" with change=changes.p95 on_dark=True %}</div>
+    </div>
+
+    <nav class="grid shrink-0 grid-cols-3 gap-1 rounded-xl border border-white/10 bg-white/[.06] p-1 lg:order-2"
+         aria-label="{% translate 'Time window' %}">
+      {% for key, label in periods %}
+        <a href="?period={{ key }}{% if selected_route %}&amp;route={{ selected_route|urlencode }}{% endif %}"
+           {% if key == period.key %}aria-current="page"{% endif %}
+           class="flex min-h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold whitespace-nowrap transition
+             {% if key == period.key %}bg-secondary-400 text-[#17111f] shadow-sm{% else %}text-white/70 hover:bg-white/10 hover:text-white{% endif %}">{{ label }}</a>
+      {% endfor %}
+    </nav>
+  </div>
+
+  {% if not recording %}
+    <p class="relative border-t border-white/10 px-5 py-3 text-xs text-amber-200 sm:px-8 lg:px-10">
+      {% translate "Recording is switched off (PERF_RECORD_REQUESTS), so no new requests arrive here." %}
+    </p>
+  {% endif %}
+</section>
+
+{% if not has_any_metrics %}
+  <section class="card overflow-hidden">
+    <div class="gradient-rule h-1"></div>
+    <div class="flex flex-col items-center px-6 py-14 text-center">
+      <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-300">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+      </span>
+      <h2 class="mt-4 text-lg font-semibold">{% translate "No requests recorded yet" %}</h2>
+      <p class="mt-1 max-w-[44ch] text-sm text-neutral-500 dark:text-neutral-400">{% translate "Every page someone opens is measured. Browse the app for a moment and the first figures show up here." %}</p>
+    </div>
+  </section>
+{% else %}
+
+{# --- The other headline figures ------------------------------------------ #}
+<section class="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-neutral-200 bg-neutral-200 sm:grid-cols-3 lg:grid-cols-5 dark:border-neutral-800 dark:bg-neutral-800"
+         aria-label="{% translate 'Key figures' %}">
+  <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">
+    <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Requests" %}</p>
+    <p class="mt-2 text-2xl font-bold tracking-tight">{{ summary.requests }}</p>
+    <div class="mt-1">{% include "perf/partials/delta.html" with change=changes.requests %}</div>
+    {% if summary.errors %}
+      <p class="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-rose-600 dark:text-rose-400">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4 2.8 19.5h18.4L12 4ZM12 10v4.5M12 17.2h.01"/></svg>
+        {% blocktranslate count count=summary.errors %}{{ count }} server error{% plural %}{{ count }} server errors{% endblocktranslate %}
+      </p>
+    {% endif %}
+  </div>
+  <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">
+    <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Typical (p50)" %}</p>
+    <p class="mt-2 text-2xl font-bold tracking-tight">{{ summary.p50|duration }}</p>
+    <div class="mt-1">{% include "perf/partials/delta.html" with change=changes.p50 %}</div>
+  </div>
+  <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">
+    <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Queries per request" %}</p>
+    <p class="mt-2 text-2xl font-bold tracking-tight">{{ summary.queries|one_decimal }}</p>
+    <div class="mt-1">{% include "perf/partials/delta.html" with change=changes.queries %}</div>
+  </div>
+  <div class="bg-white p-4 sm:p-5 dark:bg-neutral-900">
+    <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Database (p95)" %}</p>
+    <p class="mt-2 text-2xl font-bold tracking-tight">{{ summary.sql_p95|duration }}</p>
+    <div class="mt-1">{% include "perf/partials/delta.html" with change=changes.sql_p95 %}</div>
+  </div>
+  <div class="col-span-2 bg-white p-4 sm:p-5 lg:col-span-1 dark:bg-neutral-900">
+    <p class="font-mono text-[0.6rem] font-semibold uppercase tracking-[.18em] text-neutral-500 dark:text-neutral-400">{% translate "Page size (median)" %}</p>
+    <p class="mt-2 text-2xl font-bold tracking-tight">{% if summary.bytes_median is not None %}{{ summary.bytes_median|filesizeformat }}{% else %}–{% endif %}</p>
+    <div class="mt-1">{% include "perf/partials/delta.html" with change=changes.bytes_median %}</div>
+  </div>
+</section>
+
+{# --- Trend ---------------------------------------------------------------- #}
+<section id="trend" class="card scroll-mt-20 overflow-hidden">
+  <div class="flex flex-col gap-3 border-b border-neutral-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:border-neutral-800">
+    <div class="min-w-0">
+      <h2 class="flex items-center gap-1.5 text-base font-semibold">
+        {% translate "Response time" %}
+        {% translate "Response time" as trend_label %}
+        {% include "partials/info_popover.html" with text=p95_help label=trend_label %}
+      </h2>
+      <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
+        {% if period.bucket == "hour" %}{% translate "Per hour" %}{% else %}{% translate "Per day" %}{% endif %} ·
+        {% if selected_route %}<span class="font-mono text-tertiary-700 dark:text-neutral-200">{{ selected_route }}</span>{% else %}{% translate "all routes" %}{% endif %}
+      </p>
+    </div>
+    <form method="get" action="#trend" x-data class="flex items-center gap-2 sm:w-72">
+      <input type="hidden" name="period" value="{{ period.key }}">
+      <label for="trend-route" class="sr-only">{% translate "Route" %}</label>
+      <select id="trend-route" name="route" @change="$el.form.requestSubmit()"
+              class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 font-mono text-base shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 sm:text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
+        <option value="">{% translate "All routes" %}</option>
+        {% for name in route_names %}
+          <option value="{{ name }}" {% if name == selected_route %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit" class="btn btn-secondary">{% translate "Show" %}</button></noscript>
+    </form>
+  </div>
+
+  {% if trend_charts.wide %}
+    <div class="px-2 pb-2 pt-4 sm:px-4">
+      <div class="mb-1 flex items-center gap-4 px-2 text-xs font-medium text-neutral-600 dark:text-neutral-300" aria-hidden="true">
+        <span class="inline-flex items-center gap-1.5"><span class="h-0.5 w-4 rounded-full bg-primary-600"></span>p95</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-0.5 w-4 rounded-full bg-secondary-600 dark:bg-secondary-700"></span>p50</span>
+        <span class="ml-auto text-neutral-400 dark:text-neutral-500 max-sm:hidden">{% translate "Hover a point for its values" %}</span>
+      </div>
+      {% translate "Response time over time, p95 and p50; the same figures are in the table below." as chart_label %}
+      <div class="hidden sm:block">{% include "perf/partials/trend_chart.html" with chart=trend_charts.wide bucket=period.bucket chart_label=chart_label %}</div>
+      <div class="sm:hidden">{% include "perf/partials/trend_chart.html" with chart=trend_charts.narrow bucket=period.bucket chart_label=chart_label %}</div>
+    </div>
+
+    <details class="group border-t border-neutral-200 dark:border-neutral-800">
+      <summary class="flex min-h-11 list-none items-center gap-2 px-4 text-sm font-medium text-neutral-600 hover:text-tertiary-700 sm:px-6 dark:text-neutral-300 dark:hover:text-white [&::-webkit-details-marker]:hidden">
+        <svg class="h-4 w-4 transition group-open:rotate-90" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/></svg>
+        {% translate "Show as table" %}
+      </summary>
+      <div class="max-h-80 overflow-auto border-t border-neutral-200 dark:border-neutral-800">
+        <table class="w-full text-sm">
+          <thead class="sticky top-0 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+            <tr>
+              <th scope="col" class="px-4 py-2.5 text-left font-medium sm:px-6">{% if period.bucket == "hour" %}{% translate "Hour" %}{% else %}{% translate "Day" %}{% endif %}</th>
+              <th scope="col" class="px-4 py-2.5 text-right font-medium">{% translate "Requests" %}</th>
+              <th scope="col" class="px-4 py-2.5 text-right font-medium">p50</th>
+              <th scope="col" class="px-4 py-2.5 text-right font-medium sm:px-6">p95</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-100 tabular-nums dark:divide-neutral-800">
+            {% for point in trend reversed %}
+              <tr>
+                <td class="px-4 py-2 sm:px-6">{% if period.bucket == "hour" %}{{ point.bucket|date:"SHORT_DATETIME_FORMAT" }}{% else %}{{ point.bucket|date:"SHORT_DATE_FORMAT" }}{% endif %}</td>
+                <td class="px-4 py-2 text-right text-neutral-600 dark:text-neutral-400">{{ point.requests }}</td>
+                <td class="px-4 py-2 text-right">{{ point.p50|duration }}</td>
+                <td class="px-4 py-2 text-right font-semibold sm:px-6">{{ point.p95|duration }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  {% else %}
+    <p class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">{% translate "No requests in this window." %}</p>
+  {% endif %}
+</section>
+
+{# --- Routes --------------------------------------------------------------- #}
+<section class="card overflow-hidden" aria-labelledby="routes-heading">
+  <div class="border-b border-neutral-200 px-4 py-4 sm:px-6 dark:border-neutral-800">
+    <h2 id="routes-heading" class="flex items-center gap-1.5 text-base font-semibold">
+      {% translate "Routes" %}
+      {% translate "Routes" as routes_label %}
+      {% include "partials/info_popover.html" with text=routes_help label=routes_label %}
+    </h2>
+    <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% blocktranslate with fast=fast_ms slow=slow_ms %}Fast under {{ fast }} ms, slow from {{ slow }} ms at p95. Pick a route to see its trend.{% endblocktranslate %}</p>
+  </div>
+
+  {% if routes %}
+    {# From `md`: a table. #}
+    <div class="hidden overflow-x-auto md:block">
+      <table class="w-full text-sm">
+        <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left font-medium">{% translate "Route" %}</th>
+            <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Requests" %}</th>
+            <th scope="col" class="px-3 py-3 text-right font-medium">p50</th>
+            <th scope="col" class="px-3 py-3 text-right font-medium">p95</th>
+            <th scope="col" class="py-3 pr-3 text-left font-medium"><span class="sr-only">{% translate "Status" %}</span></th>
+            <th scope="col" class="px-3 py-3 text-right font-medium" title="{% translate 'Average queries per request' %}">{% translate "Queries" %}</th>
+            <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "DB p95" %}</th>
+            <th scope="col" class="px-6 py-3 text-right font-medium">{% translate "Size" %}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-100 tabular-nums dark:divide-neutral-800">
+          {% for row in routes %}
+            <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50 {% if row.route and row.route == selected_route %}bg-primary-50/60 dark:bg-primary-500/5{% endif %}">
+              <td class="px-6 py-3">
+                <div class="flex min-w-[13rem] max-w-[22rem] items-center gap-2">
+                  {% if row.route %}
+                    <a href="?period={{ period.key }}&amp;route={{ row.route|urlencode }}#trend"
+                       class="truncate text-[13px] font-medium text-tertiary-700 hover:text-primary-700 hover:underline dark:text-neutral-100 dark:hover:text-primary-300">{% include "perf/partials/route_label.html" with route=row.route %}</a>
+                  {% else %}
+                    <span class="truncate text-[13px]">{% include "perf/partials/route_label.html" with route=row.route %}</span>
+                  {% endif %}
+                  {% if row.htmx %}<span class="badge badge-neutral shrink-0 !px-2 !text-[10px] font-semibold uppercase tracking-wider">HTMX</span>{% endif %}
+                </div>
+              </td>
+              <td class="px-3 py-3 text-right text-neutral-600 dark:text-neutral-400">{{ row.requests }}</td>
+              <td class="px-3 py-3 text-right">{{ row.p50|duration }}</td>
+              <td class="px-3 py-3">
+                <div class="flex items-center justify-end gap-2.5">
+                  <div class="hidden h-1.5 w-20 overflow-hidden rounded-full bg-neutral-100 lg:block dark:bg-neutral-800" aria-hidden="true">
+                    <div class="h-full rounded-full bg-primary-500" style="width: {{ row.bar_percent }}%"></div>
+                  </div>
+                  <span class="w-16 text-right font-semibold">{{ row.p95|duration }}</span>
+                </div>
+              </td>
+              <td class="py-3 pr-3">{% include "perf/partials/status.html" with status=row.status compact=True %}</td>
+              <td class="px-3 py-3 text-right text-neutral-600 dark:text-neutral-400">{{ row.queries|one_decimal }}</td>
+              <td class="px-3 py-3 text-right text-neutral-600 dark:text-neutral-400">{{ row.sql_p95|duration }}</td>
+              <td class="px-6 py-3 text-right text-neutral-600 dark:text-neutral-400 whitespace-nowrap">{% if row.bytes_median is not None %}{{ row.bytes_median|filesizeformat }}{% else %}–{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {# Below `md`: one card per route, p95 first. #}
+    <ul class="divide-y divide-neutral-100 md:hidden dark:divide-neutral-800">
+      {% for row in routes %}
+        <li>
+          {% if row.route %}<a href="?period={{ period.key }}&amp;route={{ row.route|urlencode }}#trend" class="block px-4 py-4 transition active:bg-neutral-50 dark:active:bg-neutral-800/50 {% if row.route == selected_route %}bg-primary-50/60 dark:bg-primary-500/5{% endif %}">{% else %}<div class="px-4 py-4">{% endif %}
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="truncate text-[13px] font-medium">{% include "perf/partials/route_label.html" with route=row.route %}</p>
+                <div class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                  {% if row.htmx %}<span class="badge badge-neutral !px-2 !text-[10px] font-semibold uppercase tracking-wider">HTMX</span>{% endif %}
+                  {% blocktranslate count count=row.requests %}{{ count }} request{% plural %}{{ count }} requests{% endblocktranslate %}
+                </div>
+              </div>
+              <div class="flex shrink-0 flex-col items-end gap-1">
+                <p class="text-lg font-bold leading-none">{{ row.p95|duration }}</p>
+                {% include "perf/partials/status.html" with status=row.status %}
+              </div>
+            </div>
+            <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800" aria-hidden="true">
+              <div class="h-full rounded-full bg-primary-500" style="width: {{ row.bar_percent }}%"></div>
+            </div>
+            <dl class="mt-3 grid grid-cols-4 gap-2 text-xs">
+              <div><dt class="font-mono text-[0.6rem] uppercase tracking-[.14em] text-neutral-400 dark:text-neutral-500">p50</dt><dd class="mt-0.5 font-medium tabular-nums">{{ row.p50|duration }}</dd></div>
+              <div><dt class="font-mono text-[0.6rem] uppercase tracking-[.14em] text-neutral-400 dark:text-neutral-500">{% translate "Queries" %}</dt><dd class="mt-0.5 font-medium tabular-nums">{{ row.queries|one_decimal }}</dd></div>
+              <div><dt class="font-mono text-[0.6rem] uppercase tracking-[.14em] text-neutral-400 dark:text-neutral-500">{% translate "DB p95" %}</dt><dd class="mt-0.5 font-medium tabular-nums">{{ row.sql_p95|duration }}</dd></div>
+              <div><dt class="font-mono text-[0.6rem] uppercase tracking-[.14em] text-neutral-400 dark:text-neutral-500">{% translate "Size" %}</dt><dd class="mt-0.5 font-medium tabular-nums">{% if row.bytes_median is not None %}{{ row.bytes_median|filesizeformat }}{% else %}–{% endif %}</dd></div>
+            </dl>
+          {% if row.route %}</a>{% else %}</div>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">{% translate "No requests in this window." %}</p>
+  {% endif %}
+</section>
+
+{# --- Slowest requests ----------------------------------------------------- #}
+<section class="card overflow-hidden" aria-labelledby="slowest-heading">
+  <div class="border-b border-neutral-200 px-4 py-4 sm:px-6 dark:border-neutral-800">
+    <h2 id="slowest-heading" class="text-base font-semibold">{% translate "Slowest requests" %}</h2>
+    <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% blocktranslate with period=period.label %}The {{ limit }} slowest in the last {{ period }}, with the parameters they carried — names only, never values.{% endblocktranslate %}</p>
+  </div>
+
+  {% if slowest %}
+    <div class="hidden overflow-x-auto md:block">
+      <table class="w-full text-sm">
+        <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left font-medium">{% translate "When" %}</th>
+            <th scope="col" class="px-3 py-3 text-left font-medium">{% translate "Route" %}</th>
+            <th scope="col" class="px-3 py-3 text-left font-medium">{% translate "Parameters" %}</th>
+            <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Status" %}</th>
+            <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Time" %}</th>
+            <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Queries" %}</th>
+            <th scope="col" class="px-6 py-3 text-right font-medium">{% translate "Size" %}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-100 tabular-nums dark:divide-neutral-800">
+          {% for metric in slowest %}
+            <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+              <td class="px-6 py-3 whitespace-nowrap text-neutral-600 dark:text-neutral-400">{{ metric.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+              <td class="px-3 py-3">
+                <div class="flex min-w-[12rem] max-w-[18rem] items-center gap-2">
+                  <span class="truncate text-[13px] font-medium"><span class="text-neutral-400 dark:text-neutral-500">{{ metric.method }}</span> {% include "perf/partials/route_label.html" with route=metric.route %}</span>
+                  {% if metric.htmx %}<span class="badge badge-neutral shrink-0 !px-2 !text-[10px] font-semibold uppercase tracking-wider">HTMX</span>{% endif %}
+                </div>
+              </td>
+              <td class="px-3 py-3">
+                {% if metric.query_keys %}
+                  <div class="flex flex-wrap gap-1">{% for key in metric.query_keys|split_keys %}<span class="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ key }}</span>{% endfor %}</div>
+                {% else %}<span class="text-neutral-300 dark:text-neutral-600">–</span>{% endif %}
+              </td>
+              <td class="px-3 py-3 text-right font-medium {% if metric.status >= 500 %}text-rose-600 dark:text-rose-400{% elif metric.status >= 400 %}text-amber-700 dark:text-amber-300{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ metric.status }}</td>
+              <td class="px-3 py-3 text-right font-semibold">{{ metric.duration_ms|duration }}</td>
+              <td class="px-3 py-3 text-right text-neutral-600 dark:text-neutral-400">{{ metric.sql_count }}</td>
+              <td class="px-6 py-3 text-right text-neutral-600 dark:text-neutral-400 whitespace-nowrap">{% if metric.response_bytes is not None %}{{ metric.response_bytes|filesizeformat }}{% else %}–{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="divide-y divide-neutral-100 md:hidden dark:divide-neutral-800">
+      {% for metric in slowest %}
+        <li class="px-4 py-3.5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="truncate text-[13px] font-medium"><span class="text-neutral-400 dark:text-neutral-500">{{ metric.method }}</span> {% include "perf/partials/route_label.html" with route=metric.route %}</p>
+              <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                {{ metric.recorded_at|date:"SHORT_DATETIME_FORMAT" }} ·
+                <span class="{% if metric.status >= 500 %}text-rose-600 dark:text-rose-400{% elif metric.status >= 400 %}text-amber-700 dark:text-amber-300{% endif %}">{{ metric.status }}</span> ·
+                {% blocktranslate count count=metric.sql_count %}{{ count }} query{% plural %}{{ count }} queries{% endblocktranslate %}{% if metric.response_bytes is not None %} · {{ metric.response_bytes|filesizeformat }}{% endif %}
+              </p>
+            </div>
+            <div class="flex shrink-0 flex-col items-end gap-1">
+              <p class="text-base font-bold leading-none">{{ metric.duration_ms|duration }}</p>
+              {% if metric.htmx %}<span class="badge badge-neutral !px-2 !text-[10px] font-semibold uppercase tracking-wider">HTMX</span>{% endif %}
+            </div>
+          </div>
+          {% if metric.query_keys %}
+            <div class="mt-2 flex flex-wrap gap-1">{% for key in metric.query_keys|split_keys %}<span class="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ key }}</span>{% endfor %}</div>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">{% translate "No requests in this window." %}</p>
+  {% endif %}
+</section>
+
+<p class="text-center text-xs text-neutral-400 dark:text-neutral-500">
+  {% blocktranslate with days=retention_days %}Kept for {{ days }} days. Sizes are before compression.{% endblocktranslate %}
+</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% load i18n %}
+{% comment %}
+  The p95 verdict as a pill: icon and word, never colour alone.
+  Context: status ("fast", "ok", "slow" or None), on_dark (the hero band),
+  compact (icon only below `xl`, as in the routes table).
+{% endcomment %}
+{% if status %}
+  {% if status == "fast" %}{% translate "Fast" as status_label %}{% elif status == "ok" %}{% translate "Noticeable" as status_label %}{% else %}{% translate "Slow" as status_label %}{% endif %}
+  <span class="inline-flex shrink-0 items-center gap-1 rounded-full font-semibold
+    {% if compact %}px-1.5 py-0.5 text-[11px] xl:px-2{% else %}px-2.5 py-1 text-xs{% endif %}
+    {% if on_dark %}
+      {% if status == "fast" %}bg-emerald-400/15 text-emerald-300{% elif status == "ok" %}bg-amber-400/15 text-amber-300{% else %}bg-rose-400/15 text-rose-300{% endif %}
+    {% else %}
+      {% if status == "fast" %}bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400{% elif status == "ok" %}bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300{% else %}bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300{% endif %}
+    {% endif %}"
+    {% if compact %}title="{{ status_label }}"{% endif %}>
+    {% if status == "fast" %}
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+    {% elif status == "ok" %}
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path stroke-linecap="round" d="M12 7.5V12l3 2"/></svg>
+    {% else %}
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4 2.8 19.5h18.4L12 4ZM12 10v4.5M12 17.2h.01"/></svg>
+    {% endif %}
+    <span class="{% if compact %}max-xl:sr-only{% endif %}">{{ status_label }}</span>
+  </span>
+{% endif %}

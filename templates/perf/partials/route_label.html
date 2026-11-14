@@ -1,0 +1,3 @@
+{% load i18n %}
+{# A route's URL name in mono, or a note for requests no URL matched. #}
+{% if route %}<span class="font-mono">{{ route }}</span>{% else %}<span class="italic text-neutral-500 dark:text-neutral-400">{% translate "No matching URL" %}</span>{% endif %}

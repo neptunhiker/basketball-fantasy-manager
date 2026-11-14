@@ -14,7 +14,7 @@ from django.db.models.functions import RowNumber, TruncDay, TruncHour
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from .models import RequestMetric
+from .models import Deploy, RequestMetric
 
 # p95 thresholds for the status pills, in milliseconds. Fast is what a page
 # should feel like; past a second, people notice they are waiting.
@@ -89,19 +89,23 @@ class Period:
         and the night they go forward has no 02:00 that cannot exist.
         Days run from local midnight to local midnight, like `TruncDay`.
         """
-        moments = []
-        if self.bucket == "hour":
-            moment = self.start.astimezone(dt.UTC)
-            while moment < self.end:
-                moments.append(moment)
-                moment += dt.timedelta(hours=1)
-            return moments
-        moment = self.start
+        return [start for start, _end in self.spans()]
+
+    def spans(self):
+        """Every bucket as (start, end), like `buckets`. The last one ends
+        where a whole bucket would, after `end`: where a moment sits inside
+        it does not depend on how much of it has passed."""
+        spans = []
+        moment = self.start.astimezone(dt.UTC) if self.bucket == "hour" else self.start
         while moment < self.end:
-            moments.append(moment)
-            next_day = timezone.localdate(moment) + dt.timedelta(days=1)
-            moment = timezone.make_aware(dt.datetime.combine(next_day, dt.time.min))
-        return moments
+            if self.bucket == "hour":
+                following = moment + dt.timedelta(hours=1)
+            else:
+                next_day = timezone.localdate(moment) + dt.timedelta(days=1)
+                following = timezone.make_aware(dt.datetime.combine(next_day, dt.time.min))
+            spans.append((moment, following))
+            moment = following
+        return spans
 
 
 PERIODS = {
@@ -225,10 +229,22 @@ def route_names(period):
     return list(names.distinct().order_by("route"))
 
 
+def deploys(period):
+    """The deploys inside the window, oldest first."""
+    return list(
+        Deploy.objects.filter(deployed_at__gte=period.start, deployed_at__lt=period.end).order_by(
+            "deployed_at"
+        )
+    )
+
+
 def trend(period, route=None):
     """p50, p95 and request count per bucket, one entry per bucket -- an empty
     bucket comes back with None, so the chart can leave a gap. All routes
-    means all matched ones, like `summary`."""
+    means all matched ones, like `summary`.
+
+    Each entry also carries where its bucket ends and the deploys inside it,
+    whatever the route: a deploy changes them all."""
     if period.bucket == "hour":
         bucket = TruncHour("recorded_at", tzinfo=dt.UTC)
     else:
@@ -245,7 +261,17 @@ def trend(period, route=None):
         )
     }
     empty = {"requests": 0, "p50": None, "p95": None}
-    return [{**empty, **measured.get(moment, {}), "bucket": moment} for moment in period.buckets()]
+    released = deploys(period)
+    return [
+        {
+            **empty,
+            **measured.get(start, {}),
+            "bucket": start,
+            "end": end,
+            "deploys": [deploy for deploy in released if start <= deploy.deployed_at < end],
+        }
+        for start, end in period.spans()
+    ]
 
 
 def slowest(period, limit=SLOWEST_LIMIT, per_route=SLOWEST_PER_ROUTE):

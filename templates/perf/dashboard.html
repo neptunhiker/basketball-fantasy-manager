@@ -136,6 +136,9 @@
       <div class="mb-1 flex items-center gap-4 px-2 text-xs font-medium text-neutral-600 dark:text-neutral-300" aria-hidden="true">
         <span class="inline-flex items-center gap-1.5"><span class="h-0.5 w-4 rounded-full bg-primary-600"></span>p95</span>
         <span class="inline-flex items-center gap-1.5"><span class="h-0.5 w-4 rounded-full bg-secondary-600 dark:bg-secondary-700"></span>p50</span>
+        {% if trend_charts.wide.has_deploys %}
+          <span class="inline-flex items-center gap-1.5"><span class="relative h-3 w-2.5"><span class="absolute inset-y-0 left-1/2 border-l border-dashed border-neutral-400 dark:border-neutral-500"></span><span class="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 rounded-full bg-tertiary-700 dark:bg-neutral-300"></span></span>{% translate "Deploy" %}</span>
+        {% endif %}
         <span class="ml-auto text-neutral-400 dark:text-neutral-500 max-sm:hidden">{% translate "Hover a point for its values" %}</span>
       </div>
       {% translate "Response time over time, p95 and p50; the same figures are in the table below." as chart_label %}
@@ -149,22 +152,33 @@
         {% translate "Show as table" %}
       </summary>
       <div class="max-h-80 overflow-auto border-t border-neutral-200 dark:border-neutral-800">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm whitespace-nowrap">
           <thead class="sticky top-0 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
             <tr>
-              <th scope="col" class="px-4 py-2.5 text-left font-medium sm:px-6">{% if period.bucket == "hour" %}{% translate "Hour" %}{% else %}{% translate "Day" %}{% endif %}</th>
-              <th scope="col" class="px-4 py-2.5 text-right font-medium">{% translate "Requests" %}</th>
-              <th scope="col" class="px-4 py-2.5 text-right font-medium">p50</th>
-              <th scope="col" class="px-4 py-2.5 text-right font-medium sm:px-6">p95</th>
+              <th scope="col" class="px-3 py-2.5 text-left font-medium sm:px-6">{% if period.bucket == "hour" %}{% translate "Hour" %}{% else %}{% translate "Day" %}{% endif %}</th>
+              <th scope="col" class="px-3 py-2.5 text-right font-medium sm:px-4">{% translate "Requests" %}</th>
+              <th scope="col" class="px-3 py-2.5 text-right font-medium sm:px-4">p50</th>
+              <th scope="col" class="px-3 py-2.5 text-right font-medium {% if trend_charts.wide.has_deploys %}sm:px-4{% else %}sm:px-6{% endif %}">p95</th>
+              {% if trend_charts.wide.has_deploys %}<th scope="col" class="hidden px-3 py-2.5 text-left font-medium sm:table-cell sm:px-6">{% translate "Deploys" %}</th>{% endif %}
             </tr>
           </thead>
           <tbody class="divide-y divide-neutral-100 tabular-nums dark:divide-neutral-800">
             {% for point in trend reversed %}
               <tr>
-                <td class="px-4 py-2 sm:px-6">{% if period.bucket == "hour" %}{{ point.bucket|date:"SHORT_DATETIME_FORMAT" }}{% else %}{{ point.bucket|date:"SHORT_DATE_FORMAT" }}{% endif %}</td>
-                <td class="px-4 py-2 text-right text-neutral-600 dark:text-neutral-400">{{ point.requests }}</td>
-                <td class="px-4 py-2 text-right">{{ point.p50|duration }}</td>
-                <td class="px-4 py-2 text-right font-semibold sm:px-6">{{ point.p95|duration }}</td>
+                <td class="px-3 py-2 sm:px-6">
+                  {# Day and month like the axis: within 30 days the year says nothing. #}
+                  <time datetime="{{ point.bucket|date:'c' }}">{{ point.bucket|short_month_day }}{% if period.bucket == "hour" %}, {{ point.bucket|date:"H:i" }}{% endif %}</time>
+                  {# Phones: under the date, where no sideways scroll can hide them. #}
+                  {% if point.deploys %}<div class="mt-1 flex gap-1 sm:hidden">{% for deploy in point.deploys %}<span class="rounded bg-tertiary-50 px-1.5 py-0.5 font-mono text-[11px] font-medium text-tertiary-700 dark:bg-neutral-800 dark:text-neutral-200" title="{{ deploy.subject }} · {{ deploy.deployed_at|date:'SHORT_DATETIME_FORMAT' }}">{{ deploy.short_sha }}</span>{% endfor %}</div>{% endif %}
+                </td>
+                <td class="px-3 py-2 text-right sm:px-4 text-neutral-600 dark:text-neutral-400">{{ point.requests }}</td>
+                <td class="px-3 py-2 text-right sm:px-4">{{ point.p50|duration }}</td>
+                <td class="px-3 py-2 text-right font-semibold {% if trend_charts.wide.has_deploys %}sm:px-4{% else %}sm:px-6{% endif %}">{{ point.p95|duration }}</td>
+                {% if trend_charts.wide.has_deploys %}
+                  <td class="hidden px-3 py-2 sm:table-cell sm:px-6">
+                    <div class="flex gap-1">{% for deploy in point.deploys %}<span class="rounded bg-tertiary-50 px-1.5 py-0.5 font-mono text-[11px] font-medium text-tertiary-700 dark:bg-neutral-800 dark:text-neutral-200" title="{{ deploy.subject }} · {{ deploy.deployed_at|date:'SHORT_DATETIME_FORMAT' }}">{{ deploy.short_sha }}</span>{% endfor %}</div>
+                  </td>
+                {% endif %}
               </tr>
             {% endfor %}
           </tbody>

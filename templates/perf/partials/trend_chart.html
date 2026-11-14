@@ -13,6 +13,11 @@
 
   Gridlines are solid hairlines; text uses ink colours, never a series colour
   -- the small dots beside the end labels carry which line is which.
+
+  Deploys: a dashed line under the series, with a head on top of the plot
+  (the count inside when one bucket holds several). Hovering their bucket
+  names them in a third readout line, and the column carries a native
+  tooltip with every deploy in full.
 {% endcomment %}
 <svg viewBox="0 0 {{ chart.width|unlocalize }} {{ chart.height|unlocalize }}"
      class="h-auto w-full select-none"
@@ -36,6 +41,16 @@
             text-anchor="middle">{% if bucket == "hour" %}{{ label.at|date:"H:i" }}{% else %}{{ label.at|short_month_day }}{% endif %}</text>
     {% endfor %}
   </g>
+
+  {% if chart.deploys %}
+    <g class="text-neutral-400 dark:text-neutral-500">
+      {% for deploy in chart.deploys %}
+        <line x1="{{ deploy.x|unlocalize }}" y1="{{ chart.plot_top|unlocalize }}"
+              x2="{{ deploy.x|unlocalize }}" y2="{{ chart.plot_bottom|unlocalize }}"
+              stroke="currentColor" stroke-width="1.25" stroke-dasharray="4 3" />
+      {% endfor %}
+    </g>
+  {% endif %}
 
   <path d="{{ chart.p50_path }}" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round"
@@ -65,13 +80,26 @@
     </g>
   {% endif %}
 
+  {% for deploy in chart.deploys %}
+    <g aria-hidden="true">
+      <circle cx="{{ deploy.x|unlocalize }}" cy="{{ chart.plot_top|unlocalize }}"
+              r="{% if deploy.count > 1 %}7{% else %}4{% endif %}" stroke-width="2"
+              class="fill-tertiary-700 stroke-white dark:fill-neutral-300 dark:stroke-neutral-900" />
+      {% if deploy.count > 1 %}
+        <text x="{{ deploy.x|unlocalize }}" y="{{ chart.plot_top|unlocalize }}"
+              text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700"
+              class="fill-white dark:fill-neutral-900">{{ deploy.count }}</text>
+      {% endif %}
+    </g>
+  {% endfor %}
+
   {% for point in chart.points %}
-    {% if point.p95 is not None %}
+    {% if point.p95 is not None or point.deploys %}
       {# Order matters: the hit area first, the rules are sibling selectors on it. #}
       <g>
         <rect class="chart-hit"
               x="{{ point.band_x|unlocalize }}" y="{{ chart.plot_top|unlocalize }}"
-              width="{{ point.band_width|unlocalize }}" height="{{ chart.plot_height|unlocalize }}" />
+              width="{{ point.band_width|unlocalize }}" height="{{ chart.plot_height|unlocalize }}">{% if point.deploys %}<title>{% for deploy in point.deploys %}{% translate "Deploy" %} {{ deploy.short_sha }}{% if deploy.subject %} · {{ deploy.subject }}{% endif %} ({{ deploy.deployed_at|date:"H:i" }}){% if not forloop.last %}&#10;{% endif %}{% endfor %}</title>{% endif %}</rect>
         <line class="chart-guide text-neutral-400 dark:text-neutral-500"
               x1="{{ point.x|unlocalize }}" y1="{{ chart.plot_top|unlocalize }}"
               x2="{{ point.x|unlocalize }}" y2="{{ chart.plot_bottom|unlocalize }}"
@@ -80,16 +108,24 @@
           <circle class="chart-readout fill-secondary-600 stroke-white dark:fill-secondary-700 dark:stroke-neutral-900"
                   cx="{{ point.x|unlocalize }}" cy="{{ point.y50|unlocalize }}" r="4.5" stroke-width="2" />
         {% endif %}
-        <circle class="chart-readout fill-primary-600 stroke-white dark:stroke-neutral-900"
-                cx="{{ point.x|unlocalize }}" cy="{{ point.y95|unlocalize }}" r="4.5" stroke-width="2" />
-        <text class="chart-readout fill-neutral-900 stroke-white dark:fill-white dark:stroke-neutral-900"
-              x="{{ point.x|unlocalize }}" y="{{ chart.readout_y|unlocalize }}"
-              text-anchor="{{ point.anchor }}" font-size="12" font-weight="600"
-              paint-order="stroke" stroke-width="4" stroke-linejoin="round">p95 {{ point.p95|duration }} · p50 {{ point.p50|duration }}</text>
+        {% if point.y95 is not None %}
+          <circle class="chart-readout fill-primary-600 stroke-white dark:stroke-neutral-900"
+                  cx="{{ point.x|unlocalize }}" cy="{{ point.y95|unlocalize }}" r="4.5" stroke-width="2" />
+          <text class="chart-readout fill-neutral-900 stroke-white dark:fill-white dark:stroke-neutral-900"
+                x="{{ point.x|unlocalize }}" y="{{ chart.readout_y|unlocalize }}"
+                text-anchor="{{ point.anchor }}" font-size="12" font-weight="600"
+                paint-order="stroke" stroke-width="4" stroke-linejoin="round">p95 {{ point.p95|duration }} · p50 {{ point.p50|duration }}</text>
+        {% endif %}
         <text class="chart-readout fill-neutral-500 stroke-white dark:fill-neutral-400 dark:stroke-neutral-900"
               x="{{ point.x|unlocalize }}" y="{{ chart.readout_note_y|unlocalize }}"
               text-anchor="{{ point.anchor }}" font-size="11"
               paint-order="stroke" stroke-width="4" stroke-linejoin="round">{% if bucket == "hour" %}{{ point.bucket|date:"H:i" }}{% else %}{{ point.bucket|short_month_day }}{% endif %} · {% blocktranslate count count=point.requests %}{{ count }} request{% plural %}{{ count }} requests{% endblocktranslate %}</text>
+        {% if point.deploys %}
+          <text class="chart-readout fill-tertiary-700 stroke-white dark:fill-neutral-200 dark:stroke-neutral-900"
+                x="{{ point.x|unlocalize }}" y="{{ chart.readout_deploy_y|unlocalize }}"
+                text-anchor="{{ point.anchor }}" font-size="11" font-weight="600"
+                paint-order="stroke" stroke-width="4" stroke-linejoin="round">{% with first=point.deploys.0 %}{% if point.deploys|length == 1 %}{% translate "Deploy" %} <tspan class="font-mono" font-weight="500">{{ first.short_sha }}</tspan>{% if first.subject %}<tspan font-weight="500"> · {{ first.subject|truncatechars:chart.subject_chars }}</tspan>{% endif %}{% else %}{% blocktranslate count count=point.deploys|length %}{{ count }} deploy{% plural %}{{ count }} deploys{% endblocktranslate %} <tspan class="font-mono" font-weight="500">{% for deploy in point.deploys|slice:":3" %}{{ deploy.short_sha }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if point.deploys|length > 3 %}, …{% endif %}</tspan>{% endif %}{% endwith %}</text>
+        {% endif %}
       </g>
     {% endif %}
   {% endfor %}

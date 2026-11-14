@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 17:06+0100\n"
+"POT-Creation-Date: 2026-11-14 17:12+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -1603,7 +1603,7 @@ msgstr "Rückkehr"
 #: templates/fantasy/plan_list.html:184 templates/nba/injury_modal.html:24
 #: templates/nba/partials/player_table.html:143
 #: templates/nba/player_compare.html:106 templates/nba/player_detail.html:99
-#: templates/nba/season_stats_upload.html:187 templates/perf/dashboard.html:200
+#: templates/nba/season_stats_upload.html:187 templates/perf/dashboard.html:214
 #: templates/perf/partials/request_rows.html:21
 msgid "Status"
 msgstr "Status"
@@ -2119,15 +2119,15 @@ msgid "The note will be removed for good. This cannot be undone."
 msgstr ""
 "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."
 
-#: apps/perf/stats.py:108
+#: apps/perf/stats.py:112
 msgid "24 hours"
 msgstr "24 Stunden"
 
-#: apps/perf/stats.py:109
+#: apps/perf/stats.py:113
 msgid "7 days"
 msgstr "7 Tage"
 
-#: apps/perf/stats.py:110
+#: apps/perf/stats.py:114
 msgid "30 days"
 msgstr "30 Tage"
 
@@ -6853,8 +6853,8 @@ msgstr ""
 msgid "Key figures"
 msgstr "Kennzahlen"
 
-#: templates/perf/dashboard.html:73 templates/perf/dashboard.html:156
-#: templates/perf/dashboard.html:197
+#: templates/perf/dashboard.html:73 templates/perf/dashboard.html:159
+#: templates/perf/dashboard.html:211
 #: templates/perf/partials/requests_card.html:16
 msgid "Requests"
 msgstr "Anfragen"
@@ -6898,7 +6898,7 @@ msgstr "Pro Tag"
 msgid "all routes"
 msgstr "alle Routen"
 
-#: templates/perf/dashboard.html:122 templates/perf/dashboard.html:196
+#: templates/perf/dashboard.html:122 templates/perf/dashboard.html:210
 #: templates/perf/partials/request_rows.html:19
 msgid "Route"
 msgstr "Route"
@@ -6911,11 +6911,17 @@ msgstr "Alle Routen"
 msgid "Show"
 msgstr "Anzeigen"
 
-#: templates/perf/dashboard.html:139
+#: templates/perf/dashboard.html:140
+#: templates/perf/partials/trend_chart.html:102
+#: templates/perf/partials/trend_chart.html:127
+msgid "Deploy"
+msgstr "Deploy"
+
+#: templates/perf/dashboard.html:142
 msgid "Hover a point for its values"
 msgstr "Für Werte über einen Punkt fahren"
 
-#: templates/perf/dashboard.html:141
+#: templates/perf/dashboard.html:144
 msgid ""
 "Response time over time, p95 and p50; the same figures are in the table "
 "below."
@@ -6923,28 +6929,32 @@ msgstr ""
 "Antwortzeit im Zeitverlauf, p95 und p50; dieselben Zahlen stehen in der "
 "Tabelle darunter."
 
-#: templates/perf/dashboard.html:149
+#: templates/perf/dashboard.html:152
 msgid "Show as table"
 msgstr "Als Tabelle anzeigen"
 
-#: templates/perf/dashboard.html:155
+#: templates/perf/dashboard.html:158
 msgid "Hour"
 msgstr "Stunde"
 
-#: templates/perf/dashboard.html:155
+#: templates/perf/dashboard.html:158
 msgid "Day"
 msgstr "Tag"
 
-#: templates/perf/dashboard.html:175 templates/perf/dashboard.html:272
+#: templates/perf/dashboard.html:162
+msgid "Deploys"
+msgstr "Deploys"
+
+#: templates/perf/dashboard.html:189 templates/perf/dashboard.html:286
 #: templates/perf/partials/requests_card.html:80
 msgid "No requests in this window."
 msgstr "Keine Anfragen in diesem Zeitraum."
 
-#: templates/perf/dashboard.html:183 templates/perf/dashboard.html:184
+#: templates/perf/dashboard.html:197 templates/perf/dashboard.html:198
 msgid "Routes"
 msgstr "Routen"
 
-#: templates/perf/dashboard.html:187
+#: templates/perf/dashboard.html:201
 #, python-format
 msgid ""
 "Fast under %(fast)s ms, slow from %(slow)s ms at p95. Routes with fewer than "
@@ -6954,33 +6964,33 @@ msgstr ""
 "weniger als %(min)s Anfragen bekommen kein Urteil und stehen am Ende. Wähl "
 "eine Route, um ihren Verlauf zu sehen."
 
-#: templates/perf/dashboard.html:201
+#: templates/perf/dashboard.html:215
 msgid "Average queries per request"
 msgstr "Durchschnittliche Abfragen pro Anfrage"
 
-#: templates/perf/dashboard.html:201 templates/perf/dashboard.html:263
+#: templates/perf/dashboard.html:215 templates/perf/dashboard.html:277
 #: templates/perf/partials/request_rows.html:23
 msgid "Queries"
 msgstr "Abfragen"
 
-#: templates/perf/dashboard.html:202 templates/perf/dashboard.html:264
+#: templates/perf/dashboard.html:216 templates/perf/dashboard.html:278
 msgid "DB p95"
 msgstr "DB p95"
 
-#: templates/perf/dashboard.html:203 templates/perf/dashboard.html:265
+#: templates/perf/dashboard.html:217 templates/perf/dashboard.html:279
 #: templates/perf/partials/request_rows.html:25
 msgid "Size"
 msgstr "Größe"
 
-#: templates/perf/dashboard.html:250
-#: templates/perf/partials/trend_chart.html:92
+#: templates/perf/dashboard.html:264
+#: templates/perf/partials/trend_chart.html:122
 #, python-format
 msgid "%(count)s request"
 msgid_plural "%(count)s requests"
 msgstr[0] "%(count)s Anfrage"
 msgstr[1] "%(count)s Anfragen"
 
-#: templates/perf/dashboard.html:280
+#: templates/perf/dashboard.html:294
 #, python-format
 msgid "Kept for %(days)s days. Sizes are before compression."
 msgstr "Wird %(days)s Tage aufbewahrt. Größen vor der Komprimierung."
@@ -7091,3 +7101,10 @@ msgstr "Spürbar"
 #: templates/perf/partials/status.html:8
 msgid "Slow"
 msgstr "Langsam"
+
+#: templates/perf/partials/trend_chart.html:127
+#, python-format
+msgid "%(count)s deploy"
+msgid_plural "%(count)s deploys"
+msgstr[0] "%(count)s Deploy"
+msgstr[1] "%(count)s Deploys"

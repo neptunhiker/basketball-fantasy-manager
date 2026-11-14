@@ -9,15 +9,21 @@ fast one.
 
 Built twice per page, wide and narrow, because a 720-unit drawing squeezed
 onto a phone shrinks its labels to nothing.
+
+Deploys are dashed lines at the moment they went live, inside their bucket's
+column. A window with any gets a band above the plot, so the hover readout
+has a third line to name them.
 """
 
 import math
 
-WIDE = {"width": 720, "height": 260, "max_labels": 8, "end_labels": True}
-NARROW = {"width": 360, "height": 240, "max_labels": 4, "end_labels": False}
+# `subject_chars`: how much of a commit subject fits in the hover readout.
+WIDE = {"width": 720, "height": 260, "max_labels": 8, "end_labels": True, "subject_chars": 56}
+NARROW = {"width": 360, "height": 240, "max_labels": 4, "end_labels": False, "subject_chars": 16}
 
 PAD_LEFT = 52
 PAD_TOP = 44  # room for the hover readout above the plot
+DEPLOY_BAND = 16  # and for its line about deploys, when the window has any
 PAD_BOTTOM = 28
 END_LABEL_ROOM = 40
 EDGE_PAD = 12
@@ -56,15 +62,26 @@ def _alone(points, index, key):
     return points[index][key] is not None and before is None and after is None
 
 
-def trend_chart(buckets, width, height, max_labels, end_labels):
+def _deploy_x(bucket, index, plot_left, column):
+    """Where the bucket's first deploy sits: as far into its column as the
+    deploy was into the bucket."""
+    start, end = bucket["bucket"], bucket["end"]
+    share = (bucket["deploys"][0].deployed_at - start) / (end - start)
+    return round(plot_left + (index + min(max(share, 0), 1)) * column, 2)
+
+
+def trend_chart(buckets, width, height, max_labels, end_labels, subject_chars):
     """Coordinates for `stats.trend(...)`'s buckets, or None with nothing measured."""
     measured = [b[key] for b in buckets for key in ("p95", "p50") if b[key] is not None]
     if not measured:
         return None
 
+    has_deploys = any(bucket.get("deploys") for bucket in buckets)
+    band = DEPLOY_BAND if has_deploys else 0
+    height += band
     plot_left = PAD_LEFT
     plot_right = width - (END_LABEL_ROOM if end_labels else EDGE_PAD)
-    plot_top = PAD_TOP
+    plot_top = PAD_TOP + band
     plot_bottom = height - PAD_BOTTOM
     plot_width = plot_right - plot_left
     plot_height = plot_bottom - plot_top
@@ -98,6 +115,18 @@ def trend_chart(buckets, width, height, max_labels, end_labels):
     for index, point in enumerate(points):
         point["alone95"] = _alone(points, index, "y95")
         point["alone50"] = _alone(points, index, "y50")
+
+    # One line per bucket, however many deploys it holds: in a day's column
+    # two lines an hour apart would draw as one thick smudge.
+    deploys = [
+        {
+            "x": _deploy_x(bucket, index, plot_left, column),
+            "count": len(bucket["deploys"]),
+            "deploys": bucket["deploys"],
+        }
+        for index, bucket in enumerate(buckets)
+        if bucket.get("deploys")
+    ]
 
     # Label the newest bucket and step back from it, so "today" always shows.
     every = max(1, math.ceil(len(points) / max_labels))
@@ -134,8 +163,13 @@ def trend_chart(buckets, width, height, max_labels, end_labels):
         "plot_height": plot_height,
         "label_right": plot_left - 8,
         "label_bottom": plot_bottom + 18,
-        "readout_y": plot_top - 26,
-        "readout_note_y": plot_top - 11,
+        # The readout stays at the top; a deploy band goes between it and the plot.
+        "readout_y": PAD_TOP - 26,
+        "readout_note_y": PAD_TOP - 11,
+        "readout_deploy_y": PAD_TOP + 4,
+        "subject_chars": subject_chars,
+        "deploys": deploys,
+        "has_deploys": has_deploys,
         "y_ticks": y_ticks,
         "x_labels": x_labels,
         "p95_path": _path(points, "y95"),

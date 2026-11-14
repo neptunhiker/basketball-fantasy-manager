@@ -124,7 +124,9 @@ show up in the figures it reports.
 **The dashboard** (`/performance/`, *Staff area → Performance*) reads those
 rows for the last 24 hours, 7 or 30 days: p95 as the headline with its change
 against the window before, p50, queries per request, database time and page
-size; a trend of p95 and p50 per hour or day, for all routes or one; every
+size; a trend of p95 and p50 per hour or day, for all routes or one, with a
+dashed line for every deploy (hover its bucket for the commit; several in one
+bucket share a line with their count); every
 route with its status (fast under 300 ms at p95, slow from 1 s — the
 thresholds live in `apps/perf/stats.py`), except routes with fewer than 20
 requests, which get no verdict and come last; and the 20 slowest requests —
@@ -431,7 +433,8 @@ The deploy builds the images and runs the migrations with the new image before
 starting the containers, so new code never meets the old schema. It then waits
 for the containers to be healthy and checks `/healthz`; once that passes it
 records the deploy (`manage.py record_deploy`) for the markers on the
-performance dashboard. Before migrating, a
+performance dashboard. After deploying some other way, record it by hand:
+`python manage.py record_deploy -- "$(git rev-parse HEAD)" "$(git log -1 --format=%s)"`. Before migrating, a
 production deploy writes a `pg_dump` to `backups/` in the prod clone and keeps
 the 14 most recent dumps. Set `DEPLOY_HOST` to use an SSH host other than `nba`.
 

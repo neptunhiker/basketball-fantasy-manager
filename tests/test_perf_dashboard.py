@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.perf import charts, stats
-from apps.perf.models import RequestMetric
+from apps.perf.models import Deploy, RequestMetric
 from apps.perf.templatetags.perf import DASH, MINUS, duration, signed_percent
 
 URL = reverse("perf:dashboard")
@@ -558,3 +558,87 @@ def test_links_keep_the_chosen_list(staff_client):
 
     assert 'href="?list=latest&amp;period=7d"' in content
     assert 'href="?list=latest&amp;period=24h&amp;route=core%3Adashboard#trend"' in content
+
+
+# --- deploys on the trend --------------------------------------------------------------
+
+
+def deploy(at, sha="4b45e6e27c8965322aa1ff6828f7fb7a007331e7", subject="Perf: a change"):
+    return Deploy.objects.create(deployed_at=at, sha=sha, subject=subject)
+
+
+def test_a_deploy_lands_in_the_bucket_it_happened_in(db):
+    period = stats.period_for("24h")
+    metric(100)
+    inside = deploy(period.start + dt.timedelta(hours=5, minutes=30))
+    deploy(period.start - dt.timedelta(minutes=1), sha="d1ca3a0")
+
+    buckets = stats.trend(period)
+
+    assert [index for index, b in enumerate(buckets) if b["deploys"]] == [5]
+    assert buckets[5]["deploys"] == [inside]
+    assert buckets[5]["end"] - buckets[5]["bucket"] == dt.timedelta(hours=1)
+
+
+def test_a_deploy_sits_as_far_into_its_column_as_into_its_bucket(db):
+    period = stats.period_for("24h")
+    metric(100)
+    deploy(period.start + dt.timedelta(hours=2))
+    deploy(period.start + dt.timedelta(hours=10, minutes=30), sha="d1ca3a0")
+
+    chart = charts.trend_chart(stats.trend(period), **charts.WIDE)
+
+    column = (chart["plot_right"] - chart["plot_left"]) / 24
+    assert [marker["x"] for marker in chart["deploys"]] == [
+        pytest.approx(chart["plot_left"] + 2 * column, abs=0.01),
+        pytest.approx(chart["plot_left"] + 10.5 * column, abs=0.01),
+    ]
+
+
+def test_deploys_in_one_bucket_share_one_line(db):
+    period = stats.period_for("7d")
+    metric(100)
+    day = period.start + dt.timedelta(days=2)
+    deploy(day + dt.timedelta(hours=9))
+    deploy(day + dt.timedelta(hours=15), sha="d1ca3a0")
+
+    chart = charts.trend_chart(stats.trend(period), **charts.WIDE)
+
+    assert [marker["count"] for marker in chart["deploys"]] == [2]
+
+
+def test_a_window_with_deploys_makes_room_for_their_readout_line(db):
+    period = stats.period_for("24h")
+    metric(100)
+    plain = charts.trend_chart(stats.trend(period), **charts.WIDE)
+    deploy(timezone.now() - dt.timedelta(hours=1))
+    marked = charts.trend_chart(stats.trend(period), **charts.WIDE)
+
+    assert plain["has_deploys"] is False
+    assert marked["plot_top"] - plain["plot_top"] == charts.DEPLOY_BAND
+    assert marked["height"] - plain["height"] == charts.DEPLOY_BAND
+    assert marked["plot_height"] == plain["plot_height"]
+    assert marked["readout_deploy_y"] < marked["plot_top"]
+
+
+def test_the_page_names_a_deploy_on_the_chart_and_in_the_table(staff_client):
+    metric(100)
+    deploy(timezone.now() - dt.timedelta(minutes=30), subject="Players: store hotness")
+
+    content = staff_client.get(URL, {"period": "24h"}).content.decode()
+
+    assert "4b45e6e" in content
+    assert "Players: store hotness" in content
+    assert ">Deploys</th>" in content
+
+
+def test_a_deploy_in_an_hour_without_requests_still_shows(db):
+    period = stats.period_for("24h")
+    metric(100)
+    deploy(period.start + dt.timedelta(hours=3, minutes=10))
+
+    chart = charts.trend_chart(stats.trend(period), **charts.WIDE)
+
+    point = chart["points"][3]
+    assert point["p95"] is None
+    assert point["deploys"]

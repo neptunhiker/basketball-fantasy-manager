@@ -35,8 +35,10 @@
   {# On phones only the search shows; the other filters fold behind one button #}
   {# that counts the active ones. From `sm` everything is laid out as before. #}
   {# The Excel buttons fetch what the table shows. Filters swap only the table #}
-  {# and push their query into the address bar, so the link reads it from there #}
-  {# -- on every push and again on click -- rather than from this render. #}
+  {# and write their query into the address bar, so the link reads it from there #}
+  {# -- on every change and again on click -- rather than from this render. #}
+  {# Replaced, not pushed: a search is not a page of its own, and Back should #}
+  {# leave the list rather than step through "le", "leb", "lebro". #}
   {% translate "Download as Excel: every player matching these filters, in this order" as export_label %}
   {# Search: waits 500ms after the last key, skips a lone letter (apps/core/search.py), and a newer search cancels the one still running. #}
   <form id="player-list-filters" class="border-b border-neutral-200 p-4 dark:border-neutral-800"
@@ -51,13 +53,13 @@
             return this.$root.dataset.exportUrl + (search ? '?' + search : '');
           },
         }"
-        @htmx:pushed-into-history.window="exportHref = exportUrl()"
+        @htmx:replaced-in-history.window="exportHref = exportUrl()"
         hx-get="{{ request.path }}"
         hx-trigger="input[target.value.trim().length!=1] changed delay:500ms from:(#player-list-filters input[type=search]), input changed delay:500ms from:(#player-list-filters input[type=number]), change from:(#player-list-filters select), change from:(#player-list-filters input[type=date]), change delay:10ms from:(#player-list-filters input[type=checkbox]), search"
         hx-sync="this:replace"
         hx-target="#player-table"
         hx-swap="outerHTML"
-        hx-push-url="true"
+        hx-replace-url="true"
         hx-indicator="#player-indicator">
 
     {# Below `xl` the search takes a row of its own and the five filters share #}

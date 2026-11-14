@@ -276,3 +276,29 @@ def test_the_plan_editor_keeps_what_you_type(browser, live_server, planned, size
 def dialog_url(page):
     """Where the plan editor's search goes: its form's own `hx-get`."""
     return page.locator("#plan-editor-filters").get_attribute("hx-get")
+
+
+# --- the address bar ----------------------------------------------------------------
+
+
+@pytest.mark.parametrize("size", SIZES)
+def test_back_leaves_the_players_page_after_a_search(game, open_page, size):
+    # Arrive from the home page, so Back has somewhere to go.
+    page = open_page(game["user"], reverse("core:dashboard"), size=size)
+    page.goto(page.url.rstrip("/") + reverse("nba:player-list"))
+    page.wait_for_load_state("networkidle")
+
+    type_into(page, "#player-search", "jam", delay=650)
+    type_into(page, "#player-search", "es")
+
+    # The address bar has the search, so a reload or a shared link keeps it...
+    assert "q=james" in page.url
+    # ...and so does the Excel link this screen shows.
+    links = page.get_by_role("link", name="Download as Excel")
+    hrefs = [links.nth(i).get_attribute("href") for i in range(links.count())]
+    assert all("q=james" in href for href in hrefs)
+
+    # But the half-typed searches are not pages of their own.
+    page.go_back()
+    page.wait_for_load_state("networkidle")
+    assert urlparse(page.url).path == reverse("core:dashboard")

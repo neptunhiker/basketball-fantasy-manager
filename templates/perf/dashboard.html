@@ -179,7 +179,7 @@
       {% translate "Routes" as routes_label %}
       {% include "partials/info_popover.html" with text=routes_help label=routes_label %}
     </h2>
-    <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% blocktranslate with fast=fast_ms slow=slow_ms %}Fast under {{ fast }} ms, slow from {{ slow }} ms at p95. Pick a route to see its trend.{% endblocktranslate %}</p>
+    <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% blocktranslate with fast=fast_ms slow=slow_ms min=min_requests %}Fast under {{ fast }} ms, slow from {{ slow }} ms at p95. Routes with fewer than {{ min }} requests get no verdict and come last. Pick a route to see its trend.{% endblocktranslate %}</p>
   </div>
 
   {% if routes %}
@@ -217,12 +217,12 @@
               <td class="px-3 py-3">
                 <div class="flex items-center justify-end gap-2.5">
                   <div class="hidden h-1.5 w-20 overflow-hidden rounded-full bg-neutral-100 lg:block dark:bg-neutral-800" aria-hidden="true">
-                    <div class="h-full rounded-full bg-primary-500" style="width: {{ row.bar_percent }}%"></div>
+                    <div class="h-full rounded-full {% if row.few %}bg-neutral-300 dark:bg-neutral-600{% else %}bg-primary-500{% endif %}" style="width: {{ row.bar_percent }}%"></div>
                   </div>
-                  <span class="w-16 text-right font-semibold">{{ row.p95|duration }}</span>
+                  <span class="w-16 text-right font-semibold {% if row.few %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ row.p95|duration }}</span>
                 </div>
               </td>
-              <td class="py-3 pr-3">{% include "perf/partials/status.html" with status=row.status compact=True %}</td>
+              <td class="py-3 pr-3">{% if row.few %}{% include "perf/partials/few_requests.html" with compact=True %}{% else %}{% include "perf/partials/status.html" with status=row.status compact=True %}{% endif %}</td>
               <td class="px-3 py-3 text-right text-neutral-600 dark:text-neutral-400">{{ row.queries|one_decimal }}</td>
               <td class="px-3 py-3 text-right text-neutral-600 dark:text-neutral-400">{{ row.sql_p95|duration }}</td>
               <td class="px-6 py-3 text-right text-neutral-600 dark:text-neutral-400 whitespace-nowrap">{% if row.bytes_median is not None %}{{ row.bytes_median|filesizeformat }}{% else %}–{% endif %}</td>
@@ -246,12 +246,12 @@
                 </div>
               </div>
               <div class="flex shrink-0 flex-col items-end gap-1">
-                <p class="text-lg font-bold leading-none">{{ row.p95|duration }}</p>
-                {% include "perf/partials/status.html" with status=row.status %}
+                <p class="text-lg font-bold leading-none {% if row.few %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ row.p95|duration }}</p>
+                {% if row.few %}{% include "perf/partials/few_requests.html" %}{% else %}{% include "perf/partials/status.html" with status=row.status %}{% endif %}
               </div>
             </div>
             <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800" aria-hidden="true">
-              <div class="h-full rounded-full bg-primary-500" style="width: {{ row.bar_percent }}%"></div>
+              <div class="h-full rounded-full {% if row.few %}bg-neutral-300 dark:bg-neutral-600{% else %}bg-primary-500{% endif %}" style="width: {{ row.bar_percent }}%"></div>
             </div>
             <dl class="mt-3 grid grid-cols-4 gap-2 text-xs">
               <div><dt class="font-mono text-[0.6rem] uppercase tracking-[.14em] text-neutral-400 dark:text-neutral-500">p50</dt><dd class="mt-0.5 font-medium tabular-nums">{{ row.p50|duration }}</dd></div>

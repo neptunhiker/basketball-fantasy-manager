@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 16:37+0100\n"
+"POT-Creation-Date: 2026-11-14 16:38+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -2119,15 +2119,15 @@ msgid "The note will be removed for good. This cannot be undone."
 msgstr ""
 "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."
 
-#: apps/perf/stats.py:100
+#: apps/perf/stats.py:104
 msgid "24 hours"
 msgstr "24 Stunden"
 
-#: apps/perf/stats.py:101
+#: apps/perf/stats.py:105
 msgid "7 days"
 msgstr "7 Tage"
 
-#: apps/perf/stats.py:102
+#: apps/perf/stats.py:106
 msgid "30 days"
 msgstr "30 Tage"
 
@@ -6927,11 +6927,12 @@ msgstr "Routen"
 #: templates/perf/dashboard.html:182
 #, python-format
 msgid ""
-"Fast under %(fast)s ms, slow from %(slow)s ms at p95. Pick a route to see "
-"its trend."
+"Fast under %(fast)s ms, slow from %(slow)s ms at p95. Routes with fewer than "
+"%(min)s requests get no verdict and come last. Pick a route to see its trend."
 msgstr ""
-"Schnell unter %(fast)s ms, langsam ab %(slow)s ms bei p95. Wähl eine Route, "
-"um ihren Verlauf zu sehen."
+"Schnell unter %(fast)s ms, langsam ab %(slow)s ms bei p95. Routen mit weniger "
+"als %(min)s Anfragen bekommen kein Urteil und stehen am Ende. Wähl eine "
+"Route, um ihren Verlauf zu sehen."
 
 #: templates/perf/dashboard.html:196
 msgid "Average queries per request"
@@ -7000,6 +7001,15 @@ msgstr "ggü. vorherige %(period)s"
 #: templates/perf/partials/delta.html:21
 msgid "Not enough history to compare yet"
 msgstr "Noch nicht genug Verlauf für einen Vergleich"
+
+#: templates/perf/partials/few_requests.html:7
+#, python-format
+msgid "Fewer than %(min)s requests: too few for a verdict"
+msgstr "Weniger als %(min)s Anfragen: zu wenige für ein Urteil"
+
+#: templates/perf/partials/few_requests.html:12
+msgid "Few requests"
+msgstr "Wenige Anfragen"
 
 #: templates/perf/partials/route_label.html:3
 msgid "No matching URL"

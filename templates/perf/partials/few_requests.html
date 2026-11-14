@@ -1,0 +1,13 @@
+{% load i18n %}
+{% comment %}
+  In place of the status pill for a route with fewer than MIN_REQUESTS
+  requests: too few for its p95 to mean much. Muted, no colour verdict.
+  Context: min_requests (from the page), compact (as for status.html).
+{% endcomment %}
+{% blocktranslate asvar few_title with min=min_requests %}Fewer than {{ min }} requests: too few for a verdict{% endblocktranslate %}
+<span class="inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-neutral-300 font-medium text-neutral-500 dark:border-neutral-700 dark:text-neutral-400
+  {% if compact %}px-1.5 py-0.5 text-[11px] xl:px-2{% else %}px-2.5 py-1 text-xs{% endif %}"
+  title="{{ few_title }}">
+  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path stroke-linecap="round" d="M8.5 12h7"/></svg>
+  <span class="{% if compact %}max-xl:sr-only{% endif %}">{% translate "Few requests" %}</span>
+</span>

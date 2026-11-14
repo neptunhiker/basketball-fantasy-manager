@@ -104,10 +104,16 @@ def test_server_errors_are_counted(db):
     assert stats.summary(stats.period_for("24h"))["errors"] == 1
 
 
+def metrics(ms, count=stats.MIN_REQUESTS, **kwargs):
+    """Enough requests of one kind for a route to get a verdict."""
+    for _ in range(count):
+        metric(ms, **kwargs)
+
+
 def test_routes_are_split_into_pages_and_htmx_and_slowest_comes_first(db):
-    metric(100, route="core:dashboard")
-    metric(900, route="nba:player-list")
-    metric(400, route="nba:player-list", htmx=True)
+    metrics(100, route="core:dashboard")
+    metrics(900, route="nba:player-list")
+    metrics(400, route="nba:player-list", htmx=True)
 
     rows = stats.routes(stats.period_for("24h"))
 
@@ -118,6 +124,37 @@ def test_routes_are_split_into_pages_and_htmx_and_slowest_comes_first(db):
     ]
     assert [row["status"] for row in rows] == ["ok", "ok", "fast"]
     assert rows[0]["bar_percent"] == 100
+
+
+def test_a_route_with_few_requests_gets_no_verdict_and_comes_last(db):
+    metrics(200, route="core:dashboard", count=25)
+    metric(5000, route="nba:player-list")
+
+    rows = stats.routes(stats.period_for("24h"))
+
+    assert [row["route"] for row in rows] == ["core:dashboard", "nba:player-list"]
+    assert [(row["few"], row["status"]) for row in rows] == [(False, "fast"), (True, None)]
+    # The bars measure against the slowest route with enough requests.
+    assert [row["bar_percent"] for row in rows] == [100, 100]
+
+
+def test_routes_with_few_requests_keep_their_order_among_themselves(db):
+    metric(100, route="core:dashboard")
+    metric(900, route="nba:player-list")
+
+    rows = stats.routes(stats.period_for("24h"))
+
+    assert [row["route"] for row in rows] == ["nba:player-list", "core:dashboard"]
+    assert [row["bar_percent"] for row in rows] == [100, 11]
+
+
+def test_the_page_marks_a_route_with_few_requests(staff_client):
+    metric(5000, route="nba:player-list")
+
+    content = staff_client.get(URL, {"period": "24h"}).content.decode()
+
+    assert "Few requests" in content
+    assert "Fewer than 20 requests: too few for a verdict" in content
 
 
 @pytest.mark.parametrize(

@@ -60,4 +60,5 @@ class PerformanceView(StaffRequiredMixin, TemplateView):
             "recording": settings.PERF_RECORD_REQUESTS,
             "fast_ms": stats.FAST_MS,
             "slow_ms": stats.SLOW_MS,
+            "min_requests": stats.MIN_REQUESTS,
         }

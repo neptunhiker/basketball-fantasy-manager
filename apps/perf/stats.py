@@ -23,6 +23,10 @@ SLOW_MS = 1000
 
 SLOWEST_LIMIT = 20
 
+# Fewer requests than this and a route's p95 is little more than its slowest
+# request -- one cold start reads as "slow". Such routes get no verdict.
+MIN_REQUESTS = 20
+
 
 class Percentile(Aggregate):
     """PERCENTILE_CONT(fraction) WITHIN GROUP (ORDER BY expression).
@@ -185,18 +189,29 @@ def status(p95):
 
 
 def routes(period):
-    """One row per route and request kind (page or HTMX), slowest p95 first."""
+    """One row per route and request kind (page or HTMX), slowest p95 first.
+
+    Routes with fewer than `MIN_REQUESTS` come after all the others (`few`),
+    slowest first among themselves, and without a status.
+    """
     rows = list(
         window(period)
         .values("route", "htmx")
         .annotate(**figures())
         .order_by(F("p95").desc(nulls_last=True), "route", "htmx")
     )
-    slowest = max((row["p95"] or 0 for row in rows), default=0)
     for row in rows:
-        row["status"] = status(row["p95"])
-        # The bar beside p95: share of the slowest route, never quite nothing.
-        row["bar_percent"] = max(2, round((row["p95"] or 0) / slowest * 100)) if slowest else 0
+        row["few"] = row["requests"] < MIN_REQUESTS
+        row["status"] = None if row["few"] else status(row["p95"])
+    # Stable: each group keeps its p95 order.
+    rows.sort(key=lambda row: row["few"])
+    # The bar beside p95: share of the slowest route with enough requests,
+    # so one cold start does not shrink every other bar; never quite nothing.
+    reference = [row for row in rows if not row["few"]] or rows
+    slowest = max((row["p95"] or 0 for row in reference), default=0)
+    for row in rows:
+        share = round((row["p95"] or 0) / slowest * 100) if slowest else 0
+        row["bar_percent"] = min(100, max(2, share)) if slowest else 0
     return rows
 
 

@@ -126,7 +126,8 @@ rows for the last 24 hours, 7 or 30 days: p95 as the headline with its change
 against the window before, p50, queries per request, database time and page
 size; a trend of p95 and p50 per hour or day, for all routes or one; every
 route with its status (fast under 300 ms at p95, slow from 1 s — the
-thresholds live in `apps/perf/stats.py`); and the 20 slowest requests with
+thresholds live in `apps/perf/stats.py`), except routes with fewer than 20
+requests, which get no verdict and come last; and the 20 slowest requests with
 the names of their parameters. Percentiles come from Postgres
 (`PERCENTILE_CONT`), so the page costs the same handful of queries however
 many rows there are.

@@ -91,3 +91,38 @@ def test_hovering_a_dot_names_the_player(game, open_page):
 
     details = page.locator("#player-chart aside").first
     expect(details.get_by_role("link")).to_have_text(dot.get_attribute("aria-label"))
+
+
+def test_widening_a_phone_past_md_shows_the_chart_without_a_click(game, open_page):
+    """A rotated tablet or a wider window shows the chart by CSS alone."""
+    page = open_page(game["user"], LIST, size="phone")
+    assert dots(page).count() == 0
+
+    page.set_viewport_size({"width": 1024, "height": 900})
+
+    expect(dots(page).first).to_be_visible()
+
+
+def test_a_failed_chart_request_is_tried_again(game, open_page):
+    page = open_page(game["user"], LIST, size="phone")
+    failed = []
+
+    def fail_once(route):
+        if not failed:
+            failed.append(route.request.url)
+            route.fulfill(status=500, body="boom")
+        else:
+            route.continue_()
+
+    # A predicate, not a glob: the chart URL carries a query string.
+    page.route(lambda url: CHART in url, fail_once)
+    with page.expect_response(lambda response: CHART in response.url) as response:
+        page.get_by_role("button", name="Show chart").click()
+    assert response.value.status == 500
+    assert failed and dots(page).count() == 0
+
+    # Folding it and opening it again asks for the same filters once more.
+    page.get_by_role("button", name="Hide chart").click()
+    page.get_by_role("button", name="Show chart").click()
+
+    expect(dots(page).first).to_be_visible()

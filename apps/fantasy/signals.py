@@ -5,9 +5,13 @@ service is the only writer in the app, but snapshots are also created by
 hand in the shell, in tests and by fixtures, and a stored figure that only
 one of those paths refreshes is a figure that is quietly wrong elsewhere.
 `raw` saves (loaddata) are skipped -- the instance is half-loaded then; run
-`manage.py refresh_hotness` afterwards. Deletes are not hooked: the only
-delete is a whole season cascading away, which refreshes everyone in one go
-(`SeasonDeleteView`) instead of once per row.
+`manage.py refresh_hotness` afterwards.
+
+Deletes are not hooked here. A post_delete receiver would make Django load
+and signal every row of a season deleted by cascade -- a year of daily
+prices -- so each delete path recounts on its own instead: SeasonDeleteView
+and SeasonAdmin recount everyone in one pass, PlayerSnapshotAdmin the
+players whose rows went, and seed_demo_data after its clean-up.
 """
 
 from django.db.models.signals import post_save

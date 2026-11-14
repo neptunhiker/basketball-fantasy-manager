@@ -475,13 +475,21 @@ def refresh_all_hotness():
     """Recount every player at once; returns how many figures changed.
 
     For the paths that skip `post_save`: a season deleted with its snapshots,
-    `loaddata`, a bulk insert. One read of all snapshots and one bulk write,
-    rather than two queries per player.
+    `loaddata`, a bulk insert. One read and one bulk write, rather than two
+    queries per player.
     """
+    # Each player's newest season only -- all `hotness_counts` compares --
+    # so the read stays a season's worth of rows however many are stored.
+    newest_season = (
+        PlayerSnapshot.objects.filter(player_id=OuterRef("player_id"))
+        .order_by("-as_of")
+        .values("season_id")[:1]
+    )
+    rows = PlayerSnapshot.objects.filter(season_id=Subquery(newest_season)).values(
+        "player_id", *HOTNESS_FIELDS
+    )
     by_player = defaultdict(list)
-    for row in PlayerSnapshot.objects.values("player_id", *HOTNESS_FIELDS).iterator(
-        chunk_size=5000
-    ):
+    for row in rows.iterator(chunk_size=5000):
         by_player[row.pop("player_id")].append(SimpleNamespace(**row))
     changed = []
     for player in Player.objects.only("pk", "hotness_increases", "hotness_comparisons"):

@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.db.models import Count
 from django.utils import timezone
 
+from . import services
 from .models import (
     Manager,
     PlanStep,
@@ -32,6 +33,16 @@ class SeasonAdmin(admin.ModelAdmin):
     list_display = ["label", "starts_on", "ends_on", "is_current", "signings"]
     list_filter = ["is_current"]
     inlines = [TradeGrantInline]
+
+    # A season's snapshots go with it, past post_save: recount everyone, as
+    # SeasonDeleteView does.
+    def delete_model(self, request, obj):
+        super().delete_model(request, obj)
+        services.refresh_all_hotness()
+
+    def delete_queryset(self, request, queryset):
+        super().delete_queryset(request, queryset)
+        services.refresh_all_hotness()
 
     @admin.display(description="Signings", ordering="signings_close_at")
     def signings(self, obj):
@@ -150,6 +161,18 @@ class PlayerSnapshotAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    # Deleting a wrong row is still allowed; the players it belonged to get
+    # their stored hotness recounted from what is left.
+    def delete_model(self, request, obj):
+        super().delete_model(request, obj)
+        services.refresh_hotness(obj.player_id)
+
+    def delete_queryset(self, request, queryset):
+        player_ids = set(queryset.values_list("player_id", flat=True))
+        super().delete_queryset(request, queryset)
+        for player_id in player_ids:
+            services.refresh_hotness(player_id)
 
 
 class PlanStepInline(admin.TabularInline):

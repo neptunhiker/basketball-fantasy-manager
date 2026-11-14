@@ -94,10 +94,10 @@ def test_the_list_page_points_each_season_at_its_chart(signed_in, user, teams):
     body = signed_in.get(LIST).content.decode()
     watchlist = signed_in.get(reverse("nba:watchlist")).content.decode()
 
-    assert f'hx-get="{CHART}"' in body
-    assert 'hx-vals=\'{"view": "current"}\'' in body
-    assert 'hx-include="#player-list-filters"' in body
-    assert f'hx-get="{reverse("nba:watchlist-chart")}"' in watchlist
+    assert f"htmx.ajax('GET', '{CHART}?'" in body
+    assert "query.set('view', 'current')" in body
+    assert "getElementById('player-list-filters')" in body
+    assert f"htmx.ajax('GET', '{reverse('nba:watchlist-chart')}?'" in watchlist
 
 
 def test_the_table_no_longer_carries_a_chart(signed_in, teams):

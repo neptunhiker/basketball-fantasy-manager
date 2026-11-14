@@ -16,7 +16,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.fantasy.models import PlayerSnapshot, Season
-from apps.fantasy.services import record_snapshot
+from apps.fantasy.services import record_snapshot, refresh_all_hotness
 from apps.nba.models import Player, Team
 
 # The ten real players already in the dev database, with prices that put the
@@ -405,6 +405,9 @@ class Command(BaseCommand):
             label: Player.objects.filter(position=value).count()
             for value, label in Player.Position.choices
         }
+        # The deletes above skip post_save, so players who lost snapshots
+        # would keep a hotness counted from rows that are gone.
+        refresh_all_hotness()
         total = Player.objects.count()
         cheapest = Player.objects.order_by("current_salary").first()
         dearest = Player.objects.order_by("-current_salary").first()

@@ -240,3 +240,55 @@ def test_the_player_list_does_not_load_snapshots(signed_in, season):
         if '"fantasy_playersnapshot"."player_id" IN (' in query["sql"]
     ]
     assert prefetches == []
+
+
+# --- deletes, which skip post_save -------------------------------------------------
+
+
+@pytest.fixture
+def admin_client(client, staff_user, password):
+    staff_user.is_superuser = True
+    staff_user.save(update_fields=["is_superuser"])
+    client.login(email=staff_user.email, password=password)
+    return client
+
+
+def test_deleting_snapshots_in_the_admin_recounts_their_players(admin_client, season):
+    player = make_player("Admin")
+    record(player, season, [10, 12, 14])
+    player.refresh_from_db()
+    assert player.hotness_score() == "2/2"
+    newest = player.snapshots.order_by("-as_of").first()
+
+    admin_client.post(
+        reverse("admin:fantasy_playersnapshot_changelist"),
+        {"action": "delete_selected", "_selected_action": [newest.pk], "post": "yes"},
+    )
+
+    player.refresh_from_db()
+    assert not PlayerSnapshot.objects.filter(pk=newest.pk).exists()
+    assert player.hotness_score() == "1/1"
+
+
+def test_deleting_one_snapshot_in_the_admin_recounts_too(admin_client, season):
+    player = make_player("AdminOne")
+    record(player, season, [10, 12, 14])
+    newest = player.snapshots.order_by("-as_of").first()
+
+    admin_client.post(
+        reverse("admin:fantasy_playersnapshot_delete", args=[newest.pk]), {"post": "yes"}
+    )
+
+    player.refresh_from_db()
+    assert player.hotness_score() == "1/1"
+
+
+def test_deleting_a_season_in_the_admin_recounts_everyone(admin_client, season):
+    player = make_player("Gone")
+    record(player, season, [10, 12, 14])
+
+    admin_client.post(reverse("admin:fantasy_season_delete", args=[season.pk]), {"post": "yes"})
+
+    player.refresh_from_db()
+    assert not Season.objects.filter(pk=season.pk).exists()
+    assert player.hotness_score() is None

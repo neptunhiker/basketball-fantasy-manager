@@ -298,27 +298,46 @@ def test_the_previous_window_is_as_long_in_real_time_across_a_clock_change():
     assert previous.end == period.start
 
 
-def test_thirty_days_are_not_compared_with_what_was_pruned(staff_client, settings):
-    settings.PERF_RETENTION_DAYS = 30
+def test_no_comparison_before_the_window_before_is_recorded_in_full(staff_client):
+    """Recording began yesterday: a week against one day is no comparison."""
     metric(100)
+    metric(100, at=timezone.now() - dt.timedelta(days=1))
 
-    month = staff_client.get(URL, {"period": "30d"})
     week = staff_client.get(URL, {"period": "7d"})
 
-    assert month.context["comparable"] is False
-    assert all(change is None for change in month.context["changes"].values())
-    assert "Nothing older than 30 days is kept to compare with" in month.content.decode()
-    assert week.context["comparable"] is True
+    assert week.context["comparable"] is False
+    assert all(change is None for change in week.context["changes"].values())
+    assert "Not enough history to compare yet" in week.content.decode()
 
 
-def test_by_default_even_thirty_days_have_a_month_to_compare_with(staff_client):
-    """The default keeps twice the longest view."""
-    from django.conf import settings as django_settings
+def test_a_comparison_once_rows_reach_back_to_its_start(db):
+    period = stats.period_for("7d")
+    metric(100, at=period.previous.start + dt.timedelta(seconds=1))
+    assert stats.comparable(period) is False
 
-    assert django_settings.PERF_RETENTION_DAYS == 60
+    metric(100, at=period.previous.start - dt.timedelta(seconds=1))
+    assert stats.comparable(period) is True
+
+
+def test_a_week_with_a_full_week_before_is_compared(staff_client):
+    period = stats.period_for("7d")
+    metric(200, at=period.previous.start - dt.timedelta(hours=1))
+    metric(200, at=period.previous.start + dt.timedelta(days=1))
     metric(100)
 
-    assert staff_client.get(URL, {"period": "30d"}).context["comparable"] is True
+    week = staff_client.get(URL, {"period": "7d"})
+
+    assert week.context["comparable"] is True
+    assert week.context["changes"]["p95"]["tone"] == "good"
+
+
+def test_by_default_even_thirty_days_have_a_month_to_compare_with():
+    """The default keeps twice the longest view, so its window before is kept."""
+    from django.conf import settings as django_settings
+
+    period = stats.period_for("30d")
+    kept_from = timezone.now() - dt.timedelta(days=django_settings.PERF_RETENTION_DAYS)
+    assert period.previous.start >= kept_from
 
 
 # --- requests no URL matched -------------------------------------------------------

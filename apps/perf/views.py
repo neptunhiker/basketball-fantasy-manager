@@ -23,8 +23,8 @@ class PerformanceView(StaffRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         period = stats.period_for(self.request.GET.get("period"))
         current = stats.summary(period)
-        comparable = stats.comparable(period, settings.PERF_RETENTION_DAYS)
-        # Nothing to set against once the window before is pruned away.
+        comparable = stats.comparable(period)
+        # Nothing to set against until the window before is there in full.
         previous = stats.summary(period.previous) if comparable else dict.fromkeys(current)
         route_names = stats.route_names(period)
         route = self.request.GET.get("route") or None

@@ -125,14 +125,15 @@ def period_for(key, now=None):
     return Period(key, label, start, now, bucket)
 
 
-def comparable(period, retention_days, now=None):
-    """Whether the window before `period` is still fully kept.
+def comparable(period):
+    """Whether rows reach back to the start of the window before `period`.
 
-    Rows older than the retention are pruned, so a comparison reaching past
-    it would set a whole window against the day or two that is left.
+    Without that, a comparison would set a whole window against the day or
+    two that was recorded: the first weeks after recording began, or once
+    the retention has pruned the start away. Pruning goes oldest first, so
+    one row at or before the start means the window is there from it on.
     """
-    cutoff = (now or timezone.now()) - dt.timedelta(days=retention_days)
-    return period.previous.start >= cutoff
+    return RequestMetric.objects.filter(recorded_at__lte=period.previous.start).exists()
 
 
 def window(period, route=None):

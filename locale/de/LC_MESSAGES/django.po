@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 16:36+0100\n"
+"POT-Creation-Date: 2026-11-14 16:37+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -6998,13 +6998,8 @@ msgid "vs. previous %(period)s"
 msgstr "ggü. vorherige %(period)s"
 
 #: templates/perf/partials/delta.html:21
-#, python-format
-msgid "Nothing older than %(days)s days is kept to compare with"
-msgstr "Älter als %(days)s Tage wird nichts aufbewahrt, also kein Vergleich"
-
-#: templates/perf/partials/delta.html:23
-msgid "No earlier figure to compare"
-msgstr "Kein früherer Wert zum Vergleich"
+msgid "Not enough history to compare yet"
+msgstr "Noch nicht genug Verlauf für einen Vergleich"
 
 #: templates/perf/partials/route_label.html:3
 msgid "No matching URL"

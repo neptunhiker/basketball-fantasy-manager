@@ -131,10 +131,11 @@ the names of their parameters. Percentiles come from Postgres
 (`PERCENTILE_CONT`), so the page costs the same handful of queries however
 many rows there are.
 
-A change is only shown while the window before is still kept, so the
-retention is twice the longest view: 60 days let the 30-day view compare
-with the 30 days before it. Set it lower and that view says there is
-nothing left to compare with. Hourly buckets are UTC hours shown in Berlin time, so the
+A change is only shown once rows reach back to the start of the window
+before — not in the first weeks after recording began, and not once the
+retention has pruned that start away. The page says there is not enough
+history yet. The retention is twice the longest view, so 60 days let the
+30-day view compare with the 30 days before it. Hourly buckets are UTC hours shown in Berlin time, so the
 night the clocks go back has two 02:00 hours instead of one holding both.
 
 | Setting | Default | |

@@ -23,7 +23,9 @@ class PerformanceView(StaffRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         period = stats.period_for(self.request.GET.get("period"))
         current = stats.summary(period)
-        previous = stats.summary(period.previous)
+        comparable = stats.comparable(period, settings.PERF_RETENTION_DAYS)
+        # Nothing to set against once the window before is pruned away.
+        previous = stats.summary(period.previous) if comparable else dict.fromkeys(current)
         route_names = stats.route_names(period)
         route = self.request.GET.get("route") or None
         if route not in route_names:
@@ -45,6 +47,7 @@ class PerformanceView(StaffRequiredMixin, TemplateView):
                 "sql_p95": stats.change(current["sql_p95"], previous["sql_p95"]),
                 "bytes_median": stats.change(current["bytes_median"], previous["bytes_median"]),
             },
+            "comparable": comparable,
             "routes": stats.routes(period),
             "route_names": route_names,
             "selected_route": route,

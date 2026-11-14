@@ -1,9 +1,9 @@
 """Measure every request: wall time, database work and response size.
 
 Sits first in `MIDDLEWARE`, so its clock covers every other middleware as well
-as the view and the template. Each response gets a `Server-Timing` header
--- DevTools shows it under the request's Timing tab, on production too -- and,
-unless switched off, one `RequestMetric` row.
+as the view and the template. Responses to staff get a `Server-Timing` header
+-- DevTools shows it under the request's Timing tab, on production too -- and
+every request, unless switched off, one `RequestMetric` row.
 
 Queries are counted through `connection.execute_wrapper` rather than
 `connection.queries`, which only fills while DEBUG is on.
@@ -11,6 +11,7 @@ Queries are counted through `connection.execute_wrapper` rather than
 
 import logging
 import random
+import re
 import time
 
 from django.conf import settings
@@ -38,6 +39,17 @@ class QueryTimer:
             self.count += 1
 
 
+# What a parameter name looks like. A bare query string ("?someone@mail")
+# arrives as a key with no value, and is a value really -- so it is dropped.
+PARAMETER_NAME = re.compile(r"[A-Za-z0-9_\-\[\]]{1,40}")
+
+
+def parameter_names(query):
+    """Sorted parameter names, e.g. "position,sort" -- never values."""
+    names = sorted(key for key in query if PARAMETER_NAME.fullmatch(key))
+    return ",".join(names)[:300]
+
+
 def ignored(path):
     return any(path.startswith(prefix) for prefix in settings.PERF_IGNORED_PATHS)
 
@@ -57,10 +69,16 @@ class RequestMetricsMiddleware:
         duration_ms = (time.perf_counter() - start) * 1000
         sql_ms = queries.seconds * 1000
 
-        timing = f'app;dur={duration_ms:.1f}, db;dur={sql_ms:.1f};desc="{queries.count} queries"'
-        # Added to, not replaced: the debug toolbar may have set entries of its own.
-        existing = response.get("Server-Timing")
-        response["Server-Timing"] = f"{existing}, {timing}" if existing else timing
+        # Staff only. An exact server-side time on every response lets anyone
+        # time the password reset, which mails only addresses that exist.
+        user = getattr(request, "user", None)
+        if user is not None and user.is_staff:
+            timing = (
+                f'app;dur={duration_ms:.1f}, db;dur={sql_ms:.1f};desc="{queries.count} queries"'
+            )
+            # Added to, not replaced: the debug toolbar may have set entries of its own.
+            existing = response.get("Server-Timing")
+            response["Server-Timing"] = f"{existing}, {timing}" if existing else timing
         # Read per request rather than once, so a test can switch it.
         if settings.PERF_RECORD_REQUESTS and random.random() < settings.PERF_SAMPLE_RATE:
             self.record(request, response, duration_ms, queries.count, sql_ms)
@@ -81,7 +99,7 @@ class RequestMetricsMiddleware:
                 sql_count=sql_count,
                 sql_ms=sql_ms,
                 response_bytes=None if response.streaming else len(response.content),
-                query_keys=",".join(sorted(request.GET.keys()))[:300],
+                query_keys=parameter_names(request.GET),
             )
         except Exception:
             # A measurement must never cost the user their page.

@@ -104,9 +104,11 @@ once with `--create-db`.
 Every request is measured by `apps.perf.middleware`, first in `MIDDLEWARE` so
 its clock covers everything else:
 
-- **`Server-Timing` header** on every response:
+- **`Server-Timing` header** on every response to a staff user:
   `app;dur=…, db;dur=…;desc="N queries"`. In DevTools, open the request and
-  look at the *Timing* tab — this works on production too.
+  look at the *Timing* tab — this works on production too. Nobody else gets
+  it: an exact server time would let anyone tell from the password reset,
+  which only sends mail to accounts that exist, whether an address has one.
 - **One `RequestMetric` row per request**: route name (e.g.
   `nba:player-list`), method, status, whether it was an HTMX request, total
   time, query count, SQL time, response size before compression, and the
@@ -126,6 +128,11 @@ thresholds live in `apps/perf/stats.py`); and the 20 slowest requests with
 the names of their parameters. Percentiles come from Postgres
 (`PERCENTILE_CONT`), so the page costs the same handful of queries however
 many rows there are.
+
+A change is only shown while the window before is still kept: with the
+default 30 days of retention the 30-day view has nothing left to compare
+with and says so. Hourly buckets are UTC hours shown in Berlin time, so the
+night the clocks go back has two 02:00 hours instead of one holding both.
 
 | Setting | Default | |
 | --- | --- | --- |

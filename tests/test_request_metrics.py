@@ -62,15 +62,32 @@ def test_the_query_count_matches_what_the_request_ran(recording, signed_in):
     assert metric.sql_count == len(captured.captured_queries) - 1
 
 
-def test_every_response_says_what_it_cost(signed_in):
+def test_staff_see_what_a_response_cost(client, staff_user, password):
     """The header comes with recording off too: it costs nothing to send."""
-    response = signed_in.get(reverse("nba:player-list"))
+    client.login(email=staff_user.email, password=password)
+
+    response = client.get(reverse("nba:player-list"))
 
     timing = response["Server-Timing"]
     assert timing.startswith("app;dur=")
     assert "db;dur=" in timing
     assert 'queries"' in timing
     assert not RequestMetric.objects.exists()
+
+
+def test_nobody_else_gets_the_timings(signed_in, client):
+    """An exact server time would let anyone tell from the password reset,
+    which only mails accounts that exist, whether an address has one."""
+    assert "Server-Timing" not in signed_in.get(reverse("nba:player-list"))
+
+    signed_in.logout()
+    assert "Server-Timing" not in client.get(reverse("accounts:login"))
+
+
+def test_a_bare_query_string_is_a_value_not_a_name(recording, signed_in):
+    signed_in.get(reverse("nba:player-list") + "?someone@example.com&sort=avg")
+
+    assert RequestMetric.objects.get().query_keys == "sort"
 
 
 def test_a_redirect_is_recorded_too(recording, client, db):
@@ -103,7 +120,6 @@ def test_a_sample_rate_of_zero_records_nothing(recording, signed_in):
     response = signed_in.get(reverse("nba:player-list"))
 
     assert response.status_code == 200
-    assert "Server-Timing" in response
     assert not RequestMetric.objects.exists()
 
 

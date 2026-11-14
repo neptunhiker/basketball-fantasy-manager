@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 09:25+0100\n"
+"POT-Creation-Date: 2026-11-14 09:52+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -309,7 +309,7 @@ msgstr "Name"
 msgid "Save"
 msgstr "Speichern"
 
-#: apps/core/views.py:359 apps/fantasy/services.py:751
+#: apps/core/views.py:359 apps/fantasy/services.py:759
 msgid "Please enter a name."
 msgstr "Bitte gib einen Namen ein."
 
@@ -635,7 +635,7 @@ msgid "A transaction has to move at least one player."
 msgstr "Eine Transaktion muss mindestens einen Spieler bewegen."
 
 #: apps/fantasy/models.py:948 apps/fantasy/services.py:261
-#: apps/fantasy/services.py:835
+#: apps/fantasy/services.py:843
 msgid "The player in and the player out cannot be the same."
 msgstr "Der eingehende und der ausgehende Spieler dürfen nicht identisch sein."
 
@@ -728,7 +728,7 @@ msgstr "Der Link funktioniert nicht mehr."
 msgid "Link created."
 msgstr "Link erstellt."
 
-#: apps/fantasy/services.py:159 apps/fantasy/services.py:589
+#: apps/fantasy/services.py:159 apps/fantasy/services.py:597
 #, python-format
 msgid "Signings open on %(date)s."
 msgstr "Die Transferphase beginnt am %(date)s."
@@ -806,46 +806,46 @@ msgstr ""
 msgid "No trades available to sell."
 msgstr "Keine Trades zum Verkaufen verfügbar."
 
-#: apps/fantasy/services.py:560
+#: apps/fantasy/services.py:568
 #, python-format
 msgid "Roster %(number)d"
 msgstr "Kader %(number)d"
 
-#: apps/fantasy/services.py:585 apps/fantasy/views.py:705
+#: apps/fantasy/services.py:593 apps/fantasy/views.py:705
 msgid "Pick one of the available roster icons."
 msgstr "Wähle eines der verfügbaren Kader-Icons."
 
-#: apps/fantasy/services.py:591
+#: apps/fantasy/services.py:599
 msgid "A new roster cannot be created outside the signing window."
 msgstr "Außerhalb der Transferphase kann kein neuer Kader erstellt werden."
 
-#: apps/fantasy/services.py:739
+#: apps/fantasy/services.py:747
 #, python-format
 msgid "Variant %(number)d"
 msgstr "Variante %(number)d"
 
-#: apps/fantasy/services.py:757
+#: apps/fantasy/services.py:765
 #, python-format
 msgid "This roster already has a plan called “%(name)s”."
 msgstr "Dieser Kader hat schon eine Variante namens „%(name)s“."
 
-#: apps/fantasy/services.py:775
+#: apps/fantasy/services.py:783
 #, python-format
 msgid "%(name)s (copy)"
 msgstr "%(name)s (Kopie)"
 
-#: apps/fantasy/services.py:778
+#: apps/fantasy/services.py:786
 #, python-format
 msgid "%(name)s (copy %(number)d)"
 msgstr "%(name)s (Kopie %(number)d)"
 
-#: apps/fantasy/services.py:818
+#: apps/fantasy/services.py:826
 #, python-format
 msgid "Pick a day from %(date)s on: earlier batches have been processed."
 msgstr ""
 "Wähle einen Tag ab dem %(date)s: Frühere Verarbeitungen sind schon gelaufen."
 
-#: apps/fantasy/services.py:833 apps/fantasy/views.py:1487
+#: apps/fantasy/services.py:841 apps/fantasy/views.py:1487
 #: templates/fantasy/partials/trade_body.html:317
 msgid "Pick a player to send out and one to bring in."
 msgstr "Wähle einen Spieler, der geht, und einen, der kommt."
@@ -2119,15 +2119,15 @@ msgid "The note will be removed for good. This cannot be undone."
 msgstr ""
 "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."
 
-#: apps/perf/stats.py:89
+#: apps/perf/stats.py:100
 msgid "24 hours"
 msgstr "24 Stunden"
 
-#: apps/perf/stats.py:90
+#: apps/perf/stats.py:101
 msgid "7 days"
 msgstr "7 Tage"
 
-#: apps/perf/stats.py:91
+#: apps/perf/stats.py:102
 msgid "30 days"
 msgstr "30 Tage"
 
@@ -5199,7 +5199,7 @@ msgstr "Letzter Import von basketball.de: %(when)s"
 msgid "No import from basketball.de yet."
 msgstr "Noch kein Import von basketball.de."
 
-#: templates/nba/partials/chart_loader.html:35
+#: templates/nba/partials/chart_loader.html:41
 msgid "Loading chart…"
 msgstr "Diagramm wird geladen …"
 
@@ -6989,12 +6989,17 @@ msgstr[1] "%(count)s Abfragen"
 msgid "Kept for %(days)s days. Sizes are before compression."
 msgstr "Wird %(days)s Tage aufbewahrt. Größen vor der Komprimierung."
 
-#: templates/perf/partials/delta.html:17
+#: templates/perf/partials/delta.html:18
 #, python-format
 msgid "vs. previous %(period)s"
 msgstr "ggü. vorherige %(period)s"
 
-#: templates/perf/partials/delta.html:20
+#: templates/perf/partials/delta.html:21
+#, python-format
+msgid "Nothing older than %(days)s days is kept to compare with"
+msgstr "Älter als %(days)s Tage wird nichts aufbewahrt, also kein Vergleich"
+
+#: templates/perf/partials/delta.html:23
 msgid "No earlier figure to compare"
 msgstr "Kein früherer Wert zum Vergleich"
 

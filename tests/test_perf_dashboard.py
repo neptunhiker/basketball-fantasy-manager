@@ -248,3 +248,64 @@ def test_a_flat_change_has_no_sign():
     assert signed_percent(stats.change(100, 100)) == "±0%"
     assert signed_percent(stats.change(112, 100)) == "+12%"
     assert signed_percent(stats.change(88, 100)) == f"{MINUS}12%"
+
+
+# --- daylight saving and retention ------------------------------------------------
+
+
+def berlin(*args):
+    from zoneinfo import ZoneInfo
+
+    return dt.datetime(*args, tzinfo=ZoneInfo("Europe/Berlin"))
+
+
+def test_the_night_the_clocks_go_back_has_two_two_oclocks(db):
+    """25 hours from 01:00 to 01:00, and each 02:00 keeps its own requests."""
+    first_two = dt.datetime(2026, 10, 25, 0, 30, tzinfo=dt.UTC)  # 02:30 CEST
+    second_two = dt.datetime(2026, 10, 25, 1, 30, tzinfo=dt.UTC)  # 02:30 CET
+    metric(100, at=first_two)
+    metric(900, at=second_two)
+    metric(900, at=second_two + dt.timedelta(minutes=5))
+
+    period = stats.period_for("24h", now=berlin(2026, 10, 25, 23, 10))
+    buckets = stats.trend(period)
+
+    assert len(buckets) == 24
+    two_oclocks = [b for b in buckets if timezone.localtime(b["bucket"]).hour == 2]
+    assert [b["requests"] for b in two_oclocks] == [1, 2]
+
+
+def test_the_night_the_clocks_go_forward_has_no_missing_hour(db):
+    at = dt.datetime(2026, 3, 29, 1, 15, tzinfo=dt.UTC)  # 03:15 CEST, just after the jump
+    metric(100, at=at)
+
+    period = stats.period_for("24h", now=berlin(2026, 3, 30, 1, 30))
+    buckets = stats.trend(period)
+
+    assert len(buckets) == 24
+    assert sum(bucket["requests"] for bucket in buckets) == 1
+
+
+def test_the_previous_window_is_as_long_in_real_time_across_a_clock_change():
+    period = stats.period_for("7d", now=berlin(2026, 10, 30, 12, 0))
+    previous = period.previous
+
+    def real(start, end):
+        return end.astimezone(dt.UTC) - start.astimezone(dt.UTC)
+
+    # The window spans the night of 25 October: an hour more than its wall clock says.
+    assert real(previous.start, previous.end) == real(period.start, period.end)
+    assert previous.end == period.start
+
+
+def test_thirty_days_are_not_compared_with_what_was_pruned(staff_client, settings):
+    settings.PERF_RETENTION_DAYS = 30
+    metric(100)
+
+    month = staff_client.get(URL, {"period": "30d"})
+    week = staff_client.get(URL, {"period": "7d"})
+
+    assert month.context["comparable"] is False
+    assert all(change is None for change in month.context["changes"].values())
+    assert "Nothing older than 30 days is kept to compare with" in month.content.decode()
+    assert week.context["comparable"] is True

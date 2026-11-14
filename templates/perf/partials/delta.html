@@ -1,7 +1,8 @@
 {% load i18n perf %}
 {% comment %}
   How a figure moved against the window before, e.g. "▲ +12% vs previous".
-  Context: change (from stats.change, or None), period, on_dark.
+  Context: change (from stats.change, or None), period, on_dark, comparable
+  and retention_days (from the page).
   Rose means worse, emerald better, grey a figure where neither applies
   (request volume) -- and the arrow and sign say the direction either way.
 {% endcomment %}
@@ -16,6 +17,8 @@
     <span class="tabular-nums">{{ change|signed_percent }}</span>
     <span class="{% if on_dark %}text-white/50{% else %}text-neutral-400 max-sm:hidden dark:text-neutral-500{% endif %} font-normal">{% blocktranslate with period=period.label %}vs. previous {{ period }}{% endblocktranslate %}</span>
   </span>
+{% elif not comparable %}
+  <span class="text-xs {% if on_dark %}text-white/40{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">{% blocktranslate with days=retention_days %}Nothing older than {{ days }} days is kept to compare with{% endblocktranslate %}</span>
 {% else %}
   <span class="text-xs {% if on_dark %}text-white/40{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">{% translate "No earlier figure to compare" %}</span>
 {% endif %}

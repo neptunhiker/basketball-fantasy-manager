@@ -64,24 +64,35 @@ class Period:
 
     @property
     def previous(self):
-        """The window of the same length right before this one."""
-        length = self.end - self.start
-        return Period(self.key, self.label, self.start - length, self.start, self.bucket)
+        """The window of the same length right before this one.
+
+        Lengths are taken in UTC: two times in the same zone subtract by the
+        clock on the wall, which is an hour off across a DST change.
+        """
+        length = self.end.astimezone(dt.UTC) - self.start.astimezone(dt.UTC)
+        start = timezone.localtime(self.start.astimezone(dt.UTC) - length)
+        return Period(self.key, self.label, start, self.start, self.bucket)
 
     def buckets(self):
-        """Every bucket start in the window, oldest first, gaps included."""
-        step = dt.timedelta(hours=1) if self.bucket == "hour" else dt.timedelta(days=1)
+        """Every bucket start in the window, oldest first, gaps included.
+
+        Hours are UTC hours -- what `trend` groups by -- so the night the
+        clocks go back has two 02:00 buckets rather than one holding both,
+        and the night they go forward has no 02:00 that cannot exist.
+        Days run from local midnight to local midnight, like `TruncDay`.
+        """
         moments = []
+        if self.bucket == "hour":
+            moment = self.start.astimezone(dt.UTC)
+            while moment < self.end:
+                moments.append(moment)
+                moment += dt.timedelta(hours=1)
+            return moments
         moment = self.start
         while moment < self.end:
             moments.append(moment)
-            if self.bucket == "hour":
-                # Counted in UTC, so the night the clocks change has 23 or 25.
-                moment = timezone.localtime(moment.astimezone(dt.UTC) + step)
-            else:
-                # From local midnight to local midnight, so that day is one bucket.
-                next_day = timezone.localdate(moment) + step
-                moment = timezone.make_aware(dt.datetime.combine(next_day, dt.time.min))
+            next_day = timezone.localdate(moment) + dt.timedelta(days=1)
+            moment = timezone.make_aware(dt.datetime.combine(next_day, dt.time.min))
         return moments
 
 
@@ -104,12 +115,24 @@ def period_for(key, now=None):
     label, bucket = PERIODS[key]
     now = timezone.localtime(now or timezone.now())
     if bucket == "hour":
-        start = now.replace(minute=0, second=0, microsecond=0) - dt.timedelta(hours=23)
+        # In UTC, for the reason in `Period.buckets`.
+        hour = now.astimezone(dt.UTC).replace(minute=0, second=0, microsecond=0)
+        start = timezone.localtime(hour - dt.timedelta(hours=23))
     else:
         days = int(key.removesuffix("d"))
         first_day = now.date() - dt.timedelta(days=days - 1)
         start = timezone.make_aware(dt.datetime.combine(first_day, dt.time.min))
     return Period(key, label, start, now, bucket)
+
+
+def comparable(period, retention_days, now=None):
+    """Whether the window before `period` is still fully kept.
+
+    Rows older than the retention are pruned, so a comparison reaching past
+    it would set a whole window against the day or two that is left.
+    """
+    cutoff = (now or timezone.now()) - dt.timedelta(days=retention_days)
+    return period.previous.start >= cutoff
 
 
 def window(period, route=None):
@@ -175,11 +198,14 @@ def route_names(period):
 def trend(period, route=None):
     """p50, p95 and request count per bucket, one entry per bucket -- an empty
     bucket comes back with None, so the chart can leave a gap."""
-    trunc = TruncHour if period.bucket == "hour" else TruncDay
+    if period.bucket == "hour":
+        bucket = TruncHour("recorded_at", tzinfo=dt.UTC)
+    else:
+        bucket = TruncDay("recorded_at")
     measured = {
         row["bucket"]: row
         for row in window(period, route)
-        .annotate(bucket=trunc("recorded_at"))
+        .annotate(bucket=bucket)
         .values("bucket")
         .annotate(
             requests=Count("id"),

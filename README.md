@@ -429,7 +429,9 @@ From your laptop:
 `ship.sh` fast-forwards the server clone and then runs `scripts/deploy.sh` there.
 The deploy builds the images and runs the migrations with the new image before
 starting the containers, so new code never meets the old schema. It then waits
-for the containers to be healthy and checks `/healthz`. Before migrating, a
+for the containers to be healthy and checks `/healthz`; once that passes it
+records the deploy (`manage.py record_deploy`) for the markers on the
+performance dashboard. Before migrating, a
 production deploy writes a `pg_dump` to `backups/` in the prod clone and keeps
 the 14 most recent dumps. Set `DEPLOY_HOST` to use an SSH host other than `nba`.
 

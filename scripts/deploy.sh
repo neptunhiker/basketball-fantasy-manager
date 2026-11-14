@@ -82,6 +82,14 @@ if ! curl --fail --silent --show-error --retry 10 --retry-delay 2 \
 fi
 printf '\n'
 
+# For the deploy markers on the performance dashboard. Only now, after the
+# health check, so a failed deploy is never marked -- and a failure to record
+# it does not fail a deploy that is already live.
+echo "Recording the deploy..."
+"${COMPOSE[@]}" exec -T web python manage.py record_deploy -- \
+    "$(git rev-parse HEAD)" "$(git log -1 --format=%s)" \
+    || echo "Could not record the deploy, continuing" >&2
+
 docker image prune -f >/dev/null
 # Cap the build cache at 2 GB; it otherwise grows with every build.
 # --keep-storage is the older name for --max-used-space.

@@ -33,3 +33,28 @@ class RequestMetric(models.Model):
 
     def __str__(self):
         return f"{self.method} {self.route or '-'} {self.duration_ms:.0f} ms"
+
+
+class Deploy(models.Model):
+    """One deploy of the app: when it went live, and which commit.
+
+    Written by `manage.py record_deploy`, which `scripts/deploy.sh` runs once
+    the new containers pass their health check. The dashboard marks these on
+    its trend, so a change in response time can be set against the commit
+    that caused it. A few rows a week, so never pruned.
+    """
+
+    deployed_at = models.DateTimeField(db_index=True)
+    sha = models.CharField(max_length=40)
+    # The commit's first line, e.g. "Players: store hotness instead of ...".
+    subject = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        ordering = ["-deployed_at"]
+
+    def __str__(self):
+        return f"{self.short_sha} {self.subject}".strip()
+
+    @property
+    def short_sha(self):
+        return self.sha[:7]

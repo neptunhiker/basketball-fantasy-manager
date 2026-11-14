@@ -128,7 +128,9 @@ size; a trend of p95 and p50 per hour or day, for all routes or one; every
 route with its status (fast under 300 ms at p95, slow from 1 s — the
 thresholds live in `apps/perf/stats.py`), except routes with fewer than 20
 requests, which get no verdict and come last; and the 20 slowest requests with
-the names of their parameters. Percentiles come from Postgres
+the names of their parameters. Requests no URL matched (mostly bots
+trying paths) have their own line among the routes but stay out of the
+headline figures and the trend. Percentiles come from Postgres
 (`PERCENTILE_CONT`), so the page costs the same handful of queries however
 many rows there are.
 
@@ -144,6 +146,11 @@ night the clocks go back has two 02:00 hours instead of one holding both.
 | `PERF_RECORD_REQUESTS` | `true` | `false` keeps the header but writes no rows |
 | `PERF_SAMPLE_RATE` | `1.0` | share of requests recorded; below 1 the dashboard notes that its counts are of the sample |
 | `PERF_RETENTION_DAYS` | `60` | rolling window kept, twice the longest view |
+
+**What measuring costs.** One `INSERT` per recorded request, written before
+the response leaves, plus reading `request.user` for the staff check. Neither
+is inside the measured time, so the figures do not show it. At the current
+traffic it is negligible; if it ever is not, `PERF_SAMPLE_RATE` lowers it.
 
 Tests switch recording off (`tests/conftest.py`), because the extra insert
 would land inside every query-count assertion; `tests/test_request_metrics.py`

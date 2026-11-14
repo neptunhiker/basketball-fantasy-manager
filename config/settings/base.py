@@ -145,7 +145,7 @@ Q_CLUSTER = {
 # Request metrics (apps.perf): one row per request with its time, database
 # work and response size, pruned daily to a rolling window.
 PERF_RECORD_REQUESTS = env.bool("PERF_RECORD_REQUESTS", default=True)
-# Share of requests recorded, 0.0-1.0. Every response still gets Server-Timing.
+# Share of requests recorded, 0.0-1.0. Staff still get Server-Timing on every response.
 PERF_SAMPLE_RATE = env.float("PERF_SAMPLE_RATE", default=1.0)
 # Twice the dashboard's longest window, so even the 30-day view still has the
 # 30 days before it to compare with.

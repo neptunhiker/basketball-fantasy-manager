@@ -309,3 +309,13 @@ def test_thirty_days_are_not_compared_with_what_was_pruned(staff_client, setting
     assert all(change is None for change in month.context["changes"].values())
     assert "Nothing older than 30 days is kept to compare with" in month.content.decode()
     assert week.context["comparable"] is True
+
+
+def test_by_default_even_thirty_days_have_a_month_to_compare_with(staff_client):
+    """The default keeps twice the longest view."""
+    from django.conf import settings as django_settings
+
+    assert django_settings.PERF_RETENTION_DAYS == 60
+    metric(100)
+
+    assert staff_client.get(URL, {"period": "30d"}).context["comparable"] is True

@@ -129,16 +129,17 @@ the names of their parameters. Percentiles come from Postgres
 (`PERCENTILE_CONT`), so the page costs the same handful of queries however
 many rows there are.
 
-A change is only shown while the window before is still kept: with the
-default 30 days of retention the 30-day view has nothing left to compare
-with and says so. Hourly buckets are UTC hours shown in Berlin time, so the
+A change is only shown while the window before is still kept, so the
+retention is twice the longest view: 60 days let the 30-day view compare
+with the 30 days before it. Set it lower and that view says there is
+nothing left to compare with. Hourly buckets are UTC hours shown in Berlin time, so the
 night the clocks go back has two 02:00 hours instead of one holding both.
 
 | Setting | Default | |
 | --- | --- | --- |
 | `PERF_RECORD_REQUESTS` | `true` | `false` keeps the header but writes no rows |
 | `PERF_SAMPLE_RATE` | `1.0` | share of requests recorded |
-| `PERF_RETENTION_DAYS` | `30` | rolling window kept |
+| `PERF_RETENTION_DAYS` | `60` | rolling window kept, twice the longest view |
 
 Tests switch recording off (`tests/conftest.py`), because the extra insert
 would land inside every query-count assertion; `tests/test_request_metrics.py`

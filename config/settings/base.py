@@ -147,7 +147,9 @@ Q_CLUSTER = {
 PERF_RECORD_REQUESTS = env.bool("PERF_RECORD_REQUESTS", default=True)
 # Share of requests recorded, 0.0-1.0. Every response still gets Server-Timing.
 PERF_SAMPLE_RATE = env.float("PERF_SAMPLE_RATE", default=1.0)
-PERF_RETENTION_DAYS = env.int("PERF_RETENTION_DAYS", default=30)
+# Twice the dashboard's longest window, so even the 30-day view still has the
+# 30 days before it to compare with.
+PERF_RETENTION_DAYS = env.int("PERF_RETENTION_DAYS", default=60)
 # Not measured at all: the health probe would drown everything else out.
 PERF_IGNORED_PATHS = ("/healthz", "/static/", "/admin/", "/__debug__/")
 

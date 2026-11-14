@@ -1,13 +1,16 @@
 """What `apps.perf` records about a request, and what it leaves alone."""
 
+import datetime as dt
 from unittest import mock
 
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.perf.models import RequestMetric
+from apps.perf.tasks import prune_request_metrics
 
 
 @pytest.fixture
@@ -109,3 +112,34 @@ def test_a_failed_write_still_serves_the_page(recording, signed_in):
         response = signed_in.get(reverse("nba:player-list"))
 
     assert response.status_code == 200
+
+
+def make_metric(recorded_at):
+    return RequestMetric.objects.create(
+        recorded_at=recorded_at,
+        route="nba:player-list",
+        method="GET",
+        status=200,
+        duration_ms=10,
+        sql_count=3,
+        sql_ms=2,
+    )
+
+
+def test_pruning_keeps_the_retention_window(settings, db):
+    settings.PERF_RETENTION_DAYS = 30
+    now = timezone.now()
+    kept = make_metric(now - dt.timedelta(days=29))
+    make_metric(now - dt.timedelta(days=31))
+
+    assert prune_request_metrics(now=now) == 1
+    assert list(RequestMetric.objects.all()) == [kept]
+
+
+@pytest.mark.django_db
+def test_the_prune_schedule_exists():
+    from django_q.models import Schedule
+
+    schedule = Schedule.objects.get(name="Prune request metrics")
+    assert schedule.func == "apps.perf.tasks.prune_request_metrics"
+    assert schedule.cron == "30 4 * * *"

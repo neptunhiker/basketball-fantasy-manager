@@ -117,7 +117,9 @@ its clock covers everything else:
 - A Django-Q schedule (*Prune request metrics*, 04:30 daily) deletes rows
   older than `PERF_RETENTION_DAYS`.
 
-`/healthz`, `/static/`, `/admin/` and the debug toolbar are not measured.
+`/healthz`, `/static/`, `/admin/`, the debug toolbar and the dashboard itself
+are not measured — the dashboard's own percentile queries would otherwise
+show up in the figures it reports.
 
 **The dashboard** (`/performance/`, *Staff area → Performance*) reads those
 rows for the last 24 hours, 7 or 30 days: p95 as the headline with its change

@@ -150,8 +150,9 @@ PERF_SAMPLE_RATE = env.float("PERF_SAMPLE_RATE", default=1.0)
 # Twice the dashboard's longest window, so even the 30-day view still has the
 # 30 days before it to compare with.
 PERF_RETENTION_DAYS = env.int("PERF_RETENTION_DAYS", default=60)
-# Not measured at all: the health probe would drown everything else out.
-PERF_IGNORED_PATHS = ("/healthz", "/static/", "/admin/", "/__debug__/")
+# Not measured at all: the health probe would drown everything else out, and
+# the dashboard would measure its own percentile queries into its figures.
+PERF_IGNORED_PATHS = ("/healthz", "/static/", "/admin/", "/__debug__/", "/performance/")
 
 SITE_NAME = "Pengi Fantasy Manager"
 

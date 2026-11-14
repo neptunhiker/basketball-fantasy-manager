@@ -1,6 +1,7 @@
 """What `apps.perf` records about a request, and what it leaves alone."""
 
 import datetime as dt
+import importlib
 from unittest import mock
 
 import pytest
@@ -159,3 +160,31 @@ def test_the_prune_schedule_exists():
     schedule = Schedule.objects.get(name="Prune request metrics")
     assert schedule.func == "apps.perf.tasks.prune_request_metrics"
     assert schedule.cron == "30 4 * * *"
+
+
+def test_the_dashboard_does_not_measure_itself(recording, client, staff_user, password):
+    """Its percentile queries would land in the figures it shows."""
+    client.login(email=staff_user.email, password=password)
+
+    assert client.get(reverse("perf:dashboard")).status_code == 200
+    assert not RequestMetric.objects.exists()
+
+
+def test_the_dashboard_rows_recorded_before_are_dropped(db):
+    from django.apps import apps
+
+    migration = importlib.import_module("apps.perf.migrations.0003_drop_dashboard_metrics")
+    for route in ("perf:dashboard", "nba:player-list"):
+        RequestMetric.objects.create(
+            recorded_at=timezone.now(),
+            route=route,
+            method="GET",
+            status=200,
+            duration_ms=100,
+            sql_count=1,
+            sql_ms=1,
+        )
+
+    migration.drop_dashboard_metrics(apps, None)
+
+    assert list(RequestMetric.objects.values_list("route", flat=True)) == ["nba:player-list"]

@@ -133,7 +133,8 @@
             hx-get="{{ trade_url }}{{ state_query }}"
             hx-trigger="input[target.value.trim().length!=1] changed delay:500ms from:(#trade-filters input[type=search]), change from:(#trade-filters select), change from:(#trade-filters input[type=checkbox]), search"
             hx-sync="this:replace"
-            hx-target="#trade-body"
+            hx-target="#trade-results"
+            hx-select="#trade-results"
             hx-swap="outerHTML">
         <label for="trade-search" class="sr-only">{% translate "Search by name" %}</label>
         <input type="search" id="trade-search" name="q" value="{{ filters.q }}"
@@ -151,6 +152,8 @@
         <div class="col-span-2 sm:col-span-1">{% include "fantasy/partials/watchlist_chip.html" %}</div>
       </form>
 
+      {# Searching swaps only this list: the box above is never replaced while you type. #}
+      <div id="trade-results">
       {% if available %}
         <div class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
           <ul class="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -217,6 +220,7 @@
           {% endif %}
         </p>
       {% endif %}
+      </div>
     </section>
   </div>
 

@@ -4,10 +4,10 @@
 {# its containing block: inside the card it would be clipped by #}
 {# `overflow-hidden`, and inside `#roster-panel` above it would come #}
 {# unstuck exactly where the market begins. So the id moves out here and #}
-{# carries both halves. It is still the one swap target it always was -- #}
-{# the filter form's, and the out-of-band half of every buy, sell and #}
-{# trade -- so the strip's figures are re-rendered by the same responses #}
-{# that re-render the rows, with no second target to keep in step. #}
+{# carries both halves. It is the swap target of the star refresh and the #}
+{# out-of-band half of every buy, sell and trade, so the strip's figures #}
+{# are re-rendered by the same responses that re-render the rows. A search #}
+{# swaps only `#picker-results`: the strip does not depend on it. #}
 <div id="player-picker" class="space-y-3" {% if oob %}hx-swap-oob="outerHTML"{% endif %}>
 
   {# What the market is read against, kept in view. The team card states all #}
@@ -73,9 +73,10 @@
     {# Search: waits 500ms after the last key, skips a lone letter (apps/core/search.py), and a newer search cancels the one still running. #}
     <form id="picker-filters" class="border-b border-neutral-200 p-4 dark:border-neutral-800"
           hx-get="{% url 'fantasy:roster-build' roster.pk %}"
-          hx-trigger="input[target.value.trim().length!=1] changed delay:500ms from:(#picker-filters input[type=search]), change from:(#picker-filters select), change from:(#picker-filters input[type=checkbox]), search, watchlist-changed from:body"
+          hx-trigger="input[target.value.trim().length!=1] changed delay:500ms from:(#picker-filters input[type=search]), change from:(#picker-filters select), change from:(#picker-filters input[type=checkbox]), search"
           hx-sync="this:replace"
-          hx-target="#player-picker"
+          hx-target="#picker-results"
+          hx-select="#picker-results"
           hx-swap="outerHTML"
           hx-indicator="#picker-indicator">
       <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
@@ -109,7 +110,20 @@
       </div>
       <span id="picker-indicator" class="htmx-indicator mt-2 block text-xs text-neutral-500">{% translate "Searching" %}…</span>
     </form>
+    {# A star pressed in the list (watchlist-changed) re-renders the whole market, #}
+    {# so the chip's count follows it. Its own element, so the search above can #}
+    {# swap only the list; synced on the form, so the two never overlap. #}
+    <div hidden
+         hx-get="{% url 'fantasy:roster-build' roster.pk %}"
+         hx-trigger="watchlist-changed from:body"
+         hx-include="#picker-filters"
+         hx-sync="#picker-filters:replace"
+         hx-target="#player-picker"
+         hx-swap="outerHTML"
+         hx-indicator="#picker-indicator"></div>
 
+    {# Searching swaps only this list: the box above is never replaced while you type. #}
+    <div id="picker-results">
     {% if available %}
       <ul class="divide-y divide-neutral-200 dark:divide-neutral-800">
         {% for player in available %}
@@ -194,5 +208,6 @@
         {% endif %}
       </div>
     {% endif %}
+    </div>
   </div>
 </div>

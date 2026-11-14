@@ -138,7 +138,8 @@
               hx-get="{{ editor_url }}?body=1&amp;kind=TRADE{{ keep_day }}{{ keep_out }}{{ keep_in }}"
               hx-trigger="input[target.value.trim().length!=1] changed delay:500ms from:(#plan-editor-filters input[type=search]), change from:(#plan-editor-filters select), change from:(#plan-editor-filters input[type=checkbox]), search"
               hx-sync="this:replace"
-              hx-target="#plan-editor"
+              hx-target="#plan-editor-results"
+              hx-select="#plan-editor-results"
               hx-swap="outerHTML">
           <label for="plan-editor-search" class="sr-only">{% translate "Search by name" %}</label>
           <input type="search" id="plan-editor-search" name="q" value="{{ filters.q }}"
@@ -155,6 +156,8 @@
           <div class="col-span-2 sm:col-span-1">{% include "fantasy/partials/watchlist_chip.html" %}</div>
         </form>
 
+        {# Searching swaps only this list: the box above is never replaced while you type. #}
+        <div id="plan-editor-results">
         {% if available %}
           <div class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
             <ul class="divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -201,6 +204,7 @@
             {% if filters.watchlist %}{% include "fantasy/partials/watchlist_empty.html" %}{% elif filters.q or filters.position %}{% translate "Nothing matches those filters." %}{% else %}{% translate "No players with a salary on record." %}{% endif %}
           </p>
         {% endif %}
+        </div>
       </section>
     </div>
   {% else %}

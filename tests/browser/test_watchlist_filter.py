@@ -8,7 +8,7 @@ from apps.fantasy import services
 from .conftest import PHONE, page_overflow, shot
 
 # The market's rows, not the position strip pinned above it.
-ROWS = "#player-picker .card > ul > li"
+ROWS = "#picker-results > ul > li"
 
 
 def test_the_chip_filters_and_the_star_updates_it(game, open_page):

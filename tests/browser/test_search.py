@@ -11,7 +11,8 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from django.urls import reverse
 
-from .conftest import page_overflow, shot
+from .conftest import SCREENS, page_overflow, shot
+from .test_trade_plans import open_logged_in, planned  # noqa: F401 -- a fixture
 
 FOLDER = "search"
 SIZES = ["phone", "tablet", "desktop"]
@@ -35,6 +36,14 @@ class Searches:
                 self.queries.append(parse_qs(url.query).get("q", [""])[0])
 
         page.on("request", record)
+
+
+def close_up(locator, name):
+    """A screenshot of one element, for checking the details."""
+    target = SCREENS / FOLDER
+    target.mkdir(parents=True, exist_ok=True)
+    locator.scroll_into_view_if_needed()
+    locator.screenshot(path=str(target / f"{name}.png"))
 
 
 def type_into(page, selector, text, delay=FAST):
@@ -164,3 +173,106 @@ def test_the_user_list_searches_once_typing_stops(game, open_page):
     type_into(page, "#user-search", "coach")
 
     assert searches.queries == ["coach"]
+
+
+# --- typing on while a search is still running ---------------------------------------
+#
+# The trade dialog, the market and the plan editor used to re-render their
+# search box with every result: letters typed while a search was out were
+# lost, and the search for them never went. Now a search swaps only the list.
+
+
+def slow_requests(page, ms=300):
+    """Hold every request back for `ms`, like a slow connection."""
+    page.evaluate(
+        """ms => {
+            const send = XMLHttpRequest.prototype.send;
+            XMLHttpRequest.prototype.send = function (...args) {
+                setTimeout(() => { try { send.apply(this, args); } catch (e) {} }, ms);
+            };
+        }""",
+        ms,
+    )
+
+
+def type_on_during_a_search(page, selector, first, rest):
+    """Type `first`, pause so it is searched, then type `rest` before it returns."""
+    box = page.locator(selector)
+    box.click()
+    box.press_sequentially(first, delay=FAST)
+    page.wait_for_timeout(600)
+    box.press_sequentially(rest, delay=FAST)
+    page.wait_for_timeout(SETTLE + 300)
+    return box
+
+
+def assert_kept(page, box, text, rows, name, searches):
+    assert box.input_value() == text
+    assert page.evaluate("document.activeElement.id") == box.get_attribute("id")
+    assert searches.queries[-1] == text
+    names = page.locator(rows).all_inner_texts()
+    assert names
+    assert all(name in row for row in names)
+    assert page_overflow(page) == 0
+
+
+@pytest.mark.parametrize("size", SIZES)
+def test_the_market_keeps_what_you_type(game, open_page, size):
+    path = reverse("fantasy:roster-build", args=[game["roster"].pk])
+    page = open_page(game["user"], path, size=size)
+    slow_requests(page)
+    searches = Searches(page, path)
+
+    box = type_on_during_a_search(page, "#picker-search", "jam", "es")
+
+    assert_kept(page, box, "james", "#picker-results > ul > li", "James", searches)
+    close_up(page.locator("#player-picker .card"), f"market-kept-{size}")
+
+
+@pytest.mark.parametrize("size", SIZES)
+def test_the_trade_dialog_keeps_what_you_type(game, open_page, size):
+    build = reverse("fantasy:roster-build", args=[game["roster"].pk])
+    trade = reverse("fantasy:roster-trade", args=[game["roster"].pk])
+    page = open_page(game["user"], build, size=size)
+    page.evaluate(f"htmx.ajax('GET', '{trade}', '#modal-root')")
+    first_out = page.locator("#trade-body section").first.locator("li button").first
+    first_out.wait_for()
+    first_out.click()
+    page.locator("#trade-search").wait_for(state="visible")
+    page.wait_for_timeout(300)
+    slow_requests(page)
+    searches = Searches(page, trade)
+
+    box = type_on_during_a_search(page, "#trade-search", "jam", "es")
+
+    assert_kept(page, box, "james", "#trade-results li", "James", searches)
+    # The rest of the dialog is still the one the search started in.
+    assert page.get_by_text("Step 2 of 2").is_visible() == (size == "phone")
+    shot(page, FOLDER, f"trade-kept-{size}")
+
+
+@pytest.mark.parametrize("size", SIZES)
+def test_the_plan_editor_keeps_what_you_type(browser, live_server, planned, size):  # noqa: F811
+    roster, plan = planned["roster"], planned["greedy"]
+    editor_path = reverse("fantasy:plan-detail", args=[roster.pk, plan.pk])
+    context, page = open_logged_in(browser, live_server, planned["user"], editor_path, size)
+    try:
+        page.get_by_role("button", name="Add move").first.click()
+        dialog = page.get_by_role("dialog")
+        dialog.get_by_role("button", name="Jarrett Allen").click()
+        page.locator("#plan-editor-search").wait_for(state="visible")
+        page.wait_for_timeout(300)
+        slow_requests(page)
+        searches = Searches(page, urlparse(dialog_url(page)).path)
+
+        box = type_on_during_a_search(page, "#plan-editor-search", "ban", "chero")
+
+        assert_kept(page, box, "banchero", "#plan-editor-results li", "Paolo Banchero", searches)
+        close_up(page.get_by_role("dialog"), f"plan-kept-{size}")
+    finally:
+        context.close()
+
+
+def dialog_url(page):
+    """Where the plan editor's search goes: its form's own `hx-get`."""
+    return page.locator("#plan-editor-filters").get_attribute("hx-get")

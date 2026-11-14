@@ -144,8 +144,29 @@ timings (often a second or more on a big page), so compare production with
 production and local with local, never across.
 
 **Budgets.** `tests/test_query_counts.py` asserts that a page's query count
-does not grow with its rows. A new list page or a new column gets such a test
-alongside it.
+does not grow with its rows. `tests/test_performance_budgets.py` does the same
+for the player pages -- also as the season's snapshots pile up -- and holds
+each response to a size budget: the full player list, its HTMX table, the
+team page, the chart, the injury dialog, and what one table row or chart dot
+may add. A new list page or a new column gets such a test alongside it; when
+a budget fails, look at what was added to every row before raising it.
+
+**What keeps the player list light.** It was 1.6 MB and growing with every
+day of the season; each of these took a share:
+
+- *Hotness is stored, not counted per request.* `Player.hotness_increases` and
+  `hotness_comparisons` are recounted whenever a snapshot is saved (a
+  `post_save` receiver in `apps/fantasy/signals.py`), so no page loads a
+  season of snapshots, and sorting by hotness is a database sort. Writes that
+  skip `post_save` -- `loaddata`, `bulk_create` -- need
+  `uv run python manage.py refresh_hotness` afterwards; deleting a season
+  recounts everyone by itself.
+- *The salary chart is a request of its own* (`nba:player-chart`), made only
+  while the chart is displayed and only when the filters changed
+  (`templates/nba/partials/chart_loader.html`). It annotates only what the
+  filters in use need, and each dot is two circles plus a line of JSON.
+- *The injury report opens on demand* (`nba:player-injury`) instead of riding
+  in every row as a hidden dialog.
 
 ## Project structure
 

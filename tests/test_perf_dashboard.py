@@ -399,3 +399,24 @@ def test_a_bot_scan_still_has_its_line_among_the_routes(db):
 
     assert ("", 1) in [(row["route"], row["requests"]) for row in rows]
     assert stats.route_names(stats.period_for("24h")) == ["nba:player-list"]
+
+
+# --- sampling ----------------------------------------------------------------------
+
+
+def test_the_page_says_when_counts_are_of_a_sample(staff_client, settings):
+    metric(100)
+    settings.PERF_RECORD_REQUESTS = True
+    settings.PERF_SAMPLE_RATE = 0.25
+
+    content = staff_client.get(URL).content.decode()
+
+    assert "Sampling 25% of requests" in content
+
+
+def test_no_sampling_note_when_every_request_is_recorded(staff_client, settings):
+    metric(100)
+    settings.PERF_RECORD_REQUESTS = True
+    settings.PERF_SAMPLE_RATE = 1.0
+
+    assert "Sampling" not in staff_client.get(URL).content.decode()

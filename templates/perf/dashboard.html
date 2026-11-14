@@ -46,6 +46,10 @@
     <p class="relative border-t border-white/10 px-5 py-3 text-xs text-amber-200 sm:px-8 lg:px-10">
       {% translate "Recording is switched off (PERF_RECORD_REQUESTS), so no new requests arrive here." %}
     </p>
+  {% elif sample_percent < 100 %}
+    <p class="relative border-t border-white/10 px-5 py-3 text-xs text-white/60 sm:px-8 lg:px-10">
+      {% blocktranslate with percent=sample_percent|floatformat:"-1" %}Sampling {{ percent }}% of requests (PERF_SAMPLE_RATE). Counts are of the sample; times are not affected.{% endblocktranslate %}
+    </p>
   {% endif %}
 </section>
 

@@ -58,6 +58,8 @@ class PerformanceView(StaffRequiredMixin, TemplateView):
             "retention_days": settings.PERF_RETENTION_DAYS,
             "has_any_metrics": RequestMetric.objects.exists(),
             "recording": settings.PERF_RECORD_REQUESTS,
+            # As a percentage, for the note that counts are of a sample.
+            "sample_percent": settings.PERF_SAMPLE_RATE * 100,
             "fast_ms": stats.FAST_MS,
             "slow_ms": stats.SLOW_MS,
             "min_requests": stats.MIN_REQUESTS,

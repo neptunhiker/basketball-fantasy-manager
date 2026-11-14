@@ -142,7 +142,7 @@ night the clocks go back has two 02:00 hours instead of one holding both.
 | Setting | Default | |
 | --- | --- | --- |
 | `PERF_RECORD_REQUESTS` | `true` | `false` keeps the header but writes no rows |
-| `PERF_SAMPLE_RATE` | `1.0` | share of requests recorded |
+| `PERF_SAMPLE_RATE` | `1.0` | share of requests recorded; below 1 the dashboard notes that its counts are of the sample |
 | `PERF_RETENTION_DAYS` | `60` | rolling window kept, twice the longest view |
 
 Tests switch recording off (`tests/conftest.py`), because the extra insert

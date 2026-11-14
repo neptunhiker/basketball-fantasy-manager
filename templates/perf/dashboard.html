@@ -276,7 +276,7 @@
 <section class="card overflow-hidden" aria-labelledby="slowest-heading">
   <div class="border-b border-neutral-200 px-4 py-4 sm:px-6 dark:border-neutral-800">
     <h2 id="slowest-heading" class="text-base font-semibold">{% translate "Slowest requests" %}</h2>
-    <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% blocktranslate with period=period.label %}The {{ limit }} slowest in the last {{ period }}, with the parameters they carried — names only, never values.{% endblocktranslate %}</p>
+    <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% blocktranslate with period=period.label %}The {{ limit }} slowest in the last {{ period }}, at most {{ per_route }} per route, with the parameters they carried — names only, never values.{% endblocktranslate %}</p>
   </div>
 
   {% if slowest %}

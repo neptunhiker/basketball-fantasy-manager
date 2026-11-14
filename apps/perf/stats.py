@@ -9,8 +9,8 @@ query per section, never from rows pulled into Python.
 import datetime as dt
 from dataclasses import dataclass
 
-from django.db.models import Aggregate, Avg, Count, F, FloatField, Q
-from django.db.models.functions import TruncDay, TruncHour
+from django.db.models import Aggregate, Avg, Count, F, FloatField, Q, Window
+from django.db.models.functions import RowNumber, TruncDay, TruncHour
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -22,6 +22,8 @@ FAST_MS = 300
 SLOW_MS = 1000
 
 SLOWEST_LIMIT = 20
+# Of each route and kind, so the list shows more than one busy route.
+SLOWEST_PER_ROUTE = 3
 
 # Fewer requests than this and a route's p95 is little more than its slowest
 # request -- one cold start reads as "slow". Such routes get no verdict.
@@ -244,5 +246,19 @@ def trend(period, route=None):
     return [{**empty, **measured.get(moment, {}), "bucket": moment} for moment in period.buckets()]
 
 
-def slowest(period, limit=SLOWEST_LIMIT):
-    return list(window(period).order_by("-duration_ms")[:limit])
+def slowest(period, limit=SLOWEST_LIMIT, per_route=SLOWEST_PER_ROUTE):
+    """The slowest requests in the window, at most `per_route` of each route
+    and kind (page or HTMX) -- otherwise one busy route fills the whole list
+    with near-identical rows and pushes everything else out.
+
+    One query: ROW_NUMBER() ranks each request within its route and kind,
+    and Postgres keeps the top few of each before taking the slowest overall.
+    """
+    ranked = window(period).annotate(
+        rank=Window(
+            RowNumber(),
+            partition_by=[F("route"), F("htmx")],
+            order_by=[F("duration_ms").desc(), F("id").desc()],
+        )
+    )
+    return list(ranked.filter(rank__lte=per_route).order_by("-duration_ms", "-id")[:limit])

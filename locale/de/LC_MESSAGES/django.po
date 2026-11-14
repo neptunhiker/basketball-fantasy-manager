@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 16:39+0100\n"
+"POT-Creation-Date: 2026-11-14 17:00+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -2119,15 +2119,15 @@ msgid "The note will be removed for good. This cannot be undone."
 msgstr ""
 "Die Notiz wird endgültig entfernt. Das lässt sich nicht rückgängig machen."
 
-#: apps/perf/stats.py:104
+#: apps/perf/stats.py:106
 msgid "24 hours"
 msgstr "24 Stunden"
 
-#: apps/perf/stats.py:105
+#: apps/perf/stats.py:107
 msgid "7 days"
 msgstr "7 Tage"
 
-#: apps/perf/stats.py:106
+#: apps/perf/stats.py:108
 msgid "30 days"
 msgstr "30 Tage"
 
@@ -6976,11 +6976,11 @@ msgstr "Langsamste Anfragen"
 #: templates/perf/dashboard.html:279
 #, python-format
 msgid ""
-"The %(limit)s slowest in the last %(period)s, with the parameters they "
-"carried — names only, never values."
+"The %(limit)s slowest in the last %(period)s, at most %(per_route)s per "
+"route, with the parameters they carried — names only, never values."
 msgstr ""
-"Die %(limit)s langsamsten der letzten %(period)s, mit ihren Parametern – nur "
-"Namen, nie Werte."
+"Die %(limit)s langsamsten der letzten %(period)s, höchstens %(per_route)s "
+"pro Route, mit ihren Parametern – nur Namen, nie Werte."
 
 #: templates/perf/dashboard.html:289
 msgid "Parameters"

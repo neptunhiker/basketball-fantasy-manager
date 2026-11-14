@@ -420,3 +420,44 @@ def test_no_sampling_note_when_every_request_is_recorded(staff_client, settings)
     settings.PERF_SAMPLE_RATE = 1.0
 
     assert "Sampling" not in staff_client.get(URL).content.decode()
+
+
+# --- the slowest requests -----------------------------------------------------------
+
+
+def test_one_busy_route_does_not_fill_the_slowest_list(db):
+    for ms in range(1000, 2000, 100):
+        metric(ms, route="nba:player-list")
+    metric(500, route="core:dashboard")
+    metric(400, route="core:dashboard")
+
+    rows = stats.slowest(stats.period_for("24h"))
+
+    assert [(row.route, row.duration_ms) for row in rows] == [
+        ("nba:player-list", 1900),
+        ("nba:player-list", 1800),
+        ("nba:player-list", 1700),
+        ("core:dashboard", 500),
+        ("core:dashboard", 400),
+    ]
+
+
+def test_pages_and_htmx_updates_of_a_route_are_limited_apart(db):
+    for ms in (900, 800, 700, 600):
+        metric(ms, route="nba:player-list")
+        metric(ms - 50, route="nba:player-list", htmx=True)
+
+    rows = stats.slowest(stats.period_for("24h"))
+
+    assert sum(not row.htmx for row in rows) == 3
+    assert sum(row.htmx for row in rows) == 3
+
+
+def test_the_slowest_list_stops_at_its_limit(db):
+    for index in range(30):
+        metric(100 + index, route=f"route:{index}")
+
+    rows = stats.slowest(stats.period_for("24h"))
+
+    assert len(rows) == stats.SLOWEST_LIMIT
+    assert rows[0].duration_ms == 129

@@ -55,6 +55,7 @@ class PerformanceView(StaffRequiredMixin, TemplateView):
             "trend_charts": charts.trend_charts(buckets),
             "slowest": stats.slowest(period),
             "limit": stats.SLOWEST_LIMIT,
+            "per_route": stats.SLOWEST_PER_ROUTE,
             "retention_days": settings.PERF_RETENTION_DAYS,
             "has_any_metrics": RequestMetric.objects.exists(),
             "recording": settings.PERF_RECORD_REQUESTS,

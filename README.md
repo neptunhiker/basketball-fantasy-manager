@@ -127,7 +127,8 @@ against the window before, p50, queries per request, database time and page
 size; a trend of p95 and p50 per hour or day, for all routes or one; every
 route with its status (fast under 300 ms at p95, slow from 1 s — the
 thresholds live in `apps/perf/stats.py`), except routes with fewer than 20
-requests, which get no verdict and come last; and the 20 slowest requests with
+requests, which get no verdict and come last; and the 20 slowest requests —
+at most 3 per route and kind, so one busy route cannot fill the list — with
 the names of their parameters. Requests no URL matched (mostly bots
 trying paths) have their own line among the routes but stay out of the
 headline figures and the trend. Percentiles come from Postgres

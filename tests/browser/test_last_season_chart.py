@@ -79,8 +79,9 @@ def test_the_choice_survives_filtering(game, stored, open_page):
     chart = open_chart(page)
     season_button(page, "25/26").click()
 
-    with page.expect_response(lambda response: "q=a" in response.url):
-        page.fill("#player-search", "a")
+    # Two letters: a lone one is not searched (apps/core/search.py).
+    with page.expect_response(lambda response: "q=an" in response.url):
+        page.fill("#player-search", "an")
     page.wait_for_load_state("networkidle")
 
     expect(page.get_by_text("Fantasy points 25/26 and salary")).to_be_visible()

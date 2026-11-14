@@ -142,8 +142,18 @@ def window(period, route=None):
     return qs
 
 
+def matched(period):
+    """The window without requests no URL matched.
+
+    Those are mostly bots trying paths that do not exist: the routes table
+    lists them on a line of their own, but they say nothing about how fast
+    the app is, so the headline figures and the trend leave them out.
+    """
+    return window(period).exclude(route="")
+
+
 def summary(period):
-    return window(period).aggregate(**figures())
+    return matched(period).aggregate(**figures())
 
 
 def change(current, previous, higher_is_worse=True):
@@ -191,21 +201,22 @@ def routes(period):
 
 def route_names(period):
     """Every route with a request in the window, for the trend's picker."""
-    names = window(period).exclude(route="").values_list("route", flat=True)
+    names = matched(period).values_list("route", flat=True)
     return list(names.distinct().order_by("route"))
 
 
 def trend(period, route=None):
     """p50, p95 and request count per bucket, one entry per bucket -- an empty
-    bucket comes back with None, so the chart can leave a gap."""
+    bucket comes back with None, so the chart can leave a gap. All routes
+    means all matched ones, like `summary`."""
     if period.bucket == "hour":
         bucket = TruncHour("recorded_at", tzinfo=dt.UTC)
     else:
         bucket = TruncDay("recorded_at")
+    rows = matched(period) if route is None else window(period, route)
     measured = {
         row["bucket"]: row
-        for row in window(period, route)
-        .annotate(bucket=bucket)
+        for row in rows.annotate(bucket=bucket)
         .values("bucket")
         .annotate(
             requests=Count("id"),

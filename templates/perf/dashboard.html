@@ -6,7 +6,7 @@
 
 {% block content %}
 {% translate "Slowest first, by p95. Pages and HTMX updates are listed apart: a filter swap and a full page are different jobs." as routes_help %}
-{% translate "p95 is the time 95 out of 100 requests stayed under; p50 is the typical request. Measured inside the app, from the first middleware to the last byte of the response — network and the browser come on top." as p95_help %}
+{% translate "p95 is the time 95 out of 100 requests stayed under; p50 is the typical request. Measured inside the app, from the first middleware to the last byte of the response — network and the browser come on top. Requests no URL matched, mostly bots, are listed under Routes but not counted here." as p95_help %}
 
 {# --- Hero: the one number, and the window it covers ----------------------- #}
 <section class="relative isolate overflow-hidden rounded-xl border border-black/10 bg-[#17111f] text-white shadow-xl shadow-tertiary-700/10 animate-season-rise motion-reduce:animate-none">

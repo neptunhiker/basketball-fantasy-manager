@@ -319,3 +319,27 @@ def test_by_default_even_thirty_days_have_a_month_to_compare_with(staff_client):
     metric(100)
 
     assert staff_client.get(URL, {"period": "30d"}).context["comparable"] is True
+
+
+# --- requests no URL matched -------------------------------------------------------
+
+
+def test_a_bot_scan_does_not_move_the_headline_or_the_trend(db):
+    metric(100)
+    metric(9000, route="", status=404)
+    period = stats.period_for("24h")
+
+    summary = stats.summary(period)
+    assert summary["requests"] == 1
+    assert summary["p95"] == pytest.approx(100)
+    assert sum(bucket["requests"] for bucket in stats.trend(period)) == 1
+
+
+def test_a_bot_scan_still_has_its_line_among_the_routes(db):
+    metric(100)
+    metric(9000, route="", status=404)
+
+    rows = stats.routes(stats.period_for("24h"))
+
+    assert ("", 1) in [(row["route"], row["requests"]) for row in rows]
+    assert stats.route_names(stats.period_for("24h")) == ["nba:player-list"]

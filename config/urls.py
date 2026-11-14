@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
@@ -12,6 +13,11 @@ urlpatterns = [
     path("", include("apps.analytics.urls")),
     path("", include("apps.core.urls")),
 ]
+
+if "debug_toolbar" in settings.INSTALLED_APPS:  # local development only
+    from debug_toolbar.toolbar import debug_toolbar_urls
+
+    urlpatterns += debug_toolbar_urls()
 
 admin.site.site_header = "Pengi Fantasy Manager"
 admin.site.site_title = "Pengi Fantasy Manager"

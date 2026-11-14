@@ -1,5 +1,7 @@
 """Local development settings."""
 
+import os
+
 from .base import *  # noqa: F403
 from .base import BASE_DIR, DATABASE_OPTIONS, env
 
@@ -38,6 +40,20 @@ STORAGES = {
 }
 
 INTERNAL_IPS = ["127.0.0.1"]
+
+# Django Debug Toolbar: queries, templates and timings per page, locally only.
+# Kept out of test runs, which use these settings too: it would refuse to load
+# under pytest, and its panels would muddy the query-count assertions.
+# Placed after apps.perf's middleware, so local timings include the toolbar's
+# own overhead -- compare production numbers with production numbers.
+TESTING = "PYTEST_VERSION" in os.environ
+if not TESTING and env.bool("DEBUG_TOOLBAR", default=True):
+    INSTALLED_APPS = [*globals()["INSTALLED_APPS"], "debug_toolbar"]
+    MIDDLEWARE = [
+        MIDDLEWARE[0],
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+        *MIDDLEWARE[1:],
+    ]
 
 # The Tailwind CLI writes here; keep it out of version control.
 TAILWIND_OUTPUT = BASE_DIR / "static" / "css" / "app.css"

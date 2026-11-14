@@ -99,6 +99,44 @@ uv run pre-commit install     # once
 The test database is reused (`--reuse-db`). After changing a migration, run
 once with `--create-db`.
 
+## Performance
+
+Every request is measured by `apps.perf.middleware`, first in `MIDDLEWARE` so
+its clock covers everything else:
+
+- **`Server-Timing` header** on every response:
+  `app;dur=…, db;dur=…;desc="N queries"`. In DevTools, open the request and
+  look at the *Timing* tab — this works on production too.
+- **One `RequestMetric` row per request**: route name (e.g.
+  `nba:player-list`), method, status, whether it was an HTMX request, total
+  time, query count, SQL time, response size before compression, and the
+  *names* of the query parameters. No user, no IP, no parameter values.
+  Read-only in the admin under *Performance*; a staff dashboard follows.
+- A Django-Q schedule (*Prune request metrics*, 04:30 daily) deletes rows
+  older than `PERF_RETENTION_DAYS`.
+
+`/healthz`, `/static/`, `/admin/` and the debug toolbar are not measured.
+
+| Setting | Default | |
+| --- | --- | --- |
+| `PERF_RECORD_REQUESTS` | `true` | `false` keeps the header but writes no rows |
+| `PERF_SAMPLE_RATE` | `1.0` | share of requests recorded |
+| `PERF_RETENTION_DAYS` | `30` | rolling window kept |
+
+Tests switch recording off (`tests/conftest.py`), because the extra insert
+would land inside every query-count assertion; `tests/test_request_metrics.py`
+switches it back on for itself.
+
+**Profiling locally.** The Django Debug Toolbar is part of the dev settings —
+queries with their EXPLAIN, templates and timings per page. Set
+`DEBUG_TOOLBAR=false` to switch it off. Its own overhead is inside the local
+timings (often a second or more on a big page), so compare production with
+production and local with local, never across.
+
+**Budgets.** `tests/test_query_counts.py` asserts that a page's query count
+does not grow with its rows. A new list page or a new column gets such a test
+alongside it.
+
 ## Project structure
 
 ```
@@ -107,6 +145,7 @@ apps/accounts/   User model, invitations, sign-in
 apps/core/       Dashboard, health check, shared building blocks
 apps/nba/        Teams and players — the real league, no game logic
 apps/fantasy/    The game layer — seasons, rosters, transactions, snapshots
+apps/perf/       Request metrics: Server-Timing header, timings per route
 assets/          Tailwind source (build input, not a static file)
 static/          Served assets; css/app.css is generated
 templates/       base → app.html (signed in) / auth_base.html (signed out)

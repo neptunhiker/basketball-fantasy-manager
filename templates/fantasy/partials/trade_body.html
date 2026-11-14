@@ -128,9 +128,11 @@
         </span>
       </div>
 
+      {# Search: waits 500ms after the last key, skips a lone letter (apps/core/search.py), and a newer search cancels the one still running. #}
       <form id="trade-filters" class="mt-2 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_auto_auto]"
             hx-get="{{ trade_url }}{{ state_query }}"
-            hx-trigger="input changed delay:300ms from:input[type=search], change from:select, change from:input[type=checkbox], search"
+            hx-trigger="input[target.value.trim().length!=1] changed delay:500ms from:(#trade-filters input[type=search]), change from:(#trade-filters select), change from:(#trade-filters input[type=checkbox]), search"
+            hx-sync="this:replace"
             hx-target="#trade-body"
             hx-swap="outerHTML">
         <label for="trade-search" class="sr-only">{% translate "Search by name" %}</label>

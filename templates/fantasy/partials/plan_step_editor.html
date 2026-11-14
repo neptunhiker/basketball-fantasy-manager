@@ -133,9 +133,11 @@
           <span class="text-xs text-neutral-400 dark:text-neutral-500" title="{{ budget|exact }}">{% translate "Budget that day" %} {{ budget|millions }}</span>
         </div>
 
+        {# Search: waits 500ms after the last key, skips a lone letter (apps/core/search.py), and a newer search cancels the one still running. #}
         <form id="plan-editor-filters" class="mt-2 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_auto_auto]"
               hx-get="{{ editor_url }}?body=1&amp;kind=TRADE{{ keep_day }}{{ keep_out }}{{ keep_in }}"
-              hx-trigger="input changed delay:300ms from:input[type=search], change from:select, change from:input[type=checkbox], search"
+              hx-trigger="input[target.value.trim().length!=1] changed delay:500ms from:(#plan-editor-filters input[type=search]), change from:(#plan-editor-filters select), change from:(#plan-editor-filters input[type=checkbox]), search"
+              hx-sync="this:replace"
               hx-target="#plan-editor"
               hx-swap="outerHTML">
           <label for="plan-editor-search" class="sr-only">{% translate "Search by name" %}</label>

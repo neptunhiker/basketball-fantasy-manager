@@ -115,7 +115,7 @@ def test_the_chip_is_a_checkbox_in_the_filter_form(signed_in, user, roster, mark
         off.index('id="picker-filters"') : off.index("</form>", off.index('id="picker-filters"'))
     ]
     assert 'name="watchlist" value="1"' in form
-    assert "change from:input[type=checkbox]" in off
+    assert "change from:(#picker-filters input[type=checkbox])" in off
     assert 'name="watchlist" value="1" checked' in on
     assert 'name="watchlist" value="1" checked' not in off
 

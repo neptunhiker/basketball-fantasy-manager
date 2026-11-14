@@ -35,10 +35,12 @@
 <div class="card overflow-hidden">
   <div class="border-b border-neutral-200 p-4 dark:border-neutral-800">
     <label for="user-search" class="sr-only">{% translate "Search by email address" %}</label>
+    {# Search: waits 500ms after the last key, skips a lone letter (apps/core/search.py), and a newer search cancels the one still running. #}
     <input type="search" id="user-search" name="q" value="{{ request.GET.q|default:'' }}"
            placeholder="{% translate 'Search by email address' %}…"
            hx-get="{% url 'accounts:user-list' %}"
-           hx-trigger="input changed delay:300ms, search"
+           hx-trigger="input[target.value.trim().length!=1] changed delay:500ms, search"
+           hx-sync="this:replace"
            hx-target="#user-table"
            hx-swap="outerHTML"
            hx-indicator="#search-indicator"

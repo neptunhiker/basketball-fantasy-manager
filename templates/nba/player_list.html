@@ -38,7 +38,8 @@
   {# and push their query into the address bar, so the link reads it from there #}
   {# -- on every push and again on click -- rather than from this render. #}
   {% translate "Download as Excel: every player matching these filters, in this order" as export_label %}
-  <form class="border-b border-neutral-200 p-4 dark:border-neutral-800"
+  {# Search: waits 500ms after the last key, skips a lone letter (apps/core/search.py), and a newer search cancels the one still running. #}
+  <form id="player-list-filters" class="border-b border-neutral-200 p-4 dark:border-neutral-800"
         data-export-url="{{ export_url }}"
         x-data="{
           filtersOpen: false,
@@ -52,7 +53,8 @@
         }"
         @htmx:pushed-into-history.window="exportHref = exportUrl()"
         hx-get="{{ request.path }}"
-        hx-trigger="input changed delay:300ms from:input[type=search], input changed delay:300ms from:input[type=number], change from:select, change from:input[type=date], change delay:10ms from:input[type=checkbox], search"
+        hx-trigger="input[target.value.trim().length!=1] changed delay:500ms from:(#player-list-filters input[type=search]), input changed delay:500ms from:(#player-list-filters input[type=number]), change from:(#player-list-filters select), change from:(#player-list-filters input[type=date]), change delay:10ms from:(#player-list-filters input[type=checkbox]), search"
+        hx-sync="this:replace"
         hx-target="#player-table"
         hx-swap="outerHTML"
         hx-push-url="true"

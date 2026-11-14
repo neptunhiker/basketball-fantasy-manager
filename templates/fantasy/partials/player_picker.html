@@ -70,9 +70,11 @@
 
   <div class="card overflow-hidden">
 
+    {# Search: waits 500ms after the last key, skips a lone letter (apps/core/search.py), and a newer search cancels the one still running. #}
     <form id="picker-filters" class="border-b border-neutral-200 p-4 dark:border-neutral-800"
           hx-get="{% url 'fantasy:roster-build' roster.pk %}"
-          hx-trigger="input changed delay:300ms from:input[type=search], change from:select, change from:input[type=checkbox], search, watchlist-changed from:body"
+          hx-trigger="input[target.value.trim().length!=1] changed delay:500ms from:(#picker-filters input[type=search]), change from:(#picker-filters select), change from:(#picker-filters input[type=checkbox]), search, watchlist-changed from:body"
+          hx-sync="this:replace"
           hx-target="#player-picker"
           hx-swap="outerHTML"
           hx-indicator="#picker-indicator">

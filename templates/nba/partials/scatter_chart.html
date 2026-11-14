@@ -1,10 +1,26 @@
-{% load i18n l10n %}
+{% load i18n l10n player_stats %}
 {% comment %}
   Context: chart, chart_id, chart_label, x_axis_label, y_axis_label; with
   variant="last" the details describe last season's fantasy points against
   this season's salary, without the rows only this season has.
+
+  A league is several hundred dots, so each one is two bare circles: the
+  hit area (focusable, named for screen readers, `data-i` into the points)
+  and the dot. What the details panel shows travels once, as JSON, and the
+  hover and focus handlers sit on the group rather than on every dot.
 {% endcomment %}
-<div x-data="{ selected: null, hovered: null, select(point) { this.selected = this.hovered = point.dataset } }"
+{% with points_id=chart_id|add:"-points" %}
+{{ chart|scatter_points|json_script:points_id }}
+<div x-data="{
+    selected: null,
+    hovered: null,
+    points: [],
+    init() { this.points = JSON.parse(document.getElementById('{{ points_id }}').textContent) },
+    pick(event) {
+      const index = event.target.dataset.i;
+      if (index !== undefined) this.selected = this.hovered = this.points[index];
+    },
+  }"
   class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] md:items-stretch">
   <div class="min-w-0">
     <svg viewBox="0 0 {{ chart.width|unlocalize }} {{ chart.height|unlocalize }}"
@@ -58,39 +74,15 @@
               stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4" stroke-linejoin="round" />
   {% endif %}
 
-  <g>
+  <g @mouseover="pick($event)" @focusin="pick($event)" @mouseout="hovered = null" @focusout="hovered = null">
     {% for dot in chart.dots %}
-      <g>
-        <circle class="chart-hit"
-          cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="12"
-          tabindex="0"
-          role="button"
-          aria-label="{{ dot.label }}"
-          data-label="{{ dot.label }}"
-          data-ppg="{{ dot.x_value|floatformat:'2g' }}"
-          data-salary="{{ dot.y_value|floatformat:'2g' }}"
-          data-expected-salary="{{ dot.expected_salary|floatformat:'2g' }}"
-          data-detail-url="{{ dot.detail_url }}"
-          data-total-fp="{{ dot.total_fp|floatformat:'2g' }}"
-          data-games-played="{{ dot.games_played|default:'–' }}"
-          data-difference="{{ dot.difference|floatformat:'2g' }}"
-          data-hotness="{{ dot.hotness|default:'–' }}"
-          data-x="{{ dot.x|unlocalize }}"
-          data-y="{{ dot.y|unlocalize }}"
-          data-anchor="{{ dot.label_anchor }}"
-          @mouseenter="select($el)"
-          @focus="select($el)"
-          @mouseleave="hovered = null"
-          @blur="hovered = null" />
-        <circle class="chart-halo"
-                cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="10"
-                fill="{{ dot.color|default:'#a1a1aa' }}" />
-        <circle class="chart-dot"
-          cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="3"
-          fill="{{ dot.color|default:'#a1a1aa' }}" stroke="#ffffff" stroke-width="1.5" />
-      </g>
+      <circle class="chart-hit" cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="12" tabindex="0" role="button" aria-label="{{ dot.label }}" data-i="{{ forloop.counter0 }}" />
+      <circle class="chart-dot" cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="3" fill="{{ dot.color|default:'#a1a1aa' }}" stroke="#ffffff" stroke-width="1.5" />
     {% endfor %}
     </g>
+    {# The hovered dot's halo: one for the chart, moved to whichever dot is under the pointer. #}
+    <circle x-show="hovered" x-cloak pointer-events="none" r="10" opacity="0.15"
+            :cx="hovered?.x" :cy="hovered?.y" :fill="hovered?.color" />
     {# One name tag for the whole chart, drawn after every dot: SVG paints in #}
     {# document order, so a tag inside each dot's group was covered by the #}
     {# dots that came after it. #}
@@ -170,3 +162,4 @@
     </div>
   </aside>
 </div>
+{% endwith %}

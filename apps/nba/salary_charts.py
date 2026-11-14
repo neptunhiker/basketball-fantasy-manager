@@ -25,7 +25,15 @@ def salary_charts(players, last_season):
     player paid less than his points are worth.
     """
     players = list(players)
-    current_points = (
+    return {
+        "salary_fp_chart": current_salary_chart(players),
+        "last_season_chart": last_season_salary_chart(players) if last_season else None,
+    }
+
+
+def current_salary_chart(players):
+    """This season's points per game against salary; see `salary_charts`."""
+    points = (
         (
             player.full_name,
             player.current_fp_per_game,
@@ -41,17 +49,23 @@ def salary_charts(players, last_season):
         )
         for player in players
     )
-    current = charts.scatter_chart(current_points, curve=predict_salary)
-    if last_season is None:
-        return {"salary_fp_chart": current, "last_season_chart": None}
-    last = []
+    return charts.scatter_chart(points, curve=predict_salary)
+
+
+def last_season_salary_chart(players):
+    """Last season's points per game against this season's salary.
+
+    Reads `last_season_fp` and `last_season_games`, which
+    `apps.nba.season_stats.with_last_season` annotates.
+    """
+    points = []
     for player in players:
-        points = getattr(player, "last_season_fp", None)
-        expected = predict_salary(points) if points is not None else None
-        last.append(
+        fp = getattr(player, "last_season_fp", None)
+        expected = predict_salary(fp) if fp is not None else None
+        points.append(
             (
                 player.full_name,
-                points,
+                fp,
                 _millions(player.current_salary),
                 expected,
                 {
@@ -61,10 +75,7 @@ def salary_charts(players, last_season):
                 },
             )
         )
-    return {
-        "salary_fp_chart": current,
-        "last_season_chart": charts.scatter_chart(last, curve=predict_salary),
-    }
+    return charts.scatter_chart(points, curve=predict_salary)
 
 
 def _millions(amount):

@@ -41,6 +41,7 @@
 
   <div class="card overflow-hidden" x-data="{ chartOpen: false, chartView: '{{ default_chart_view|default:'current' }}' }">
     {% if players %}
+      {% include "nba/partials/player_chart.html" %}
       {% include "nba/partials/player_table.html" %}
     {% else %}
       <div class="px-4 py-16 text-center">

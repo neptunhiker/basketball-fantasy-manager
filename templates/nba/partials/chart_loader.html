@@ -1,0 +1,37 @@
+{% load i18n %}
+{% comment %}
+  Loads one of the player list's charts (nba:player-chart) for the filters
+  in #player-list-filters. Context: chart_url, view.
+
+  It asks only while it is displayed -- a chart folded away on a phone, or
+  the season not on show, costs nothing -- and only for filters it has not
+  drawn yet. It looks again when the chart is opened or the season switched
+  (`chartOpen` and `chartView`, from the page's card) and after every filter
+  swap (`htmx:replaced-in-history`, the event the Excel link follows too).
+  While a new chart is on its way the old one stays, dimmed, rather than
+  blinking out.
+{% endcomment %}
+<div class="transition-opacity duration-150 [&.htmx-request]:opacity-50"
+     hx-get="{{ chart_url }}"
+     hx-vals='{"view": "{{ view }}"}'
+     hx-include="#player-list-filters"
+     hx-trigger="load-chart"
+     hx-sync="this:replace"
+     hx-swap="innerHTML"
+     x-data="{
+       drawn: null,
+       refresh() {
+         if (!this.$el.offsetParent) return;
+         const form = document.getElementById('player-list-filters');
+         const query = form ? new URLSearchParams(new FormData(form)).toString() : '';
+         if (query === this.drawn) return;
+         this.drawn = query;
+         htmx.trigger(this.$el, 'load-chart');
+       },
+     }"
+     x-effect="chartOpen; chartView; $nextTick(() => refresh())"
+     @htmx:replaced-in-history.window="refresh()">
+  <div class="flex h-72 items-center justify-center rounded-xl bg-neutral-100/70 motion-safe:animate-pulse dark:bg-neutral-800/50" role="status">
+    <span class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Loading chart…" %}</span>
+  </div>
+</div>

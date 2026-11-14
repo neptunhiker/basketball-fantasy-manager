@@ -47,7 +47,9 @@ urlpatterns = [
         name="player-compare-modal",
     ),
     path("players/", views.PlayerListView.as_view(), name="player-list"),
+    path("players/chart/", views.PlayerChartView.as_view(), name="player-chart"),
     path("players/watchlist/", views.WatchlistView.as_view(), name="watchlist"),
+    path("players/watchlist/chart/", views.WatchlistChartView.as_view(), name="watchlist-chart"),
     # Before `players/<slug>/`, which would otherwise take "export" for a player.
     path("players/export/", views.PlayerExportView.as_view(), name="player-export"),
     path(

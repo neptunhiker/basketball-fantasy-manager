@@ -1,0 +1,28 @@
+{% load i18n %}
+{% comment %}
+  One salary chart, or the sentence that stands in for it. Context: chart,
+  view ("current" or "last"), last_season_short. Inline on the team page;
+  on its own as the response of nba:player-chart.
+{% endcomment %}
+{% translate "Salary ($ millions)" as salary_axis_label %}
+{% if view == "last" %}
+  {% blocktranslate with season=last_season_short asvar last_chart_label %}Salary compared with fantasy points per game in {{ season }}{% endblocktranslate %}
+  {% blocktranslate with season=last_season_short asvar last_axis_label %}Fantasy points per game {{ season }}{% endblocktranslate %}
+  {% if chart %}
+    {% include "nba/partials/scatter_chart.html" with chart=chart chart_id="salary-fp-last" chart_label=last_chart_label x_axis_label=last_axis_label y_axis_label=salary_axis_label variant="last" %}
+  {% else %}
+    <p class="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+      {% blocktranslate with season=last_season_short %}None of these players has stats for {{ season }}.{% endblocktranslate %}
+    </p>
+  {% endif %}
+{% else %}
+  {% translate "Salary compared with points per game" as salary_chart_label %}
+  {% translate "Points per game" as points_per_game_label %}
+  {% if chart %}
+    {% include "nba/partials/scatter_chart.html" with chart=chart chart_id="salary-fp" chart_label=salary_chart_label x_axis_label=points_per_game_label y_axis_label=salary_axis_label %}
+  {% else %}
+    <p class="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+      {% translate "The comparison appears when players have points per game and salary recorded." %}
+    </p>
+  {% endif %}
+{% endif %}

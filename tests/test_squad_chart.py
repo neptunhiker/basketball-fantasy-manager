@@ -55,8 +55,8 @@ def test_the_chart_plots_the_squad_and_not_the_market(signed_in, roster):
     _, _, chart = body.partition('id="squad-chart"')
     chart, _, _ = chart.partition('id="player-picker"')
 
-    assert 'data-label="Signed Test"' in chart
-    assert 'data-label="Market Test"' not in chart
+    assert 'aria-label="Signed Test"' in chart
+    assert 'aria-label="Market Test"' not in chart
     assert "Fair value" in chart
 
 
@@ -74,4 +74,4 @@ def test_a_signing_redraws_the_chart_out_of_band(signed_in, roster):
     body = response.content.decode()
 
     assert 'id="squad-chart" class="card px-4 pb-4 pt-5" hx-swap-oob="outerHTML"' in body
-    assert 'data-label="Signed Test"' in body
+    assert 'aria-label="Signed Test"' in body

@@ -1,0 +1,75 @@
+{% load i18n %}
+{% comment %}
+  The salary chart above a player table: a heading, the season toggle and
+  one chart per season. `chartOpen` and `chartView` live on the page's card,
+  so they survive the table's filter swaps.
+
+  Two ways to fill it. The team page passes `salary_fp_chart` and
+  `last_season_chart` and the charts are drawn inline -- fifteen players.
+  The player list passes `chart_url` instead: each chart is a request of its
+  own (nba/partials/chart_loader.html), made only while it is on screen, so
+  neither the table nor a phone with the chart folded pays for it.
+{% endcomment %}
+{% translate "Show chart" as show_chart_label %}
+{% translate "Hide chart" as hide_chart_label %}
+{# Phones: the chart folds behind "Show chart"; from `md` it is always open. #}
+<button type="button" @click="chartOpen = !chartOpen" :aria-expanded="chartOpen.toString()"
+        aria-controls="player-chart"
+        class="flex w-full items-center justify-between border-b border-neutral-200 px-4 py-3 text-sm font-medium md:hidden dark:border-neutral-800">
+  <span x-text="chartOpen ? '{{ hide_chart_label|escapejs }}' : '{{ show_chart_label|escapejs }}'">{{ show_chart_label }}</span>
+  <svg class="h-4 w-4 transition" :class="chartOpen && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+</button>
+<div id="player-chart" x-show="chartOpen" x-cloak class="border-b border-neutral-200 px-4 pb-4 pt-5 md:!block dark:border-neutral-800">
+  {# Two charts, one shown: this season's points, or last season's against #}
+  {# this season's salary. #}
+  <div class="mb-3 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+    <div class="min-w-0">
+      <div x-show="chartView !== 'last'" {% if default_chart_view == "last" %}x-cloak{% endif %}>
+        <h2 class="text-sm font-semibold">{% translate "Points per game and salary" %}</h2>
+        <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+          {% translate "Players with both figures recorded are shown." %}
+        </p>
+      </div>
+      {% if last_season %}
+        <div x-show="chartView === 'last'" {% if default_chart_view != "last" %}x-cloak{% endif %}>
+          <h2 class="text-sm font-semibold">{% blocktranslate with season=last_season_short %}Fantasy points {{ season }} and salary{% endblocktranslate %}</h2>
+          <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+            {% blocktranslate with season=last_season_short %}This season's salary against fantasy points per game in {{ season }}.{% endblocktranslate %}
+          </p>
+        </div>
+      {% endif %}
+    </div>
+    {% if last_season %}
+      <div class="inline-flex shrink-0 rounded-lg border border-neutral-200 bg-neutral-100 p-0.5 dark:border-neutral-700 dark:bg-neutral-800"
+           role="group" aria-label="{% translate 'Season shown in the chart' %}">
+        <button type="button" @click="chartView = 'current'"
+                :aria-pressed="(chartView !== 'last').toString()"
+                aria-pressed="{% if default_chart_view == 'last' %}false{% else %}true{% endif %}"
+                :class="chartView !== 'last' ? 'bg-white text-tertiary-700 shadow-sm dark:bg-neutral-900 dark:text-neutral-100' : 'text-neutral-500 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:text-neutral-100'"
+                class="rounded-md px-3 py-1.5 text-xs font-semibold transition max-sm:min-h-10 max-sm:px-4">{% translate "This season" %}</button>
+        <button type="button" @click="chartView = 'last'"
+                :aria-pressed="(chartView === 'last').toString()"
+                aria-pressed="{% if default_chart_view == 'last' %}true{% else %}false{% endif %}"
+                :class="chartView === 'last' ? 'bg-white text-tertiary-700 shadow-sm dark:bg-neutral-900 dark:text-neutral-100' : 'text-neutral-500 hover:text-tertiary-700 dark:text-neutral-400 dark:hover:text-neutral-100'"
+                class="rounded-md px-3 py-1.5 text-xs font-semibold tabular-nums transition max-sm:min-h-10 max-sm:px-4">{{ last_season_short }}</button>
+      </div>
+    {% endif %}
+  </div>
+
+  <div x-show="chartView !== 'last'" {% if default_chart_view == "last" %}x-cloak{% endif %}>
+    {% if chart_url %}
+      {% include "nba/partials/chart_loader.html" with view="current" %}
+    {% else %}
+      {% include "nba/partials/player_chart_body.html" with chart=salary_fp_chart view="current" %}
+    {% endif %}
+  </div>
+  {% if last_season %}
+    <div x-show="chartView === 'last'" {% if default_chart_view != "last" %}x-cloak{% endif %}>
+      {% if chart_url %}
+        {% include "nba/partials/chart_loader.html" with view="last" %}
+      {% else %}
+        {% include "nba/partials/player_chart_body.html" with chart=last_season_chart view="last" %}
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

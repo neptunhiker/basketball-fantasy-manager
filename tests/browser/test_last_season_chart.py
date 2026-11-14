@@ -62,7 +62,8 @@ def test_switching_to_last_season(game, stored, open_page, size, dark):
     expect(chart.get_by_text("Fantasy points 25/26 and salary")).to_be_visible()
     expect(chart.get_by_text("Points per game and salary")).to_be_hidden()
     assert last_button.get_attribute("aria-pressed") == "true"
-    last_chart = chart.locator("svg").nth(1)
+    # By name: a bare nth("svg") also counts each chart's small legend line.
+    last_chart = chart.locator('svg[aria-label^="Salary compared with fantasy points"]')
     expect(last_chart).to_be_visible()
     assert last_chart.locator("circle.chart-hit").count() == 30
 

@@ -93,9 +93,16 @@ def test_player_list_uses_the_saved_language_for_full_and_htmx_responses(signed_
         reverse("nba:player-list"), headers={"hx-request": "true"}
     ).content.decode()
 
+    chart_body = signed_in.get(
+        reverse("nba:player-chart"), headers={"hx-request": "true"}
+    ).content.decode()
+
     assert "Spielersuche" in full_body
     assert "Alle Positionen" in full_body
-    assert "Punkte pro Spiel und Gehalt" in htmx_body
+    assert "Punkte pro Spiel und Gehalt" in full_body
+    assert "Aktuelles Gehalt" in htmx_body
+    # The chart is a request of its own, in the same language.
+    assert "Der Vergleich erscheint" in chart_body
 
 
 def test_hides_inactive_players_by_default(signed_in, roster):
@@ -580,10 +587,10 @@ def test_scatter_chart_uses_the_filtered_players(signed_in, roster):
         current_salary=8_000_000,
     )
 
-    response = signed_in.get(reverse("nba:player-list"), {"team": "BOS"})
+    response = signed_in.get(reverse("nba:player-chart"), {"team": "BOS"})
 
-    assert [dot["label"] for dot in response.context["salary_fp_chart"]["dots"]] == ["Jayson Tatum"]
-    dot = response.context["salary_fp_chart"]["dots"][0]
+    assert [dot["label"] for dot in response.context["chart"]["dots"]] == ["Jayson Tatum"]
+    dot = response.context["chart"]["dots"][0]
     assert dot["detail_url"] == reverse(
         "nba:player-detail", args=[Player.objects.get(last_name="Tatum").slug]
     )

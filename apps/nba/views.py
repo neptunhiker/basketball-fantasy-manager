@@ -61,7 +61,7 @@ from .models import (
     latest_fp_change,
 )
 from .rest_of_season import EXPECTED_AVAILABILITY, rest_of_season, with_rest_of_season
-from .salary_charts import salary_charts
+from .salary_charts import current_salary_chart, last_season_salary_chart, salary_charts
 from .salary_outlook import (
     average_error,
     past_updates,
@@ -424,16 +424,51 @@ class PlayerListView(LoginRequiredMixin, ListView):
         # No snapshots: hotness is stored on the player, and Latest FP comes
         # from `with_latest_fp_change` -- a season of daily rows per player
         # is the one thing that grew with every day of the season.
-        qs = Player.objects.select_related("team").prefetch_related(
-            Prefetch(
-                "injuries",
-                queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
-                to_attr="injury_history",
-            ),
+        qs = (
+            self.filtered_players()
+            .select_related("team")
+            .prefetch_related(
+                Prefetch(
+                    "injuries",
+                    queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
+                    to_attr="injury_history",
+                ),
+            )
         )
-
-        qs = services.with_player_marks(qs, self.request.user)
         qs = qs.annotate(note_count=my_note_count(self.request.user))
+        qs = with_expected_salary(qs)
+        qs = with_fp_per_million(qs)
+        qs = with_latest_fp_change(qs)
+        qs = with_salary_outlook(qs, self._salary_baseline())
+        qs = with_hotness_share(qs)
+
+        sort, descending = self._sort_params()
+        return order_players(qs, self.SORT_FIELDS, sort, descending)
+
+    def filtered_players(self, chart_view=None):
+        """The players the request's filters match, unordered.
+
+        Shared by the table and the salary chart. The table (`chart_view`
+        None) gets every annotation a filter reads, because it shows them
+        all as columns; the chart -- hundreds of rows, a handful of fields --
+        only gets the ones a filter in this request actually needs, since
+        each is a subquery evaluated for every row.
+        """
+        table = chart_view is None
+        get = self.request.GET
+        injury_status = (get.get("injury_status") or "").strip().lower()
+        if injury_status not in {"healthy", "day_to_day", "injured"}:
+            injury_status = ""
+        week_games = get.get("week_games")
+        if week_games not in WEEK_GAMES_FILTERS:
+            week_games = None
+        return_from = date_param(self.request, "return_from")
+        return_to = date_param(self.request, "return_to")
+        last_min_games = bool(self._last_season()) and get.get("last_min_games") == "1"
+
+        qs = Player.objects.all()
+        if table or self._kicklist_only() or self._watchlist_only():
+            qs = services.with_player_marks(qs, self.request.user)
         # A player is starred or kicked, never both, so the two filters cannot
         # combine: the kick list wins if both arrive.
         if self._kicklist_only():
@@ -467,9 +502,10 @@ class PlayerListView(LoginRequiredMixin, ListView):
         if team := self.request.GET.get("team", "").strip():
             qs = qs.filter(team__abbreviation=team)
 
-        qs = with_expected_return(qs)
-        injury_status = (self.request.GET.get("injury_status") or "").strip().lower()
-        if injury_status in {"healthy", "day_to_day", "injured"}:
+        # Rest of season reads the expected return, so the week filter needs it too.
+        if table or injury_status or return_from or return_to or week_games:
+            qs = with_expected_return(qs)
+        if injury_status:
             day_to_day = Q()
             for day_to_day_state in DAY_TO_DAY_INJURY_STATUSES:
                 day_to_day |= Q(latest_injury_status__iexact=day_to_day_state)
@@ -487,20 +523,22 @@ class PlayerListView(LoginRequiredMixin, ListView):
 
         # Either bound alone is "back after" or "back by"; a player with no
         # date -- healthy, or hurt with nothing reported -- matches neither.
-        if return_from := date_param(self.request, "return_from"):
+        if return_from:
             qs = qs.filter(expected_return_date__gte=return_from)
-        if return_to := date_param(self.request, "return_to"):
+        if return_to:
             qs = qs.filter(expected_return_date__lte=return_to)
 
         if self.request.GET.get("min_games") == "6":
             qs = qs.filter(current_games_played__gte=6)
 
-        qs = with_rest_of_season(qs)
-        if (week_games := self.request.GET.get("week_games")) in WEEK_GAMES_FILTERS:
+        if table or week_games:
+            qs = with_rest_of_season(qs)
+        if week_games:
             qs = qs.filter(next_days__gte=int(week_games))
 
-        qs = with_last_season(qs, self._last_season())
-        if self._last_season() and self.request.GET.get("last_min_games") == "1":
+        if table or chart_view == "last" or last_min_games:
+            qs = with_last_season(qs, self._last_season())
+        if last_min_games:
             qs = qs.filter(last_season_games__gte=MIN_GAMES)
 
         try:
@@ -509,15 +547,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
             max_salary = None
         if max_salary is not None and max_salary >= 0:
             qs = qs.filter(current_salary__lte=max_salary * 1_000_000)
-
-        qs = with_expected_salary(qs)
-        qs = with_fp_per_million(qs)
-        qs = with_latest_fp_change(qs)
-        qs = with_salary_outlook(qs, self._salary_baseline())
-        qs = with_hotness_share(qs)
-
-        sort, descending = self._sort_params()
-        return order_players(qs, self.SORT_FIELDS, sort, descending)
+        return qs
 
     def _sort_params(self):
         # Asked twice per request (queryset and context); the default may cost
@@ -597,7 +627,12 @@ class PlayerListView(LoginRequiredMixin, ListView):
         context["rosters"] = Roster.objects.filter(manager__user=self.request.user).select_related(
             "manager", "season"
         )
-        context.update(salary_charts(self.object_list, self._last_season()))
+        # The chart is a request of its own (PlayerChartView): drawing it here
+        # meant the whole filtered league, every filter change, on top of
+        # the 50 rows the table shows.
+        context["chart_url"] = reverse(
+            "nba:watchlist-chart" if context["watchlist_page"] else "nba:player-chart"
+        )
         sort, descending = self._sort_params()
         context["last_season"] = self._last_season()
         context["last_season_short"] = short_season(self._last_season())
@@ -624,6 +659,56 @@ class PlayerListView(LoginRequiredMixin, ListView):
 class WatchlistView(PlayerListView):
     watchlist_page = True
     template_name = "nba/player_list.html"
+
+
+# What one dot of the salary chart reads; everything else stays in the database.
+CHART_FIELDS = (
+    "first_name",
+    "last_name",
+    "slug",
+    "current_salary",
+    "current_fp_per_game",
+    "current_total_fp",
+    "current_games_played",
+    "hotness_increases",
+    "hotness_comparisons",
+)
+
+
+class PlayerChartView(PlayerListView):
+    """One of the player list's salary charts, for the list's current filters.
+
+    Asked for by the chart itself, after the table, and only for the season
+    on show: `?view=current` (points per game this season) or `?view=last`.
+    The filters arrive as the same query parameters the table gets.
+    """
+
+    paginate_by = None
+
+    def get(self, request, *args, **kwargs):
+        last_season = self._last_season()
+        view = "last" if request.GET.get("view") == "last" and last_season else "current"
+        players = self.filtered_players(chart_view=view).only(*CHART_FIELDS)
+        if view == "last":
+            chart = last_season_salary_chart(players)
+        else:
+            chart = current_salary_chart(players)
+        response = render(
+            request,
+            "nba/partials/player_chart_body.html",
+            {
+                "chart": chart,
+                "view": view,
+                "last_season_short": short_season(last_season),
+            },
+        )
+        # Marks and filters are the viewer's own.
+        response["Cache-Control"] = "private"
+        return response
+
+
+class WatchlistChartView(PlayerChartView):
+    watchlist_page = True
 
 
 class PlayerExportView(PlayerListView):

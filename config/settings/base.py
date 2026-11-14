@@ -36,11 +36,14 @@ LOCAL_APPS = [
     "apps.nba",
     "apps.fantasy",
     "apps.analytics",
+    "apps.perf",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
+    # First, so its clock covers every other middleware too.
+    "apps.perf.middleware.RequestMetricsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -138,6 +141,15 @@ Q_CLUSTER = {
     "catch_up": False,
     "label": "Hintergrundaufgaben",
 }
+
+# Request metrics (apps.perf): one row per request with its time, database
+# work and response size, pruned daily to a rolling window.
+PERF_RECORD_REQUESTS = env.bool("PERF_RECORD_REQUESTS", default=True)
+# Share of requests recorded, 0.0-1.0. Every response still gets Server-Timing.
+PERF_SAMPLE_RATE = env.float("PERF_SAMPLE_RATE", default=1.0)
+PERF_RETENTION_DAYS = env.int("PERF_RETENTION_DAYS", default=30)
+# Not measured at all: the health probe would drown everything else out.
+PERF_IGNORED_PATHS = ("/healthz", "/static/", "/admin/", "/__debug__/")
 
 SITE_NAME = "Pengi Fantasy Manager"
 

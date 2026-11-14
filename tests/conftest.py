@@ -14,6 +14,14 @@ def _english_after_each_test():
     translation.activate("en")
 
 
+@pytest.fixture(autouse=True)
+def _no_request_metrics(settings):
+    """No `RequestMetric` row per test request: the insert would land inside
+    every query-count assertion. `tests/test_request_metrics.py` switches it
+    back on for itself."""
+    settings.PERF_RECORD_REQUESTS = False
+
+
 User = get_user_model()
 
 

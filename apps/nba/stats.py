@@ -12,6 +12,7 @@ he earned nothing would be a claim about the team that is simply false.
 """
 
 from decimal import Decimal
+from itertools import pairwise
 from statistics import median
 
 CENTS = Decimal("0.01")
@@ -93,6 +94,44 @@ HOTNESS_GAMES = 10
 HOT_SHARE = Decimal("0.6")
 COLD_SHARE = Decimal("0.4")
 MIN_COMPARISONS = 3
+
+
+def hotness_counts(snapshots):
+    """How often a player's FP/game rose after his recent games: `(rises, comparisons)`.
+
+    Snapshots are written daily, but a player plays only every other day or
+    so: a day without a game leaves the average untouched and must not count
+    as a miss. So only snapshots where `games_played` went up are kept, and
+    the newest `HOTNESS_GAMES` + 1 of those give up to `HOTNESS_GAMES`
+    comparisons. Several games between two snapshots (a missed download) are
+    one comparison -- all we know is where the average ended up. Only the
+    most recent season is read, so cumulative stats from different seasons
+    are never compared.
+
+    `snapshots` is any iterable of objects with `as_of`, `season_id`,
+    `fp_per_game` and `games_played`, in any order. `(0, 0)` means no score.
+    Pure, so the import, the backfill migration and the tests share it.
+    """
+    snapshots = sorted(snapshots, key=lambda snapshot: snapshot.as_of)
+    if not snapshots:
+        return 0, 0
+    season_id = snapshots[-1].season_id
+
+    # Oldest to newest: keep a snapshot only once more games have been
+    # played. Rest days drop out, and so does a source correcting the count
+    # downwards.
+    games = []
+    for snapshot in snapshots:
+        if snapshot.season_id != season_id or snapshot.fp_per_game is None:
+            continue
+        if not games or snapshot.games_played > games[-1].games_played:
+            games.append(snapshot)
+    games = games[-(HOTNESS_GAMES + 1) :]
+
+    rises = sum(
+        1 for previous, current in pairwise(games) if current.fp_per_game > previous.fp_per_game
+    )
+    return rises, max(len(games) - 1, 0)
 
 
 def hotness_reading(score):

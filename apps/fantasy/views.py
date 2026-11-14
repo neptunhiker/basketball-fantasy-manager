@@ -279,6 +279,7 @@ class SeasonDeleteView(AdminRequiredMixin, TypedConfirmView):
         return super().post(request, *args, **kwargs)
 
     def perform(self, obj):
+        _rosters, snapshots = self.counts(obj)
         try:
             obj.delete()
         except ProtectedError as exc:
@@ -289,6 +290,10 @@ class SeasonDeleteView(AdminRequiredMixin, TypedConfirmView):
                 _("%(season)s has a roster in it now, so it cannot be deleted.")
                 % {"season": obj.label}
             ) from exc
+        if snapshots:
+            # The cascade skips post_save, so the stored hotness of everyone
+            # who had prices in that season is recounted here, in one go.
+            services.refresh_all_hotness()
 
     def get_success_url(self, obj):
         return reverse("fantasy:season-list")

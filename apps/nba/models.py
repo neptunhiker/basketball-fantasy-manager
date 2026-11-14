@@ -8,7 +8,6 @@ separate from the fantasy game layer.
 import datetime as dt
 import uuid
 from decimal import ROUND_HALF_UP, Decimal
-from itertools import pairwise
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator, RegexValidator
@@ -20,7 +19,6 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
-from apps.nba.stats import HOTNESS_GAMES
 
 # Injury report statuses that mean the player can play, compared casefolded.
 HEALTHY_INJURY_STATUSES = frozenset({"healthy", "available", "returned", "cleared"})
@@ -296,6 +294,17 @@ class Player(TimeStampedModel):
         blank=True,
         help_text="Games played, from the newest snapshot.",
     )
+    # Hotness, worked out once per snapshot rather than on every page that
+    # shows it: it needs a player's whole season of snapshots, which a list
+    # of hundreds of players cannot afford to load per request. Written by
+    # `apps.fantasy.services.refresh_hotness` whenever a snapshot is saved.
+    # No comparisons means no score yet.
+    hotness_increases = models.PositiveSmallIntegerField(
+        "Hotness: rises", default=0, editable=False
+    )
+    hotness_comparisons = models.PositiveSmallIntegerField(
+        "Hotness: games compared", default=0, editable=False
+    )
 
     class Meta:
         ordering = ["last_name", "first_name"]
@@ -363,54 +372,13 @@ class Player(TimeStampedModel):
         return (self.expected_return - timezone.localdate()).days
 
     def hotness_score(self):
-        """Return how often the player's FP/game rose after his recent games.
+        """How often his FP/game rose after his recent games, e.g. "3/7", or None.
 
-        Snapshots are written daily, but a player plays only every other day or
-        so: a day without a game leaves the average untouched and must not count
-        as a miss. So only snapshots where `games_played` went up are kept, and
-        the newest `HOTNESS_GAMES` + 1 of those give up to `HOTNESS_GAMES`
-        comparisons. Several games between two snapshots (a missed download) are
-        one comparison -- all we know is where the average ended up. Only the
-        most recent season is read, so cumulative stats from different seasons
-        are never compared.
+        Reads the stored counts; `apps.nba.stats.hotness_counts` has the rules.
         """
-        prefetched = getattr(self, "_prefetched_objects_cache", {}).get("snapshots")
-        if prefetched is not None:
-            snapshots = sorted(prefetched, key=lambda snapshot: snapshot.as_of, reverse=True)
-            latest = snapshots[0] if snapshots else None
-        else:
-            snapshot_query = self.snapshots.order_by("-as_of")
-            latest = snapshot_query.first()
-            snapshots = snapshot_query.filter(season_id=latest.season_id) if latest else []
-
-        if latest is None:
+        if not self.hotness_comparisons:
             return None
-
-        snapshots = [
-            snapshot
-            for snapshot in reversed(snapshots)
-            if snapshot.season_id == latest.season_id and snapshot.fp_per_game is not None
-        ]
-
-        # Oldest to newest: keep a snapshot only once more games have been
-        # played. Rest days drop out, and so does a source correcting the count
-        # downwards.
-        games = []
-        for snapshot in snapshots:
-            if not games or snapshot.games_played > games[-1].games_played:
-                games.append(snapshot)
-        games = games[-(HOTNESS_GAMES + 1) :]
-
-        increases = 0
-        comparisons = 0
-        for previous, current in pairwise(games):
-            comparisons += 1
-            if current.fp_per_game > previous.fp_per_game:
-                increases += 1
-
-        if comparisons == 0:
-            return None
-        return f"{increases}/{comparisons}"
+        return f"{self.hotness_increases}/{self.hotness_comparisons}"
 
     def latest_fp_change(self):
         """What moved between his two newest snapshots; see `latest_fp_change`.

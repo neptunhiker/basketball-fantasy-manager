@@ -11,6 +11,7 @@ from django.db.models import (
     DecimalField,
     ExpressionWrapper,
     F,
+    FloatField,
     IntegerField,
     OuterRef,
     Prefetch,
@@ -20,7 +21,7 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Cast, Coalesce
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -209,6 +210,42 @@ def with_expected_return(qs):
     )
 
 
+def with_hotness_share(qs):
+    """Annotate `hotness_share`: rises over comparisons, NULL without a score.
+
+    The stored counts make hotness an ordinary database sort -- it used to
+    pull the whole league into Python to rank it.
+    """
+    return qs.annotate(
+        hotness_share=Case(
+            When(
+                hotness_comparisons__gt=0,
+                then=Cast("hotness_increases", FloatField())
+                / Cast("hotness_comparisons", FloatField()),
+            ),
+            output_field=FloatField(),
+        )
+    )
+
+
+def order_players(qs, sort_fields, sort, descending):
+    """`qs` in the order a player table's header asked for.
+
+    Numeric columns put players without the figure last in both directions.
+    Hotness breaks ties by name, as its old in-Python sort did.
+    """
+    order_fields = sort_fields[sort]
+    if descending:
+        order_fields = [
+            f.desc(nulls_last=True) if isinstance(f, F) else f"-{f}" for f in order_fields
+        ]
+    else:
+        order_fields = [f.asc(nulls_last=True) if isinstance(f, F) else f for f in order_fields]
+    if sort == "hotness":
+        order_fields += ["last_name", "first_name"]
+    return qs.order_by(*order_fields)
+
+
 def date_param(request, key):
     """A YYYY-MM-DD query parameter as a date, or None if absent or invalid."""
     try:
@@ -375,7 +412,7 @@ class PlayerListView(LoginRequiredMixin, ListView):
         "avg": [F("current_fp_per_game")],
         "latest": [F("latest_fp_gain")],
         "games": [F("current_games_played")],
-        "hotness": [],
+        "hotness": [F("hotness_share"), F("hotness_comparisons")],
         "last_fp": [F("last_season_fp")],
         "return": [F("expected_return_date")],
         "projected": [F("projected_fp")],
@@ -384,8 +421,10 @@ class PlayerListView(LoginRequiredMixin, ListView):
     }
 
     def get_queryset(self):
+        # No snapshots: hotness is stored on the player, and Latest FP comes
+        # from `with_latest_fp_change` -- a season of daily rows per player
+        # is the one thing that grew with every day of the season.
         qs = Player.objects.select_related("team").prefetch_related(
-            Prefetch("snapshots", queryset=PlayerSnapshot.objects.order_by("-as_of")),
             Prefetch(
                 "injuries",
                 queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
@@ -475,30 +514,10 @@ class PlayerListView(LoginRequiredMixin, ListView):
         qs = with_fp_per_million(qs)
         qs = with_latest_fp_change(qs)
         qs = with_salary_outlook(qs, self._salary_baseline())
+        qs = with_hotness_share(qs)
 
         sort, descending = self._sort_params()
-        if sort == "hotness":
-            players = list(qs)
-            scored = []
-            unscored = []
-            for player in players:
-                score = player.hotness_score()
-                if score is None:
-                    unscored.append(player)
-                    continue
-                increases, comparisons = (int(value) for value in score.split("/"))
-                scored.append((Decimal(increases) / Decimal(comparisons), comparisons, player))
-            scored.sort(key=lambda item: (item[0], item[1]), reverse=descending)
-            return [player for _, _, player in scored] + unscored
-
-        order_fields = self.SORT_FIELDS[sort]
-        if descending:
-            order_fields = [
-                f.desc(nulls_last=True) if isinstance(f, F) else f"-{f}" for f in order_fields
-            ]
-        else:
-            order_fields = [f.asc(nulls_last=True) if isinstance(f, F) else f for f in order_fields]
-        return qs.order_by(*order_fields)
+        return order_players(qs, self.SORT_FIELDS, sort, descending)
 
     def _sort_params(self):
         # Asked twice per request (queryset and context); the default may cost
@@ -1114,7 +1133,7 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         "avg": [F("current_fp_per_game")],
         "latest": [F("latest_fp_gain")],
         "games": [F("current_games_played")],
-        "hotness": [],
+        "hotness": [F("hotness_share"), F("hotness_comparisons")],
         "last_fp": [F("last_season_fp")],
         "return": [F("expected_return_date")],
         "projected": [F("projected_fp")],
@@ -1173,7 +1192,6 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
             self.object.players.filter(is_active=True)
             .select_related("team")
             .prefetch_related(
-                Prefetch("snapshots", queryset=PlayerSnapshot.objects.order_by("-as_of")),
                 Prefetch(
                     "injuries",
                     queryset=PlayerInjury.objects.order_by("-observed_at", "-created_at"),
@@ -1191,30 +1209,10 @@ class TeamDetailView(LoginRequiredMixin, DetailView):
         qs = with_fp_per_million(qs)
         qs = with_latest_fp_change(qs)
         qs = with_salary_outlook(qs, self._salary_baseline())
+        qs = with_hotness_share(qs)
 
         sort, descending = self._sort_params()
-        if sort == "hotness":
-            players = list(qs)
-            scored = []
-            unscored = []
-            for player in players:
-                score = player.hotness_score()
-                if score is None:
-                    unscored.append(player)
-                    continue
-                increases, comparisons = (int(value) for value in score.split("/"))
-                scored.append((Decimal(increases) / Decimal(comparisons), comparisons, player))
-            scored.sort(key=lambda item: (item[0], item[1]), reverse=descending)
-            return [player for _, _, player in scored] + unscored
-
-        order_fields = self.SORT_FIELDS[sort]
-        if descending:
-            order_fields = [
-                f.desc(nulls_last=True) if isinstance(f, F) else f"-{f}" for f in order_fields
-            ]
-        else:
-            order_fields = [f.asc(nulls_last=True) if isinstance(f, F) else f for f in order_fields]
-        return list(qs.order_by(*order_fields))
+        return list(order_players(qs, self.SORT_FIELDS, sort, descending))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

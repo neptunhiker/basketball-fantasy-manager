@@ -11,16 +11,20 @@ player is on, so writing one may update `Player` too.
 """
 
 import uuid
+from collections import defaultdict
 from decimal import Decimal
+from types import SimpleNamespace
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Subquery
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.core.dates import local_date, local_moment
 from apps.core.templatetags.money import millions
+from apps.nba.models import Player
+from apps.nba.stats import hotness_counts
 
 from .models import (
     ROSTER_ICON_CHOICES,
@@ -436,6 +440,59 @@ def record_snapshot(
     )
     sync_player_from_latest_snapshot(player)
     return snapshot, created
+
+
+HOTNESS_FIELDS = ("as_of", "season_id", "fp_per_game", "games_played")
+
+
+def refresh_hotness(player_id, player=None):
+    """Recount one player's hotness from his snapshots and store it.
+
+    Called for every saved snapshot (see `apps.fantasy.signals`), so the
+    stored figure can never trail the snapshots it is counted from. Reads
+    only the newest season's rows, which is all `hotness_counts` compares.
+    `player`, when the caller holds the instance, is updated too, so the
+    object in hand agrees with the database without a reload.
+    """
+    newest_season = (
+        PlayerSnapshot.objects.filter(player_id=player_id)
+        .order_by("-as_of")
+        .values("season_id")[:1]
+    )
+    rows = PlayerSnapshot.objects.filter(
+        player_id=player_id, season_id=Subquery(newest_season)
+    ).values(*HOTNESS_FIELDS)
+    rises, comparisons = hotness_counts(SimpleNamespace(**row) for row in rows)
+    Player.objects.filter(pk=player_id).update(
+        hotness_increases=rises, hotness_comparisons=comparisons
+    )
+    if player is not None:
+        player.hotness_increases, player.hotness_comparisons = rises, comparisons
+    return rises, comparisons
+
+
+def refresh_all_hotness():
+    """Recount every player at once; returns how many figures changed.
+
+    For the paths that skip `post_save`: a season deleted with its snapshots,
+    `loaddata`, a bulk insert. One read of all snapshots and one bulk write,
+    rather than two queries per player.
+    """
+    by_player = defaultdict(list)
+    for row in PlayerSnapshot.objects.values("player_id", *HOTNESS_FIELDS).iterator(
+        chunk_size=5000
+    ):
+        by_player[row.pop("player_id")].append(SimpleNamespace(**row))
+    changed = []
+    for player in Player.objects.only("pk", "hotness_increases", "hotness_comparisons"):
+        counts = hotness_counts(by_player.get(player.pk, ()))
+        if counts != (player.hotness_increases, player.hotness_comparisons):
+            player.hotness_increases, player.hotness_comparisons = counts
+            changed.append(player)
+    Player.objects.bulk_update(
+        changed, ["hotness_increases", "hotness_comparisons"], batch_size=500
+    )
+    return len(changed)
 
 
 # --- helpers the roster screens need -----------------------------------------

@@ -13,6 +13,7 @@ import logging
 import random
 import re
 import time
+from urllib.parse import unquote_plus
 
 from django.conf import settings
 from django.db import connection
@@ -39,15 +40,25 @@ class QueryTimer:
             self.count += 1
 
 
-# What a parameter name looks like. A bare query string ("?someone@mail")
-# arrives as a key with no value, and is a value really -- so it is dropped.
+# What a parameter name looks like, once decoded.
 PARAMETER_NAME = re.compile(r"[A-Za-z0-9_\-\[\]]{1,40}")
 
 
-def parameter_names(query):
-    """Sorted parameter names, e.g. "position,sort" -- never values."""
-    names = sorted(key for key in query if PARAMETER_NAME.fullmatch(key))
-    return ",".join(names)[:300]
+def parameter_names(query_string):
+    """Sorted parameter names, e.g. "position,sort" -- never values.
+
+    Only a part with an "=" names a parameter, even an empty one ("?q=").
+    A bare part ("?someone@mail", "?a1b2c3d4") is a value sent on its own --
+    an address, an invite code -- and is dropped whatever it looks like.
+    `request.GET` cannot tell the two apart: both arrive as a key with "".
+    """
+    names = set()
+    for part in query_string.split("&"):
+        key, equals, _value = part.partition("=")
+        key = unquote_plus(key)
+        if equals and PARAMETER_NAME.fullmatch(key):
+            names.add(key)
+    return ",".join(sorted(names))[:300]
 
 
 def ignored(path):
@@ -99,7 +110,7 @@ class RequestMetricsMiddleware:
                 sql_count=sql_count,
                 sql_ms=sql_ms,
                 response_bytes=None if response.streaming else len(response.content),
-                query_keys=parameter_names(request.GET),
+                query_keys=parameter_names(request.META.get("QUERY_STRING", "")),
             )
         except Exception:
             # A measurement must never cost the user their page.

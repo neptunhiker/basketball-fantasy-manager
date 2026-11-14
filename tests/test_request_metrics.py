@@ -10,6 +10,7 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.perf.middleware import parameter_names
 from apps.perf.models import RequestMetric
 from apps.perf.tasks import prune_request_metrics
 
@@ -188,3 +189,27 @@ def test_the_dashboard_rows_recorded_before_are_dropped(db):
     migration.drop_dashboard_metrics(apps, None)
 
     assert list(RequestMetric.objects.values_list("route", flat=True)) == ["nba:player-list"]
+
+
+@pytest.mark.parametrize(
+    ("query_string", "expected"),
+    [
+        ("a1b2c3d4", ""),
+        ("q=", "q"),
+        ("q=x&token", "q"),
+        ("sort=avg&q=x&sort=pts", "q,sort"),
+        ("%5Bf%5D=1", "[f]"),
+        ("someone%40example.com=1", ""),
+        ("", ""),
+    ],
+)
+def test_only_parts_with_an_equals_sign_name_a_parameter(query_string, expected):
+    """A bare part is a value sent on its own -- an invite code, say -- even
+    when it looks like a name."""
+    assert parameter_names(query_string) == expected
+
+
+def test_a_bare_token_is_not_recorded(recording, signed_in):
+    signed_in.get(reverse("nba:player-list") + "?a1b2c3d4e5f6&sort=avg")
+
+    assert RequestMetric.objects.get().query_keys == "sort"

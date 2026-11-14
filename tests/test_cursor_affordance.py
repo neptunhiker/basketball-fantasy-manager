@@ -33,6 +33,11 @@ COVERED_TAGS = {"a", "button", "form", "input", "label", "select", "summary"}
 # at that point to click, when the whole region does the same one thing.
 BACKDROPS = {("app.html", "navOpen = false"), ("modal.html", "open = false")}
 
+# An HTMX element with a trigger of its own and no click in it is not clicked:
+# it listens for an event (the market's hidden star refresh, for one).
+TRIGGER = re.compile(r'\bhx-trigger="([^"]*)"')
+CLICK_HANDLER = re.compile(r"@click|x-on:click|\bonclick\b")
+
 OPENING_TAG = re.compile(r"<([a-zA-Z][\w-]*)((?:[^<>]|\{%[^%]*%\}|\{\{[^}]*\}\})*?)>", re.S)
 
 
@@ -43,6 +48,9 @@ def clickable_elements():
         source = path.read_text()
         for match in OPENING_TAG.finditer(source):
             tag, attributes = match.group(1).lower(), match.group(2)
+            trigger = TRIGGER.search(attributes)
+            if trigger and "click" not in trigger.group(1) and not CLICK_HANDLER.search(attributes):
+                continue
             if CLICKABLE.search(attributes):
                 line = source[: match.start()].count("\n") + 1
                 yield path, line, tag, attributes

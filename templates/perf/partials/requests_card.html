@@ -1,0 +1,84 @@
+{% load i18n perf %}
+{% comment %}
+  Single requests: the slowest in the window, or the latest whatever the
+  window. Rendered in the page and alone by perf:requests, which the tabs
+  and the refresh button swap in (HTMX). The tabs are plain links first, so
+  they work without JavaScript and a copied address opens the same tab.
+
+  Context: request_list ("slowest" or "latest"), request_rows, as_of,
+  period, selected_route, limit, per_route, latest_limit.
+{% endcomment %}
+<section id="requests"
+         class="card scroll-mt-20 overflow-hidden transition-opacity duration-150 [&.htmx-request]:opacity-60"
+         aria-labelledby="requests-heading">
+  <div class="flex flex-col gap-3 border-b border-neutral-200 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6 sm:px-6 dark:border-neutral-800">
+    <div class="min-w-0">
+      <h2 id="requests-heading" class="text-base font-semibold">{% translate "Requests" %}</h2>
+      <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
+        {% if request_list == "latest" %}
+          {% blocktranslate with count=latest_limit %}The {{ count }} most recent, whatever the time window.{% endblocktranslate %}
+          {% if selected_route %}
+            <span class="ml-0.5 inline-flex max-w-full items-center gap-1 rounded-md bg-primary-50 px-1.5 py-0.5 align-middle font-mono text-xs text-primary-700 dark:bg-primary-500/10 dark:text-primary-300"
+                  title="{% translate 'Only this route, as picked for the trend' %}">
+              <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16l-6 7.5V19l-4-2v-4.5L4 5Z"/></svg>
+              <span class="truncate">{{ selected_route }}</span>
+            </span>
+          {% endif %}
+        {% else %}
+          {% blocktranslate with period=period.label %}The {{ limit }} slowest in the last {{ period }}, at most {{ per_route }} per route, with the parameters they carried — names only, never values.{% endblocktranslate %}
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="flex shrink-0 items-center gap-2">
+      {% if request_list == "latest" %}
+        <button type="button"
+                class="btn btn-secondary order-2 shrink-0 !px-3 !py-1.5 max-sm:min-w-10 sm:order-1"
+                hx-get="{% url 'perf:requests' %}{% querystring %}"
+                hx-target="#requests"
+                hx-swap="outerHTML"
+                hx-indicator="#requests"
+                title="{% blocktranslate with time=as_of|time:'H:i:s' %}As of {{ time }}{% endblocktranslate %}">
+          <svg class="h-4 w-4 shrink-0 [.htmx-request_&]:motion-safe:animate-spin" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4"/></svg>
+          <span class="max-sm:sr-only">{% translate "Refresh" %}</span>
+          <time class="hidden font-normal tabular-nums text-neutral-400 md:inline dark:text-neutral-500" datetime="{{ as_of|date:'c' }}">{{ as_of|time:"H:i:s" }}</time>
+        </button>
+      {% endif %}
+
+      <nav class="grid flex-1 grid-cols-2 rounded-lg bg-neutral-100 p-1 sm:order-2 sm:flex-none dark:bg-neutral-800"
+           aria-label="{% translate 'Which requests' %}">
+        {% for key in lists %}
+          <a href="{% querystring list=key %}#requests"
+             hx-get="{% url 'perf:requests' %}{% querystring list=key %}"
+             hx-target="#requests"
+             hx-swap="outerHTML"
+             hx-indicator="#requests"
+             hx-push-url="{% url 'perf:dashboard' %}{% querystring list=key %}"
+             {% if key == request_list %}aria-current="page"{% endif %}
+             class="flex min-h-9 items-center justify-center gap-1.5 rounded-md px-4 text-sm font-medium whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-primary-500
+               {% if key == request_list %}bg-white text-tertiary-800 shadow-sm dark:bg-neutral-900 dark:text-neutral-50{% else %}text-neutral-600 hover:text-tertiary-800 dark:text-neutral-400 dark:hover:text-neutral-100{% endif %}">
+            {% if key == "slowest" %}
+              <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h5"/></svg>
+              {% translate "Slowest" context "request list" %}
+            {% else %}
+              <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path stroke-linecap="round" d="M12 7.5V12l3 2"/></svg>
+              {% translate "Latest" context "request list" %}
+            {% endif %}
+          </a>
+        {% endfor %}
+      </nav>
+    </div>
+  </div>
+
+  {% if request_rows %}
+    {% include "perf/partials/request_rows.html" with rows=request_rows relative=relative_times %}
+  {% else %}
+    <p class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+      {% if request_list == "latest" %}
+        {% if selected_route %}{% translate "No requests to this route recorded yet." %}{% else %}{% translate "No requests recorded yet." %}{% endif %}
+      {% else %}
+        {% translate "No requests in this window." %}
+      {% endif %}
+    </p>
+  {% endif %}
+</section>

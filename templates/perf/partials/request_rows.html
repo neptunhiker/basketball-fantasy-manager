@@ -1,0 +1,95 @@
+{% load i18n perf %}
+{% comment %}
+  Single requests, as a table from `lg` and as tiles below it -- one column on
+  a phone, two on a tablet. Shared by the slowest and the latest list.
+  Context: rows (RequestMetric), relative (True: "3 minutes ago" with the
+  exact time on hover; else the date and time).
+
+  The dot beside a time is the p95 verdict applied to that one request, by
+  the same thresholds; it only repeats what the number says, so it is hidden
+  from screen readers.
+{% endcomment %}
+
+{# --- From `lg`: a table ------------------------------------------------------ #}
+<div class="hidden overflow-x-auto lg:block">
+  <table class="w-full text-sm">
+    <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left font-medium">{% translate "When" %}</th>
+        <th scope="col" class="px-3 py-3 text-left font-medium">{% translate "Route" %}</th>
+        <th scope="col" class="px-3 py-3 text-left font-medium">{% translate "Parameters" %}</th>
+        <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Status" %}</th>
+        <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Time" %}</th>
+        <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Queries" %}</th>
+        <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "DB" %}</th>
+        <th scope="col" class="px-6 py-3 text-right font-medium">{% translate "Size" %}</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-neutral-100 tabular-nums dark:divide-neutral-800">
+      {% for metric in rows %}
+        <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+          <td class="px-6 py-3 whitespace-nowrap text-neutral-600 dark:text-neutral-400">
+            {% if relative %}
+              <time datetime="{{ metric.recorded_at|date:'c' }}" title="{{ metric.recorded_at|date:'DATETIME_FORMAT' }}">{{ metric.recorded_at|ago }}</time>
+              <span class="block text-xs text-neutral-400 dark:text-neutral-500">{{ metric.recorded_at|date:"H:i:s" }}</span>
+            {% else %}
+              <time datetime="{{ metric.recorded_at|date:'c' }}">{{ metric.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</time>
+            {% endif %}
+          </td>
+          <td class="px-3 py-3">
+            <div class="flex min-w-[12rem] max-w-[18rem] items-center gap-2">
+              <span class="truncate text-[13px] font-medium"><span class="text-neutral-400 dark:text-neutral-500">{{ metric.method }}</span> {% include "perf/partials/route_label.html" with route=metric.route %}</span>
+              {% if metric.htmx %}<span class="badge badge-neutral shrink-0 !px-2 !text-[10px] font-semibold uppercase tracking-wider">HTMX</span>{% endif %}
+            </div>
+          </td>
+          <td class="px-3 py-3">
+            {% if metric.query_keys %}
+              <div class="flex flex-wrap gap-1">{% for key in metric.query_keys|split_keys %}<span class="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ key }}</span>{% endfor %}</div>
+            {% else %}<span class="text-neutral-300 dark:text-neutral-600">–</span>{% endif %}
+          </td>
+          <td class="px-3 py-3 text-right font-medium {% if metric.status >= 500 %}text-rose-600 dark:text-rose-400{% elif metric.status >= 400 %}text-amber-700 dark:text-amber-300{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ metric.status }}</td>
+          <td class="px-3 py-3 text-right">
+            <span class="inline-flex items-center justify-end gap-2 font-semibold whitespace-nowrap">
+              {% include "perf/partials/speed_dot.html" with speed=metric.duration_ms|speed %}{{ metric.duration_ms|duration }}
+            </span>
+          </td>
+          <td class="px-3 py-3 text-right text-neutral-600 dark:text-neutral-400">{{ metric.sql_count }}</td>
+          <td class="px-3 py-3 text-right text-neutral-600 whitespace-nowrap dark:text-neutral-400">{{ metric.sql_ms|duration }}</td>
+          <td class="px-6 py-3 text-right text-neutral-600 dark:text-neutral-400 whitespace-nowrap">{% if metric.response_bytes is not None %}{{ metric.response_bytes|filesizeformat }}{% else %}–{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# --- Below `lg`: tiles, two side by side from `md` --------------------------- #}
+<ul class="grid gap-px bg-neutral-100 md:grid-cols-2 lg:hidden dark:bg-neutral-800">
+  {% for metric in rows %}
+    <li class="min-w-0 bg-white px-4 py-3.5 sm:px-5 md:odd:last:col-span-2 dark:bg-neutral-900">
+      <div class="flex items-start justify-between gap-3">
+        <p class="min-w-0 truncate pt-0.5 text-[13px] font-medium"><span class="text-neutral-400 dark:text-neutral-500">{{ metric.method }}</span> {% include "perf/partials/route_label.html" with route=metric.route %}</p>
+        <p class="inline-flex shrink-0 items-center gap-2 text-base font-bold leading-6 tabular-nums">
+          {% include "perf/partials/speed_dot.html" with speed=metric.duration_ms|speed %}{{ metric.duration_ms|duration }}
+        </p>
+      </div>
+      {# Spaced, not separated by dots: a dot left at the end of a wrapped line reads as noise. #}
+      <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-neutral-500 tabular-nums dark:text-neutral-400">
+        {% if relative %}
+          <time datetime="{{ metric.recorded_at|date:'c' }}" title="{{ metric.recorded_at|date:'DATETIME_FORMAT' }}">{{ metric.recorded_at|ago }}</time>
+        {% else %}
+          <time datetime="{{ metric.recorded_at|date:'c' }}">{{ metric.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</time>
+        {% endif %}
+        <span class="font-semibold {% if metric.status >= 500 %}text-rose-600 dark:text-rose-400{% elif metric.status >= 400 %}text-amber-700 dark:text-amber-300{% else %}text-neutral-600 dark:text-neutral-300{% endif %}">{{ metric.status }}</span>
+        <span class="whitespace-nowrap">{% blocktranslate count count=metric.sql_count %}{{ count }} query{% plural %}{{ count }} queries{% endblocktranslate %}</span>
+        <span class="whitespace-nowrap">{% blocktranslate with time=metric.sql_ms|duration %}DB {{ time }}{% endblocktranslate %}</span>
+        {% if metric.response_bytes is not None %}<span class="whitespace-nowrap">{{ metric.response_bytes|filesizeformat }}</span>{% endif %}
+      </p>
+      {% if metric.htmx or metric.query_keys %}
+        <div class="mt-2 flex flex-wrap items-center gap-1">
+          {% if metric.htmx %}<span class="badge badge-neutral !px-2 !text-[10px] font-semibold uppercase tracking-wider">HTMX</span>{% endif %}
+          {% for key in metric.query_keys|split_keys %}<span class="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ key }}</span>{% endfor %}
+        </div>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>

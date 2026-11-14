@@ -129,7 +129,9 @@ route with its status (fast under 300 ms at p95, slow from 1 s — the
 thresholds live in `apps/perf/stats.py`), except routes with fewer than 20
 requests, which get no verdict and come last; and the 20 slowest requests —
 at most 3 per route and kind, so one busy route cannot fill the list — with
-the names of their parameters. Requests no URL matched (mostly bots
+the names of their parameters. A second tab, *Latest*, lists the 10 most
+recent requests whatever the window (only the route picked for the trend, if
+one is), with a refresh button that reloads just that card. Requests no URL matched (mostly bots
 trying paths) have their own line among the routes but stay out of the
 headline figures and the trend. Percentiles come from Postgres
 (`PERCENTILE_CONT`), so the page costs the same handful of queries however

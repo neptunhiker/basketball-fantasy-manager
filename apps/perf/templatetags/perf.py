@@ -1,6 +1,12 @@
+import datetime as dt
+
 from django import template
+from django.utils import timezone
 from django.utils.formats import number_format
+from django.utils.timesince import timesince
 from django.utils.translation import gettext as _
+
+from apps.perf import stats
 
 register = template.Library()
 
@@ -55,3 +61,19 @@ def one_decimal(value):
 def split_keys(value):
     """`RequestMetric.query_keys` ("q,sort") -> ["q", "sort"]."""
     return [key for key in (value or "").split(",") if key]
+
+
+@register.filter
+def speed(ms):
+    """A single request's time as "fast", "ok" or "slow", by the p95 thresholds."""
+    return stats.status(ms)
+
+
+@register.filter
+def ago(moment):
+    """How long ago, in one unit: "just now", "3 minutes ago", "2 hours ago"."""
+    if moment is None:
+        return DASH
+    if timezone.now() - moment < dt.timedelta(minutes=1):
+        return _("just now")
+    return _("%(time)s ago") % {"time": timesince(moment, depth=1)}

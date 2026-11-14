@@ -34,7 +34,7 @@
     <nav class="grid shrink-0 grid-cols-3 gap-1 rounded-xl border border-white/10 bg-white/[.06] p-1 lg:order-2"
          aria-label="{% translate 'Time window' %}">
       {% for key, label in periods %}
-        <a href="?period={{ key }}{% if selected_route %}&amp;route={{ selected_route|urlencode }}{% endif %}"
+        <a href="{% querystring period=key %}"
            {% if key == period.key %}aria-current="page"{% endif %}
            class="flex min-h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold whitespace-nowrap transition
              {% if key == period.key %}bg-secondary-400 text-[#17111f] shadow-sm{% else %}text-white/70 hover:bg-white/10 hover:text-white{% endif %}">{{ label }}</a>
@@ -118,6 +118,7 @@
     </div>
     <form method="get" action="#trend" x-data class="flex items-center gap-2 sm:w-72">
       <input type="hidden" name="period" value="{{ period.key }}">
+      {% if request_list != "slowest" %}<input type="hidden" name="list" value="{{ request_list }}">{% endif %}
       <label for="trend-route" class="sr-only">{% translate "Route" %}</label>
       <select id="trend-route" name="route" @change="$el.form.requestSubmit()"
               class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 font-mono text-base shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 sm:text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100">
@@ -208,7 +209,7 @@
               <td class="px-6 py-3">
                 <div class="flex min-w-[13rem] max-w-[22rem] items-center gap-2">
                   {% if row.route %}
-                    <a href="?period={{ period.key }}&amp;route={{ row.route|urlencode }}#trend"
+                    <a href="{% querystring route=row.route %}#trend"
                        class="truncate text-[13px] font-medium text-tertiary-700 hover:text-primary-700 hover:underline dark:text-neutral-100 dark:hover:text-primary-300">{% include "perf/partials/route_label.html" with route=row.route %}</a>
                   {% else %}
                     <span class="truncate text-[13px]">{% include "perf/partials/route_label.html" with route=row.route %}</span>
@@ -240,7 +241,7 @@
     <ul class="divide-y divide-neutral-100 md:hidden dark:divide-neutral-800">
       {% for row in routes %}
         <li>
-          {% if row.route %}<a href="?period={{ period.key }}&amp;route={{ row.route|urlencode }}#trend" class="block px-4 py-4 transition active:bg-neutral-50 dark:active:bg-neutral-800/50 {% if row.route == selected_route %}bg-primary-50/60 dark:bg-primary-500/5{% endif %}">{% else %}<div class="px-4 py-4">{% endif %}
+          {% if row.route %}<a href="{% querystring route=row.route %}#trend" class="block px-4 py-4 transition active:bg-neutral-50 dark:active:bg-neutral-800/50 {% if row.route == selected_route %}bg-primary-50/60 dark:bg-primary-500/5{% endif %}">{% else %}<div class="px-4 py-4">{% endif %}
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <p class="truncate text-[13px] font-medium">{% include "perf/partials/route_label.html" with route=row.route %}</p>
@@ -272,79 +273,8 @@
   {% endif %}
 </section>
 
-{# --- Slowest requests ----------------------------------------------------- #}
-<section class="card overflow-hidden" aria-labelledby="slowest-heading">
-  <div class="border-b border-neutral-200 px-4 py-4 sm:px-6 dark:border-neutral-800">
-    <h2 id="slowest-heading" class="text-base font-semibold">{% translate "Slowest requests" %}</h2>
-    <p class="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{% blocktranslate with period=period.label %}The {{ limit }} slowest in the last {{ period }}, at most {{ per_route }} per route, with the parameters they carried — names only, never values.{% endblocktranslate %}</p>
-  </div>
-
-  {% if slowest %}
-    <div class="hidden overflow-x-auto md:block">
-      <table class="w-full text-sm">
-        <thead class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-          <tr>
-            <th scope="col" class="px-6 py-3 text-left font-medium">{% translate "When" %}</th>
-            <th scope="col" class="px-3 py-3 text-left font-medium">{% translate "Route" %}</th>
-            <th scope="col" class="px-3 py-3 text-left font-medium">{% translate "Parameters" %}</th>
-            <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Status" %}</th>
-            <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Time" %}</th>
-            <th scope="col" class="px-3 py-3 text-right font-medium">{% translate "Queries" %}</th>
-            <th scope="col" class="px-6 py-3 text-right font-medium">{% translate "Size" %}</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-neutral-100 tabular-nums dark:divide-neutral-800">
-          {% for metric in slowest %}
-            <tr class="transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
-              <td class="px-6 py-3 whitespace-nowrap text-neutral-600 dark:text-neutral-400">{{ metric.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</td>
-              <td class="px-3 py-3">
-                <div class="flex min-w-[12rem] max-w-[18rem] items-center gap-2">
-                  <span class="truncate text-[13px] font-medium"><span class="text-neutral-400 dark:text-neutral-500">{{ metric.method }}</span> {% include "perf/partials/route_label.html" with route=metric.route %}</span>
-                  {% if metric.htmx %}<span class="badge badge-neutral shrink-0 !px-2 !text-[10px] font-semibold uppercase tracking-wider">HTMX</span>{% endif %}
-                </div>
-              </td>
-              <td class="px-3 py-3">
-                {% if metric.query_keys %}
-                  <div class="flex flex-wrap gap-1">{% for key in metric.query_keys|split_keys %}<span class="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ key }}</span>{% endfor %}</div>
-                {% else %}<span class="text-neutral-300 dark:text-neutral-600">–</span>{% endif %}
-              </td>
-              <td class="px-3 py-3 text-right font-medium {% if metric.status >= 500 %}text-rose-600 dark:text-rose-400{% elif metric.status >= 400 %}text-amber-700 dark:text-amber-300{% else %}text-neutral-500 dark:text-neutral-400{% endif %}">{{ metric.status }}</td>
-              <td class="px-3 py-3 text-right font-semibold">{{ metric.duration_ms|duration }}</td>
-              <td class="px-3 py-3 text-right text-neutral-600 dark:text-neutral-400">{{ metric.sql_count }}</td>
-              <td class="px-6 py-3 text-right text-neutral-600 dark:text-neutral-400 whitespace-nowrap">{% if metric.response_bytes is not None %}{{ metric.response_bytes|filesizeformat }}{% else %}–{% endif %}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <ul class="divide-y divide-neutral-100 md:hidden dark:divide-neutral-800">
-      {% for metric in slowest %}
-        <li class="px-4 py-3.5">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <p class="truncate text-[13px] font-medium"><span class="text-neutral-400 dark:text-neutral-500">{{ metric.method }}</span> {% include "perf/partials/route_label.html" with route=metric.route %}</p>
-              <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                {{ metric.recorded_at|date:"SHORT_DATETIME_FORMAT" }} ·
-                <span class="{% if metric.status >= 500 %}text-rose-600 dark:text-rose-400{% elif metric.status >= 400 %}text-amber-700 dark:text-amber-300{% endif %}">{{ metric.status }}</span> ·
-                {% blocktranslate count count=metric.sql_count %}{{ count }} query{% plural %}{{ count }} queries{% endblocktranslate %}{% if metric.response_bytes is not None %} · {{ metric.response_bytes|filesizeformat }}{% endif %}
-              </p>
-            </div>
-            <div class="flex shrink-0 flex-col items-end gap-1">
-              <p class="text-base font-bold leading-none">{{ metric.duration_ms|duration }}</p>
-              {% if metric.htmx %}<span class="badge badge-neutral !px-2 !text-[10px] font-semibold uppercase tracking-wider">HTMX</span>{% endif %}
-            </div>
-          </div>
-          {% if metric.query_keys %}
-            <div class="mt-2 flex flex-wrap gap-1">{% for key in metric.query_keys|split_keys %}<span class="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ key }}</span>{% endfor %}</div>
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">{% translate "No requests in this window." %}</p>
-  {% endif %}
-</section>
+{# --- Single requests: the slowest or the latest -------------------------- #}
+{% include "perf/partials/requests_card.html" %}
 
 <p class="text-center text-xs text-neutral-400 dark:text-neutral-500">
   {% blocktranslate with days=retention_days %}Kept for {{ days }} days. Sizes are before compression.{% endblocktranslate %}

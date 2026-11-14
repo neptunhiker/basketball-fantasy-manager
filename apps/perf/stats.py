@@ -25,6 +25,8 @@ SLOWEST_LIMIT = 20
 # Of each route and kind, so the list shows more than one busy route.
 SLOWEST_PER_ROUTE = 3
 
+LATEST_LIMIT = 10
+
 # Fewer requests than this and a route's p95 is little more than its slowest
 # request -- one cold start reads as "slow". Such routes get no verdict.
 MIN_REQUESTS = 20
@@ -262,3 +264,15 @@ def slowest(period, limit=SLOWEST_LIMIT, per_route=SLOWEST_PER_ROUTE):
         )
     )
     return list(ranked.filter(rank__lte=per_route).order_by("-duration_ms", "-id")[:limit])
+
+
+def latest(route=None, limit=LATEST_LIMIT):
+    """The most recent requests, whatever the window: "latest" is always now.
+
+    Unmatched URLs included -- this is what just happened, bots and all.
+    Both orders ride an index: `recorded_at`, or `route, -recorded_at`.
+    """
+    qs = RequestMetric.objects.all()
+    if route is not None:
+        qs = qs.filter(route=route)
+    return list(qs.order_by("-recorded_at", "-id")[:limit])

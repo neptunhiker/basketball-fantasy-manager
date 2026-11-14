@@ -461,3 +461,100 @@ def test_the_slowest_list_stops_at_its_limit(db):
 
     assert len(rows) == stats.SLOWEST_LIMIT
     assert rows[0].duration_ms == 129
+
+
+# --- the latest requests -------------------------------------------------------------
+
+REQUESTS_URL = reverse("perf:requests")
+
+
+def test_the_latest_requests_come_newest_first_whatever_the_window(db):
+    now = timezone.now()
+    for minutes in range(15):
+        metric(100 + minutes, at=now - dt.timedelta(minutes=minutes))
+    metric(100, at=now - dt.timedelta(days=40))
+
+    rows = stats.latest()
+
+    assert len(rows) == stats.LATEST_LIMIT
+    assert [row.duration_ms for row in rows] == list(range(100, 110))
+
+
+def test_the_latest_include_unmatched_urls_and_can_follow_one_route(db):
+    now = timezone.now()
+    metric(100, route="core:dashboard", at=now - dt.timedelta(minutes=2))
+    metric(200, route="", status=404, at=now - dt.timedelta(minutes=1))
+
+    assert [row.route for row in stats.latest()] == ["", "core:dashboard"]
+    assert [row.route for row in stats.latest("core:dashboard")] == ["core:dashboard"]
+
+
+def test_the_page_opens_on_the_slowest_and_switches_by_address(staff_client):
+    metric(4321, route="nba:player-list", at=timezone.now() - dt.timedelta(hours=2))
+    metric(80, route="core:dashboard")
+
+    slowest = staff_client.get(URL)
+    latest = staff_client.get(URL, {"list": "latest"})
+
+    assert slowest.context["request_list"] == "slowest"
+    assert slowest.context["request_rows"][0].duration_ms == 4321
+    assert latest.context["request_list"] == "latest"
+    assert latest.context["request_rows"][0].route == "core:dashboard"
+    assert "just now" in latest.content.decode()
+
+
+def test_an_unknown_list_falls_back_to_the_slowest(staff_client):
+    metric(100)
+
+    assert staff_client.get(URL, {"list": "oldest"}).context["request_list"] == "slowest"
+
+
+def test_the_latest_follow_the_route_picked_for_the_trend(staff_client):
+    metric(100, route="core:dashboard")
+    metric(100, route="nba:player-list")
+
+    response = staff_client.get(URL, {"list": "latest", "route": "core:dashboard"})
+
+    assert [row.route for row in response.context["request_rows"]] == ["core:dashboard"]
+
+
+def test_the_card_alone_comes_back_for_htmx(staff_client):
+    metric(100)
+
+    response = staff_client.get(REQUESTS_URL, {"list": "latest"}, HTTP_HX_REQUEST="true")
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert content.lstrip().startswith("<section")
+    assert 'id="requests"' in content
+    assert "Refresh" in content
+
+
+def test_the_card_opened_directly_goes_to_the_full_page(staff_client):
+    response = staff_client.get(REQUESTS_URL, {"list": "latest", "period": "24h"})
+
+    assert response.status_code == 302
+    assert response["Location"] == f"{URL}?list=latest&period=24h#requests"
+
+
+def test_only_staff_get_the_card(client, user, password):
+    client.login(email=user.email, password=password)
+
+    assert client.get(REQUESTS_URL, HTTP_HX_REQUEST="true").status_code == 403
+
+
+def test_refreshing_the_card_is_not_measured(staff_client, settings):
+    settings.PERF_RECORD_REQUESTS = True
+
+    staff_client.get(REQUESTS_URL, {"list": "latest"}, HTTP_HX_REQUEST="true")
+
+    assert not RequestMetric.objects.exists()
+
+
+def test_links_keep_the_chosen_list(staff_client):
+    metric(100, route="core:dashboard")
+
+    content = staff_client.get(URL, {"list": "latest", "period": "24h"}).content.decode()
+
+    assert 'href="?list=latest&amp;period=7d"' in content
+    assert 'href="?list=latest&amp;period=24h&amp;route=core%3Adashboard#trend"' in content

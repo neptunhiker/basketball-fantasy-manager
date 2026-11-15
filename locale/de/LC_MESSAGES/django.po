@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 11:19+0100\n"
+"POT-Creation-Date: 2026-11-15 12:13+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -174,7 +174,7 @@ msgstr "Ein neuer Einladungslink für %(email)s wurde erstellt."
 msgid "Welcome! Your account is now active."
 msgstr "Willkommen! Dein Konto ist jetzt aktiv."
 
-#: apps/analytics/dream_team.py:234
+#: apps/analytics/dream_team.py:234 apps/reports/inputs.py:90
 msgid "There are no stats for this season yet."
 msgstr "Für diese Saison gibt es noch keine Statistiken."
 
@@ -2204,6 +2204,34 @@ msgstr "Urteilt fast wie das Spitzenmodell, für ein Fünftel des Preises."
 #: apps/reports/catalog.py:66
 msgid "OpenAI's flagship. Expensive."
 msgstr "OpenAIs Spitzenmodell. Teuer."
+
+#: apps/reports/services.py:42
+msgid "AI reports are switched off: no OpenAI API key is set."
+msgstr ""
+"KI-Reports sind ausgeschaltet: Es ist kein OpenAI-API-Schlüssel hinterlegt."
+
+#: apps/reports/services.py:44
+#, python-format
+msgid "This month's spending limit of $%(limit)s has been reached."
+msgstr "Das monatliche Ausgabenlimit von $%(limit)s ist erreicht."
+
+#: apps/reports/services.py:52
+#, python-format
+msgid "%(model)s is not an approved model."
+msgstr "%(model)s ist kein freigegebenes Modell."
+
+#: apps/reports/services.py:54
+#, python-format
+msgid "Unknown reasoning effort: %(effort)s."
+msgstr "Unbekannter Denkaufwand: %(effort)s."
+
+#: apps/reports/services.py:177
+msgid "A run can only be published once it has finished."
+msgstr "Ein Lauf kann erst veröffentlicht werden, wenn er fertig ist."
+
+#: apps/reports/services.py:179
+msgid "This run has no report to show."
+msgstr "Dieser Lauf hat keinen Report, der sich zeigen ließe."
 
 #: templates/accounts/accept_invitation.html:4
 msgid "Accept invitation"

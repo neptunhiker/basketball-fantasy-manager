@@ -50,7 +50,10 @@ def estimate_tokens(text):
 
 def estimate_run(model_id, effort, shared_input, own_inputs):
     """Expected dollars for a run: the briefing writes the shared input to the
-    cache, every roster report then reads it back and adds its own part.
+    cache, and so does the first roster report -- its answer schema differs
+    from the briefing's and OpenAI puts the schema ahead of our text, so it
+    cannot reuse the briefing's entry (seen in the first real run). Every
+    later roster report reads it back and adds its own part.
 
     `own_inputs` holds one text per roster report (none for briefing only).
     """
@@ -59,11 +62,13 @@ def estimate_run(model_id, effort, shared_input, own_inputs):
     total = usage_cost(
         model_id, input_tokens=shared, cache_write_tokens=shared, output_tokens=output
     )
-    for own in own_inputs:
+    for index, own in enumerate(own_inputs):
+        written, read = (shared, 0) if index == 0 else (0, shared)
         total += usage_cost(
             model_id,
             input_tokens=shared + estimate_tokens(own),
-            cached_tokens=shared,
+            cached_tokens=read,
+            cache_write_tokens=written,
             output_tokens=output,
         )
     return total

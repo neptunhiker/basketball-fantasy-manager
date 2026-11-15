@@ -22,6 +22,23 @@ def _no_request_metrics(settings):
     settings.PERF_RECORD_REQUESTS = False
 
 
+@pytest.fixture(autouse=True)
+def _no_openai(settings, monkeypatch):
+    """No test ever reaches OpenAI, and none spends money.
+
+    `.env` may hold a real key, which the settings read; it is replaced, and the
+    client refuses to be built at all. Tests of AI reports replace
+    `apps.reports.ai.generate` with a fake (`tests.reports_factories.FakeAi`);
+    `tests/test_reports_ai.py` swaps in a fake client of its own.
+    """
+    settings.AI_BRIEFING_API_KEY = "sk-test-not-a-real-key"
+
+    def refuse(*args, **kwargs):
+        raise RuntimeError("Tests must not call the OpenAI API: fake apps.reports.ai.generate.")
+
+    monkeypatch.setattr("apps.reports.ai.OpenAI", refuse)
+
+
 User = get_user_model()
 
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 07:52+0100\n"
+"POT-Creation-Date: 2026-11-15 07:57+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -192,6 +192,11 @@ msgid "No team of %(size)d players fits the budget and the position minimums."
 msgstr ""
 "Kein Team aus %(size)d Spielern passt ins Budget und erfüllt die Mindestzahl"
 " je Position."
+
+#: apps/analytics/insights.py:164
+#: templates/analytics/partials/dream_team_chart.html:37
+msgid "Dream Team"
+msgstr "Dream Team"
 
 #: apps/analytics/views.py:77
 msgid "Guards"
@@ -1627,7 +1632,7 @@ msgid "Status"
 msgstr "Status"
 
 #: apps/nba/player_export.py:368
-#: templates/fantasy/partials/roster_card.html:27
+#: templates/fantasy/partials/roster_card.html:29
 #: templates/fantasy/partials/roster_panel.html:428
 #: templates/fantasy/partials/squad_cards.html:36
 #: templates/nba/partials/player_table.html:288
@@ -1975,7 +1980,7 @@ msgstr "Freiwürfe"
 #: apps/nba/views.py:740 templates/app.html:88
 #: templates/fantasy/manager_detail.html:60
 #: templates/fantasy/manager_list.html:91
-#: templates/fantasy/partials/roster_card.html:58
+#: templates/fantasy/partials/roster_card.html:60
 #: templates/fantasy/partials/roster_panel.html:120
 #: templates/fantasy/roster_latest.html:109 templates/nba/player_list.html:4
 #: templates/nba/player_list.html:5 templates/nba/team_list.html:31
@@ -2801,10 +2806,6 @@ msgstr "Fahre über einen Punkt oder tippe darauf, um zu sehen, wer es ist."
 msgid "points"
 msgstr "Punkte"
 
-#: templates/analytics/partials/dream_team_chart.html:37
-msgid "Dream Team"
-msgstr "Dream Team"
-
 #: templates/analytics/partials/dream_team_chart_svg.html:6
 msgid ""
 "Draft-day price against points for every player who has played; the Dream "
@@ -3002,7 +3003,7 @@ msgstr "Kader-Icon %(icon)s"
 #: templates/fantasy/partials/plan_step.html:45
 #: templates/fantasy/partials/player_picker.html:34
 #: templates/fantasy/partials/player_roster_options.html:14
-#: templates/fantasy/partials/roster_card.html:62
+#: templates/fantasy/partials/roster_card.html:64
 #: templates/fantasy/partials/roster_panel.html:73
 msgid "Cash"
 msgstr "Cash"
@@ -3010,7 +3011,7 @@ msgstr "Cash"
 #: templates/fantasy/manager_detail.html:56
 #: templates/fantasy/manager_list.html:87
 #: templates/fantasy/partials/plan_day.html:89
-#: templates/fantasy/partials/roster_card.html:66
+#: templates/fantasy/partials/roster_card.html:68
 #: templates/fantasy/partials/roster_panel.html:82
 #: templates/fantasy/plan_list.html:156 templates/fantasy/plan_list.html:188
 #: templates/fantasy/roster_rules.html:145
@@ -3743,7 +3744,7 @@ msgid "Trade in…"
 msgstr "Per Trade holen …"
 
 #: templates/fantasy/partials/player_roster_options.html:42
-#: templates/fantasy/partials/roster_card.html:36
+#: templates/fantasy/partials/roster_card.html:38
 #: templates/fantasy/partials/roster_panel.html:238
 msgid "No roster changes are available in this phase."
 msgstr "In dieser Phase sind keine Kaderänderungen möglich."
@@ -3761,68 +3762,68 @@ msgstr "Kader erstellen"
 msgid "%(season)s · Managed by %(name)s"
 msgstr "%(season)s · Verwaltet von %(name)s"
 
-#: templates/fantasy/partials/roster_card.html:30
+#: templates/fantasy/partials/roster_card.html:32
 #: templates/fantasy/partials/roster_panel.html:43
 msgid "Complete"
 msgstr "Vollständig"
 
-#: templates/fantasy/partials/roster_card.html:32
+#: templates/fantasy/partials/roster_card.html:34
 #: templates/fantasy/partials/roster_panel.html:45
 msgid "Building"
 msgstr "Im Aufbau"
 
-#: templates/fantasy/partials/roster_card.html:35
+#: templates/fantasy/partials/roster_card.html:37
 #: templates/fantasy/partials/roster_panel.html:47
 msgid "Short"
 msgstr "Unvollständig"
 
 # Mobile, phase 1
-#: templates/fantasy/partials/roster_card.html:36
+#: templates/fantasy/partials/roster_card.html:38
 msgid "Signings are closed; this roster can only change through trades."
 msgstr ""
 "Die Transferphase ist vorbei; dieser Kader kann sich nur noch durch Trades "
 "ändern."
 
-#: templates/fantasy/partials/roster_card.html:36
+#: templates/fantasy/partials/roster_card.html:38
 msgid "Signings have not opened yet."
 msgstr "Die Transferphase hat noch nicht begonnen."
 
-#: templates/fantasy/partials/roster_card.html:47
+#: templates/fantasy/partials/roster_card.html:49
 #: templates/fantasy/roster_build.html:95
 msgid "Delete roster"
 msgstr "Kader löschen"
 
-#: templates/fantasy/partials/roster_card.html:80
+#: templates/fantasy/partials/roster_card.html:82
 #, python-format
 msgid "Signings close on %(date)s at %(time)s"
 msgstr "Die Transferphase endet am %(date)s um %(time)s Uhr"
 
-#: templates/fantasy/partials/roster_card.html:82
+#: templates/fantasy/partials/roster_card.html:84
 #, python-format
 msgid "Signings open on %(date)s at %(time)s"
 msgstr "Die Transferphase beginnt am %(date)s um %(time)s Uhr"
 
-#: templates/fantasy/partials/roster_card.html:84
+#: templates/fantasy/partials/roster_card.html:86
 msgid "Signings closed — trades only"
 msgstr "Transferphase geschlossen — nur Trades"
 
-#: templates/fantasy/partials/roster_card.html:86
+#: templates/fantasy/partials/roster_card.html:88
 msgid "Season closed — no roster changes"
 msgstr "Saison geschlossen — keine Kaderänderungen"
 
-#: templates/fantasy/partials/roster_card.html:88
+#: templates/fantasy/partials/roster_card.html:90
 msgid "No roster changes until the season starts"
 msgstr "Keine Kaderänderungen bis zum Saisonbeginn"
 
-#: templates/fantasy/partials/roster_card.html:109
+#: templates/fantasy/partials/roster_card.html:111
 msgid "Counts in Insights"
 msgstr "Zählt in den Insights"
 
-#: templates/fantasy/partials/roster_card.html:112
+#: templates/fantasy/partials/roster_card.html:114
 msgid "Races the Dream Team on the points chart."
 msgstr "Tritt im Punkte-Chart gegen das Dream Team an."
 
-#: templates/fantasy/partials/roster_card.html:112
+#: templates/fantasy/partials/roster_card.html:114
 msgid "Hidden from the points chart, e.g. a what-if."
 msgstr "Im Punkte-Chart ausgeblendet, z. B. ein Was-wäre-wenn."
 

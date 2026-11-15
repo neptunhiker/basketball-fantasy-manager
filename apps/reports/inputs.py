@@ -37,7 +37,7 @@ from apps.nba.models import (
     PlayerNews,
     Team,
 )
-from apps.nba.rest_of_season import with_rest_of_season
+from apps.nba.rest_of_season import EXPECTED_AVAILABILITY, with_rest_of_season
 from apps.nba.salary_outlook import salary_baseline, with_salary_outlook
 from apps.nba.team_schedule import NEXT_DAYS, season_games, team_schedules
 from apps.nba.views import with_expected_return, with_expected_salary, with_hotness_share
@@ -47,6 +47,12 @@ from . import history, injuries, shortlist
 MILLION = Decimal(1_000_000)
 # The form columns: FP per game in each of the last `FORM_WEEKS` weeks.
 FORM_WEEKS = 3
+# A riser: over the last RISER_DAYS days, with RISER_MIN_GAMES games or more,
+# FP/game at least RISER_FACTOR times and RISER_MIN_RISE above his season.
+RISER_DAYS = 21
+RISER_MIN_GAMES = 4
+RISER_FACTOR = Decimal("1.15")
+RISER_MIN_RISE = Decimal(3)
 NEWS_DAYS = 7
 # The news block stops here (about 10K tokens at the ~2.2 characters a token
 # these texts come to). Players on a roster in the run come first, then the
@@ -98,11 +104,12 @@ def build(season, rosters=(), now=None):
     refs = {player.pk: f"P{index:03d}" for index, player in enumerate(players, start=1)}
     log = history.GameLog(season, [player.pk for player in players], until=data_as_of)
     hurt = injuries.build(season, players, log, data_as_of, now)
+    rising = _risers(players, log, data_as_of, hurt)
 
     shared = "\n\n".join(
         [
             _rules(season, data_as_of, now),
-            _player_table(players, refs, log, data_as_of, hurt),
+            _player_table(players, refs, log, data_as_of, hurt, rising),
             _injury_block(refs, hurt),
             _benefit_block(refs, hurt),
             _schedule_block(season, now),
@@ -112,9 +119,13 @@ def build(season, rosters=(), now=None):
     by_id = {player.pk: player for player in players}
     # Rostered players who have left the league can be traded away, never bought.
     market = [
-        _candidate(player, refs) for player in players if player.is_active and player.current_salary
+        _candidate(player, refs, rising)
+        for player in players
+        if player.is_active and player.current_salary
     ]
-    roster_inputs = [_roster_input(season, roster, by_id, refs, market, now) for roster in rosters]
+    roster_inputs = [
+        _roster_input(season, roster, by_id, refs, market, rising) for roster in rosters
+    ]
     return RunInputs(
         data_as_of=data_as_of,
         shared_input=shared,
@@ -156,12 +167,14 @@ def _status(player, spell):
     return "OUT"
 
 
-def _player_table(players, refs, log, data_as_of, hurt):
+def _player_table(players, refs, log, data_as_of, hurt, rising):
     weeks_end = timezone.localdate(data_as_of).isoformat()
     lines = [
         "PLAYERS",
         "Columns: ref | name | team | pos | salary $M | FP/game season "
         f"| FP/game by week, oldest to newest, the last week ending {weeks_end} (games that week) "
+        "| rising (form: FP/game over the last 21 days, 4+ games, at least 15% and 3 above "
+        "his season; opening: FP/game up since a teammate's long absence) "
         "| team games next 7 days (minus injury) | games left expected "
         "| projected FP rest of season | predicted salary change at next update $M "
         "| value $M (salary his FP/game is worth minus his salary; + is a bargain) "
@@ -178,6 +191,7 @@ def _player_table(players, refs, log, data_as_of, hurt):
                     _millions(player.current_salary),
                     _number(player.current_fp_per_game, 1),
                     _weeks(log.weekly(player.pk, data_as_of, weeks=FORM_WEEKS)),
+                    (rising[player.pk].flag if player.pk in rising else "") or "-",
                     _whole(player.next_days),
                     _whole(player.games_expected),
                     _whole(player.projected_fp),
@@ -408,7 +422,48 @@ def _rules(season, data_as_of, now):
 # --- one roster -------------------------------------------------------------
 
 
-def _candidate(player, refs):
+@dataclass(frozen=True)
+class Rising:
+    """A player whose recent form is up, and why: "form", "opening" or both."""
+
+    flag: str
+    # FP per game over the last `RISER_DAYS` days, None without enough games.
+    recent_per_game: Decimal | None
+
+
+def _risers(players, log, data_as_of, hurt):
+    """{player id: Rising} for every player who is rising or has enough recent
+    games for a recent-form projection; `flag` is empty when he isn't rising."""
+    openings = hurt.openings
+    result = {}
+    for player in players:
+        recent = log.recent(player.pk, data_as_of, days=RISER_DAYS)
+        per_game = recent.per_game if recent.games >= RISER_MIN_GAMES else None
+        season = player.current_fp_per_game
+        flags = []
+        if (
+            per_game is not None
+            and season is not None
+            and per_game >= season * RISER_FACTOR
+            and per_game >= season + RISER_MIN_RISE
+        ):
+            flags.append("form")
+        if player.pk in openings:
+            flags.append("opening")
+        if flags or per_game is not None:
+            result[player.pk] = Rising(flag="+".join(flags), recent_per_game=per_game)
+    return result
+
+
+def _recent_projection(player, recent):
+    """Rest-of-season points if he keeps his recent form, None without it."""
+    if recent is None or recent.recent_per_game is None or player.games_expected is None:
+        return None
+    return round(recent.recent_per_game * player.games_expected * EXPECTED_AVAILABILITY)
+
+
+def _candidate(player, refs, rising):
+    recent = rising.get(player.pk)
     return shortlist.Candidate(
         player_id=player.pk,
         ref=refs[player.pk],
@@ -417,12 +472,14 @@ def _candidate(player, refs):
         salary=player.current_salary or Decimal(0),
         projected_fp=player.projected_fp,
         salary_change=player.outlook_change,
+        recent_projected_fp=_recent_projection(player, recent),
+        riser=(recent.flag or None) if recent else None,
     )
 
 
-def _roster_input(season, roster, by_id, refs, market, now):
+def _roster_input(season, roster, by_id, refs, market, rising):
     squad = [by_id[player.pk] for player in roster.current_squad if player.pk in by_id]
-    candidates = [_candidate(player, refs) for player in squad]
+    candidates = [_candidate(player, refs, rising) for player in squad]
     trades = shortlist.build(candidates, market, roster.cash)
     counts = Counter(player.position for player in squad)
     lines = [
@@ -446,9 +503,13 @@ def _roster_input(season, roster, by_id, refs, market, now):
     if trades:
         lines += [
             "",
-            "SHORTLIST (every legal trade that gains projected points; recommend only these)",
-            "trade | out | in | cash after $M | projected FP gain | predicted salary change "
-            "out / in $M" + (" | still affordable after buying a trade" if must_buy else ""),
+            "SHORTLIST (the legal trades that gain projected points on season form, plus up to "
+            f"{shortlist.RESERVED} that bring in a rising player and gain on recent form; "
+            "recommend only these)",
+            "trade | out | in | cash after $M | projected FP gain on season form "
+            "| projected FP gain if both keep their last 21 days' form | in is rising "
+            "| predicted salary change out / in $M"
+            + (" | still affordable after buying a trade" if must_buy else ""),
         ]
         for trade in trades:
             lines.append(
@@ -460,7 +521,9 @@ def _roster_input(season, roster, by_id, refs, market, now):
                         f"{trade.into.ref} {trade.into.name} ({trade.into.position} "
                         f"{_millions(trade.into.salary)})",
                         _millions(trade.cash_after),
-                        f"+{trade.fp_gain}",
+                        f"{trade.fp_gain:+d}",
+                        "-" if trade.fp_gain_recent is None else f"{trade.fp_gain_recent:+d}",
+                        trade.riser or "-",
                         f"{_millions(trade.out.salary_change, signed=True)} / "
                         f"{_millions(trade.into.salary_change, signed=True)}",
                     ]

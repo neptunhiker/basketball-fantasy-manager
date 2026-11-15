@@ -207,3 +207,26 @@ def test_queries_do_not_grow_with_rosters(season, teams, manager):
         inputs.build(season, three, now=NOW)
     assert len(triple) == len(single)
     assert len(single) <= 20
+
+
+def test_a_rising_player_is_flagged_and_offered_on_recent_form(season, teams, manager):
+    # 20 FP/game on the season, 30 over four games in the last three weeks.
+    riser = make_player("G", "3", "20", 9, team=teams[0], last_name="Riser")
+    snapshot(season, riser, at(10, 25, 12, 15), total=100, games=5)
+    snapshot(season, riser, LATEST, total=220, games=9)
+    steady = played(season, teams[1], fp_per_game="21")
+    squad = [played(season, teams[1], fp_per_game="19") for _ in range(5)]
+    roster = make_roster(season, manager, squad, cash="5")
+
+    built = inputs.build(season, [roster], now=NOW)
+
+    assert " | 20.0 | - (0) → - (0) → 30.0 (4) | form | " in line_of(
+        built.shared_input, riser.full_name
+    )
+    assert " | form | " not in line_of(built.shared_input, steady.full_name)
+    rows = [trade for trade in built.rosters[0].shortlist if trade["in"] == str(riser.pk)]
+    assert rows and all(trade["riser"] == "form" for trade in rows)
+    # On the season he gains 20-19 per game; on recent form 30-19.
+    assert rows[0]["fp_gain"] < rows[0]["fp_gain_recent"]
+    assert "| in is rising |" in built.rosters[0].own_input
+    assert "| form | " in built.rosters[0].own_input

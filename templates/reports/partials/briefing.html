@@ -1,0 +1,84 @@
+{% load i18n %}
+{# The run's headline card and its market briefing. Context: run, briefing, briefing_items, season. #}
+<section class="card overflow-hidden" aria-labelledby="briefing-heading">
+  <div class="gradient-rule h-1"></div>
+  <div class="p-5 sm:p-7">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <p class="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
+        {% blocktranslate with season=season.label %}Weekly trade report · {{ season }}{% endblocktranslate %}
+      </p>
+      {% if not run.is_published %}
+        <span class="badge badge-warning">
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c5 0 9 4.5 10 7a13 13 0 0 1-2.4 3.4M6.6 6.6A13.3 13.3 0 0 0 2 12c1 2.5 5 7 10 7a10 10 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+          {% translate "Not published: only staff can see this" %}
+        </span>
+      {% endif %}
+    </div>
+
+    {% if briefing.output %}
+      <h2 id="briefing-heading" class="mt-1 text-2xl font-bold tracking-tight text-balance text-tertiary-700 sm:text-4xl dark:text-neutral-50">{{ briefing.output.headline }}</h2>
+      <p class="mt-3 max-w-3xl text-sm leading-6 text-neutral-600 sm:text-base sm:leading-7 dark:text-neutral-300">{{ briefing.output.summary|linebreaksbr }}</p>
+    {% else %}
+      <h2 id="briefing-heading" class="mt-1 text-2xl font-bold tracking-tight text-tertiary-700 sm:text-3xl dark:text-neutral-50">{% translate "Market briefing" %}</h2>
+      <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+        {% if run.is_active %}{% translate "The briefing is still being written." %}{% else %}{% translate "The briefing could not be written for this report." %}{% endif %}
+      </p>
+    {% endif %}
+
+    <p class="mt-4 flex flex-wrap gap-2 text-xs text-neutral-600 dark:text-neutral-300">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-1 dark:bg-neutral-800">
+        <svg class="h-3.5 w-3.5 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 0 1-13.7 5.6L4 15.3M4 20v-4.7h4.7"/></svg>
+        {% blocktranslate with moment=run.data_as_of|date:"D j M, H:i" %}Data as of {{ moment }}{% endblocktranslate %}
+      </span>
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-1 dark:bg-neutral-800">
+        <svg class="h-3.5 w-3.5 text-secondary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></svg>
+        {{ run.model_name }} · {{ run.get_effort_display|lower }}
+      </span>
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-1 dark:bg-neutral-800">
+        <svg class="h-3.5 w-3.5 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>
+        {% if run.trigger == "scheduled" %}{% translate "Automatic" %}{% else %}{% translate "Manual" %}{% endif %} · {{ run.created_at|date:"D j M, H:i" }}
+      </span>
+      {% if run.label %}
+        <span class="inline-flex max-w-full items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-primary-800 dark:bg-primary-500/10 dark:text-primary-200">
+          <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M3 3h8l10 10-8 8L3 11V3Z"/></svg>
+          <span class="truncate">{{ run.label }}</span>
+        </span>
+      {% endif %}
+    </p>
+  </div>
+
+  {% if briefing_items %}
+    <div class="border-t border-neutral-100 bg-neutral-50/60 p-3 sm:p-4 dark:border-neutral-800 dark:bg-neutral-950/30">
+      <h3 class="sr-only">{% translate "What matters this week" %}</h3>
+      <ul class="grid gap-3 md:grid-cols-2">
+        {% for item in briefing_items %}
+          <li class="flex gap-3 rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs dark:border-neutral-800 dark:bg-neutral-900">
+            {% include "reports/partials/briefing_icon.html" with kind=item.kind %}
+            <div class="min-w-0 flex-1">
+              <p class="text-[11px] font-bold uppercase tracking-wide
+                {% if item.kind == 'injury_opening' %}text-rose-600 dark:text-rose-300
+                {% elif item.kind == 'riser' %}text-emerald-600 dark:text-emerald-300
+                {% elif item.kind == 'faller' %}text-amber-600 dark:text-amber-300
+                {% elif item.kind == 'salary_watch' %}text-primary-600 dark:text-primary-300
+                {% else %}text-sky-600 dark:text-sky-300{% endif %}">
+                {% if item.kind == 'injury_opening' %}{% translate "Minutes opening up" %}
+                {% elif item.kind == 'riser' %}{% translate "On the rise" %}
+                {% elif item.kind == 'faller' %}{% translate "Cooling off" %}
+                {% elif item.kind == 'salary_watch' %}{% translate "Salary watch" %}
+                {% else %}{% translate "Schedule" %}{% endif %}
+              </p>
+              <p class="mt-1 text-sm leading-6 text-neutral-700 dark:text-neutral-200">{{ item.text|linebreaksbr }}</p>
+              {% if item.players %}
+                <p class="mt-2.5 flex flex-wrap gap-1.5">
+                  {% for player in item.players %}
+                    {% include "reports/partials/player_chip.html" %}
+                  {% endfor %}
+                </p>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+</section>

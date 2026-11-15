@@ -1,0 +1,60 @@
+{% load i18n %}
+{# Every published run of the season, newest first, the open one marked. #}
+{# Staff looking at an unpublished run see it on top, marked as such. #}
+<ol class="space-y-1">
+  {% if not run.is_published %}
+    <li>
+      <span aria-current="page" class="block rounded-xl border border-dashed border-amber-300 bg-amber-50/70 px-3 py-2.5 dark:border-amber-500/40 dark:bg-amber-500/10">
+        <span class="flex items-center justify-between gap-2">
+          <span class="text-sm font-semibold text-amber-900 dark:text-amber-200">{{ run.created_at|date:"D j M, H:i" }}</span>
+          <span class="badge badge-warning px-2 py-0 text-[11px]">{% translate "Not published" %}</span>
+        </span>
+        <span class="mt-0.5 block text-xs text-amber-800/80 dark:text-amber-200/70">{{ run.model_name }} · {{ run.get_effort_display|lower }}</span>
+      </span>
+    </li>
+  {% endif %}
+  {% for entry in runs %}
+    <li>
+      <a href="{% url 'reports:run' entry.pk %}"
+         {% if entry.pk == run.pk %}aria-current="page"{% endif %}
+         class="group block rounded-xl px-3 py-2.5 transition focus-visible:outline-2 focus-visible:outline-primary-500
+           {% if entry.pk == run.pk %}bg-primary-50 ring-1 ring-primary-200 dark:bg-primary-500/10 dark:ring-primary-500/30{% else %}hover:bg-neutral-50 dark:hover:bg-neutral-800/60{% endif %}">
+        <span class="flex items-center justify-between gap-2">
+          <span class="text-sm font-semibold tabular-nums {% if entry.pk == run.pk %}text-primary-800 dark:text-primary-200{% else %}text-tertiary-700 dark:text-neutral-100{% endif %}">
+            {{ entry.created_at|date:"D j M, H:i" }}
+          </span>
+          {% if entry.trigger == "scheduled" %}
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-neutral-500 dark:text-neutral-400" title="{% translate 'Made by the Sunday schedule' %}">
+              <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>
+              {% translate "Automatic" %}
+            </span>
+          {% else %}
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-neutral-500 dark:text-neutral-400" title="{% translate 'Started by an admin' %}">
+              <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 20a7 7 0 0 1 14 0"/></svg>
+              {% translate "Manual" %}
+            </span>
+          {% endif %}
+        </span>
+        <span class="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+          <span class="rounded-md bg-tertiary-700/5 px-1.5 py-0.5 font-medium text-tertiary-700 dark:bg-white/10 dark:text-neutral-200">{{ entry.model_name }}</span>
+          <span class="text-neutral-500 dark:text-neutral-400">{{ entry.get_effort_display|lower }}</span>
+          {% if entry.is_briefing_only %}
+            <span class="text-neutral-400 dark:text-neutral-500">·</span>
+            <span class="text-neutral-500 dark:text-neutral-400">{% translate "Briefing only" %}</span>
+          {% else %}
+            <span class="text-neutral-400 dark:text-neutral-500">·</span>
+            <span class="text-neutral-500 dark:text-neutral-400">{% blocktranslate count counter=entry.roster_count %}{{ counter }} roster{% plural %}{{ counter }} rosters{% endblocktranslate %}</span>
+          {% endif %}
+        </span>
+        <span class="mt-0.5 block text-[11px] text-neutral-500 dark:text-neutral-400">
+          {% blocktranslate with moment=entry.data_as_of|date:"D j M, H:i" %}Data as of {{ moment }}{% endblocktranslate %}
+        </span>
+        {% if entry.label %}
+          <span class="mt-1 block truncate text-xs italic text-neutral-600 dark:text-neutral-300">“{{ entry.label }}”</span>
+        {% endif %}
+      </a>
+    </li>
+  {% empty %}
+    <li class="px-3 py-4 text-sm text-neutral-500 dark:text-neutral-400">{% translate "Nothing published yet." %}</li>
+  {% endfor %}
+</ol>

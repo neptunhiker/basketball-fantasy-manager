@@ -1,0 +1,10 @@
+{# A player as a small link: position, name, team. Context: player. #}
+<a href="{% url 'nba:player-detail' player.slug %}"
+   class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-neutral-200 bg-white py-0.5 pl-0.5 pr-2.5 text-xs font-medium text-tertiary-700 transition hover:border-primary-300 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:border-primary-500/50 dark:hover:text-primary-300">
+  <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold
+    {% if player.position == 'G' %}bg-primary-100 text-primary-800 dark:bg-primary-500/20 dark:text-primary-200
+    {% elif player.position == 'F' %}bg-secondary-100 text-secondary-800 dark:bg-secondary-500/20 dark:text-secondary-300
+    {% else %}bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300{% endif %}">{{ player.position }}</span>
+  <span class="truncate">{{ player.full_name }}</span>
+  {% if player.team %}<span class="shrink-0 text-neutral-400 dark:text-neutral-500">{{ player.team.abbreviation }}</span>{% endif %}
+</a>

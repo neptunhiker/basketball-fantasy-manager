@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 12:13+0100\n"
+"POT-Creation-Date: 2026-11-15 12:21+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -128,7 +128,7 @@ msgid "User"
 msgstr "Benutzer"
 
 #: apps/accounts/models.py:60 templates/accounts/user_list.html:4
-#: templates/accounts/user_list.html:5 templates/app.html:169
+#: templates/accounts/user_list.html:5 templates/app.html:179
 msgid "Users"
 msgstr "Benutzer"
 
@@ -3051,33 +3051,38 @@ msgstr "Teams"
 msgid "Rosters"
 msgstr "Kader"
 
-#: templates/app.html:144
+#: templates/app.html:149 templates/reports/reports.html:12
+#: templates/reports/reports.html:13
+msgid "Reports"
+msgstr "Reports"
+
+#: templates/app.html:154
 msgid "Staff area"
 msgstr "Team-Bereich"
 
-#: templates/app.html:157 templates/fantasy/season_list.html:4
+#: templates/app.html:167 templates/fantasy/season_list.html:4
 #: templates/fantasy/season_list.html:5
 msgid "Seasons"
 msgstr "Saisons"
 
-#: templates/app.html:179 templates/perf/dashboard.html:4
+#: templates/app.html:189 templates/perf/dashboard.html:4
 #: templates/perf/dashboard.html:5
 msgid "Performance"
 msgstr "Performance"
 
-#: templates/app.html:202 templates/app.html:249 templates/app.html:254
+#: templates/app.html:212 templates/app.html:259 templates/app.html:264
 msgid "Sign out"
 msgstr "Abmelden"
 
-#: templates/app.html:227
+#: templates/app.html:237
 msgid "Toggle navigation"
 msgstr "Navigation umschalten"
 
-#: templates/app.html:296 templates/partials/messages.html:14
+#: templates/app.html:306 templates/partials/messages.html:14
 msgid "Dismiss message"
 msgstr "Nachricht schließen"
 
-#: templates/app.html:306 templates/nba/news_list.html:12
+#: templates/app.html:316 templates/nba/news_list.html:12
 msgid "Loading"
 msgstr "Wird geladen"
 
@@ -3851,6 +3856,7 @@ msgstr ""
 #: templates/fantasy/partials/trade_body.html:267
 #: templates/fantasy/partials/trade_body.html:329
 #: templates/fantasy/roster_history.html:128
+#: templates/reports/partials/trade_card.html:32
 msgid "Cash after"
 msgstr "Cash danach"
 
@@ -3941,6 +3947,7 @@ msgstr ""
 "verpflichtet werden."
 
 #: templates/fantasy/partials/player_roster_options.html:6
+#: templates/reports/reports.html:51
 msgid "Your rosters"
 msgstr "Deine Kader"
 
@@ -4233,6 +4240,7 @@ msgid "No trades available."
 msgstr "Keine Trades verfügbar."
 
 #: templates/fantasy/partials/roster_panel.html:257
+#: templates/reports/partials/roster_section.html:12
 msgid "Your roster"
 msgstr "Dein Kader"
 
@@ -6396,6 +6404,7 @@ msgid "The figures come from the newest snapshot."
 msgstr "Die Werte stammen aus dem neuesten Snapshot."
 
 #: templates/nba/partials/team_schedule.html:11
+#: templates/reports/partials/briefing.html:68
 msgid "Schedule"
 msgstr "Spielplan"
 
@@ -7373,3 +7382,306 @@ msgid "%(count)s deploy"
 msgid_plural "%(count)s deploys"
 msgstr[0] "%(count)s Deploy"
 msgstr[1] "%(count)s Deploys"
+
+#: templates/reports/partials/briefing.html:8
+#, python-format
+msgid "Weekly trade report · %(season)s"
+msgstr "Wöchentlicher Trade-Report · %(season)s"
+
+#: templates/reports/partials/briefing.html:13
+msgid "Not published: only staff can see this"
+msgstr "Nicht veröffentlicht: nur das Team sieht das"
+
+#: templates/reports/partials/briefing.html:22
+msgid "Market briefing"
+msgstr "Marktbericht"
+
+#: templates/reports/partials/briefing.html:24
+msgid "The briefing is still being written."
+msgstr "Der Marktbericht wird noch geschrieben."
+
+#: templates/reports/partials/briefing.html:24
+msgid "The briefing could not be written for this report."
+msgstr "Der Marktbericht konnte für diesen Report nicht geschrieben werden."
+
+#: templates/reports/partials/briefing.html:31
+#: templates/reports/partials/run_list.html:50
+#, python-format
+msgid "Data as of %(moment)s"
+msgstr "Daten vom %(moment)s"
+
+#: templates/reports/partials/briefing.html:39
+#: templates/reports/partials/run_list.html:29
+msgid "Automatic"
+msgstr "Automatisch"
+
+#: templates/reports/partials/briefing.html:39
+#: templates/reports/partials/run_list.html:34
+msgid "Manual"
+msgstr "Manuell"
+
+#: templates/reports/partials/briefing.html:52
+msgid "What matters this week"
+msgstr "Was diese Woche zählt"
+
+#: templates/reports/partials/briefing.html:64
+msgid "Minutes opening up"
+msgstr "Minuten werden frei"
+
+#: templates/reports/partials/briefing.html:65
+msgid "On the rise"
+msgstr "Im Aufwind"
+
+#: templates/reports/partials/briefing.html:66
+msgid "Cooling off"
+msgstr "Kühlt ab"
+
+#: templates/reports/partials/briefing.html:67
+msgid "Salary watch"
+msgstr "Gehalt im Blick"
+
+#: templates/reports/partials/empty.html:7
+msgid "Weekly trade report"
+msgstr "Wöchentlicher Trade-Report"
+
+#: templates/reports/partials/outcomes.html:14
+msgid "for"
+msgstr "für"
+
+#: templates/reports/partials/outcomes.html:19
+msgid "Too early to tell"
+msgstr "Noch zu früh"
+
+#: templates/reports/partials/outcomes.html:24
+#, python-format
+msgid "in %(counter)s day"
+msgid_plural "in %(counter)s days"
+msgstr[0] "in %(counter)s Tag"
+msgstr[1] "in %(counter)s Tagen"
+
+#: templates/reports/partials/outcomes.html:29
+msgid "Trade made"
+msgstr "Trade gemacht"
+
+#: templates/reports/partials/roster_section.html:12
+#, python-format
+msgid "Managed by %(nick)s"
+msgstr "Geführt von %(nick)s"
+
+#: templates/reports/partials/roster_section.html:14
+msgid "Open roster"
+msgstr "Kader öffnen"
+
+#: templates/reports/partials/roster_section.html:21
+msgid "Trade this week"
+msgstr "Diese Woche traden"
+
+#: templates/reports/partials/roster_section.html:26
+msgid "Buy a trade, then trade"
+msgstr "Trade kaufen, dann traden"
+
+#: templates/reports/partials/roster_section.html:31
+msgid "Keep your trade"
+msgstr "Trade aufheben"
+
+#: templates/reports/partials/roster_section.html:56
+msgid "Why keep the trade"
+msgstr "Warum den Trade aufheben"
+
+#: templates/reports/partials/roster_section.html:68
+msgid "Keep an eye on"
+msgstr "Im Auge behalten"
+
+#: templates/reports/partials/roster_section.html:84
+msgid "What could make this wrong"
+msgstr "Was dagegen sprechen könnte"
+
+#: templates/reports/partials/roster_section.html:93
+msgid "How this advice has done"
+msgstr "So hat sich der Rat bewährt"
+
+#: templates/reports/partials/roster_section.html:98
+msgid "No report for this roster in this run: the AI could not write one."
+msgstr ""
+"Kein Report für diesen Kader in diesem Lauf: Die KI konnte keinen schreiben."
+
+#: templates/reports/partials/roster_section.html:103
+msgid "This roster's report is still being written."
+msgstr "Der Report für diesen Kader wird noch geschrieben."
+
+#: templates/reports/partials/roster_section.html:108
+#, python-format
+msgid "The report of %(moment)s advised"
+msgstr "Der Report vom %(moment)s riet"
+
+#: templates/reports/partials/run_list.html:10
+msgid "Not published"
+msgstr "Nicht veröffentlicht"
+
+#: templates/reports/partials/run_list.html:27
+msgid "Made by the Sunday schedule"
+msgstr "Vom Sonntagslauf erstellt"
+
+#: templates/reports/partials/run_list.html:32
+msgid "Started by an admin"
+msgstr "Von einem Admin gestartet"
+
+#: templates/reports/partials/run_list.html:43
+msgid "Briefing only"
+msgstr "Nur Marktbericht"
+
+#: templates/reports/partials/run_list.html:46
+#, python-format
+msgid "%(counter)s roster"
+msgid_plural "%(counter)s rosters"
+msgstr[0] "%(counter)s Kader"
+msgstr[1] "%(counter)s Kader"
+
+#: templates/reports/partials/run_list.html:58
+msgid "Nothing published yet."
+msgstr "Noch nichts veröffentlicht."
+
+#: templates/reports/partials/trade_card.html:3
+#, python-format
+msgid "Recommended trade %(rank)s"
+msgstr "Empfohlener Trade %(rank)s"
+
+#: templates/reports/partials/trade_card.html:7
+msgid "First choice"
+msgstr "Erste Wahl"
+
+#: templates/reports/partials/trade_card.html:7
+msgid "Alternative"
+msgstr "Alternative"
+
+#: templates/reports/partials/trade_card.html:11
+msgid "High confidence"
+msgstr "Hohe Sicherheit"
+
+#: templates/reports/partials/trade_card.html:11
+msgid "Medium confidence"
+msgstr "Mittlere Sicherheit"
+
+#: templates/reports/partials/trade_card.html:11
+msgid "Low confidence"
+msgstr "Geringe Sicherheit"
+
+#: templates/reports/partials/trade_card.html:28
+msgid "Projected gain"
+msgstr "Prognostizierter Gewinn"
+
+#: templates/reports/partials/trade_card.html:36
+msgid "Predicted salary change at the next Sunday update: in minus out"
+msgstr ""
+"Vorhergesagte Gehaltsänderung beim nächsten Sonntags-Update: rein minus raus"
+
+#: templates/reports/partials/trade_card.html:36
+msgid "Sunday swing"
+msgstr "Sonntags-Effekt"
+
+#: templates/reports/partials/trade_side.html:12
+msgid "Out"
+msgstr "Raus"
+
+#: templates/reports/partials/trade_side.html:12
+msgid "In"
+msgstr "Rein"
+
+#: templates/reports/partials/trade_side.html:18
+#, python-format
+msgid "%(projected)s proj."
+msgstr "%(projected)s Prog."
+
+#: templates/reports/partials/trade_side.html:20
+msgid "Predicted salary change at the next update"
+msgstr "Vorhergesagte Gehaltsänderung beim nächsten Update"
+
+#: templates/reports/reports.html:21
+msgid "No season is running"
+msgstr "Es läuft keine Saison"
+
+#: templates/reports/reports.html:21
+msgid "Reports appear once a season is set up and its first stats are in."
+msgstr ""
+"Reports erscheinen, sobald eine Saison angelegt ist und die ersten Stats da "
+"sind."
+
+#: templates/reports/reports.html:23
+msgid "No report yet"
+msgstr "Noch kein Report"
+
+#: templates/reports/reports.html:23
+msgid ""
+"Every Sunday at 12:30 an AI reads the week's numbers, injuries and news and "
+"writes a market briefing plus advice for every active roster. The first one "
+"appears here once it is published."
+msgstr ""
+"Jeden Sonntag um 12:30 liest eine KI die Zahlen, Verletzungen und News der "
+"Woche und schreibt einen Marktbericht plus Rat für jeden aktiven Kader. Der "
+"erste erscheint hier, sobald er veröffentlicht ist."
+
+#: templates/reports/reports.html:34
+#, python-format
+msgid "%(counter)s published report"
+msgid_plural "%(counter)s published reports"
+msgstr[0] "%(counter)s veröffentlichter Report"
+msgstr[1] "%(counter)s veröffentlichte Reports"
+
+#: templates/reports/reports.html:51
+msgid "Roster advice"
+msgstr "Rat für die Kader"
+
+#: templates/reports/reports.html:53
+msgid ""
+"Trades are picked from the legal ones this app worked out; the reasoning is "
+"the AI's."
+msgstr ""
+"Die Trades stammen aus den erlaubten, die diese App ausgerechnet hat; die "
+"Begründung kommt von der KI."
+
+#: templates/reports/reports.html:58
+msgid "Rosters in this report"
+msgstr "Kader in diesem Report"
+
+#: templates/reports/reports.html:80
+msgid "This report is the market briefing only."
+msgstr "Dieser Report ist nur der Marktbericht."
+
+#: templates/reports/reports.html:80
+msgid "None of your rosters is in this report."
+msgstr "Keiner deiner Kader ist in diesem Report."
+
+#: templates/reports/reports.html:82
+msgid ""
+"Reports cover the rosters switched on under Rosters at the time they are "
+"made."
+msgstr ""
+"Reports umfassen die Kader, die beim Erstellen unter Kader eingeschaltet "
+"sind."
+
+#: templates/reports/reports.html:84
+msgid "Go to Rosters"
+msgstr "Zu den Kadern"
+
+#: templates/reports/reports.html:91
+msgid "How this report is made"
+msgstr "So entsteht dieser Report"
+
+#: templates/reports/reports.html:93
+#, python-format
+msgid ""
+"This app works out every number and every legal trade: form, projections, "
+"predicted salary changes, cash and position rules. %(model)s reads them "
+"together with the week's injuries and news, picks from those trades and "
+"explains why. It can be wrong. Nothing is traded for you: a trade still has "
+"to be made on the roster's page."
+msgstr ""
+"Diese App rechnet jede Zahl und jeden erlaubten Trade aus: Form, Prognosen, "
+"vorhergesagte Gehaltsänderungen, Cash und Positionsregeln. %(model)s liest "
+"sie zusammen mit den Verletzungen und News der Woche, wählt aus diesen "
+"Trades und erklärt, warum. Das kann falsch sein. Für dich wird nichts "
+"getradet: Ein Trade muss weiterhin auf der Seite des Kaders gemacht werden."
+
+#: templates/reports/reports.html:106
+msgid "Published reports"
+msgstr "Veröffentlichte Reports"

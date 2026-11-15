@@ -1,0 +1,117 @@
+{% extends "app.html" %}
+{% load i18n static %}
+
+{% comment %}
+  AI trade reports. One run on the left -- the market briefing for everyone,
+  then the viewer's own rosters -- and every published run of the season on
+  the right (folded into a disclosure above the report on phones and
+  tablets). Data from `apps.reports.pages`; staff controls arrive with
+  `staff_panel`. The AI's words are always escaped: never `|safe` here.
+{% endcomment %}
+
+{% block title %}{% translate "Reports" %} · {{ SITE_NAME }}{% endblock %}
+{% block page_title %}{% translate "Reports" %}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-6xl space-y-6">
+
+  {% block staff_panel %}{% endblock %}
+
+  {% if not season %}
+    {% include "reports/partials/empty.html" with title=_("No season is running") text=_("Reports appear once a season is set up and its first stats are in.") %}
+  {% elif not run %}
+    {% include "reports/partials/empty.html" with title=_("No report yet") text=_("Every Sunday at 12:30 an AI reads the week's numbers, injuries and news and writes a market briefing plus advice for every active roster. The first one appears here once it is published.") %}
+  {% else %}
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-start">
+
+      <div class="min-w-0 space-y-6">
+        {# Phones and tablets: the other reports, folded away above this one. #}
+        {% if runs|length > 1 or not run.is_published %}
+          <details class="card group lg:hidden">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-tertiary-700 dark:text-neutral-100 [&::-webkit-details-marker]:hidden">
+              <span class="flex min-w-0 items-center gap-2">
+                <svg class="h-4 w-4 shrink-0 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/></svg>
+                <span class="truncate">{% blocktranslate count counter=runs|length %}{{ counter }} published report{% plural %}{{ counter }} published reports{% endblocktranslate %}</span>
+              </span>
+              <svg class="h-4 w-4 shrink-0 text-neutral-400 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="border-t border-neutral-100 p-2 dark:border-neutral-800">
+              {% include "reports/partials/run_list.html" %}
+            </div>
+          </details>
+        {% endif %}
+
+        {% include "reports/partials/briefing.html" %}
+
+        {# --- The viewer's rosters ------------------------------------------- #}
+        <section aria-labelledby="rosters-heading" class="space-y-4">
+          <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 px-1">
+            <div>
+              <h2 id="rosters-heading" class="text-lg font-bold tracking-tight text-tertiary-700 dark:text-neutral-100">
+                {% if request.user.is_staff and roster_choices %}{% translate "Roster advice" %}{% else %}{% translate "Your rosters" %}{% endif %}
+              </h2>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400">{% translate "Trades are picked from the legal ones this app worked out; the reasoning is the AI's." %}</p>
+            </div>
+          </div>
+
+          {% if roster_choices|length > 1 %}
+            <nav aria-label="{% translate 'Rosters in this report' %}" class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              {% for roster in roster_choices %}
+                {% with roster_id=roster.pk|stringformat:"s" %}
+                  <a href="?roster={{ roster.pk }}"
+                     {% if roster_id in shown_roster_ids %}aria-current="true"{% endif %}
+                     class="inline-flex shrink-0 items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-sm font-medium transition
+                       {% if roster_id in shown_roster_ids %}border-primary-300 bg-primary-50 text-primary-800 dark:border-primary-500/40 dark:bg-primary-500/15 dark:text-primary-200{% else %}border-neutral-200 bg-white text-neutral-700 hover:border-primary-200 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300{% endif %}">
+                    <img src="{% static 'img/roster_icons/' %}{{ roster.icon }}.png" alt="" class="h-6 w-6 rounded-full object-cover">
+                    <span class="max-w-40 truncate">{{ roster.name }}</span>
+                  </a>
+                {% endwith %}
+              {% endfor %}
+            </nav>
+          {% endif %}
+
+          {% for section in sections %}
+            {% include "reports/partials/roster_section.html" %}
+          {% empty %}
+            <div class="card flex flex-col items-center gap-3 px-6 py-10 text-center sm:flex-row sm:text-left">
+              <img src="{% static 'img/pengi.png' %}" alt="" class="h-16 w-16 rounded-2xl object-cover shadow-sm">
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold text-tertiary-700 dark:text-neutral-100">
+                  {% if run.is_briefing_only %}{% translate "This report is the market briefing only." %}{% else %}{% translate "None of your rosters is in this report." %}{% endif %}
+                </p>
+                <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{% translate "Reports cover the rosters switched on under Rosters at the time they are made." %}</p>
+              </div>
+              <a href="{% url 'fantasy:roster-list' %}" class="btn btn-secondary shrink-0">{% translate "Go to Rosters" %}</a>
+            </div>
+          {% endfor %}
+        </section>
+
+        {# --- How it is made ------------------------------------------------ #}
+        <section class="rounded-2xl border border-dashed border-neutral-300 px-5 py-4 sm:px-6 dark:border-neutral-700" aria-labelledby="method-heading">
+          <h2 id="method-heading" class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "How this report is made" %}</h2>
+          <p class="mt-1 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+            {% blocktranslate trimmed with model=run.model_name %}
+              This app works out every number and every legal trade: form, projections, predicted salary changes, cash and position rules.
+              {{ model }} reads them together with the week's injuries and news, picks from those trades and explains why.
+              It can be wrong. Nothing is traded for you: a trade still has to be made on the roster's page.
+            {% endblocktranslate %}
+          </p>
+        </section>
+      </div>
+
+      {# Desktop: every published report, the open one marked. #}
+      <aside class="hidden lg:sticky lg:top-6 lg:block" aria-labelledby="runs-heading">
+        <div class="card overflow-hidden">
+          <div class="flex items-center justify-between gap-2 border-b border-neutral-100 px-4 py-3 dark:border-neutral-800">
+            <h2 id="runs-heading" class="text-sm font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "Published reports" %}</h2>
+            <span class="badge badge-neutral tabular-nums">{{ runs|length }}</span>
+          </div>
+          <div class="max-h-[calc(100vh-10rem)] overflow-y-auto p-2">
+            {% include "reports/partials/run_list.html" %}
+          </div>
+        </div>
+      </aside>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

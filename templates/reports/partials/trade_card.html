@@ -1,0 +1,44 @@
+{% load i18n money %}
+{# One recommended trade, drawn from our own shortlist figures. Context: card (pages.TradeCard). #}
+<section class="overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800" aria-label="{% blocktranslate with rank=card.rank %}Recommended trade {{ rank }}{% endblocktranslate %}">
+  <div class="flex flex-wrap items-center justify-between gap-2 bg-neutral-50/80 px-4 py-2.5 dark:bg-neutral-800/40">
+    <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <span class="flex h-5 w-5 items-center justify-center rounded-full bg-tertiary-700 text-[11px] font-bold text-white dark:bg-neutral-100 dark:text-tertiary-800">{{ card.rank }}</span>
+      {% if card.rank == 1 %}{% translate "First choice" %}{% else %}{% translate "Alternative" %}{% endif %}
+    </p>
+    <span class="badge
+      {% if card.confidence == 'high' %}badge-success{% elif card.confidence == 'medium' %}bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300{% else %}badge-warning{% endif %}">
+      {% if card.confidence == 'high' %}{% translate "High confidence" %}{% elif card.confidence == 'medium' %}{% translate "Medium confidence" %}{% else %}{% translate "Low confidence" %}{% endif %}
+    </span>
+  </div>
+
+  {# Out and in: side by side from `sm`, one above the other on phones. #}
+  <div class="grid items-stretch gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:p-4">
+    {% include "reports/partials/trade_side.html" with player=card.out side="out" salary=card.salary_out projected=card.projected_out change=card.change_out %}
+    <div class="flex items-center justify-center" aria-hidden="true">
+      <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 text-white shadow-sm">
+        <svg class="h-4 w-4 rotate-90 sm:rotate-0" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+    </div>
+    {% include "reports/partials/trade_side.html" with player=card.into side="in" salary=card.salary_in projected=card.projected_in change=card.change_in %}
+  </div>
+
+  <dl class="grid grid-cols-3 divide-x divide-neutral-100 border-y border-neutral-100 text-center dark:divide-neutral-800 dark:border-neutral-800">
+    <div class="px-2 py-2.5">
+      <dt class="text-[11px] text-neutral-500 dark:text-neutral-400">{% translate "Projected gain" %}</dt>
+      <dd class="text-sm font-bold tabular-nums text-emerald-600 sm:text-base dark:text-emerald-400">+{{ card.fp_gain }} <span class="text-xs font-semibold">FP</span></dd>
+    </div>
+    <div class="px-2 py-2.5">
+      <dt class="text-[11px] text-neutral-500 dark:text-neutral-400">{% translate "Cash after" %}</dt>
+      <dd class="text-sm font-bold tabular-nums text-tertiary-700 sm:text-base dark:text-neutral-100" title="{{ card.cash_after|exact }}">{{ card.cash_after|millions }}</dd>
+    </div>
+    <div class="px-2 py-2.5">
+      <dt class="text-[11px] text-neutral-500 dark:text-neutral-400" title="{% translate 'Predicted salary change at the next Sunday update: in minus out' %}">{% translate "Sunday swing" %}</dt>
+      <dd class="text-sm font-bold tabular-nums sm:text-base {% if card.salary_swing > 0 %}text-emerald-600 dark:text-emerald-400{% elif card.salary_swing < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-600 dark:text-neutral-300{% endif %}">{{ card.salary_swing|signed_millions }}</dd>
+    </div>
+  </dl>
+
+  {% if card.reasoning %}
+    <p class="px-4 py-3.5 text-sm leading-6 text-neutral-700 dark:text-neutral-200">{{ card.reasoning|linebreaksbr }}</p>
+  {% endif %}
+</section>

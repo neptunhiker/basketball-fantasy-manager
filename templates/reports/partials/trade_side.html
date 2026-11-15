@@ -1,0 +1,24 @@
+{% load i18n money %}
+{# One side of a trade card. Context: player, side ("out"/"in"), salary, projected, change. #}
+<div class="flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5
+  {% if side == 'out' %}bg-rose-50/70 dark:bg-rose-500/5{% else %}bg-emerald-50/70 dark:bg-emerald-500/5{% endif %}">
+  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold
+    {% if player.position == 'G' %}bg-primary-100 text-primary-800 dark:bg-primary-500/20 dark:text-primary-200
+    {% elif player.position == 'F' %}bg-secondary-100 text-secondary-800 dark:bg-secondary-500/20 dark:text-secondary-300
+    {% else %}bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300{% endif %}"
+    title="{{ player.get_position_display }}">{{ player.position }}</span>
+  <div class="min-w-0 flex-1">
+    <p class="text-[11px] font-bold uppercase tracking-wide {% if side == 'out' %}text-rose-600 dark:text-rose-300{% else %}text-emerald-600 dark:text-emerald-300{% endif %}">
+      {% if side == 'out' %}{% translate "Out" %}{% else %}{% translate "In" %}{% endif %}
+    </p>
+    <a href="{% url 'nba:player-detail' player.slug %}" class="block truncate font-semibold text-tertiary-700 hover:text-primary-600 hover:underline dark:text-neutral-100 dark:hover:text-primary-400">{{ player.full_name }}</a>
+    <p class="flex flex-wrap gap-x-2 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+      <span>{{ player.team.abbreviation|default:"–" }}</span>
+      <span title="{{ salary|exact }}">{{ salary|millions }}</span>
+      {% if projected is not None %}<span>{% blocktranslate %}{{ projected }} proj.{% endblocktranslate %}</span>{% endif %}
+      {% if change is not None %}
+        <span class="{% if change > 0 %}text-emerald-600 dark:text-emerald-400{% elif change < 0 %}text-rose-600 dark:text-rose-400{% endif %}" title="{% translate 'Predicted salary change at the next update' %}">{{ change|signed_millions }}</span>
+      {% endif %}
+    </p>
+  </div>
+</div>

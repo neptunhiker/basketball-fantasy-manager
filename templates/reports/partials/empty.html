@@ -1,0 +1,11 @@
+{% load i18n static %}
+{# The page without a report to show. Context: title, text. #}
+<section class="card overflow-hidden" aria-labelledby="reports-empty-heading">
+  <div class="gradient-rule h-1"></div>
+  <div class="flex flex-col items-center px-6 py-14 text-center sm:py-20">
+    <img src="{% static 'img/pengi_bookkeeper.png' %}" alt="" class="h-28 w-28 rounded-3xl object-cover shadow-md sm:h-32 sm:w-32">
+    <p class="mt-6 text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">{% translate "Weekly trade report" %}</p>
+    <h2 id="reports-empty-heading" class="mt-1 text-2xl font-bold tracking-tight text-tertiary-700 sm:text-3xl dark:text-neutral-100">{{ title }}</h2>
+    <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-neutral-500 dark:text-neutral-400">{{ text }}</p>
+  </div>
+</section>

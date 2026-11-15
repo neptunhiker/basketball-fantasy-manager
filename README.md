@@ -200,6 +200,7 @@ apps/accounts/   User model, invitations, sign-in
 apps/core/       Dashboard, health check, shared building blocks
 apps/nba/        Teams and players — the real league, no game logic
 apps/fantasy/    The game layer — seasons, rosters, transactions, snapshots
+apps/analytics/  Season analytics — the Dream Team and the points race
 apps/perf/       Request metrics: Server-Timing header, timings per route
 assets/          Tailwind source (build input, not a static file)
 static/          Served assets; css/app.css is generated
@@ -394,6 +395,33 @@ game × the player's games between two moments × the league's availability,
 with the same injury rule as the rest of the season. A trade gains the
 newcomer's games from its day on and loses the leaver's, which makes a chain
 of trades add up by itself.
+
+## Analytics
+
+**Analytics** in the sidebar has two tabs, each its own page under one tab bar
+(`templates/analytics/base.html`):
+
+- **Dream Team** (`/analytics/`): the best fifteen that could have been bought
+  on draft day, worked out after every import (`apps/analytics/dream_team.py`).
+- **Insights** (`/analytics/insights/`): the points race. Every *active* roster's
+  running total since signings closed, day by day, against the Dream Team's,
+  with the standings underneath (`apps/analytics/insights.py`). A roster's
+  points come from `apps/fantasy/points.py`, the same arithmetic as the roster
+  timeline, so the two pages never disagree.
+
+Whether a roster races is `Roster.is_active`, on by default and switched on
+each roster card on **Rosters** — what-ifs switch it off. Insights is the one
+page where everyone signed in sees other managers' roster names, handles and
+points; their roster pages stay private, so the names are not links.
+
+The Dream Team line needs a stored result per import. Imports from before the
+Dream Team existed have none, so after deploying it for the first time, fill
+the history in once:
+
+```bash
+docker compose -p fantasy-prod -f docker-compose.deploy.yml exec web \
+  python manage.py refresh_dream_team --all
+```
 
 ## Accounts and invitations
 

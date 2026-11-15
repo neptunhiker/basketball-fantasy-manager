@@ -11,6 +11,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
 from apps.core.models import TimeStampedModel
 from apps.fantasy.models import Roster, Season
@@ -20,9 +21,9 @@ from . import catalog
 
 
 class Effort(models.TextChoices):
-    LOW = catalog.LOW, "Low"
-    MEDIUM = catalog.MEDIUM, "Medium"
-    HIGH = catalog.HIGH, "High"
+    LOW = catalog.LOW, _("Low")
+    MEDIUM = catalog.MEDIUM, _("Medium")
+    HIGH = catalog.HIGH, _("High")
 
 
 class ReportSettings(TimeStampedModel):

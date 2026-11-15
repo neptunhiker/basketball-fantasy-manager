@@ -26,7 +26,7 @@
   <dl class="grid grid-cols-3 divide-x divide-neutral-100 border-y border-neutral-100 text-center dark:divide-neutral-800 dark:border-neutral-800">
     <div class="px-2 py-2.5">
       <dt class="text-[11px] text-neutral-500 dark:text-neutral-400">{% translate "Projected gain" %}</dt>
-      <dd class="text-sm font-bold tabular-nums text-emerald-600 sm:text-base dark:text-emerald-400">+{{ card.fp_gain }} <span class="text-xs font-semibold">FP</span></dd>
+      <dd class="text-sm font-bold tabular-nums text-emerald-600 sm:text-base dark:text-emerald-400">+{{ card.fp_gain|floatformat:"0g" }} <span class="text-xs font-semibold">FP</span></dd>
     </div>
     <div class="px-2 py-2.5">
       <dt class="text-[11px] text-neutral-500 dark:text-neutral-400">{% translate "Cash after" %}</dt>

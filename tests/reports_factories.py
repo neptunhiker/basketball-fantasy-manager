@@ -147,13 +147,14 @@ class FakeAi:
 
     By default the briefing names P001 and a roster report picks the first
     shortlist trade. `fail` is a predicate on the call; `answer` replaces the
-    parsed answer for roster reports.
+    parsed answer for roster reports, `briefing` the briefing.
     """
 
     def __init__(self):
         self.calls = []
         self.fail = None
         self.answer = None
+        self.briefing = None
 
     def __call__(self, *, model, effort, preamble, shared_input, task, schema):
         from types import SimpleNamespace
@@ -179,7 +180,9 @@ class FakeAi:
         )
         if self.fail and self.fail(call):
             raise ai.AiError("The model declined: test", usage)
-        if not roster:
+        if not roster and self.briefing is not None:
+            parsed = self.briefing
+        elif not roster:
             parsed = schemas.Briefing(
                 headline="A busy week",
                 summary="Two games for everyone.",

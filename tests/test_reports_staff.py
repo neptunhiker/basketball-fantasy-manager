@@ -67,7 +67,8 @@ def test_players_cannot_use_any_staff_control(client, user, season):
 
 def test_staff_see_the_panel_open_while_there_is_no_report(staff, season):
     html = staff.get(reverse("reports:index")).content.decode()
-    assert '<details id="staff"' in html and "open>" in html.split('<details id="staff"')[1][:200]
+    panel = html.split('<details id="staff"')[1].split(">")[0]
+    assert " open" in panel
     assert "Start run" in html
     assert "GPT-6.1 Sol" in html
 

@@ -29,7 +29,7 @@
         {# Phones and tablets: the other reports, folded away above this one. #}
         {% if runs|length > 1 or not run.is_published %}
           <details class="card group lg:hidden">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-tertiary-700 dark:text-neutral-100 [&::-webkit-details-marker]:hidden">
+            <summary class="flex list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-tertiary-700 dark:text-neutral-100 [&::-webkit-details-marker]:hidden">
               <span class="flex min-w-0 items-center gap-2">
                 <svg class="h-4 w-4 shrink-0 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/></svg>
                 <span class="truncate">{% blocktranslate count counter=runs|length %}{{ counter }} published report{% plural %}{{ counter }} published reports{% endblocktranslate %}</span>

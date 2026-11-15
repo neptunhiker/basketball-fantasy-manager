@@ -55,19 +55,19 @@
     {% endif %}
     {% if not entry.is_active %}
       <details class="group/rerun relative">
-        <summary class="btn btn-ghost cursor-pointer list-none px-3 py-1.5 text-xs [&::-webkit-details-marker]:hidden">{% translate "Rerun…" %}</summary>
+        <summary class="btn btn-ghost list-none px-3 py-1.5 text-xs [&::-webkit-details-marker]:hidden">{% translate "Rerun…" %}</summary>
         <form method="post" action="{% url 'reports:rerun' entry.pk %}"
               class="z-20 mt-2 w-full space-y-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-lg sm:absolute sm:right-0 sm:w-64 dark:border-neutral-700 dark:bg-neutral-900">
           {% csrf_token %}
           <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Same data and shortlists, another model or effort." %}</p>
-          <select name="model" aria-label="{% translate 'Model' %}" class="block w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+          <select name="model" aria-label="{% translate 'Model' %}" class="block w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-base sm:text-sm dark:border-neutral-700 dark:bg-neutral-900">
             {% for model in staff.models %}<option value="{{ model.id }}" {% if model.id == entry.model %}selected{% endif %}>{{ model.name }}</option>{% endfor %}
           </select>
-          <select name="effort" aria-label="{% translate 'Reasoning effort' %}" class="block w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+          <select name="effort" aria-label="{% translate 'Reasoning effort' %}" class="block w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-base sm:text-sm dark:border-neutral-700 dark:bg-neutral-900">
             {% for effort in staff.efforts %}<option value="{{ effort }}" {% if effort == entry.effort %}selected{% endif %}>{% if effort == "low" %}{% translate "Low" %}{% elif effort == "medium" %}{% translate "Medium" %}{% else %}{% translate "High" %}{% endif %}</option>{% endfor %}
           </select>
           <input type="text" name="label" maxlength="80" placeholder="{% translate 'Label (optional)' %}" aria-label="{% translate 'Label' %}"
-                 class="block w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+                 class="block w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-base sm:text-sm dark:border-neutral-700 dark:bg-neutral-900">
           <button type="submit" class="btn btn-primary w-full py-1.5 text-xs">{% translate "Start rerun" %}</button>
         </form>
       </details>

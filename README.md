@@ -423,6 +423,49 @@ docker compose -p fantasy-prod -f docker-compose.deploy.yml exec web \
   python manage.py refresh_dream_team --all
 ```
 
+## Reports (AI trade reports)
+
+**Reports** in the sidebar shows a weekly trade report written by an AI
+(`apps/reports`): a market briefing for everyone, and advice for each active
+roster — at most two trades, or "keep your trade". Python works out every
+figure and every *legal* trade first (`inputs.py`, `shortlist.py`); the AI
+only picks from that list and explains why, using the week's injuries and
+RotoWire news as well. Its answers are checked against our own lists before
+they are stored, and shown escaped.
+
+- **Runs.** A run is one model asked about one moment's data: the briefing
+  plus one report per roster, each its own Django-Q task. Every run is kept.
+  Players see published runs only, and only their own rosters; staff see
+  everything.
+- **Every Sunday at 12:30** (after the 12:15 import, before the 22:00 salary
+  update) a run starts with the default model and publishes itself once its
+  briefing is written. It waits up to an hour for an import still running.
+- **Staff** use the *AI report runs* panel on the Reports page to start runs
+  (model, reasoning effort, label, which rosters) with a cost estimate,
+  publish or hide them, retry failed reports, rerun the same data with
+  another model to compare, and set the default model and the Sunday run.
+- **Models and prices** are a fixed list in `apps/reports/catalog.py`.
+
+Settings (in `.env`):
+
+```bash
+AI_BRIEFING_API_KEY=sk-...          # OpenAI; empty switches reports off
+AI_BRIEFING_MONTHLY_LIMIT_USD=20    # no new run once this month has cost this much
+```
+
+From the shell, without the page:
+
+```bash
+uv run python manage.py report_inputs --summary  # what the AI would see, and its cost; calls nothing
+uv run python manage.py run_report --model gpt-6-luna --effort low   # asks before spending
+```
+
+Locally Django-Q runs in sync mode, so a run started from the page keeps the
+request busy until it is done (about 20 seconds with Luna); on the server the
+worker does it in the background. **Tests never call OpenAI**:
+`tests/conftest.py` replaces the key and blocks the client, and the report
+tests use a fake (`tests/reports_factories.FakeAi`).
+
 ## Accounts and invitations
 
 There is no public sign-up. Team members (`is_staff`) invite people under

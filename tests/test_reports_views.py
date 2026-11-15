@@ -159,7 +159,7 @@ def test_a_trade_card_is_drawn_from_our_own_figures(signed_in, season, manager, 
     assert card.cash_after == Decimal(first["cash_after"])
     assert "Trade this week" in html
     assert "High confidence" in html
-    assert f"+{first['fp_gain']}" in html
+    assert f"+{first['fp_gain']:,}" in html
 
 
 def test_the_ais_words_are_escaped(signed_in, season, manager, run_of, fake_ai):

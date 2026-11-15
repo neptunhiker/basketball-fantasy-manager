@@ -28,6 +28,12 @@ from apps.fantasy.points import ZERO, cutoff, roster_points_by_moment
 from .models import DreamTeam
 
 DREAM_TEAM = "dream-team"
+# How many rosters get a colour of their own. The palette (`.race-*` in
+# assets/input.css) is the Dream Team's brand violet plus seven hues checked
+# against it and each other for colour-blind readers; any roster past the
+# seventh is drawn in a muted grey and told apart by its label instead.
+COLORS = 7
+MUTED = "muted"
 
 
 @dataclass
@@ -41,6 +47,8 @@ class Line:
     icon: str = ""
     is_dream_team: bool = False
     is_own: bool = False
+    # Which `.race-*` colour draws it: "dt", "1".."7", or MUTED.
+    color: str = MUTED
 
     @property
     def latest(self):
@@ -139,9 +147,21 @@ def points_race(season, viewer=None):
         )
         for roster in rosters
     ]
+    _assign_colors(roster_lines, {str(roster.pk): roster.created_at for roster in rosters})
     roster_lines.sort(key=lambda line: (-(line.latest or ZERO), line.name.lower(), line.manager))
     lines += roster_lines
     return Race(days=days, lines=lines, as_of=moments[-1])
+
+
+def _assign_colors(lines, created):
+    """A colour per roster that follows the roster, not its place in the race.
+
+    The viewer's own rosters first, then the oldest: a roster keeps its colour
+    when it overtakes another, and the one you care about is never the grey one.
+    """
+    ordered = sorted(lines, key=lambda line: (not line.is_own, created[line.key], line.key))
+    for index, line in enumerate(ordered):
+        line.color = str(index + 1) if index < COLORS else MUTED
 
 
 def _dream_team_line(season, start, moments):
@@ -161,4 +181,4 @@ def _dream_team_line(season, start, moments):
     values = [
         ZERO if moment == start else by_day.get(timezone.localdate(moment)) for moment in moments
     ]
-    return Line(key=DREAM_TEAM, name=_("Dream Team"), values=values, is_dream_team=True)
+    return Line(key=DREAM_TEAM, name=_("Dream Team"), values=values, is_dream_team=True, color="dt")

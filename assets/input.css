@@ -227,6 +227,37 @@
     }
   }
 
+  /* The points race on Analytics -> Insights: one colour per line, set as
+     `--race` by a `race-*` class and read by strokes, dots and legend keys
+     alike (`stroke: var(--race)`). The Dream Team keeps the brand violet; the
+     seven roster hues are the reference categorical palette without its blue
+     and violet, which sit too close to the brand violet, plus a deep blue
+     (sky in dark mode) that does not. Checked with the dataviz palette
+     validator in both modes, light against the white card and dark against
+     neutral-900. Dark steps are chosen, not flipped. Roster eight and on are
+     grey: past that, hue stops telling lines apart and the labels do. */
+  .race-dt { --race: #7c5ef3; }
+  .race-1 { --race: #eb6834; }
+  .race-2 { --race: #1baf7a; }
+  .race-3 { --race: #eda100; }
+  .race-4 { --race: #e87ba4; }
+  .race-5 { --race: #008300; }
+  .race-6 { --race: #1c5cab; }
+  .race-7 { --race: #e34948; }
+  .race-muted { --race: #a1a1aa; }
+
+  .dark .race-1 { --race: #d95926; }
+  .dark .race-2 { --race: #199e70; }
+  .dark .race-3 { --race: #c98500; }
+  .dark .race-4 { --race: #d55181; }
+  .dark .race-6 { --race: #0284c7; }
+  .dark .race-7 { --race: #e66767; }
+  .dark .race-muted { --race: #52525b; }
+
+  .race-stroke { stroke: var(--race); }
+  .race-fill { fill: var(--race); }
+  .race-key { background-color: var(--race); }
+
   /* Buttons — compose as `btn btn-primary`. Tailwind v4 cannot @apply a class
      defined in the same layer, so the variants only add colour. */
   /* At least 40px tall on phones, whatever padding a compact button asks for:

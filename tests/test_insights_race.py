@@ -215,3 +215,29 @@ def test_the_race_takes_a_fixed_number_of_queries(season, manager, other_manager
     # Import moments, rosters with managers, spells, snapshots, Dream Teams.
     assert len(queries) == 5
     assert len(race.rosters) == 3
+
+
+def test_colours_follow_the_roster_own_first_then_oldest(season, manager, other_manager, user):
+    day1 = at(10, 21, 20)
+    theirs = [
+        roster_with(season, other_manager, f"Theirs {index}", {day1: 100 - index})
+        for index in range(8)
+    ]
+    mine = roster_with(season, manager, "Mine", {day1: 1})
+
+    race = points_race(season, viewer=user)
+
+    colours = {line.key: line.color for line in race.lines}
+    assert colours["dream-team"] == "dt"
+    # The viewer's roster is newest and last in points, and still gets the first colour.
+    assert colours[str(mine.pk)] == "1"
+    assert [colours[str(roster.pk)] for roster in theirs] == [
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "muted",
+        "muted",
+    ]

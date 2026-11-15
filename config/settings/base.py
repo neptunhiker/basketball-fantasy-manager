@@ -37,6 +37,7 @@ LOCAL_APPS = [
     "apps.fantasy",
     "apps.analytics",
     "apps.perf",
+    "apps.reports",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -160,6 +161,14 @@ SITE_NAME = "Pengi Fantasy Manager"
 # the manual import in the app asks for a login and never uses these.
 BBDE_USERNAME = env("BBDE_USERNAME", default="")
 BBDE_PASSWORD = env("BBDE_PASSWORD", default="")
+
+# AI trade reports (apps.reports): the OpenAI key, empty to switch the
+# feature off; a monthly spending limit that blocks new runs once reached; and
+# how long one call may take -- below Django-Q's 300 s task timeout, so a slow
+# call fails on its own rather than taking the worker with it.
+AI_BRIEFING_API_KEY = env("AI_BRIEFING_API_KEY", default="")
+AI_BRIEFING_MONTHLY_LIMIT_USD = env("AI_BRIEFING_MONTHLY_LIMIT_USD", default="20")
+AI_BRIEFING_TIMEOUT = env.int("AI_BRIEFING_TIMEOUT", default=240)
 
 RAPID_API_KEY = env("RAPID_API_KEY", default="")
 RAPID_API_HOST = env("RAPID_API_HOST", default="api-basketball-nba.p.rapidapi.com")

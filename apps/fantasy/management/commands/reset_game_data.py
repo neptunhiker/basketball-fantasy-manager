@@ -12,6 +12,7 @@ from django.db import connection, transaction
 from apps.analytics.models import DreamTeam
 from apps.fantasy.models import PlayerSnapshot, Roster, RosterPlayer, Transaction, WatchlistEntry
 from apps.nba.models import ImportRun, Player, PlayerInjury, PlayerNote
+from apps.reports.models import ReportRun
 
 # In deletion order: whatever PROTECTs a player has to go before the players.
 TARGETS = [
@@ -20,6 +21,7 @@ TARGETS = [
     ("Rosters", Roster),
     ("Watchlist entries", WatchlistEntry),
     ("Dream Teams", DreamTeam),
+    ("Report runs", ReportRun),
     ("Snapshots", PlayerSnapshot),
     ("Injuries", PlayerInjury),
     ("Player notes", PlayerNote),
@@ -31,8 +33,8 @@ TARGETS = [
 class Command(BaseCommand):
     help = (
         "Delete all rosters, transactions, watchlists, players, snapshots, Dream Teams, "
-        "injuries, player notes and import runs. Keeps users, managers, teams, seasons, trade "
-        "grants and team notes. Asks for the database name to confirm."
+        "report runs, injuries, player notes and import runs. Keeps users, managers, teams, "
+        "seasons, trade grants and team notes. Asks for the database name to confirm."
     )
 
     def add_arguments(self, parser):

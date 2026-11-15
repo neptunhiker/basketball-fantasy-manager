@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 08:26+0100\n"
+"POT-Creation-Date: 2026-11-15 11:19+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -2188,6 +2188,22 @@ msgstr "gerade eben"
 #, python-format
 msgid "%(time)s ago"
 msgstr "vor %(time)s"
+
+#: apps/reports/catalog.py:42
+msgid "Cheapest. Good for testing the pipeline."
+msgstr "Am günstigsten. Gut zum Testen des Ablaufs."
+
+#: apps/reports/catalog.py:50
+msgid "Fast and inexpensive, writes well."
+msgstr "Schnell und günstig, schreibt gut."
+
+#: apps/reports/catalog.py:58
+msgid "Near the flagship's judgment at a fifth of its price."
+msgstr "Urteilt fast wie das Spitzenmodell, für ein Fünftel des Preises."
+
+#: apps/reports/catalog.py:66
+msgid "OpenAI's flagship. Expensive."
+msgstr "OpenAIs Spitzenmodell. Teuer."
 
 #: templates/accounts/accept_invitation.html:4
 msgid "Accept invitation"

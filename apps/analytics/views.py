@@ -12,6 +12,7 @@ from apps.nba.charts import scatter_chart
 from apps.nba.models import Player
 
 from .dream_team import changes, missing_reason
+from .insights import points_race
 from .models import DreamTeam, DreamTeamPick
 
 MILLION = Decimal(1_000_000)
@@ -25,17 +26,35 @@ WIDE_CHART = {"width": 920, "height": 340}
 COMPACT_CHART = {"width": 360, "height": 300}
 
 
-class DreamTeamView(LoginRequiredMixin, TemplateView):
-    """The season analytics page, whose first and so far only section is the
-    Dream Team. Reads stored results only: the solving happens after imports
-    (`dream_team.refresh`), never on a page view."""
+class AnalyticsMixin(LoginRequiredMixin):
+    """What every Analytics tab shares: the current season and which tab is open.
 
-    template_name = "analytics/dream_team.html"
+    The tabs are separate pages rather than panels of one, so each pays only
+    for its own work and has a URL of its own (`templates/analytics/base.html`
+    draws the tab bar). Without a current season the base template says so and
+    the tab's own content is not rendered, so `season` is None is all a tab
+    has to handle.
+    """
+
+    tab = None
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        season = Season.objects.filter(is_current=True).first()
-        context["season"] = season
+        context["season"] = Season.objects.filter(is_current=True).first()
+        context["tab"] = self.tab
+        return context
+
+
+class DreamTeamView(AnalyticsMixin, TemplateView):
+    """The Dream Team tab. Reads stored results only: the solving happens
+    after imports (`dream_team.refresh`), never on a page view."""
+
+    template_name = "analytics/dream_team.html"
+    tab = "dream-team"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        season = context["season"]
         if season is None:
             return context
 
@@ -62,6 +81,47 @@ class DreamTeamView(LoginRequiredMixin, TemplateView):
             if dream_team.budget
             else 0,
             **_pool(dream_team, picks),
+        )
+        return context
+
+
+class InsightsView(AnalyticsMixin, TemplateView):
+    """The Insights tab: every active roster's points race against the Dream Team.
+
+    Sums stored snapshots and results on read (`insights.points_race`); a
+    handful of queries however many rosters race.
+    """
+
+    template_name = "analytics/insights.html"
+    tab = "insights"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        season = context["season"]
+        if season is None:
+            return context
+        race = points_race(season, viewer=self.request.user)
+        context["race"] = race
+        if race is None:
+            return context
+        rows = [
+            {
+                "rank": rank,
+                "line": line,
+                "gap": gap,
+                # Shown as a size and a direction, so the template never has
+                # to print a minus sign for "ahead".
+                "gap_size": abs(gap) if gap is not None else None,
+                "ahead": gap is not None and gap < 0,
+            }
+            for rank, line, gap in race.standings
+        ]
+        own = [row for row in rows if row["line"].is_own]
+        context.update(
+            standings=rows,
+            leader=next((row for row in rows if not row["line"].is_dream_team), None),
+            own_best=own[0] if own else None,
+            roster_count=len(race.rosters),
         )
         return context
 

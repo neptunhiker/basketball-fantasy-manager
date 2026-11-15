@@ -1,0 +1,64 @@
+{% load i18n static %}
+{% comment %}
+  Every line of the points race, best first: the table under the chart and
+  its accessible twin. Context: standings (rows from `InsightsView`).
+
+  Each row's key is a short stroke of its line's colour -- dashed for the
+  Dream Team, as on the chart -- so colour never carries the identity alone:
+  the name is right beside it. On a phone the gap folds under the points.
+{% endcomment %}
+<table class="w-full text-sm">
+  <thead class="border-y border-neutral-100 bg-neutral-50/70 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800/40 dark:text-neutral-400">
+    <tr>
+      <th scope="col" class="w-10 py-2 pl-5 pr-1 text-left font-medium sm:pl-6"><span class="sr-only">{% translate "Place" %}</span>#</th>
+      <th scope="col" class="px-3 py-2 text-left font-medium">{% translate "Roster" %}</th>
+      <th scope="col" class="hidden px-3 py-2 text-right font-medium md:table-cell">{% translate "Last import" %}</th>
+      <th scope="col" class="hidden px-3 py-2 text-right font-medium sm:table-cell">{% translate "Gap to Dream Team" %}</th>
+      <th scope="col" class="py-2 pl-3 pr-5 text-right font-medium sm:pr-6">{% translate "Points" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in standings %}
+      {% with line=row.line %}
+        <tr class="border-t border-neutral-100 first:border-t-0 dark:border-neutral-800 {% if line.is_dream_team %}bg-primary-50/60 dark:bg-primary-500/[.07]{% elif line.is_own %}bg-neutral-50/70 dark:bg-neutral-800/30{% endif %}">
+          <td class="py-3 pl-5 pr-1 text-xs font-semibold tabular-nums text-neutral-400 sm:pl-6 dark:text-neutral-500">{{ row.rank }}</td>
+          {# `w-full max-w-0`: the cell takes what the others leave and no more, #}
+          {# so a long name truncates instead of pushing Points off a phone. #}
+          <td class="w-full max-w-0 px-3 py-3">
+            <div class="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <svg class="race-{{ line.color }} h-2.5 w-5 shrink-0" viewBox="0 0 20 10" aria-hidden="true">
+                <line x1="2" y1="5" x2="18" y2="5" class="race-stroke" stroke-width="3" stroke-linecap="round" {% if line.is_dream_team %}stroke-dasharray="4 4"{% endif %} />
+              </svg>
+              {% if line.is_dream_team %}
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br max-sm:hidden from-primary-500 to-secondary-600 text-white shadow-sm" aria-hidden="true">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg>
+                </span>
+              {% else %}
+                <img src="{% static 'img/roster_icons/' %}{{ line.icon }}.png" alt="" class="h-8 w-8 shrink-0 rounded-lg object-cover max-sm:hidden">
+              {% endif %}
+              <div class="min-w-0">
+                <p class="flex min-w-0 items-center gap-2">
+                  <span class="truncate font-semibold text-tertiary-700 dark:text-neutral-100">{{ line.name }}</span>
+                  {% if line.is_own %}<span class="badge badge-pending shrink-0 px-2 py-0 text-[11px]">{% translate "You" %}</span>{% endif %}
+                </p>
+                <p class="truncate text-xs text-neutral-500 dark:text-neutral-400">
+                  {% if line.is_dream_team %}{% translate "Best roster from draft day, no trades" %}{% else %}{{ line.manager }}{% endif %}
+                </p>
+              </div>
+            </div>
+          </td>
+          <td class="hidden px-3 py-3 text-right text-xs whitespace-nowrap tabular-nums text-neutral-500 md:table-cell dark:text-neutral-400">
+            {% if row.line.last_gain is not None %}+{{ row.line.last_gain|floatformat:"0g" }}{% else %}–{% endif %}
+          </td>
+          <td class="hidden px-3 py-3 text-right whitespace-nowrap tabular-nums sm:table-cell">
+            {% include "analytics/partials/standings_gap.html" %}
+          </td>
+          <td class="py-3 pl-3 pr-5 text-right whitespace-nowrap sm:pr-6">
+            <span class="text-base font-semibold tabular-nums">{{ line.latest|floatformat:"0g"|default:"–" }}</span>
+            <span class="block text-xs sm:hidden">{% include "analytics/partials/standings_gap.html" %}</span>
+          </td>
+        </tr>
+      {% endwith %}
+    {% endfor %}
+  </tbody>
+</table>

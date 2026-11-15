@@ -1,0 +1,13 @@
+{% load i18n static %}
+{# Every Analytics tab, when no season is current: there is nothing to look back on. #}
+<section class="card overflow-hidden">
+  <div class="gradient-rule h-1"></div>
+  <div class="flex flex-col items-center px-6 py-14 text-center sm:py-20">
+    <img src="{% static 'img/pengi_bookkeeper.png' %}" alt="" class="h-28 w-28 rounded-3xl object-cover shadow-md sm:h-32 sm:w-32">
+    <p class="mt-6 text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">{% translate "Season analytics" %}</p>
+    <h2 class="mt-1 text-2xl font-bold tracking-tight text-tertiary-700 sm:text-3xl dark:text-neutral-100">{% translate "No current season" %}</h2>
+    <p class="mx-auto mt-3 max-w-md text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+      {% translate "No season is marked as current, so there is nothing to look back on yet." %}
+    </p>
+  </div>
+</section>

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 07:57+0100\n"
+"POT-Creation-Date: 2026-11-15 08:15+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -193,20 +193,21 @@ msgstr ""
 "Kein Team aus %(size)d Spielern passt ins Budget und erfüllt die Mindestzahl"
 " je Position."
 
-#: apps/analytics/insights.py:164
+#: apps/analytics/insights.py:184 templates/analytics/base.html:30
+#: templates/analytics/insights.html:57
 #: templates/analytics/partials/dream_team_chart.html:37
 msgid "Dream Team"
 msgstr "Dream Team"
 
-#: apps/analytics/views.py:77
+#: apps/analytics/views.py:137
 msgid "Guards"
 msgstr "Guards"
 
-#: apps/analytics/views.py:78
+#: apps/analytics/views.py:138
 msgid "Forwards"
 msgstr "Forwards"
 
-#: apps/analytics/views.py:79
+#: apps/analytics/views.py:139
 msgid "Centers"
 msgstr "Center"
 
@@ -1468,7 +1469,7 @@ msgstr "unbekannt"
 msgid "Healthy"
 msgstr "Gesund"
 
-#: apps/nba/player_export.py:219 templates/analytics/dream_team.html:132
+#: apps/nba/player_export.py:219 templates/analytics/dream_team.html:127
 #: templates/fantasy/partials/latest_table.html:25
 #: templates/fantasy/partials/roster_panel.html:3
 #: templates/nba/partials/player_table.html:2
@@ -1539,8 +1540,9 @@ msgstr "Nächstes Update"
 msgid "Salary after the update"
 msgstr "Gehalt nach dem Update"
 
-#: apps/nba/player_export.py:298 templates/analytics/dream_team.html:135
+#: apps/nba/player_export.py:298 templates/analytics/dream_team.html:130
 #: templates/analytics/partials/change_row.html:11
+#: templates/analytics/partials/standings_table.html:17
 #: templates/fantasy/partials/roster_panel.html:9
 #: templates/nba/partials/player_table.html:8
 #: templates/nba/partials/scatter_chart.html:145
@@ -1655,8 +1657,9 @@ msgstr "Nach Namen suchen"
 msgid "Injury status"
 msgstr "Verletzungsstatus"
 
-#: apps/nba/player_export.py:408 templates/nba/news_list.html:66
-#: templates/nba/player_list.html:124
+#: apps/nba/player_export.py:408
+#: templates/analytics/partials/standings_table.html:14
+#: templates/nba/news_list.html:66 templates/nba/player_list.html:124
 msgid "Roster"
 msgstr "Kader"
 
@@ -2558,35 +2561,34 @@ msgstr "Nach E-Mail-Adresse suchen"
 msgid "Searching"
 msgstr "Suche läuft"
 
+#: templates/analytics/base.html:14 templates/app.html:139
+msgid "Analytics"
+msgstr "Analysen"
+
+#: templates/analytics/base.html:19
+msgid "Analytics sections"
+msgstr "Analyse-Bereiche"
+
+#: templates/analytics/base.html:39 templates/analytics/insights.html:10
+#: templates/analytics/insights.html:37
+msgid "Insights"
+msgstr "Insights"
+
 #: templates/analytics/dream_team.html:11
-#: templates/analytics/dream_team.html:25
-#: templates/analytics/dream_team.html:58
+#: templates/analytics/dream_team.html:22
+#: templates/analytics/dream_team.html:53
 #: templates/analytics/partials/dream_team_chart.html:20
 msgid "The Dream Team"
 msgstr "The Dream Team"
 
-#: templates/analytics/dream_team.html:12 templates/app.html:139
-msgid "Analytics"
-msgstr "Analysen"
-
-#: templates/analytics/dream_team.html:23
-#: templates/analytics/dream_team.html:55
+#: templates/analytics/dream_team.html:20
+#: templates/analytics/dream_team.html:50 templates/analytics/insights.html:19
+#: templates/analytics/insights.html:34
 #, python-format
 msgid "Season analytics · %(season)s"
 msgstr "Saison-Analysen · %(season)s"
 
-#: templates/analytics/dream_team.html:23
-msgid "Season analytics"
-msgstr "Saison-Analysen"
-
-#: templates/analytics/dream_team.html:28
-msgid ""
-"No season is marked as current, so there is nothing to look back on yet."
-msgstr ""
-"Keine Saison ist als aktuell markiert, es gibt also noch nichts, worauf man "
-"zurückblicken kann."
-
-#: templates/analytics/dream_team.html:30
+#: templates/analytics/dream_team.html:25
 msgid ""
 "No stats have been imported for this season yet. The Dream Team appears "
 "after the first import with games played."
@@ -2594,7 +2596,7 @@ msgstr ""
 "Für diese Saison wurden noch keine Statistiken importiert. The Dream Team "
 "erscheint nach dem ersten Import mit gespielten Spielen."
 
-#: templates/analytics/dream_team.html:32
+#: templates/analytics/dream_team.html:27
 msgid ""
 "There are no prices from before the season started, so nobody knows what the"
 " players cost on draft day. The Dream Team needs at least one import from "
@@ -2604,7 +2606,7 @@ msgstr ""
 "Spieler am Draft-Tag gekostet haben. The Dream Team braucht mindestens einen"
 " Import von vor dem ersten Spieltag."
 
-#: templates/analytics/dream_team.html:34
+#: templates/analytics/dream_team.html:29
 msgid ""
 "Nobody has played a game yet. The Dream Team appears after the first import "
 "with games played."
@@ -2612,7 +2614,7 @@ msgstr ""
 "Noch hat niemand ein Spiel bestritten. The Dream Team erscheint nach dem "
 "ersten Import mit gespielten Spielen."
 
-#: templates/analytics/dream_team.html:36
+#: templates/analytics/dream_team.html:31
 msgid ""
 "The Dream Team has not been worked out yet. It appears after the next stats "
 "import."
@@ -2620,11 +2622,11 @@ msgstr ""
 "The Dream Team wurde noch nicht berechnet. Es erscheint nach dem nächsten "
 "Statistik-Import."
 
-#: templates/analytics/dream_team.html:41
+#: templates/analytics/dream_team.html:36
 msgid "Staff: to work it out now, run"
 msgstr "Staff: Um es jetzt zu berechnen, führe aus:"
 
-#: templates/analytics/dream_team.html:61
+#: templates/analytics/dream_team.html:56
 #, python-format
 msgid ""
 "The 15 players who, bought on draft day for %(budget)s, would have scored "
@@ -2633,22 +2635,22 @@ msgstr ""
 "Die 15 Spieler, die – am Draft-Tag für %(budget)s gekauft – bisher die "
 "meisten Punkte geholt hätten. Mindestens 5 Guards, 5 Forwards und 2 Center."
 
-#: templates/analytics/dream_team.html:69
+#: templates/analytics/dream_team.html:64
 #, python-format
 msgid "Prices from %(moment)s"
 msgstr "Gehälter vom %(moment)s"
 
-#: templates/analytics/dream_team.html:73
+#: templates/analytics/dream_team.html:68 templates/analytics/insights.html:45
 #, python-format
 msgid "Points as of %(moment)s"
 msgstr "Punkte bis %(moment)s"
 
-#: templates/analytics/dream_team.html:78
+#: templates/analytics/dream_team.html:73
 #: templates/analytics/partials/dream_team_chart_svg.html:25
 msgid "Points so far"
 msgstr "Punkte bisher"
 
-#: templates/analytics/dream_team.html:84
+#: templates/analytics/dream_team.html:79
 #: templates/fantasy/roster_latest.html:69
 #, python-format
 msgid "in %(counter)s game"
@@ -2656,58 +2658,58 @@ msgid_plural "in %(counter)s games"
 msgstr[0] "in %(counter)s Spiel"
 msgstr[1] "in %(counter)s Spielen"
 
-#: templates/analytics/dream_team.html:92
+#: templates/analytics/dream_team.html:87
 msgid "Salary used"
 msgstr "Gehalt verplant"
 
-#: templates/analytics/dream_team.html:97
+#: templates/analytics/dream_team.html:92
 #, python-format
 msgid "%(share)s%% of the budget used"
 msgstr "%(share)s %% des Budgets verplant"
 
-#: templates/analytics/dream_team.html:102
+#: templates/analytics/dream_team.html:97
 msgid "Left over"
 msgstr "Übrig"
 
-#: templates/analytics/dream_team.html:106
+#: templates/analytics/dream_team.html:101
 msgid "Players to choose from"
 msgstr "Spieler zur Auswahl"
 
-#: templates/analytics/dream_team.html:110
+#: templates/analytics/dream_team.html:105
 msgid "Line-up"
 msgstr "Aufstellung"
 
-#: templates/analytics/dream_team.html:126
+#: templates/analytics/dream_team.html:121
 msgid "The 15 picks"
 msgstr "Die 15 Spieler"
 
-#: templates/analytics/dream_team.html:127
+#: templates/analytics/dream_team.html:122
 msgid "Price and position as on draft day."
 msgstr "Gehalt und Position wie am Draft-Tag."
 
-#: templates/analytics/dream_team.html:133
+#: templates/analytics/dream_team.html:128
 msgid "Draft price"
 msgstr "Draft-Gehalt"
 
-#: templates/analytics/dream_team.html:134
+#: templates/analytics/dream_team.html:129
 msgid "Points per $1M of draft-day salary"
 msgstr "Punkte pro 1 Mio. $ Gehalt am Draft-Tag"
 
-#: templates/analytics/dream_team.html:134
+#: templates/analytics/dream_team.html:129
 msgid "Points per $M"
 msgstr "Punkte pro Mio. $"
 
-#: templates/analytics/dream_team.html:157
+#: templates/analytics/dream_team.html:152
 #: templates/nba/partials/bbde_import_modal.html:19
 #: templates/nba/season_stats_import.html:99
 msgid "New"
 msgstr "Neu"
 
-#: templates/analytics/dream_team.html:184
+#: templates/analytics/dream_team.html:179
 msgid "Changes since the last import"
 msgstr "Änderungen seit dem letzten Import"
 
-#: templates/analytics/dream_team.html:187
+#: templates/analytics/dream_team.html:182
 msgid ""
 "This is the first Dream Team of the season. From the next import on, this "
 "shows who came in and who went out."
@@ -2715,42 +2717,42 @@ msgstr ""
 "Das ist das erste Dream Team der Saison. Ab dem nächsten Import steht hier, "
 "wer neu dabei ist und wer rausgefallen ist."
 
-#: templates/analytics/dream_team.html:191
+#: templates/analytics/dream_team.html:186
 #, python-format
 msgid "Compared with %(moment)s"
 msgstr "Verglichen mit %(moment)s"
 
-#: templates/analytics/dream_team.html:196
+#: templates/analytics/dream_team.html:191
 msgid "Unchanged: the same 15 as last time."
 msgstr "Unverändert: dieselben 15 wie beim letzten Mal."
 
-#: templates/analytics/dream_team.html:201
+#: templates/analytics/dream_team.html:196
 #, python-format
 msgid "In · %(counter)s"
 msgid_plural "In · %(counter)s"
 msgstr[0] "Neu · %(counter)s"
 msgstr[1] "Neu · %(counter)s"
 
-#: templates/analytics/dream_team.html:210
+#: templates/analytics/dream_team.html:205
 #, python-format
 msgid "Out · %(counter)s"
 msgid_plural "Out · %(counter)s"
 msgstr[0] "Raus · %(counter)s"
 msgstr[1] "Raus · %(counter)s"
 
-#: templates/analytics/dream_team.html:220
+#: templates/analytics/dream_team.html:215
 msgid "Stayed"
 msgstr "Geblieben"
 
-#: templates/analytics/dream_team.html:224
+#: templates/analytics/dream_team.html:219
 msgid "Total salary"
 msgstr "Gehalt gesamt"
 
-#: templates/analytics/dream_team.html:237
+#: templates/analytics/dream_team.html:232
 msgid "Top scorers left out"
 msgstr "Topscorer, die fehlen"
 
-#: templates/analytics/dream_team.html:238
+#: templates/analytics/dream_team.html:233
 msgid ""
 "More points than some of the picks, but the 15 could not be bought around "
 "them."
@@ -2758,17 +2760,17 @@ msgstr ""
 "Mehr Punkte als manche im Team, aber mit ihnen ließen sich die 15 nicht im "
 "Budget zusammenstellen."
 
-#: templates/analytics/dream_team.html:251
+#: templates/analytics/dream_team.html:246
 msgid "Nobody: no player outside the team has outscored the weakest pick."
 msgstr ""
 "Niemand: Kein Spieler außerhalb des Teams hat mehr Punkte als der schwächste"
 " im Team."
 
-#: templates/analytics/dream_team.html:260
+#: templates/analytics/dream_team.html:255
 msgid "Price against points"
 msgstr "Gehalt gegen Punkte"
 
-#: templates/analytics/dream_team.html:262
+#: templates/analytics/dream_team.html:257
 msgid ""
 "Every player who has played. The Dream Team sits high and to the left: cheap"
 " on draft day, scoring well since."
@@ -2776,11 +2778,12 @@ msgstr ""
 "Jeder Spieler, der schon gespielt hat. The Dream Team steht oben links: "
 "günstig am Draft-Tag, seitdem stark gepunktet."
 
-#: templates/analytics/dream_team.html:273
+#: templates/analytics/dream_team.html:268
+#: templates/analytics/insights.html:109
 msgid "How this is worked out"
 msgstr "So wird es berechnet"
 
-#: templates/analytics/dream_team.html:275
+#: templates/analytics/dream_team.html:270
 msgid ""
 "Every player with a price on draft day is a candidate, at that price and in "
 "that position. Of all the teams of 15 that stay within the budget and meet "
@@ -2793,6 +2796,97 @@ msgstr ""
 "passen und die Mindestzahl je Position erfüllen, ist das hier das mit den "
 "meisten Punkten bisher. Es wird nach jedem Statistik-Import neu berechnet "
 "und kann sich daher von Tag zu Tag ändern."
+
+#: templates/analytics/insights.html:21
+msgid "The race has not started yet"
+msgstr "Das Rennen hat noch nicht begonnen"
+
+#: templates/analytics/insights.html:23
+msgid ""
+"Every active roster and the Dream Team start at zero on the day signings "
+"close. The first figures appear with the first stats import after that."
+msgstr ""
+"Alle aktiven Kader und das Dream Team starten an dem Tag bei null, an dem "
+"die Verpflichtungen schließen. Die ersten Zahlen erscheinen mit dem ersten "
+"Statistik-Import danach."
+
+#: templates/analytics/insights.html:40
+msgid ""
+"How every active roster has scored since signings closed, against the Dream "
+"Team: the best roster that could have been bought on draft day."
+msgstr ""
+"Wie jeder aktive Kader seit Ende der Verpflichtungen gepunktet hat, im "
+"Vergleich zum Dream Team: dem besten Kader, der am Draft-Tag zu kaufen "
+"gewesen wäre."
+
+#: templates/analytics/insights.html:49
+#, python-format
+msgid "%(counter)s active roster"
+msgid_plural "%(counter)s active rosters"
+msgstr[0] "%(counter)s aktiver Kader"
+msgstr[1] "%(counter)s aktive Kader"
+
+#: templates/analytics/insights.html:62
+msgid "The best possible without a trade"
+msgstr "Das Beste, was ohne Trade möglich war"
+
+#: templates/analytics/insights.html:65
+msgid "Leading roster"
+msgstr "Führender Kader"
+
+#: templates/analytics/insights.html:71
+msgid "No active roster yet"
+msgstr "Noch kein aktiver Kader"
+
+#: templates/analytics/insights.html:75
+msgid "Your best roster"
+msgstr "Dein bester Kader"
+
+#: templates/analytics/insights.html:79
+#, python-format
+msgid "Place %(rank)s of %(total)s"
+msgstr "Platz %(rank)s von %(total)s"
+
+#: templates/analytics/insights.html:84
+msgid "Put a roster in the race"
+msgstr "Schick einen Kader ins Rennen"
+
+#: templates/analytics/insights.html:95
+msgid "Standings"
+msgstr "Tabelle"
+
+#: templates/analytics/insights.html:96
+msgid ""
+"Points since signings closed, and how far each roster is from the Dream "
+"Team."
+msgstr ""
+"Punkte seit Ende der Verpflichtungen und wie weit jeder Kader vom Dream Team"
+" entfernt ist."
+
+#: templates/analytics/insights.html:101
+msgid "No roster is in the race yet."
+msgstr "Noch ist kein Kader im Rennen."
+
+#: templates/analytics/insights.html:102
+msgid "Switch one on under Rosters."
+msgstr "Schalte einen unter Kader ein."
+
+#: templates/analytics/insights.html:111
+msgid ""
+"A roster scores what its players scored while they were on it, from the day "
+"signings closed, read off the daily stats imports, so a trade counts from "
+"the day it was made. The Dream Team is worked out again after every import "
+"and may be a different fifteen each day; it never trades, so a roster that "
+"trades well can overtake it. Only rosters switched on under Rosters take "
+"part."
+msgstr ""
+"Ein Kader bekommt die Punkte, die seine Spieler erzielt haben, solange sie "
+"in ihm standen – ab dem Tag, an dem die Verpflichtungen schlossen, abgelesen"
+" aus den täglichen Statistik-Importen. Ein Trade zählt also ab dem Tag, an "
+"dem er gemacht wurde. Das Dream Team wird nach jedem Import neu berechnet "
+"und kann jeden Tag aus anderen 15 Spielern bestehen; es tradet nie, deshalb "
+"kann ein Kader, der gut tradet, es überholen. Es nehmen nur Kader teil, die "
+"unter Kader eingeschaltet sind."
 
 #: templates/analytics/partials/dream_team_chart.html:24
 msgid "Everyone else who has played"
@@ -2817,6 +2911,55 @@ msgstr ""
 #: templates/analytics/partials/dream_team_chart_svg.html:24
 msgid "Draft-day price"
 msgstr "Gehalt am Draft-Tag"
+
+#: templates/analytics/partials/no_season.html:7
+msgid "Season analytics"
+msgstr "Saison-Analysen"
+
+#: templates/analytics/partials/no_season.html:8
+msgid "No current season"
+msgstr "Keine aktuelle Saison"
+
+#: templates/analytics/partials/no_season.html:10
+msgid ""
+"No season is marked as current, so there is nothing to look back on yet."
+msgstr ""
+"Keine Saison ist als aktuell markiert, es gibt also noch nichts, worauf man "
+"zurückblicken kann."
+
+#: templates/analytics/partials/standings_gap.html:1
+#, python-format
+msgid "%(points)s ahead"
+msgstr "%(points)s vorn"
+
+#: templates/analytics/partials/standings_gap.html:1
+msgid "level"
+msgstr "gleichauf"
+
+#: templates/analytics/partials/standings_gap.html:1
+#, python-format
+msgid "%(points)s behind"
+msgstr "%(points)s zurück"
+
+#: templates/analytics/partials/standings_table.html:13
+msgid "Place"
+msgstr "Platz"
+
+#: templates/analytics/partials/standings_table.html:15
+msgid "Last import"
+msgstr "Letzter Import"
+
+#: templates/analytics/partials/standings_table.html:16
+msgid "Gap to Dream Team"
+msgstr "Abstand zum Dream Team"
+
+#: templates/analytics/partials/standings_table.html:40
+msgid "You"
+msgstr "Du"
+
+#: templates/analytics/partials/standings_table.html:43
+msgid "Best roster from draft day, no trades"
+msgstr "Bester Kader vom Draft-Tag, ohne Trades"
 
 #: templates/app.html:57
 msgid "Main navigation"

@@ -6,4 +6,5 @@ app_name = "analytics"
 
 urlpatterns = [
     path("analytics/", views.DreamTeamView.as_view(), name="dream-team"),
+    path("analytics/insights/", views.InsightsView.as_view(), name="insights"),
 ]

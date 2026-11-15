@@ -1,0 +1,50 @@
+{% extends "app.html" %}
+{% load i18n %}
+
+{% comment %}
+  The frame every Analytics tab shares: the tab bar, and what to say when no
+  season is current. Each tab is its own page and URL (see
+  `apps.analytics.views.AnalyticsMixin`); a tab fills `analytics_content`,
+  which is only rendered when there is a season to show.
+
+  The tabs are links, not ARIA tabs: they load a page, so `aria-current`
+  marks the open one and the browser's back button works as expected.
+{% endcomment %}
+
+{% block page_title %}{% translate "Analytics" %}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-6xl space-y-6">
+
+  <nav aria-label="{% translate 'Analytics sections' %}"
+       class="grid grid-cols-2 gap-1 rounded-xl bg-neutral-100 p-1 sm:inline-grid sm:w-auto dark:bg-neutral-800/80">
+    {% url 'analytics:dream-team' as dream_team_url %}
+    {% url 'analytics:insights' as insights_url %}
+    <a href="{{ dream_team_url }}"
+       {% if tab == "dream-team" %}aria-current="page"{% endif %}
+       class="flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-primary-500
+         {% if tab == "dream-team" %}bg-white text-tertiary-800 shadow-sm dark:bg-neutral-900 dark:text-neutral-50{% else %}text-neutral-600 hover:bg-white/60 hover:text-tertiary-800 dark:text-neutral-400 dark:hover:bg-neutral-900/50 dark:hover:text-neutral-100{% endif %}">
+      <svg class="h-4 w-4 shrink-0 {% if tab == 'dream-team' %}text-primary-600 dark:text-primary-400{% endif %}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>
+      </svg>
+      {% translate "Dream Team" %}
+    </a>
+    <a href="{{ insights_url }}"
+       {% if tab == "insights" %}aria-current="page"{% endif %}
+       class="flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-primary-500
+         {% if tab == "insights" %}bg-white text-tertiary-800 shadow-sm dark:bg-neutral-900 dark:text-neutral-50{% else %}text-neutral-600 hover:bg-white/60 hover:text-tertiary-800 dark:text-neutral-400 dark:hover:bg-neutral-900/50 dark:hover:text-neutral-100{% endif %}">
+      <svg class="h-4 w-4 shrink-0 {% if tab == 'insights' %}text-primary-600 dark:text-primary-400{% endif %}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l4-4 3 3 6-7"/>
+      </svg>
+      {% translate "Insights" %}
+    </a>
+  </nav>
+
+  {% if season %}
+    {% block analytics_content %}{% endblock %}
+  {% else %}
+    {% include "analytics/partials/no_season.html" %}
+  {% endif %}
+
+</div>
+{% endblock %}

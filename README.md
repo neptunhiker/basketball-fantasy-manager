@@ -576,6 +576,15 @@ ssh nba "cd /srv/fantasy-manager/prod && docker compose -p fantasy-prod -f docke
 Both the schedule load and the injury button stop once RapidAPI reports fewer
 than 10 requests left this month; "API quotas" in the admin shows the count.
 
+Injuries are also imported automatically every day at 12:20 (*Daily injury
+import*, `apps.nba.tasks.scheduled_injury_import`), right after the 12:15
+snapshot so the Sunday 12:30 AI report reads that day's injuries. That is
+about 30 of the subscription's requests a month. It runs from a week before
+the season to its end, counts against the superuser limit (a manual refresh
+that morning doesn't stop it), and a refused or failed request is logged, not
+retried. Staff who aren't superusers keep one request a day, so after 12:20
+only a superuser can refresh by hand.
+
 ### Rest of the season per player
 
 The player list, the team page's table and the player page show, once a

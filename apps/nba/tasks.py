@@ -1,5 +1,6 @@
 """Background tasks run by the Django-Q cluster."""
 
+import datetime as dt
 import logging
 
 from django.conf import settings
@@ -9,6 +10,7 @@ from . import schedule
 from .importer import import_bbde
 from .models import ImportRun, PlayerNews
 from .rotowire import sync_news, why_not_now
+from .services import NbaApiError, sync_injuries
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +91,50 @@ def scheduled_rotowire_news_import():
         )
     logger.info("RotoWire news imported: %s", result)
     return str(result)
+
+
+# The injury feed is pulled from a week before the season opens to its end.
+INJURY_DAYS_BEFORE_SEASON = 7
+
+
+def why_no_injury_import(now=None):
+    """Why the daily injury import should skip now, or None when it may run."""
+    if not settings.RAPID_API_KEY:
+        return "RAPID_API_KEY is not set"
+    season = schedule.current_season()
+    if season is None:
+        return "no current season is set up"
+    today = timezone.localdate(now or timezone.now())
+    if today < season.starts_on - dt.timedelta(days=INJURY_DAYS_BEFORE_SEASON):
+        return f"the season {season.label} has not started"
+    if today > season.ends_on:
+        return f"the current season {season.label} is over"
+    return None
+
+
+def scheduled_injury_import():
+    """The daily 12:20 injury import, started by a Django-Q schedule.
+
+    Right after the 12:15 snapshot, so the Sunday 12:30 report reads the day's
+    injuries. It counts against the superuser limit: a manual refresh earlier
+    that day must not stop it. A refused or failed request is logged and
+    returned, never raised -- Django-Q would retry it and spend more requests.
+    """
+    reason = why_no_injury_import()
+    if reason:
+        logger.info("Scheduled injury import skipped: %s.", reason)
+        return f"skipped: {reason}"
+    try:
+        summary = sync_injuries(daily_limit=settings.RAPID_API_SUPERUSER_DAILY_LIMIT)
+    except NbaApiError as exc:
+        logger.warning("Scheduled injury import failed: %s", exc)
+        return f"failed: {exc}"
+    logger.info("Injuries imported: %s", summary)
+    return (
+        f"{summary['created']} created, {summary['updated']} updated, "
+        f"{summary['recovered']} recovered, {summary['unmatched']} unmatched, "
+        f"{summary['ambiguous']} ambiguous."
+    )
 
 
 def scheduled_nba_schedule_load():

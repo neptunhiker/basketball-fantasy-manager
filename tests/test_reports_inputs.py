@@ -119,7 +119,9 @@ def test_projection_and_schedule_come_from_the_games(season, teams):
     shared = inputs.build(season, now=NOW).shared_input
     # Two games next week; 82 less none played is 82 left; 20 x 82 x 0.85.
     assert " | 2 | 82 | 1394 | " in line_of(shared, who.full_name)
-    assert "SAS 2/82" in shared and "LAL 2/82" in shared
+    # Next 7/14/21 days (the 30th is 15 days out), then games left.
+    assert "SAS 2/2/3/82" in shared and "LAL 2/2/3/82" in shared
+    assert "games in the next 7/14/21 days / games left" in shared
 
 
 def test_injuries_are_listed_and_counted_per_team(season, teams):
@@ -230,3 +232,20 @@ def test_a_rising_player_is_flagged_and_offered_on_recent_form(season, teams, ma
     assert rows[0]["fp_gain"] < rows[0]["fp_gain_recent"]
     assert "| in is rising |" in built.rosters[0].own_input
     assert "| form | " in built.rosters[0].own_input
+
+
+def test_news_about_the_injured_and_risers_comes_before_the_best_scorers(season, teams):
+    star = played(season, teams[1], fp_per_game="40")
+    out = played(season, teams[0], fp_per_game="10")
+    hurt(out)
+    riser = make_player("G", "3", "20", 9, team=teams[0])
+    snapshot(season, riser, at(10, 25, 12, 15), total=100, games=5)
+    snapshot(season, riser, LATEST, total=220, games=9)
+    news(star, 15, headline="Star news")
+    news(riser, 13, headline="Riser news")
+    news(out, 12, headline="Injury news")
+
+    block = inputs.build(season, now=NOW).shared_input.split("\nNEWS", 1)[1]
+
+    assert block.index("Injury news") < block.index("Riser news") < block.index("Star news")
+    assert "| news | " in block  # the item's kind

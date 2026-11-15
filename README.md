@@ -446,6 +446,38 @@ they are stored, and shown escaped.
   another model to compare, and set the default model and the Sunday run.
 - **Models and prices** are a fixed list in `apps/reports/catalog.py`.
 
+**Looking weeks ahead, not only to Sunday.** The prompt aims at points over
+the next three to six weeks. A predicted salary change only breaks ties and
+times a move. The input is built for that:
+
+- **Form per week.** Each player gets FP/game for each of the last three
+  weeks, with the games played (`history.py`). The game log comes from the
+  daily snapshots: the difference between two days is that day's game.
+- **Injuries as stories** (`injuries.py`). For each injured player:
+  - out since when, and the team games he missed
+  - how his status and expected return changed over the last three weeks
+  - the provider's latest note and the newest RotoWire injury headline
+
+  Players back within two weeks are listed too, because a return can end a
+  teammate's run.
+- **Who benefits.** When a player with 15+ FP/game has missed 3+ games, or
+  has no return within a week, the input names the teammates whose FP/game
+  rose since. It shows timing, not cause.
+- **Rising players on the shortlist.** Up to 8 of its 25 trades bring in a
+  riser judged on recent form. A riser has either:
+  - 4+ games in the last 21 days, with FP/game at least 15% and 3 above his
+    season, or
+  - more points since a teammate's long absence.
+
+  Season-based projections would otherwise keep him off the list.
+- **News and schedule.** About 15K tokens of RotoWire news. The order is:
+  rostered players, the injured and their teammates who gained, risers, then
+  the best scorers. The schedule covers the next 7, 14 and 21 days.
+
+Each recommended trade says how long it should pay (short-term, a few weeks,
+rest of season), why it should last, and what would end it. The track record
+shows the result after 7 days, and after 21 once three weeks have passed.
+
 Settings (in `.env`):
 
 ```bash

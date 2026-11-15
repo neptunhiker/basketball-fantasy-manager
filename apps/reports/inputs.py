@@ -45,10 +45,11 @@ from apps.nba.salary_outlook import salary_baseline, with_salary_outlook
 from apps.nba.team_schedule import NEXT_DAYS, season_games, team_schedules
 from apps.nba.views import with_expected_return, with_expected_salary, with_hotness_share
 
-from . import shortlist
+from . import history, shortlist
 
 MILLION = Decimal(1_000_000)
-FORM_DAYS = 7
+# The form columns: FP per game in each of the last `FORM_WEEKS` weeks.
+FORM_WEEKS = 3
 NEWS_DAYS = 7
 # The news block stops here (about 10K tokens at the ~2.2 characters a token
 # these texts come to). Players on a roster in the run come first, then the
@@ -98,13 +99,13 @@ def build(season, rosters=(), now=None):
 
     players = _players(season, rostered, now)
     refs = {player.pk: f"P{index:03d}" for index, player in enumerate(players, start=1)}
-    form_since, form = _form(season, players, data_as_of)
+    log = history.GameLog(season, [player.pk for player in players], until=data_as_of)
     injuries = _latest_injuries()
 
     shared = "\n\n".join(
         [
             _rules(season, data_as_of, now),
-            _player_table(players, refs, form_since, form, injuries),
+            _player_table(players, refs, log, data_as_of, injuries),
             _injury_block(players, refs, injuries),
             _schedule_block(season, now),
             _news_block(players, refs, rostered, data_as_of),
@@ -144,40 +145,6 @@ def _players(season, rostered, now):
     )
 
 
-def _form(season, players, data_as_of):
-    """`(since, {player id: (points, games)})`: the recent form columns.
-
-    Measured from the newest import at least `FORM_DAYS` days before the data,
-    so the window is a week when imports are daily and says how long it is
-    when they are not. `since` is None before there is such an import. A
-    player without a snapshot by then (he arrived since) is left out rather
-    than credited with his whole season.
-    """
-    since = PlayerSnapshot.objects.filter(
-        season=season, as_of__lte=data_as_of - dt.timedelta(days=FORM_DAYS)
-    ).aggregate(moment=Max("as_of"))["moment"]
-    if since is None:
-        return None, {}
-    before = {
-        player_id: (total, games)
-        for player_id, total, games in PlayerSnapshot.objects.filter(
-            season=season, player_id__in=[player.pk for player in players]
-        )
-        .as_of(since)
-        .values_list("player_id", "total_fp", "games_played")
-    }
-    result = {}
-    for player in players:
-        if player.pk not in before or player.current_total_fp is None:
-            continue
-        total, games = before[player.pk]
-        result[player.pk] = (
-            player.current_total_fp - total,
-            (player.current_games_played or 0) - games,
-        )
-    return since, result
-
-
 def _latest_injuries():
     """{player id: newest injury report} for every player who has one."""
     reports = (
@@ -203,19 +170,18 @@ def _status(player, report):
     return "OUT"
 
 
-def _player_table(players, refs, form_since, form, injuries):
-    since = f"since {timezone.localdate(form_since).isoformat()}" if form_since else "recently"
+def _player_table(players, refs, log, data_as_of, injuries):
+    weeks_end = timezone.localdate(data_as_of).isoformat()
     lines = [
         "PLAYERS",
-        f"Columns: ref | name | team | pos | salary $M | FP/game season | FP/game {since} "
-        f"| games {since} | team games next 7 days (minus injury) | games left expected "
+        "Columns: ref | name | team | pos | salary $M | FP/game season "
+        f"| FP/game by week, oldest to newest, the last week ending {weeks_end} (games that week) "
+        "| team games next 7 days (minus injury) | games left expected "
         "| projected FP rest of season | predicted salary change at next update $M "
         "| value $M (salary his FP/game is worth minus his salary; + is a bargain) "
         "| hotness (rises in last 10 games) | injury",
     ]
     for player in players:
-        points, games = form.get(player.pk, (None, None))
-        per_game = _number(points / games, 1) if points is not None and games else "-"
         lines.append(
             " | ".join(
                 [
@@ -225,8 +191,7 @@ def _player_table(players, refs, form_since, form, injuries):
                     player.position,
                     _millions(player.current_salary),
                     _number(player.current_fp_per_game, 1),
-                    per_game,
-                    "-" if games is None else str(games),
+                    _weeks(log.weekly(player.pk, data_as_of, weeks=FORM_WEEKS)),
                     _whole(player.next_days),
                     _whole(player.games_expected),
                     _whole(player.projected_fp),
@@ -238,6 +203,13 @@ def _player_table(players, refs, form_since, form, injuries):
             )
         )
     return "\n".join(lines)
+
+
+def _weeks(forms):
+    """`22.1 (3) → 25.4 (4) → - (0)`: each week's FP per game and games."""
+    return " → ".join(
+        f"{_number(form.per_game, 1)} ({form.games})" if form.games else "- (0)" for form in forms
+    )
 
 
 def _injury_block(players, refs, injuries):

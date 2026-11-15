@@ -102,18 +102,16 @@ def test_players_are_named_with_refs_best_scorer_first(season, teams):
     assert "P003" not in built.shared_input
 
 
-def test_recent_form_is_measured_from_an_import_a_week_back(season, teams):
+def test_form_is_shown_per_week_from_the_snapshots(season, teams):
     # 100 points in 5 games a week ago; 160 in 8 games now: 60 in 3 games.
     who = played(season, teams[0], fp_per_game="20", games=8, before=(Decimal(100), 5))
-    who.current_total_fp = Decimal(160)
-    who.save(update_fields=["current_total_fp"])
     newcomer = played(season, teams[0], before=False)
 
     shared = inputs.build(season, now=NOW).shared_input
 
-    assert "FP/game since 2026-11-08" in shared
-    assert " | 20.0 | 20.0 | 3 | " in line_of(shared, who.full_name)
-    assert " | 20.0 | - | - | " in line_of(shared, newcomer.full_name)
+    assert "FP/game by week, oldest to newest, the last week ending 2026-11-15" in shared
+    assert " | 20.0 | - (0) → - (0) → 20.0 (3) | " in line_of(shared, who.full_name)
+    assert " | 20.0 | - (0) → - (0) → - (0) | " in line_of(shared, newcomer.full_name)
 
 
 def test_projection_and_schedule_come_from_the_games(season, teams):

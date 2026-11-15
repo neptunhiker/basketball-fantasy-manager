@@ -197,9 +197,10 @@ def test_the_track_record_follows_a_trade_for_a_week(signed_in, season, manager,
     later = LATEST + dt.timedelta(days=3)
     for player, gained in ((trade.player_in, 60), (trade.player_out, 10)):
         snapshot(season, player, later, total=player.current_total_fp + gained, games=9)
+    # Made after the advice, whatever the clock says.
     Transaction.objects.create(
         roster=rosters[0],
-        occurred_at=NOW + dt.timedelta(hours=1),
+        occurred_at=first.created_at + dt.timedelta(hours=1),
         kind=Transaction.Kind.TRADE,
         player_out=trade.player_out,
         player_in=trade.player_in,

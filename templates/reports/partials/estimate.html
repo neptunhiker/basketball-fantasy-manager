@@ -1,0 +1,11 @@
+{% load i18n %}
+{# What the run in the form would cost. Context: estimate, tokens, rosters, players, or problem. #}
+{% if problem %}
+  <span class="text-neutral-500 dark:text-neutral-400">{{ problem }}</span>
+{% else %}
+  <span class="block text-xs font-medium text-neutral-500 dark:text-neutral-400">{% translate "Estimated cost" %}</span>
+  <span class="block text-lg font-bold tabular-nums text-tertiary-700 dark:text-neutral-50">≈ ${{ estimate|floatformat:2 }}</span>
+  <span class="block text-xs text-neutral-500 dark:text-neutral-400">
+    {% blocktranslate count counter=rosters with players=players tokens=tokens|floatformat:"0g" %}{{ players }} players, ~{{ tokens }} tokens shared, {{ counter }} roster{% plural %}{{ players }} players, ~{{ tokens }} tokens shared, {{ counter }} rosters{% endblocktranslate %}
+  </span>
+{% endif %}

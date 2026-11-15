@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 12:21+0100\n"
+"POT-Creation-Date: 2026-11-15 12:28+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -332,7 +332,8 @@ msgstr ""
 "Nur eine Saison kann dies haben. Wenn du es hier aktivierst, wird es von der"
 " aktuell markierten Saison entfernt."
 
-#: apps/fantasy/forms.py:95
+#: apps/fantasy/forms.py:95 templates/reports/partials/staff_panel.html:76
+#: templates/reports/partials/staff_run_row.html:69
 msgid "Label"
 msgstr "Bezeichnung"
 
@@ -1346,7 +1347,7 @@ msgstr "Befehl"
 msgid "Scheduled"
 msgstr "Geplant"
 
-#: apps/nba/models.py:708
+#: apps/nba/models.py:708 templates/reports/partials/staff_run_row.html:30
 msgid "Running"
 msgstr "Läuft"
 
@@ -1355,6 +1356,7 @@ msgid "Succeeded"
 msgstr "Erfolgreich"
 
 #: apps/nba/models.py:710 apps/nba/models.py:794
+#: templates/reports/partials/staff_run_row.html:26
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
@@ -2205,6 +2207,39 @@ msgstr "Urteilt fast wie das Spitzenmodell, für ein Fünftel des Preises."
 msgid "OpenAI's flagship. Expensive."
 msgstr "OpenAIs Spitzenmodell. Teuer."
 
+#: apps/reports/forms.py:26 templates/reports/partials/staff_panel.html:78
+msgid "e.g. Sol at high effort"
+msgstr "z. B. Sol mit hohem Aufwand"
+
+#: apps/reports/forms.py:31
+msgid "All active rosters"
+msgstr "Alle aktiven Kader"
+
+#: apps/reports/forms.py:32
+msgid "Chosen rosters"
+msgstr "Ausgewählte Kader"
+
+#: apps/reports/forms.py:33 templates/reports/partials/run_list.html:43
+#: templates/reports/partials/staff_panel.html:96
+msgid "Briefing only"
+msgstr "Nur Marktbericht"
+
+#: apps/reports/forms.py:46
+msgid "Choose at least one roster."
+msgstr "Wähle mindestens einen Kader."
+
+#: apps/reports/forms.py:72
+msgid "Default model"
+msgstr "Standardmodell"
+
+#: apps/reports/forms.py:73
+msgid "Default reasoning effort"
+msgstr "Standard-Denkaufwand"
+
+#: apps/reports/forms.py:74
+msgid "Run and publish a report every Sunday at 12:30"
+msgstr "Jeden Sonntag um 12:30 einen Report erstellen und veröffentlichen"
+
 #: apps/reports/services.py:42
 msgid "AI reports are switched off: no OpenAI API key is set."
 msgstr ""
@@ -2232,6 +2267,53 @@ msgstr "Ein Lauf kann erst veröffentlicht werden, wenn er fertig ist."
 #: apps/reports/services.py:179
 msgid "This run has no report to show."
 msgstr "Dieser Lauf hat keinen Report, der sich zeigen ließe."
+
+#: apps/reports/views.py:127
+#, python-format
+msgid "Run started with %(model)s. It is not published until you publish it."
+msgstr ""
+"Lauf mit %(model)s gestartet. Er ist erst sichtbar, wenn du ihn "
+"veröffentlichst."
+
+#: apps/reports/views.py:142
+msgid "Published: every manager can read this report now."
+msgstr "Veröffentlicht: Alle Manager können diesen Report jetzt lesen."
+
+#: apps/reports/views.py:145
+msgid "Hidden: only staff can see this report now."
+msgstr "Verborgen: Nur das Team sieht diesen Report jetzt."
+
+#: apps/reports/views.py:160
+#, python-format
+msgid "Retrying %(count)s failed report."
+msgid_plural "Retrying %(count)s failed reports."
+msgstr[0] "%(count)s fehlgeschlagener Report wird wiederholt."
+msgstr[1] "%(count)s fehlgeschlagene Reports werden wiederholt."
+
+#: apps/reports/views.py:164
+msgid "Nothing to retry: no report in this run failed."
+msgstr "Nichts zu wiederholen: Kein Report in diesem Lauf ist fehlgeschlagen."
+
+#: apps/reports/views.py:174
+msgid "Choose a model and an effort for the rerun."
+msgstr "Wähle ein Modell und einen Aufwand für den neuen Lauf."
+
+#: apps/reports/views.py:189
+#, python-format
+msgid "Rerun started with %(model)s on the same data."
+msgstr "Neuer Lauf mit %(model)s auf denselben Daten gestartet."
+
+#: apps/reports/views.py:199
+msgid "Report settings saved."
+msgstr "Report-Einstellungen gespeichert."
+
+#: apps/reports/views.py:201
+msgid "The settings could not be saved."
+msgstr "Die Einstellungen konnten nicht gespeichert werden."
+
+#: apps/reports/views.py:215
+msgid "Choose a model and an effort."
+msgstr "Wähle ein Modell und einen Aufwand."
 
 #: templates/accounts/accept_invitation.html:4
 msgid "Accept invitation"
@@ -2476,6 +2558,7 @@ msgstr "Zurück zur Anmeldung"
 #: templates/fantasy/partials/plan_moves_summary.html:48
 #: templates/fantasy/partials/plan_step_actions.html:10
 #: templates/fantasy/plan_share.html:34
+#: templates/reports/partials/staff_run_row.html:22
 msgid "Done"
 msgstr "Fertig"
 
@@ -3048,11 +3131,12 @@ msgstr "Teams"
 
 #: templates/app.html:118 templates/fantasy/roster_list.html:4
 #: templates/fantasy/roster_list.html:5 templates/fantasy/season_list.html:29
+#: templates/reports/partials/staff_panel.html:84
 msgid "Rosters"
 msgstr "Kader"
 
-#: templates/app.html:149 templates/reports/reports.html:12
-#: templates/reports/reports.html:13
+#: templates/app.html:149 templates/reports/reports.html:13
+#: templates/reports/reports.html:14
 msgid "Reports"
 msgstr "Reports"
 
@@ -3947,7 +4031,7 @@ msgstr ""
 "verpflichtet werden."
 
 #: templates/fantasy/partials/player_roster_options.html:6
-#: templates/reports/reports.html:51
+#: templates/reports/reports.html:52
 msgid "Your rosters"
 msgstr "Deine Kader"
 
@@ -6404,7 +6488,7 @@ msgid "The figures come from the newest snapshot."
 msgstr "Die Werte stammen aus dem neuesten Snapshot."
 
 #: templates/nba/partials/team_schedule.html:11
-#: templates/reports/partials/briefing.html:68
+#: templates/reports/partials/briefing.html:72
 msgid "Schedule"
 msgstr "Spielplan"
 
@@ -7392,57 +7476,74 @@ msgstr "Wöchentlicher Trade-Report · %(season)s"
 msgid "Not published: only staff can see this"
 msgstr "Nicht veröffentlicht: nur das Team sieht das"
 
-#: templates/reports/partials/briefing.html:22
+#: templates/reports/partials/briefing.html:26
 msgid "Market briefing"
 msgstr "Marktbericht"
 
-#: templates/reports/partials/briefing.html:24
+#: templates/reports/partials/briefing.html:28
 msgid "The briefing is still being written."
 msgstr "Der Marktbericht wird noch geschrieben."
 
-#: templates/reports/partials/briefing.html:24
+#: templates/reports/partials/briefing.html:28
 msgid "The briefing could not be written for this report."
 msgstr "Der Marktbericht konnte für diesen Report nicht geschrieben werden."
 
-#: templates/reports/partials/briefing.html:31
+#: templates/reports/partials/briefing.html:35
 #: templates/reports/partials/run_list.html:50
+#: templates/reports/partials/staff_run_row.html:15
 #, python-format
 msgid "Data as of %(moment)s"
 msgstr "Daten vom %(moment)s"
 
-#: templates/reports/partials/briefing.html:39
+#: templates/reports/partials/briefing.html:43
 #: templates/reports/partials/run_list.html:29
+#: templates/reports/partials/staff_run_row.html:11
 msgid "Automatic"
 msgstr "Automatisch"
 
-#: templates/reports/partials/briefing.html:39
+#: templates/reports/partials/briefing.html:43
 #: templates/reports/partials/run_list.html:34
+#: templates/reports/partials/staff_run_row.html:11
 msgid "Manual"
 msgstr "Manuell"
 
-#: templates/reports/partials/briefing.html:52
+#: templates/reports/partials/briefing.html:56
 msgid "What matters this week"
 msgstr "Was diese Woche zählt"
 
-#: templates/reports/partials/briefing.html:64
+#: templates/reports/partials/briefing.html:68
 msgid "Minutes opening up"
 msgstr "Minuten werden frei"
 
-#: templates/reports/partials/briefing.html:65
+#: templates/reports/partials/briefing.html:69
 msgid "On the rise"
 msgstr "Im Aufwind"
 
-#: templates/reports/partials/briefing.html:66
+#: templates/reports/partials/briefing.html:70
 msgid "Cooling off"
 msgstr "Kühlt ab"
 
-#: templates/reports/partials/briefing.html:67
+#: templates/reports/partials/briefing.html:71
 msgid "Salary watch"
 msgstr "Gehalt im Blick"
 
 #: templates/reports/partials/empty.html:7
 msgid "Weekly trade report"
 msgstr "Wöchentlicher Trade-Report"
+
+#: templates/reports/partials/estimate.html:6
+msgid "Estimated cost"
+msgstr "Geschätzte Kosten"
+
+#: templates/reports/partials/estimate.html:9
+#, python-format
+msgid "%(players)s players, ~%(tokens)s tokens shared, %(counter)s roster"
+msgid_plural ""
+"%(players)s players, ~%(tokens)s tokens shared, %(counter)s rosters"
+msgstr[0] ""
+"%(players)s Spieler, ~%(tokens)s geteilte Tokens, %(counter)s Kader"
+msgstr[1] ""
+"%(players)s Spieler, ~%(tokens)s geteilte Tokens, %(counter)s Kader"
 
 #: templates/reports/partials/outcomes.html:14
 msgid "for"
@@ -7462,6 +7563,11 @@ msgstr[1] "in %(counter)s Tagen"
 #: templates/reports/partials/outcomes.html:29
 msgid "Trade made"
 msgstr "Trade gemacht"
+
+#: templates/reports/partials/progress.html:7
+#, python-format
+msgid "%(model)s is writing this report: %(done)s of %(total)s done."
+msgstr "%(model)s schreibt diesen Report: %(done)s von %(total)s fertig."
 
 #: templates/reports/partials/roster_section.html:12
 #, python-format
@@ -7526,10 +7632,6 @@ msgstr "Vom Sonntagslauf erstellt"
 msgid "Started by an admin"
 msgstr "Von einem Admin gestartet"
 
-#: templates/reports/partials/run_list.html:43
-msgid "Briefing only"
-msgstr "Nur Marktbericht"
-
 #: templates/reports/partials/run_list.html:46
 #, python-format
 msgid "%(counter)s roster"
@@ -7540,6 +7642,168 @@ msgstr[1] "%(counter)s Kader"
 #: templates/reports/partials/run_list.html:58
 msgid "Nothing published yet."
 msgstr "Noch nichts veröffentlicht."
+
+#: templates/reports/partials/staff_panel.html:16
+msgid "AI report runs"
+msgstr "KI-Report-Läufe"
+
+#: templates/reports/partials/staff_panel.html:17
+msgid "Staff only: start, compare and publish reports."
+msgstr "Nur fürs Team: Reports starten, vergleichen und veröffentlichen."
+
+#: templates/reports/partials/staff_panel.html:21
+msgid "Spent on AI reports this month"
+msgstr "Diesen Monat für KI-Reports ausgegeben"
+
+#: templates/reports/partials/staff_panel.html:29
+#, python-format
+msgid "%(counter)s run"
+msgid_plural "%(counter)s runs"
+msgstr[0] "%(counter)s Lauf"
+msgstr[1] "%(counter)s Läufe"
+
+#: templates/reports/partials/staff_panel.html:42
+msgid "New run"
+msgstr "Neuer Lauf"
+
+#: templates/reports/partials/staff_panel.html:45
+#: templates/reports/partials/staff_run_row.html:63
+msgid "Model"
+msgstr "Modell"
+
+#: templates/reports/partials/staff_panel.html:52
+msgid "Default"
+msgstr "Standard"
+
+#: templates/reports/partials/staff_panel.html:56
+msgid "per 1M in / out"
+msgstr "pro 1 Mio. rein / raus"
+
+#: templates/reports/partials/staff_panel.html:65
+#: templates/reports/partials/staff_run_row.html:66
+msgid "Reasoning effort"
+msgstr "Denkaufwand"
+
+#: templates/reports/partials/staff_panel.html:70
+#: templates/reports/partials/staff_run_row.html:67
+msgid "Low"
+msgstr "Niedrig"
+
+#: templates/reports/partials/staff_panel.html:70
+#: templates/reports/partials/staff_run_row.html:67
+msgid "Medium"
+msgstr "Mittel"
+
+#: templates/reports/partials/staff_panel.html:70
+#: templates/reports/partials/staff_run_row.html:67
+msgid "High"
+msgstr "Hoch"
+
+#: templates/reports/partials/staff_panel.html:76
+msgid "optional"
+msgstr "optional"
+
+#: templates/reports/partials/staff_panel.html:88
+#, python-format
+msgid "All active (%(count)s)"
+msgstr "Alle aktiven (%(count)s)"
+
+#: templates/reports/partials/staff_panel.html:92
+msgid "Choose rosters"
+msgstr "Kader auswählen"
+
+#: templates/reports/partials/staff_panel.html:104
+msgid "off"
+msgstr "aus"
+
+#: templates/reports/partials/staff_panel.html:107
+msgid "No rosters this season."
+msgstr "Keine Kader in dieser Saison."
+
+#: templates/reports/partials/staff_panel.html:114
+msgid "Working out the cost…"
+msgstr "Kosten werden berechnet …"
+
+#: templates/reports/partials/staff_panel.html:121
+msgid "Start run"
+msgstr "Lauf starten"
+
+#: templates/reports/partials/staff_panel.html:130
+msgid "Spent this month"
+msgstr "Diesen Monat ausgegeben"
+
+#: templates/reports/partials/staff_panel.html:133
+#, python-format
+msgid "%(share)s%% of the monthly limit"
+msgstr "%(share)s %% des Monatslimits"
+
+#: templates/reports/partials/staff_panel.html:136
+msgid "No new run starts once the limit is reached."
+msgstr "Ist das Limit erreicht, startet kein neuer Lauf."
+
+#: templates/reports/partials/staff_panel.html:141
+msgid "Sunday run"
+msgstr "Sonntagslauf"
+
+#: templates/reports/partials/staff_panel.html:154
+msgid "Save settings"
+msgstr "Einstellungen speichern"
+
+#: templates/reports/partials/staff_panel.html:161
+msgid "All runs this season"
+msgstr "Alle Läufe dieser Saison"
+
+#: templates/reports/partials/staff_panel.html:166
+msgid "No run yet. Start the first one above."
+msgstr "Noch kein Lauf. Starte oben den ersten."
+
+#: templates/reports/partials/staff_run_row.html:11
+msgid "Rerun"
+msgstr "Neuer Lauf"
+
+#: templates/reports/partials/staff_run_row.html:24
+msgid "Partly failed"
+msgstr "Teilweise fehlgeschlagen"
+
+#: templates/reports/partials/staff_run_row.html:33
+msgid "Reports done / in the run"
+msgstr "Fertige Reports / Reports im Lauf"
+
+#: templates/reports/partials/staff_run_row.html:42
+msgid "Published: click to hide it from managers"
+msgstr "Veröffentlicht: Klicken, um ihn vor den Managern zu verbergen"
+
+#: templates/reports/partials/staff_run_row.html:43
+msgid "Published"
+msgstr "Veröffentlicht"
+
+#: templates/reports/partials/staff_run_row.html:47
+msgid "Publish"
+msgstr "Veröffentlichen"
+
+#: templates/reports/partials/staff_run_row.html:53
+#, python-format
+msgid "Retry %(counter)s failed"
+msgid_plural "Retry %(counter)s failed"
+msgstr[0] "%(counter)s fehlgeschlagenen wiederholen"
+msgstr[1] "%(counter)s fehlgeschlagene wiederholen"
+
+#: templates/reports/partials/staff_run_row.html:58
+msgid "Rerun…"
+msgstr "Neu laufen lassen …"
+
+#: templates/reports/partials/staff_run_row.html:62
+msgid "Same data and shortlists, another model or effort."
+msgstr ""
+"Dieselben Daten und Trade-Listen, anderes Modell oder anderer Aufwand."
+
+#: templates/reports/partials/staff_run_row.html:69
+msgid "Label (optional)"
+msgstr "Bezeichnung (optional)"
+
+#: templates/reports/partials/staff_run_row.html:71
+msgid "Start rerun"
+msgstr "Neuen Lauf starten"
 
 #: templates/reports/partials/trade_card.html:3
 #, python-format
@@ -7596,21 +7860,21 @@ msgstr "%(projected)s Prog."
 msgid "Predicted salary change at the next update"
 msgstr "Vorhergesagte Gehaltsänderung beim nächsten Update"
 
-#: templates/reports/reports.html:21
+#: templates/reports/reports.html:22
 msgid "No season is running"
 msgstr "Es läuft keine Saison"
 
-#: templates/reports/reports.html:21
+#: templates/reports/reports.html:22
 msgid "Reports appear once a season is set up and its first stats are in."
 msgstr ""
 "Reports erscheinen, sobald eine Saison angelegt ist und die ersten Stats da "
 "sind."
 
-#: templates/reports/reports.html:23
+#: templates/reports/reports.html:24
 msgid "No report yet"
 msgstr "Noch kein Report"
 
-#: templates/reports/reports.html:23
+#: templates/reports/reports.html:24
 msgid ""
 "Every Sunday at 12:30 an AI reads the week's numbers, injuries and news and "
 "writes a market briefing plus advice for every active roster. The first one "
@@ -7620,18 +7884,18 @@ msgstr ""
 "Woche und schreibt einen Marktbericht plus Rat für jeden aktiven Kader. Der "
 "erste erscheint hier, sobald er veröffentlicht ist."
 
-#: templates/reports/reports.html:34
+#: templates/reports/reports.html:35
 #, python-format
 msgid "%(counter)s published report"
 msgid_plural "%(counter)s published reports"
 msgstr[0] "%(counter)s veröffentlichter Report"
 msgstr[1] "%(counter)s veröffentlichte Reports"
 
-#: templates/reports/reports.html:51
+#: templates/reports/reports.html:52
 msgid "Roster advice"
 msgstr "Rat für die Kader"
 
-#: templates/reports/reports.html:53
+#: templates/reports/reports.html:54
 msgid ""
 "Trades are picked from the legal ones this app worked out; the reasoning is "
 "the AI's."
@@ -7639,19 +7903,19 @@ msgstr ""
 "Die Trades stammen aus den erlaubten, die diese App ausgerechnet hat; die "
 "Begründung kommt von der KI."
 
-#: templates/reports/reports.html:58
+#: templates/reports/reports.html:59
 msgid "Rosters in this report"
 msgstr "Kader in diesem Report"
 
-#: templates/reports/reports.html:80
+#: templates/reports/reports.html:81
 msgid "This report is the market briefing only."
 msgstr "Dieser Report ist nur der Marktbericht."
 
-#: templates/reports/reports.html:80
+#: templates/reports/reports.html:81
 msgid "None of your rosters is in this report."
 msgstr "Keiner deiner Kader ist in diesem Report."
 
-#: templates/reports/reports.html:82
+#: templates/reports/reports.html:83
 msgid ""
 "Reports cover the rosters switched on under Rosters at the time they are "
 "made."
@@ -7659,15 +7923,15 @@ msgstr ""
 "Reports umfassen die Kader, die beim Erstellen unter Kader eingeschaltet "
 "sind."
 
-#: templates/reports/reports.html:84
+#: templates/reports/reports.html:85
 msgid "Go to Rosters"
 msgstr "Zu den Kadern"
 
-#: templates/reports/reports.html:91
+#: templates/reports/reports.html:92
 msgid "How this report is made"
 msgstr "So entsteht dieser Report"
 
-#: templates/reports/reports.html:93
+#: templates/reports/reports.html:94
 #, python-format
 msgid ""
 "This app works out every number and every legal trade: form, projections, "
@@ -7682,6 +7946,6 @@ msgstr ""
 "Trades und erklärt, warum. Das kann falsch sein. Für dich wird nichts "
 "getradet: Ein Trade muss weiterhin auf der Seite des Kaders gemacht werden."
 
-#: templates/reports/reports.html:106
+#: templates/reports/reports.html:107
 msgid "Published reports"
 msgstr "Veröffentlichte Reports"

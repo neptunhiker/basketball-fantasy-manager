@@ -1,0 +1,11 @@
+{% load i18n %}
+{# A run in progress, polled every few seconds until it is done. Context: run, done, total. #}
+<div hx-get="{% url 'reports:progress' run.pk %}" hx-trigger="every 4s" hx-swap="outerHTML"
+     class="flex items-center gap-3 rounded-2xl border border-sky-200 bg-sky-50/70 px-4 py-3 text-sm text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100"
+     role="status">
+  <svg class="h-4 w-4 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4Z"/></svg>
+  <span class="flex-1">{% blocktranslate with model=run.model_name %}{{ model }} is writing this report: {{ done }} of {{ total }} done.{% endblocktranslate %}</span>
+  <span class="h-1.5 w-24 overflow-hidden rounded-full bg-sky-200 dark:bg-sky-500/20" aria-hidden="true">
+    <span class="block h-full rounded-full bg-sky-500" style="width: {% widthratio done total 100 %}%"></span>
+  </span>
+</div>

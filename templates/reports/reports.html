@@ -5,8 +5,9 @@
   AI trade reports. One run on the left -- the market briefing for everyone,
   then the viewer's own rosters -- and every published run of the season on
   the right (folded into a disclosure above the report on phones and
-  tablets). Data from `apps.reports.pages`; staff controls arrive with
-  `staff_panel`. The AI's words are always escaped: never `|safe` here.
+  tablets). Data from `apps.reports.pages`; staff get the run controls on
+  top (`partials/staff_panel.html`). The AI's words are always escaped:
+  never `|safe` here.
 {% endcomment %}
 
 {% block title %}{% translate "Reports" %} · {{ SITE_NAME }}{% endblock %}
@@ -15,7 +16,7 @@
 {% block content %}
 <div class="mx-auto max-w-6xl space-y-6">
 
-  {% block staff_panel %}{% endblock %}
+  {% if staff %}{% include "reports/partials/staff_panel.html" %}{% endif %}
 
   {% if not season %}
     {% include "reports/partials/empty.html" with title=_("No season is running") text=_("Reports appear once a season is set up and its first stats are in.") %}

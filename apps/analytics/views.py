@@ -11,6 +11,7 @@ from apps.fantasy.models import Season
 from apps.nba.charts import scatter_chart
 from apps.nba.models import Player
 
+from . import charts
 from .dream_team import changes, missing_reason
 from .insights import points_race
 from .models import DreamTeam, DreamTeamPick
@@ -118,6 +119,13 @@ class InsightsView(AnalyticsMixin, TemplateView):
         ]
         own = [row for row in rows if row["line"].is_own]
         context.update(
+            # Three drawings of the same race, each close to the size it is
+            # shown at: desktop, tablet, and a phone's that leaves the naming
+            # of the lines to the legend.
+            race_chart=charts.race_chart(race, **charts.WIDE),
+            race_medium_chart=charts.race_chart(race, **charts.MEDIUM),
+            race_compact_chart=charts.race_chart(race, **charts.COMPACT),
+            race_readout=charts.race_readout(race),
             standings=rows,
             leader=next((row for row in rows if not row["line"].is_dream_team), None),
             own_best=own[0] if own else None,

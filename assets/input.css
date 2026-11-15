@@ -4,6 +4,7 @@
 @source "../templates";
 @source "../apps";
 @source "../static/js/roster_timeline.js";
+@source "../static/js/points_race.js";
 
 /* Dark mode is toggled by a class on <html>, not by the OS alone, so the
    user's choice can win. See the theme toggle in templates/base.html. */

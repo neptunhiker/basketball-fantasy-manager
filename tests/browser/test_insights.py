@@ -142,3 +142,77 @@ def test_the_tabs_switch_between_the_pages(race, open_page, size):
             "link", name="Insights"
         )
     ).to_have_attribute("aria-current", "page")
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+def test_each_screen_gets_the_drawing_made_for_it(race, open_page, size):
+    page = open_page(race["user"], URL, size=size)
+    drawings = {
+        name: page.locator(f"svg:has(+ script#points-race-{name})")
+        for name in ("wide", "medium", "compact")
+    }
+    made_for = {"phone": "compact", "tablet": "medium", "desktop": "wide"}[size]
+
+    for name, drawing in drawings.items():
+        if name == made_for:
+            expect(drawing).to_be_visible()
+        else:
+            expect(drawing).to_be_hidden()
+    shown = drawings[made_for]
+    # Six lines: five rosters and the dashed Dream Team.
+    expect(shown.locator("path.race-stroke[stroke-linejoin]")).to_have_count(6)
+    expect(shown.locator("path[stroke-dasharray]")).to_have_count(1)
+
+
+def test_a_mouse_reads_every_line_at_the_day_under_it(race, open_page):
+    page = open_page(race["user"], URL, size="desktop")
+    svg = page.locator("svg:has(+ script#points-race-wide)")
+    box = svg.bounding_box()
+
+    page.mouse.move(box["x"] + box["width"] * 0.45, box["y"] + box["height"] * 0.5)
+
+    tooltip = page.locator("[data-race-tooltip]")
+    expect(tooltip).to_be_visible()
+    expect(tooltip.locator("li")).to_have_count(6)
+    day = tooltip.locator("[data-race-tooltip-day]").inner_text()
+    expect(page.locator("[data-race-day]")).to_have_text(day)
+    expect(svg.locator("[data-race-hover]")).to_have_attribute("visibility", "visible")
+    shot(page, FOLDER, "hover-desktop")
+
+    page.mouse.move(box["x"] + box["width"] * 0.5, box["y"] - 80)
+
+    expect(tooltip).to_be_hidden()
+    latest = page.locator("[data-race-day]").get_attribute("data-latest")
+    expect(page.locator("[data-race-day]")).to_have_text(latest)
+
+
+def test_a_tap_on_a_phone_reads_out_in_the_legend(race, open_page):
+    page = open_page(race["user"], URL, size="phone")
+    svg = page.locator("svg:has(+ script#points-race-compact)")
+    latest = page.locator("[data-race-day]").inner_text()
+    dream_team = page.locator("[data-race-legend='0'] [data-race-value]")
+    latest_value = dream_team.inner_text()
+
+    svg.tap(position={"x": 60, "y": 100})
+
+    expect(page.locator("[data-race-tooltip]")).to_be_hidden()
+    expect(page.locator("[data-race-day]")).not_to_have_text(latest)
+    expect(dream_team).not_to_have_text(latest_value)
+    shot(page, FOLDER, "tap-phone")
+
+
+def test_the_arrow_keys_step_through_the_days(race, open_page):
+    page = open_page(race["user"], URL, size="desktop")
+    stage = page.locator("[data-race-stage]")
+    day = page.locator("[data-race-day]")
+
+    stage.focus()
+    page.keyboard.press("Home")
+    first = day.inner_text()
+    page.keyboard.press("ArrowRight")
+
+    expect(day).not_to_have_text(first)
+    page.keyboard.press("ArrowLeft")
+    expect(day).to_have_text(first)
+    page.keyboard.press("Escape")
+    expect(page.locator("[data-race-tooltip]")).to_be_hidden()

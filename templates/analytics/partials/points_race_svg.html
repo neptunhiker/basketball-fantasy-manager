@@ -1,0 +1,84 @@
+{% load i18n l10n %}
+{% comment %}
+  One drawing of the points race, from `apps.analytics.charts.race_chart`.
+  Context: chart, geometry_id (the json_script with its hover coordinates).
+
+  Coordinates go through `unlocalize` -- in German a plain `{{ x }}` renders
+  as `52,5` and the browser refuses to draw it.
+
+  Colours come from `race-*` classes (assets/input.css), so the theme switch
+  needs nothing from here. Text wears ink colours, never a line's colour:
+  the dot beside a name says which line it belongs to.
+
+  The guide and the dots at the bottom are moved by static/js/points_race.js;
+  without JavaScript they simply stay hidden and the drawing is complete.
+{% endcomment %}
+<svg viewBox="0 0 {{ chart.width|unlocalize }} {{ chart.height|unlocalize }}"
+     class="h-auto w-full touch-pan-y select-none overflow-visible"
+     role="img"
+     aria-label="{% translate 'Points so far per day for every active roster and the Dream Team. The standings below list the latest figures.' %}"
+     data-race-svg>
+  <g class="text-neutral-200 dark:text-neutral-800">
+    {% for tick in chart.y_ticks %}
+      <line x1="{{ chart.plot_left|unlocalize }}" y1="{{ tick.y|unlocalize }}"
+            x2="{{ chart.plot_right|unlocalize }}" y2="{{ tick.y|unlocalize }}"
+            stroke="currentColor" stroke-width="1" {% if not forloop.first %}stroke-dasharray="2 4"{% endif %} />
+    {% endfor %}
+  </g>
+
+  <g class="fill-neutral-500 dark:fill-neutral-400" font-size="11">
+    {% for tick in chart.y_ticks %}
+      <text x="{{ chart.label_right|unlocalize }}" y="{{ tick.y|unlocalize }}"
+            text-anchor="end" dominant-baseline="middle" class="tabular-nums">{{ tick.value }}</text>
+    {% endfor %}
+    {% for label in chart.x_labels %}
+      <text x="{{ label.x|unlocalize }}" y="{{ chart.label_bottom|unlocalize }}"
+            text-anchor="{{ label.anchor }}">{{ label.label }}</text>
+    {% endfor %}
+  </g>
+
+  {% for entry in chart.lines %}
+    {% with line=entry.line %}
+      <g class="race-{{ line.color }}">
+        <path d="{{ entry.path }}" fill="none" class="race-stroke"
+              stroke-linecap="round" stroke-linejoin="round"
+              {% if line.is_dream_team %}stroke-width="2.5" stroke-dasharray="7 5"{% elif line.is_own %}stroke-width="3"{% elif line.color == "muted" %}stroke-width="1.75"{% else %}stroke-width="2"{% endif %} />
+        {% for dot in entry.lone %}
+          <circle cx="{{ dot.x|unlocalize }}" cy="{{ dot.y|unlocalize }}" r="3.5" class="race-fill" />
+        {% endfor %}
+      </g>
+    {% endwith %}
+  {% endfor %}
+
+  {% if chart.ends %}
+    <g font-size="11">
+      {% for end in chart.ends %}
+        <g class="race-{{ end.line.color }}">
+          {% if end.leader %}
+            <path d="{{ end.leader }}" fill="none" class="race-stroke" stroke-width="1" opacity="0.5" />
+          {% endif %}
+          <circle cx="{{ end.dot_x|unlocalize }}" cy="{{ end.dot_y|unlocalize }}" r="4" stroke-width="2"
+                  class="race-fill stroke-white dark:stroke-neutral-900" />
+          <text x="{{ end.x|unlocalize }}" y="{{ end.y|unlocalize }}" dominant-baseline="middle"
+                {% if end.line.is_dream_team or end.line.is_own %}font-weight="700"{% else %}font-weight="500"{% endif %}
+                class="{% if end.line.is_dream_team or end.line.is_own %}fill-tertiary-700 dark:fill-neutral-100{% else %}fill-neutral-600 dark:fill-neutral-300{% endif %}">{{ end.name }}</text>
+        </g>
+      {% endfor %}
+    </g>
+  {% endif %}
+
+  {# The hover layer, hidden until static/js/points_race.js moves it. #}
+  <g data-race-hover class="pointer-events-none" visibility="hidden">
+    <line data-race-guide x1="0" x2="0"
+          y1="{{ chart.plot_top|unlocalize }}" y2="{{ chart.plot_bottom|unlocalize }}"
+          stroke="currentColor" stroke-width="1" class="text-neutral-400 dark:text-neutral-500" />
+    {% for entry in chart.lines %}
+      <circle data-race-dot="{{ entry.index }}" cx="0" cy="0" r="{% if entry.line.is_dream_team or entry.line.is_own %}5{% else %}4{% endif %}" stroke-width="2"
+              class="race-{{ entry.line.color }} race-fill stroke-white dark:stroke-neutral-900" />
+    {% endfor %}
+  </g>
+  {# The whole drawing is the hit area: a reader aims at a day, not a line. #}
+  <rect data-race-hit x="0" y="0" width="{{ chart.width|unlocalize }}" height="{{ chart.height|unlocalize }}"
+        fill="transparent" />
+</svg>
+{{ chart.hover|json_script:geometry_id }}

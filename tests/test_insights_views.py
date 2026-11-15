@@ -196,3 +196,27 @@ def test_more_rosters_cost_no_more_queries(signed_in, raced, season, manager):
         roster_with(season, manager, f"More {index}", (10, 20))
 
     assert count() == before
+
+
+def test_the_chart_is_drawn_with_both_drawings_and_its_readout(signed_in, raced):
+    response = signed_in.get(URL)
+
+    for name in ("wide", "medium", "compact"):
+        assert f'id="points-race-{name}"' in response.text
+    assert 'id="points-race-readout"' in response.text
+    assert "js/points_race.js" in response.text
+    assert response.context["race_readout"]["days"][-1] == "22 Oct"
+
+
+def test_in_german_the_coordinates_stay_numbers_the_browser_can_draw(signed_in, raced, user):
+    user.language = "de"
+    user.save()
+
+    response = signed_in.get(URL)
+
+    assert "Punkterennen" in response.text
+    coordinates = re.findall(r'\b(?:x|y|x1|y1|x2|y2|cx|cy)="([^"]*)"', response.text)
+    assert coordinates
+    assert not [value for value in coordinates if "," in value]
+    # The figures themselves are German: 1.250 rather than 1,250.
+    assert "1.250" in response.text

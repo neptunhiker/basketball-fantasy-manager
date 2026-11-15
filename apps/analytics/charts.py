@@ -10,9 +10,10 @@ templates/analytics/partials/points_race_svg.html, like the app's other
 charts. The hover readout (static/js/points_race.js) only reads coordinates
 it is handed; nothing in the browser measures or scales data.
 
-Built twice per page: a wide drawing with each line named at its end, and a
-narrow one for phones that leaves the naming to the legend under it, since
-names beside the lines would leave no room for the lines.
+Built three times per page: a wide drawing and a tablet-sized one, each
+with every line named at its end, and a narrow one for phones that leaves
+the naming to the legend under it, since names beside the lines would leave
+no room for the lines.
 """
 
 import math
@@ -25,6 +26,9 @@ from apps.perf.charts import nice_top
 
 # `end_labels`: how many characters of a name fit beside its line (0: none).
 WIDE = {"width": 920, "height": 360, "max_labels": 7, "end_labels": 16}
+# A tablet's card is about 700px wide: the wide drawing would shrink its text
+# to 8px there, so it gets one of its own, drawn close to its real size.
+MEDIUM = {"width": 680, "height": 330, "max_labels": 6, "end_labels": 13}
 COMPACT = {"width": 360, "height": 300, "max_labels": 4, "end_labels": 0}
 
 PAD_LEFT = 50
@@ -35,6 +39,10 @@ TICKS = 4
 # Room right of the plot for a dot and a name of `end_labels` characters.
 CHAR_WIDTH = 6.4
 END_LABEL_DOT = 14
+# How far the first stepped date has to be from the start for the start to
+# get a label as well: a start-anchored date and a centred one, about six
+# characters each, with a little air between them.
+START_LABEL_ROOM = 70
 # Two names closer than this would overlap, so they are pushed apart.
 END_LABEL_GAP = 15
 
@@ -70,10 +78,12 @@ def race_chart(race, width, height, max_labels, end_labels):
 
     xs = [x_of(index) for index in range(len(days))]
     lines = []
-    for line in race.lines:
+    for index, line in enumerate(race.lines):
         ys = [y_of(value) for value in line.values]
         lines.append(
             {
+                # Its place in `race.lines`, which the readout and `hover.y` follow.
+                "index": index,
                 "line": line,
                 "ys": ys,
                 "path": _path(xs, ys),
@@ -106,7 +116,7 @@ def race_chart(race, width, height, max_labels, end_labels):
     ]
     # The first day is where everyone starts at zero; worth a label of its
     # own unless the stepping put one right next to it.
-    if x_labels[0]["x"] != xs[0] and x_labels[0]["x"] - xs[0] > plot_width / max_labels / 2:
+    if x_labels[0]["x"] != xs[0] and x_labels[0]["x"] - xs[0] > START_LABEL_ROOM:
         x_labels.insert(0, {"x": xs[0], "label": short_month_day(days[0]), "anchor": "start"})
 
     y_ticks = [
@@ -214,4 +224,10 @@ def _end_labels(lines, xs, plot_right, plot_top, plot_bottom, chars):
     for end in ends:
         end["y"] = round(max(end["y"], plot_top), 2)
         end["x"] = plot_right + END_LABEL_DOT
+        # A hairline from the dot to a name that had to move away from it.
+        end["leader"] = (
+            f"M{end['dot_x'] + 5} {end['dot_y']} L{end['x'] - 4} {end['y']}"
+            if abs(end["y"] - end["dot_y"]) > 1
+            else ""
+        )
     return ends

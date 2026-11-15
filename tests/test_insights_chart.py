@@ -7,6 +7,7 @@ from itertools import pairwise
 from apps.analytics.charts import (
     COMPACT,
     END_LABEL_GAP,
+    MEDIUM,
     WIDE,
     race_chart,
     race_readout,
@@ -150,3 +151,10 @@ def test_the_readout_has_every_line_and_day_formatted():
     assert dream["dreamTeam"] is True
     assert mine["values"] == [0.0, None]
     assert (mine["manager"], mine["own"], mine["color"]) == ("Bulla", True, "1")
+
+
+def test_the_start_gets_a_label_only_where_it_does_not_crowd_the_next():
+    for size in (WIDE, MEDIUM, COMPACT):
+        chart = race_chart(race(line("A", *range(22))), **size)
+        xs = sorted(label["x"] for label in chart["x_labels"])
+        assert all(b - a >= 45 for a, b in pairwise(xs)), (size, xs)

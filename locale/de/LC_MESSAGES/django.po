@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 08:15+0100\n"
+"POT-Creation-Date: 2026-11-15 08:26+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -199,15 +199,15 @@ msgstr ""
 msgid "Dream Team"
 msgstr "Dream Team"
 
-#: apps/analytics/views.py:137
+#: apps/analytics/views.py:145
 msgid "Guards"
 msgstr "Guards"
 
-#: apps/analytics/views.py:138
+#: apps/analytics/views.py:146
 msgid "Forwards"
 msgstr "Forwards"
 
-#: apps/analytics/views.py:139
+#: apps/analytics/views.py:147
 msgid "Centers"
 msgstr "Center"
 
@@ -1836,6 +1836,7 @@ msgid "Nothing matches those filters."
 msgstr "Keine Ergebnisse für diese Filter."
 
 #: apps/nba/player_export.py:649 apps/nba/player_export.py:654
+#: templates/analytics/insights.html:133
 #: templates/fantasy/partials/roster_timeline.html:35
 msgid "Legend"
 msgstr "Legende"
@@ -2779,7 +2780,7 @@ msgstr ""
 "günstig am Draft-Tag, seitdem stark gepunktet."
 
 #: templates/analytics/dream_team.html:268
-#: templates/analytics/insights.html:109
+#: templates/analytics/insights.html:168
 msgid "How this is worked out"
 msgstr "So wird es berechnet"
 
@@ -2851,11 +2852,29 @@ msgstr "Platz %(rank)s von %(total)s"
 msgid "Put a roster in the race"
 msgstr "Schick einen Kader ins Rennen"
 
-#: templates/analytics/insights.html:95
+#: templates/analytics/insights.html:97
+msgid "Points race"
+msgstr "Punkterennen"
+
+#: templates/analytics/insights.html:99
+msgid ""
+"Points so far, day by day since signings closed. The dashed line is the "
+"Dream Team."
+msgstr ""
+"Punkte bisher, Tag für Tag seit Ende der Verpflichtungen. Die gestrichelte "
+"Linie ist das Dream Team."
+
+#: templates/analytics/insights.html:112
+msgid ""
+"Points race. Use the left and right arrow keys to step through the days."
+msgstr ""
+"Punkterennen. Mit den Pfeiltasten links und rechts gehst du durch die Tage."
+
+#: templates/analytics/insights.html:154
 msgid "Standings"
 msgstr "Tabelle"
 
-#: templates/analytics/insights.html:96
+#: templates/analytics/insights.html:155
 msgid ""
 "Points since signings closed, and how far each roster is from the Dream "
 "Team."
@@ -2863,15 +2882,15 @@ msgstr ""
 "Punkte seit Ende der Verpflichtungen und wie weit jeder Kader vom Dream Team"
 " entfernt ist."
 
-#: templates/analytics/insights.html:101
+#: templates/analytics/insights.html:160
 msgid "No roster is in the race yet."
 msgstr "Noch ist kein Kader im Rennen."
 
-#: templates/analytics/insights.html:102
+#: templates/analytics/insights.html:161
 msgid "Switch one on under Rosters."
 msgstr "Schalte einen unter Kader ein."
 
-#: templates/analytics/insights.html:111
+#: templates/analytics/insights.html:170
 msgid ""
 "A roster scores what its players scored while they were on it, from the day "
 "signings closed, read off the daily stats imports, so a trade counts from "
@@ -2927,6 +2946,14 @@ msgstr ""
 "Keine Saison ist als aktuell markiert, es gibt also noch nichts, worauf man "
 "zurückblicken kann."
 
+#: templates/analytics/partials/points_race_svg.html:19
+msgid ""
+"Points so far per day for every active roster and the Dream Team. The "
+"standings below list the latest figures."
+msgstr ""
+"Punkte bisher pro Tag für jeden aktiven Kader und das Dream Team. Die "
+"Tabelle darunter zeigt die neuesten Zahlen."
+
 #: templates/analytics/partials/standings_gap.html:1
 #, python-format
 msgid "%(points)s ahead"
@@ -2953,11 +2980,11 @@ msgstr "Letzter Import"
 msgid "Gap to Dream Team"
 msgstr "Abstand zum Dream Team"
 
-#: templates/analytics/partials/standings_table.html:40
+#: templates/analytics/partials/standings_table.html:42
 msgid "You"
 msgstr "Du"
 
-#: templates/analytics/partials/standings_table.html:43
+#: templates/analytics/partials/standings_table.html:45
 msgid "Best roster from draft day, no trades"
 msgstr "Bester Kader vom Draft-Tag, ohne Trades"
 

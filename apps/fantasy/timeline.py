@@ -16,7 +16,6 @@ player on two lanes or none -- at worst a link is missing and the incoming
 player takes the first free lane.
 """
 
-import bisect
 import datetime as dt
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -28,7 +27,8 @@ from django.utils.formats import number_format
 from apps.core.templatetags.money import millions
 from apps.nba.templatetags.player_stats import short_month_day
 
-from .models import PlayerSnapshot, Transaction
+from .models import Transaction
+from .points import PointsHistory, cutoff
 
 POSITION_ORDER = {"G": 0, "F": 1, "C": 2}
 
@@ -65,15 +65,6 @@ class Timeline:
             "tradeCount": self.trade_count,
             "spots": self.spots,
         }
-
-
-def cutoff(season):
-    """The moment the starting squad is read: when signings closed.
-
-    A season without a cutoff keeps signings open all season, so there is no
-    pre-season to leave out and its first day stands in.
-    """
-    return season.signings_close_at or season.season_open_at
 
 
 def roster_timeline(roster, now=None):
@@ -174,41 +165,15 @@ def _assign_lanes(stints):
 def _add_points(stints, season, now):
     """What each player scored while he was on the roster, from the snapshots.
 
-    The season total at the end of the spell minus the total at its start. The
-    snapshots are daily, so this is as precise as they are -- the screen says
-    "approx." for that reason. A player with no snapshot before a mid-season
+    Worked out by `points.PointsHistory`, the same arithmetic Analytics ->
+    Insights adds up day by day. A player with no snapshot before a mid-season
     arrival gets no number rather than a wrong one.
     """
-    player_ids = {s.membership.player_id for s in stints}
-    series = {}
-    for player_id, as_of, total in (
-        PlayerSnapshot.objects.filter(season=season, player_id__in=player_ids, as_of__lte=now)
-        .order_by("player_id", "as_of")
-        .values_list("player_id", "as_of", "total_fp")
-    ):
-        moments, totals = series.setdefault(player_id, ([], []))
-        moments.append(as_of)
-        totals.append(total)
-
-    def total_at(player_id, moment):
-        moments, totals = series.get(player_id, ([], []))
-        index = bisect.bisect_right(moments, moment) - 1
-        return totals[index] if index >= 0 else None
-
+    history = PointsHistory(season, {s.membership.player_id for s in stints}, until=now)
     for stint in stints:
-        player_id = stint.membership.player_id
-        if player_id not in series:
-            continue
-        before = total_at(player_id, stint.start)
-        if before is None:
-            # Nothing recorded yet when he arrived: zero if that was before
-            # the season's first game, unknown otherwise.
-            if stint.start > season.season_open_at:
-                continue
-            before = Decimal("0")
-        after = total_at(player_id, stint.end or now)
-        if after is not None:
-            stint.points = max(Decimal("0"), after - before)
+        stint.points = history.spell_points(
+            stint.membership.player_id, stint.start, stint.end or now
+        )
 
 
 def _move(trade, price, partner):

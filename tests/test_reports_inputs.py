@@ -136,7 +136,10 @@ def test_injuries_are_listed_and_counted_per_team(season, teams):
     assert line_of(shared, doubtful.full_name).endswith("| DTD")
     assert line_of(shared, fine.full_name).endswith("| -")
     injuries = shared.split("INJURIES", 1)[1].split("SCHEDULE", 1)[0]
-    assert f"{out.full_name} | SAS | Out | Knee, Leg | 2026-11-30 | 2026-11-14" in injuries
+    assert (
+        f"{out.full_name} | SAS | G | Out | Knee, Leg | 2026-11-14 (0) | 2026-11-30 "
+        "| 2026-11-14 Out, back 11-30 | 20.0 | - | -"
+    ) in injuries
     assert fine.full_name not in injuries
     assert "Injured players per team: SAS 2" in injuries
 

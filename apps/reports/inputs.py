@@ -33,10 +33,7 @@ from apps.fantasy.models import (
 )
 from apps.fantasy.services import next_trade_grant
 from apps.nba.models import (
-    DAY_TO_DAY_INJURY_STATUSES,
-    HEALTHY_INJURY_STATUSES,
     Player,
-    PlayerInjury,
     PlayerNews,
     Team,
 )
@@ -45,7 +42,7 @@ from apps.nba.salary_outlook import salary_baseline, with_salary_outlook
 from apps.nba.team_schedule import NEXT_DAYS, season_games, team_schedules
 from apps.nba.views import with_expected_return, with_expected_salary, with_hotness_share
 
-from . import history, shortlist
+from . import history, injuries, shortlist
 
 MILLION = Decimal(1_000_000)
 # The form columns: FP per game in each of the last `FORM_WEEKS` weeks.
@@ -100,13 +97,14 @@ def build(season, rosters=(), now=None):
     players = _players(season, rostered, now)
     refs = {player.pk: f"P{index:03d}" for index, player in enumerate(players, start=1)}
     log = history.GameLog(season, [player.pk for player in players], until=data_as_of)
-    injuries = _latest_injuries()
+    hurt = injuries.build(season, players, log, data_as_of, now)
 
     shared = "\n\n".join(
         [
             _rules(season, data_as_of, now),
-            _player_table(players, refs, log, data_as_of, injuries),
-            _injury_block(players, refs, injuries),
+            _player_table(players, refs, log, data_as_of, hurt),
+            _injury_block(refs, hurt),
+            _benefit_block(refs, hurt),
             _schedule_block(season, now),
             _news_block(players, refs, rostered, data_as_of),
         ]
@@ -145,32 +143,20 @@ def _players(season, rostered, now):
     )
 
 
-def _latest_injuries():
-    """{player id: newest injury report} for every player who has one."""
-    reports = (
-        PlayerInjury.objects.filter(player__isnull=False)
-        .select_related("player__team")
-        .order_by("player_id", "-observed_at", "-created_at")
-        .distinct("player_id")
-    )
-    return {report.player_id: report for report in reports}
-
-
-def _is_hurt(report):
-    return report is not None and report.status.lower() not in HEALTHY_INJURY_STATUSES
-
-
-def _status(player, report):
-    if not _is_hurt(report):
-        return ""
-    if report.status.lower() in DAY_TO_DAY_INJURY_STATUSES:
+def _status(player, spell):
+    """The player table's injury column: `OUT to <date>`, `DTD`, `back <date>`, `-`."""
+    if spell is None:
+        return "-"
+    if spell.is_returned:
+        return f"back {spell.returned_on.isoformat()}"
+    if injuries.is_day_to_day(spell.status):
         return "DTD"
     if player.expected_return_date:
         return f"OUT to {player.expected_return_date.isoformat()}"
     return "OUT"
 
 
-def _player_table(players, refs, log, data_as_of, injuries):
+def _player_table(players, refs, log, data_as_of, hurt):
     weeks_end = timezone.localdate(data_as_of).isoformat()
     lines = [
         "PLAYERS",
@@ -198,7 +184,7 @@ def _player_table(players, refs, log, data_as_of, injuries):
                     _millions(player.outlook_change, signed=True),
                     _millions(player.salary_difference_amount, signed=True),
                     _hotness(player),
-                    _status(player, injuries.get(player.pk)) or "-",
+                    _status(player, hurt.spell_of(player.pk)),
                 ]
             )
         )
@@ -212,42 +198,132 @@ def _weeks(forms):
     )
 
 
-def _injury_block(players, refs, injuries):
-    """Every player in the table who is hurt, and how many each team has hurt."""
-    lines = ["INJURIES", "ref | name | team | status | injury | expected return | reported"]
-    for player in players:
-        report = injuries.get(player.pk)
-        if not _is_hurt(report):
-            continue
-        injury = ", ".join(
-            part
-            for part in (report.injury_type, report.injury_location, report.injury_detail)
-            if part
-        )
+def _injury_block(refs, hurt):
+    """Every hurt player in the table with how his absence developed, the
+    players back in the last two weeks, and how many each team has hurt."""
+    moment = timezone.localtime(hurt.as_of).strftime("%Y-%m-%d %H:%M") if hurt.as_of else "never"
+    lines = [
+        f"INJURIES (injury reports as of {moment}; history: the state when the absence "
+        f"began or {injuries.HISTORY_DAYS} days ago, then each change of status or "
+        "expected return)",
+        "ref | name | team | pos | status | injury | out since (team games missed) "
+        "| expected return | history | his FP/game | latest note | newest RotoWire injury headline",
+    ]
+    for spell in hurt.hurt:
+        player = spell.player
         lines.append(
             " | ".join(
                 [
                     refs[player.pk],
                     player.full_name,
-                    player.team.abbreviation if player.team else "-",
-                    report.status,
-                    injury or "-",
-                    report.return_date.isoformat() if report.return_date else "-",
-                    timezone.localdate(report.observed_at).isoformat(),
+                    _team(player),
+                    player.position,
+                    spell.status,
+                    spell.injury or "-",
+                    f"{_day(spell.out_since)} ({spell.games_missed})",
+                    spell.return_date.isoformat() if spell.return_date else "-",
+                    _history(spell.history),
+                    _number(player.current_fp_per_game, 1),
+                    spell.comment or "-",
+                    _headline(spell.headline),
                 ]
             )
         )
-    hurt_per_team = Counter(
-        report.player.team.abbreviation
-        for report in injuries.values()
-        if _is_hurt(report) and report.player.team is not None
+    if not hurt.hurt:
+        lines.append("Nobody is injured.")
+    if hurt.returned:
+        lines += [
+            "",
+            f"RETURNED IN THE LAST {injuries.RETURNED_DAYS} DAYS (an absence that ended: "
+            "teammates may lose minutes they gained)",
+            "ref | name | team | pos | back since | out since (team games missed) | his FP/game",
+        ]
+        for spell in hurt.returned:
+            player = spell.player
+            lines.append(
+                " | ".join(
+                    [
+                        refs[player.pk],
+                        player.full_name,
+                        _team(player),
+                        player.position,
+                        spell.returned_on.isoformat(),
+                        f"{_day(spell.out_since)} ({spell.games_missed})",
+                        _number(player.current_fp_per_game, 1),
+                    ]
+                )
+            )
+    per_team = Counter(
+        spell.player.team.abbreviation for spell in hurt.hurt if spell.player.team is not None
     )
-    if hurt_per_team:
-        lines.append(
+    if per_team:
+        lines += [
+            "",
             "Injured players per team: "
-            + ", ".join(f"{team} {count}" for team, count in sorted(hurt_per_team.items()))
-        )
+            + ", ".join(f"{team} {count}" for team, count in sorted(per_team.items())),
+        ]
     return "\n".join(lines)
+
+
+def _benefit_block(refs, hurt):
+    """Teammates whose points rose since a long absence began."""
+    lines = [
+        "WHO BENEFITS (players out for a while who score "
+        f"{injuries.BENEFIT_MIN_FP:.0f}+ FP/game, and the teammates whose FP/game rose "
+        "since; it shows timing, not proof of cause)",
+    ]
+    for benefit in hurt.benefits:
+        spell, injured = benefit.spell, benefit.spell.player
+        also = ", ".join(f"{refs[other.pk]} {other.full_name}" for other in benefit.also_out)
+        lines.append(
+            f"{_team(injured)} without {refs[injured.pk]} {injured.full_name} "
+            f"({spell.status} since {_day(spell.out_since)}, {spell.games_missed} team games "
+            f"missed, {_number(injured.current_fp_per_game, 1)} FP/game; "
+            f"also out: {also or 'nobody'})"
+        )
+        for gain in benefit.teammates:
+            mate = gain.player
+            lines.append(
+                f"  {refs[mate.pk]} {mate.full_name} | {mate.position} | FP/game "
+                f"{_number(gain.before.per_game, 1)} ({gain.before.games} games) before -> "
+                f"{_number(gain.since.per_game, 1)} ({gain.since.games} games) since "
+                f"| salary {_millions(mate.current_salary)}"
+            )
+        if not benefit.teammates:
+            lines[-1] += "; no teammate has gained yet"
+    if not hurt.benefits:
+        lines.append("No long absences of players who score that much.")
+    return "\n".join(lines)
+
+
+def _team(player):
+    return player.team.abbreviation if player.team else "-"
+
+
+def _day(moment):
+    return timezone.localdate(moment).isoformat()
+
+
+def _history(changes):
+    """`2026-11-02 Out, back 11-10; 11-09 back 11-18`: the start, then each change."""
+    parts = []
+    for index, change in enumerate(changes):
+        back = change.return_date.strftime("%m-%d") if change.return_date else "?"
+        said = []
+        if index == 0 or change.status_changed:
+            said.append(change.status)
+        if index == 0 or change.return_changed:
+            said.append(f"back {back}")
+        day = change.on.isoformat() if index == 0 else change.on.strftime("%m-%d")
+        parts.append(f"{day} {', '.join(said)}")
+    return "; ".join(parts) or "-"
+
+
+def _headline(headline):
+    if headline is None:
+        return "-"
+    published_on, text = headline
+    return f"{published_on.strftime('%m-%d')}: {' '.join(text.split())}"
 
 
 def _schedule_block(season, now):

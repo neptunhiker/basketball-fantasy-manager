@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 20:30+0100\n"
+"POT-Creation-Date: 2026-11-15 20:36+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -332,7 +332,7 @@ msgstr ""
 "Nur eine Saison kann dies haben. Wenn du es hier aktivierst, wird es von der"
 " aktuell markierten Saison entfernt."
 
-#: apps/fantasy/forms.py:95 templates/reports/partials/staff_panel.html:78
+#: apps/fantasy/forms.py:95 templates/reports/partials/staff_panel.html:91
 #: templates/reports/partials/staff_run_row.html:69
 msgid "Label"
 msgstr "Bezeichnung"
@@ -2207,7 +2207,7 @@ msgstr "Urteilt fast wie das Spitzenmodell, für ein Fünftel des Preises."
 msgid "OpenAI's flagship. Expensive."
 msgstr "OpenAIs Spitzenmodell. Teuer."
 
-#: apps/reports/forms.py:26 templates/reports/partials/staff_panel.html:80
+#: apps/reports/forms.py:26 templates/reports/partials/staff_panel.html:93
 msgid "e.g. Sol at high effort"
 msgstr "z. B. Sol mit hohem Aufwand"
 
@@ -2220,7 +2220,7 @@ msgid "Chosen rosters"
 msgstr "Ausgewählte Kader"
 
 #: apps/reports/forms.py:33 templates/reports/partials/run_list.html:43
-#: templates/reports/partials/staff_panel.html:98
+#: templates/reports/partials/staff_panel.html:111
 msgid "Briefing only"
 msgstr "Nur Marktbericht"
 
@@ -2240,17 +2240,17 @@ msgstr "Standard-Denkaufwand"
 msgid "Run and publish a report every Sunday at 12:30"
 msgstr "Jeden Sonntag um 12:30 einen Report erstellen und veröffentlichen"
 
-#: apps/reports/models.py:24 templates/reports/partials/staff_panel.html:72
+#: apps/reports/models.py:24 templates/reports/partials/staff_panel.html:85
 #: templates/reports/partials/staff_run_row.html:67
 msgid "Low"
 msgstr "Niedrig"
 
-#: apps/reports/models.py:25 templates/reports/partials/staff_panel.html:72
+#: apps/reports/models.py:25 templates/reports/partials/staff_panel.html:85
 #: templates/reports/partials/staff_run_row.html:67
 msgid "Medium"
 msgstr "Mittel"
 
-#: apps/reports/models.py:26 templates/reports/partials/staff_panel.html:72
+#: apps/reports/models.py:26 templates/reports/partials/staff_panel.html:85
 #: templates/reports/partials/staff_run_row.html:67
 msgid "High"
 msgstr "Hoch"
@@ -2295,50 +2295,50 @@ msgstr "Ein Lauf kann erst veröffentlicht werden, wenn er fertig ist."
 msgid "This run has no report to show."
 msgstr "Dieser Lauf hat keinen Report, der sich zeigen ließe."
 
-#: apps/reports/views.py:127
+#: apps/reports/views.py:147
 #, python-format
 msgid "Run started with %(model)s. It is not published until you publish it."
 msgstr ""
 "Lauf mit %(model)s gestartet. Er ist erst sichtbar, wenn du ihn "
 "veröffentlichst."
 
-#: apps/reports/views.py:142
+#: apps/reports/views.py:162
 msgid "Published: every manager can read this report now."
 msgstr "Veröffentlicht: Alle Manager können diesen Report jetzt lesen."
 
-#: apps/reports/views.py:145
+#: apps/reports/views.py:165
 msgid "Hidden: only staff can see this report now."
 msgstr "Verborgen: Nur das Team sieht diesen Report jetzt."
 
-#: apps/reports/views.py:160
+#: apps/reports/views.py:180
 #, python-format
 msgid "Retrying %(count)s failed report."
 msgid_plural "Retrying %(count)s failed reports."
 msgstr[0] "%(count)s fehlgeschlagener Report wird wiederholt."
 msgstr[1] "%(count)s fehlgeschlagene Reports werden wiederholt."
 
-#: apps/reports/views.py:164
+#: apps/reports/views.py:184
 msgid "Nothing to retry: no report in this run failed."
 msgstr "Nichts zu wiederholen: Kein Report in diesem Lauf ist fehlgeschlagen."
 
-#: apps/reports/views.py:174
+#: apps/reports/views.py:194
 msgid "Choose a model and an effort for the rerun."
 msgstr "Wähle ein Modell und einen Aufwand für den neuen Lauf."
 
-#: apps/reports/views.py:189
+#: apps/reports/views.py:209
 #, python-format
 msgid "Rerun started with %(model)s on the same data."
 msgstr "Neuer Lauf mit %(model)s auf denselben Daten gestartet."
 
-#: apps/reports/views.py:199
+#: apps/reports/views.py:219
 msgid "Report settings saved."
 msgstr "Report-Einstellungen gespeichert."
 
-#: apps/reports/views.py:201
+#: apps/reports/views.py:221
 msgid "The settings could not be saved."
 msgstr "Die Einstellungen konnten nicht gespeichert werden."
 
-#: apps/reports/views.py:215
+#: apps/reports/views.py:235
 msgid "Choose a model and an effort."
 msgstr "Wähle ein Modell und einen Aufwand."
 
@@ -3158,7 +3158,7 @@ msgstr "Teams"
 
 #: templates/app.html:118 templates/fantasy/roster_list.html:4
 #: templates/fantasy/roster_list.html:5 templates/fantasy/season_list.html:29
-#: templates/reports/partials/staff_panel.html:86
+#: templates/reports/partials/staff_panel.html:99
 msgid "Rosters"
 msgstr "Kader"
 
@@ -7700,83 +7700,98 @@ msgid_plural "%(counter)s runs"
 msgstr[0] "%(counter)s Lauf"
 msgstr[1] "%(counter)s Läufe"
 
-#: templates/reports/partials/staff_panel.html:44
+#: templates/reports/partials/staff_panel.html:45
 msgid "New run"
 msgstr "Neuer Lauf"
 
-#: templates/reports/partials/staff_panel.html:47
+#: templates/reports/partials/staff_panel.html:49
+#, python-format
+msgid "Injuries last imported %(moment)s: refresh them first"
+msgstr ""
+"Verletzungen zuletzt importiert %(moment)s: bitte zuerst aktualisieren"
+
+#: templates/reports/partials/staff_panel.html:49
+msgid "No injuries imported yet"
+msgstr "Noch keine Verletzungen importiert"
+
+#: templates/reports/partials/staff_panel.html:54
+#, python-format
+msgid "Injuries as of %(moment)s"
+msgstr "Verletzungen Stand %(moment)s"
+
+#: templates/reports/partials/staff_panel.html:60
 #: templates/reports/partials/staff_run_row.html:63
 msgid "Model"
 msgstr "Modell"
 
-#: templates/reports/partials/staff_panel.html:54
+#: templates/reports/partials/staff_panel.html:67
 msgid "Default"
 msgstr "Standard"
 
-#: templates/reports/partials/staff_panel.html:58
+#: templates/reports/partials/staff_panel.html:71
 msgid "per 1M in / out"
 msgstr "pro 1 Mio. rein / raus"
 
-#: templates/reports/partials/staff_panel.html:67
+#: templates/reports/partials/staff_panel.html:80
 #: templates/reports/partials/staff_run_row.html:66
 msgid "Reasoning effort"
 msgstr "Denkaufwand"
 
-#: templates/reports/partials/staff_panel.html:78
+#: templates/reports/partials/staff_panel.html:91
 msgid "optional"
 msgstr "optional"
 
-#: templates/reports/partials/staff_panel.html:90
+#: templates/reports/partials/staff_panel.html:103
 #, python-format
 msgid "All active (%(count)s)"
 msgstr "Alle aktiven (%(count)s)"
 
-#: templates/reports/partials/staff_panel.html:94
+#: templates/reports/partials/staff_panel.html:107
 msgid "Choose rosters"
 msgstr "Kader auswählen"
 
-#: templates/reports/partials/staff_panel.html:106
+#: templates/reports/partials/staff_panel.html:119
 msgid "off"
 msgstr "aus"
 
-#: templates/reports/partials/staff_panel.html:109
+#: templates/reports/partials/staff_panel.html:122
 msgid "No rosters this season."
 msgstr "Keine Kader in dieser Saison."
 
-#: templates/reports/partials/staff_panel.html:116
+#: templates/reports/partials/staff_panel.html:129
 msgid "Working out the cost…"
 msgstr "Kosten werden berechnet …"
 
-#: templates/reports/partials/staff_panel.html:123
+#: templates/reports/partials/staff_panel.html:136
 msgid "Start run"
 msgstr "Lauf starten"
 
-#: templates/reports/partials/staff_panel.html:132
+#: templates/reports/partials/staff_panel.html:145
 msgid "Spent this month"
 msgstr "Diesen Monat ausgegeben"
 
-#: templates/reports/partials/staff_panel.html:135
+#: templates/reports/partials/staff_panel.html:148
 #, python-format
 msgid "%(share)s%% of the monthly limit"
 msgstr "%(share)s %% des Monatslimits"
 
-#: templates/reports/partials/staff_panel.html:138
+#: templates/reports/partials/staff_panel.html:151
 msgid "No new run starts once the limit is reached."
 msgstr "Ist das Limit erreicht, startet kein neuer Lauf."
 
-#: templates/reports/partials/staff_panel.html:143
+#: templates/reports/partials/staff_panel.html:156
 msgid "Sunday run"
 msgstr "Sonntagslauf"
 
-#: templates/reports/partials/staff_panel.html:156
+#: templates/reports/partials/staff_panel.html:169
 msgid "Save settings"
 msgstr "Einstellungen speichern"
 
-#: templates/reports/partials/staff_panel.html:163
+#: templates/reports/partials/staff_panel.html:176
 msgid "All runs this season"
 msgstr "Alle Läufe dieser Saison"
 
-#: templates/reports/partials/staff_panel.html:168
+#: templates/reports/partials/staff_panel.html:181
 msgid "No run yet. Start the first one above."
 msgstr "Noch kein Lauf. Starte oben den ersten."
 

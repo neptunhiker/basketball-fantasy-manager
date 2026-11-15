@@ -6,9 +6,11 @@ Sunday run uses. Staff actions are plain POSTs that redirect back with a
 message; HTMX only refreshes the cost estimate and a run in progress.
 """
 
+import datetime as dt
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Max, Q, Sum
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -18,7 +20,8 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from apps.core.views import StaffRequiredMixin
-from apps.fantasy.models import Roster, Season
+from apps.fantasy.models import PlayerSnapshot, Roster, Season
+from apps.nba.models import PlayerInjury
 
 from . import catalog, costs, inputs, pages, services
 from .forms import ACTIVE, BRIEFING, CHOSEN, RerunForm, RunForm, SettingsForm
@@ -95,7 +98,24 @@ def _staff_context(season, run):
         "spent_share": min(round(spent / limit * 100), 100) if limit else 100,
         "unavailable": services.unavailable_reason(),
         "open": run is None or any(entry.is_active for entry in all_runs),
+        **_injury_freshness(season),
     }
+
+
+# Injury reports this much older than the stats make a run's injury picture stale.
+INJURIES_STALE_AFTER = dt.timedelta(hours=24)
+
+
+def _injury_freshness(season):
+    """When injuries were last imported, and whether a run now would use stale ones."""
+    injuries_as_of = PlayerInjury.objects.aggregate(moment=Max("observed_at"))["moment"]
+    stats_as_of = PlayerSnapshot.objects.filter(season=season).aggregate(moment=Max("as_of"))[
+        "moment"
+    ]
+    stale = stats_as_of is not None and (
+        injuries_as_of is None or injuries_as_of < stats_as_of - INJURIES_STALE_AFTER
+    )
+    return {"injuries_as_of": injuries_as_of, "injuries_stale": stale}
 
 
 def _back(request, run=None):

@@ -41,7 +41,20 @@
             x-data="{ scope: 'active' }"
             hx-get="{% url 'reports:estimate' %}" hx-trigger="change, load" hx-target="#run-estimate" hx-swap="innerHTML" hx-sync="this:replace">
         {% csrf_token %}
-        <h3 class="text-base font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "New run" %}</h3>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="text-base font-semibold text-tertiary-700 dark:text-neutral-100">{% translate "New run" %}</h3>
+          {% if staff.injuries_stale %}
+            <p class="badge badge-warning items-start rounded-lg py-1 leading-4" role="status">
+              <svg class="mt-px h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v5m0 3.5v.01M10.3 3.9 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+              {% if staff.injuries_as_of %}{% blocktranslate with moment=staff.injuries_as_of|date:"D j M, H:i" %}Injuries last imported {{ moment }}: refresh them first{% endblocktranslate %}{% else %}{% translate "No injuries imported yet" %}{% endif %}
+            </p>
+          {% elif staff.injuries_as_of %}
+            <p class="badge badge-neutral">
+              <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7V3Z"/></svg>
+              {% blocktranslate with moment=staff.injuries_as_of|date:"D j M, H:i" %}Injuries as of {{ moment }}{% endblocktranslate %}
+            </p>
+          {% endif %}
+        </div>
 
         <fieldset>
           <legend class="form-label">{% translate "Model" %}</legend>

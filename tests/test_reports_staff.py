@@ -1,5 +1,7 @@
 """Staff controls on the Reports page: start, publish, retry, rerun, settings."""
 
+import datetime as dt
+
 import pytest
 from django.urls import reverse
 
@@ -215,3 +217,30 @@ def test_the_panel_lists_every_run_with_its_cost(post, staff, season, manager, f
     assert "All runs this season" in html
     assert "2/2" in html
     assert "Published" in html
+
+
+def test_staff_see_how_fresh_the_injuries_are(staff, season, manager):
+    from apps.nba.models import PlayerInjury
+    from tests.reports_factories import LATEST, at
+
+    players, _ = make_world(season, manager)  # stats as of Nov 15, 12:15
+    report = PlayerInjury.objects.create(
+        player=players[0], observed_at=at(11, 15, 12, 20), status="Out"
+    )
+
+    html = staff.get(reverse("reports:index")).content.decode()
+    assert "Injuries as of Sun 15 Nov, 12:20" in html
+    assert "refresh them first" not in html
+
+    report.observed_at = LATEST - dt.timedelta(days=2)
+    report.save(update_fields=["observed_at"])
+    html = staff.get(reverse("reports:index")).content.decode()
+    assert "Injuries last imported" in html and "refresh them first" in html
+
+
+def test_no_injuries_at_all_is_flagged(staff, season, manager):
+    make_world(season, manager)
+
+    html = staff.get(reverse("reports:index")).content.decode()
+
+    assert "No injuries imported yet" in html

@@ -11,6 +11,7 @@ model: a call can take minutes.
 """
 
 import logging
+import re
 import time
 import uuid
 from functools import partial
@@ -22,6 +23,7 @@ from django.utils.translation import gettext as _
 from django_q.tasks import async_task
 
 from apps.fantasy.models import Roster
+from apps.nba.models import Player
 
 from . import ai, catalog, costs, inputs, prompts, schemas
 from .models import RecommendedTrade, Report, ReportRun
@@ -30,6 +32,12 @@ logger = logging.getLogger(__name__)
 
 TASK = "apps.reports.tasks.generate_report"
 MAX_TRADES = 2
+# The codes the AI is given for players and trades. Readers never see them,
+# so none may be left in what they read (`_plain_text`).
+PLAYER_REF = re.compile(r"\bP\d{3}\b")
+TRADE_REF = re.compile(r"\bT\d{2}\b")
+# The keys in a stored answer that hold text for readers.
+TEXT_KEYS = {"headline", "summary", "situation", "hold_reason", "risks", "text", "reasoning"}
 
 
 class ReportsUnavailable(Exception):
@@ -299,6 +307,8 @@ def _succeed(report, result, started):
         picks = []
     else:
         output, picks, notes = _clean_roster(result.parsed, report, refs)
+    if replaced := _plain_text(output, report):
+        notes.append("Named in place of codes: " + ", ".join(replaced) + ".")
     with transaction.atomic():
         report.output = output
         report.response_id = result.response_id or ""
@@ -319,7 +329,7 @@ def _succeed(report, result, started):
                 salary_out=by_ref[pick.trade_id]["salary_out"],
                 salary_in=by_ref[pick.trade_id]["salary_in"],
                 confidence=pick.confidence,
-                reasoning=pick.reasoning,
+                reasoning=output["trades"][rank - 1]["reasoning"],
             )
             for rank, pick in enumerate(picks, start=1)
         )
@@ -391,6 +401,67 @@ def _clean_roster(advice, report, refs):
 
 def _dropped_refs(refs):
     return "Dropped unknown player refs: " + ", ".join(sorted(refs)) + "."
+
+
+def _plain_text(output, report):
+    """Names in place of the codes readers never see, in every text of `output`.
+
+    The prompt asks for names; this catches what slips through. A trade id
+    becomes "Out -> In" with both players' names, a player ref the player's
+    name; a code that is not ours is left alone. Changes `output` in place and
+    returns the codes it replaced, sorted. One query, and none without codes.
+    """
+    refs = report.run.player_refs
+    trades = {trade["ref"]: trade for trade in report.shortlist}
+    texts = list(_texts(output))
+    trade_ids = {code for text in texts for code in TRADE_REF.findall(text) if code in trades}
+    player_refs = {code for text in texts for code in PLAYER_REF.findall(text) if code in refs}
+    if not trade_ids and not player_refs:
+        return []
+    ids = {refs[code] for code in player_refs}
+    ids |= {trades[code][side] for code in trade_ids for side in ("out", "in")}
+    names = {
+        str(pk): f"{first} {last}".strip()
+        for pk, first, last in Player.objects.filter(pk__in=ids).values_list(
+            "pk", "first_name", "last_name"
+        )
+    }
+
+    def trade_name(match):
+        trade = trades.get(match.group())
+        if trade is None or trade["out"] not in names or trade["in"] not in names:
+            return match.group()
+        return f"{names[trade['out']]} \u2192 {names[trade['in']]}"
+
+    def player_name(match):
+        return names.get(refs.get(match.group(), ""), match.group())
+
+    _rewrite(output, lambda text: PLAYER_REF.sub(player_name, TRADE_REF.sub(trade_name, text)))
+    return sorted(trade_ids | player_refs)
+
+
+def _texts(value):
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key in TEXT_KEYS and isinstance(item, str):
+                yield item
+            else:
+                yield from _texts(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _texts(item)
+
+
+def _rewrite(value, change):
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key in TEXT_KEYS and isinstance(item, str):
+                value[key] = change(item)
+            else:
+                _rewrite(item, change)
+    elif isinstance(value, list):
+        for item in value:
+            _rewrite(item, change)
 
 
 def _finish_run(run_id, now=None):

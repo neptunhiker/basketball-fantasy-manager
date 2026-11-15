@@ -283,3 +283,57 @@ def test_publishing_needs_a_finished_run_with_an_answer(
     services.unpublish(run)
     run.refresh_from_db()
     assert not run.is_published
+
+
+def test_codes_readers_never_see_become_names(season, manager, start, fake_ai):
+    """The AI is told to name players; whatever code still slips into a text
+    is replaced before it is stored, and noted for staff."""
+    players, _ = make_world(season, manager)
+    fake_ai.briefing = schemas.Briefing(
+        headline="Watch P001",
+        summary="P001 leads, and P099 is not ours.",
+        items=[schemas.BriefingItem(kind="riser", player_refs=["P001"], text="P001 is hot.")],
+    )
+    fake_ai.answer = lambda call: schemas.RosterAdvice(
+        headline="Make T01 now",
+        situation="T01 adds the most; T77 is not on the list.",
+        decision="trade",
+        trades=[
+            schemas.TradePick(
+                trade_id="T01", priority=1, reasoning="T01 brings in P001.", confidence="high"
+            )
+        ],
+        hold_reason="",
+        watch=[schemas.WatchItem(player_ref="P001", text="Watch P001 closely.")],
+        risks="",
+    )
+
+    run = start()
+
+    star = players[-1].full_name  # the best scorer is P001
+    briefing = run.reports.get(kind=Report.Kind.BRIEFING)
+    assert briefing.output["headline"] == f"Watch {star}"
+    assert briefing.output["summary"] == f"{star} leads, and P099 is not ours."
+    assert briefing.output["items"][0]["text"] == f"{star} is hot."
+    assert briefing.output["items"][0]["player_refs"] == ["P001"]  # ref fields stay codes
+    assert briefing.error == "Named in place of codes: P001."
+
+    report = run.reports.get(kind=Report.Kind.ROSTER)
+    first = report.shortlist[0]
+    out_name = next(p.full_name for p in players if str(p.pk) == first["out"])
+    in_name = next(p.full_name for p in players if str(p.pk) == first["in"])
+    swap = f"{out_name} → {in_name}"
+    assert report.output["headline"] == f"Make {swap} now"
+    assert report.output["situation"] == f"{swap} adds the most; T77 is not on the list."
+    assert report.output["trades"][0]["trade_id"] == "T01"  # the id field stays a code
+    assert report.output["trades"][0]["reasoning"] == f"{swap} brings in {star}."
+    assert report.output["watch"] == [{"player_ref": "P001", "text": f"Watch {star} closely."}]
+    assert report.trades.get().reasoning == f"{swap} brings in {star}."
+    assert report.error == "Named in place of codes: P001, T01."
+
+
+def test_an_answer_without_codes_is_stored_as_written(season, manager, start, fake_ai):
+    make_world(season, manager)
+    run = start()
+    assert run.reports.get(kind=Report.Kind.ROSTER).error == ""
+    assert run.prompt_version == "2026-11-15.2"

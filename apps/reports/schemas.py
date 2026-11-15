@@ -32,7 +32,10 @@ class Briefing(BaseModel):
 class TradePick(BaseModel):
     trade_id: str = Field(description="A shortlist ref, T01...")
     priority: Literal[1, 2]
-    reasoning: str = Field(description="Two or three sentences: why, with figures.")
+    reasoning: str = Field(
+        description="Two or three sentences: why, with figures. Name the players, "
+        "never the trade id."
+    )
     confidence: Literal["low", "medium", "high"]
 
 

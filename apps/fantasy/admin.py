@@ -87,8 +87,8 @@ class ManagerAdmin(admin.ModelAdmin):
 
 @admin.register(Roster)
 class RosterAdmin(admin.ModelAdmin):
-    list_display = ["name", "manager", "season", "cash", "player_count", "is_complete"]
-    list_filter = ["season"]
+    list_display = ["name", "manager", "season", "cash", "player_count", "is_complete", "is_active"]
+    list_filter = ["season", "is_active"]
     # The account as well as the handle: the handle is what the game shows, but
     # the email is what you have when someone writes in about their roster.
     search_fields = ["name", "manager__nick_name", "manager__user__email"]

@@ -530,6 +530,13 @@ class Roster(TimeStampedModel):
     # you cannot buy what you cannot afford. Starts at `starting_cash`.
     cash = models.DecimalField("Cash", max_digits=12, decimal_places=2)
     trades_available = models.PositiveIntegerField("Available trades", default=STARTING_TRADES)
+    # Whether the roster is being played for real rather than tried out. Only
+    # active rosters race the Dream Team on Analytics -> Insights; a what-if
+    # stays fully usable everywhere else. On by default, because the first
+    # roster a manager builds is almost always the one they play.
+    is_active = models.BooleanField(
+        "Active", default=True, help_text="Counts in Analytics -> Insights."
+    )
 
     class Meta:
         ordering = ["name"]

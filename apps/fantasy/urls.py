@@ -25,6 +25,7 @@ urlpatterns = [
     path("rosters/<uuid:pk>/build/", views.RosterBuildView.as_view(), name="roster-build"),
     path("rosters/<uuid:pk>/rename/", views.RosterRenameView.as_view(), name="roster-rename"),
     path("rosters/<uuid:pk>/delete/", views.RosterDeleteView.as_view(), name="roster-delete"),
+    path("rosters/<uuid:pk>/active/", views.RosterActiveView.as_view(), name="roster-active"),
     path(
         "rosters/<uuid:pk>/buy/<uuid:player_pk>/",
         views.RosterBuyView.as_view(),

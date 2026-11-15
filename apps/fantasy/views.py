@@ -19,7 +19,7 @@ from django.db.models import (
 from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import number_format
@@ -1544,6 +1544,35 @@ class RosterRenameView(OwnRosterMixin, View):
             roster.name = name[:80]
             roster.save(update_fields=["name", "updated_at"])
         return render(request, "fantasy/partials/roster_name.html", {"roster": roster})
+
+
+class RosterActiveView(OwnRosterMixin, View):
+    """Switches whether a roster counts on Analytics -> Insights.
+
+    Takes the state to end up in (`active=1` or `0`) rather than flipping it,
+    so a double click or a resent form lands where the user meant instead of
+    back where they started. HTMX gets the redrawn card back; a plain form
+    post goes back to the list.
+    """
+
+    def post(self, request, *args, **kwargs):
+        roster = self.get_roster()
+        active = request.POST.get("active") == "1"
+        if roster.is_active != active:
+            roster.is_active = active
+            roster.save(update_fields=["is_active", "updated_at"])
+        if not request.htmx:
+            return redirect("fantasy:roster-list")
+        # Read again with its squad: the card shows the player count and the
+        # team value, which come from the prefetched open spells.
+        roster = Roster.objects.select_related("season", "manager").with_squad().get(pk=roster.pk)
+        response = render(request, "fantasy/partials/roster_card.html", {"roster": roster})
+        message = (
+            _("%(name)s now counts in Insights.")
+            if active
+            else _("%(name)s is hidden from Insights.")
+        ) % {"name": roster.name}
+        return add_toast(response, message)
 
 
 class RosterDeleteView(OwnRosterMixin, TypedConfirmView):

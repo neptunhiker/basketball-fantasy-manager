@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: crossover-manager 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 12:35+0100\n"
+"POT-Creation-Date: 2026-11-15 20:30+0100\n"
 "PO-Revision-Date: 2026-09-20 00:00+0200\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -174,7 +174,7 @@ msgstr "Ein neuer Einladungslink für %(email)s wurde erstellt."
 msgid "Welcome! Your account is now active."
 msgstr "Willkommen! Dein Konto ist jetzt aktiv."
 
-#: apps/analytics/dream_team.py:234 apps/reports/inputs.py:90
+#: apps/analytics/dream_team.py:234 apps/reports/inputs.py:96
 msgid "There are no stats for this season yet."
 msgstr "Für diese Saison gibt es noch keine Statistiken."
 
@@ -2255,31 +2255,43 @@ msgstr "Mittel"
 msgid "High"
 msgstr "Hoch"
 
-#: apps/reports/services.py:42
+#: apps/reports/models.py:247
+msgid "Short-term"
+msgstr "Kurzfristig"
+
+#: apps/reports/models.py:248
+msgid "A few weeks"
+msgstr "Einige Wochen"
+
+#: apps/reports/models.py:249
+msgid "Rest of season"
+msgstr "Restsaison"
+
+#: apps/reports/services.py:60
 msgid "AI reports are switched off: no OpenAI API key is set."
 msgstr ""
 "KI-Reports sind ausgeschaltet: Es ist kein OpenAI-API-Schlüssel hinterlegt."
 
-#: apps/reports/services.py:44
+#: apps/reports/services.py:62
 #, python-format
 msgid "This month's spending limit of $%(limit)s has been reached."
 msgstr "Das monatliche Ausgabenlimit von $%(limit)s ist erreicht."
 
-#: apps/reports/services.py:52
+#: apps/reports/services.py:70
 #, python-format
 msgid "%(model)s is not an approved model."
 msgstr "%(model)s ist kein freigegebenes Modell."
 
-#: apps/reports/services.py:54
+#: apps/reports/services.py:72
 #, python-format
 msgid "Unknown reasoning effort: %(effort)s."
 msgstr "Unbekannter Denkaufwand: %(effort)s."
 
-#: apps/reports/services.py:177
+#: apps/reports/services.py:195
 msgid "A run can only be published once it has finished."
 msgstr "Ein Lauf kann erst veröffentlicht werden, wenn er fertig ist."
 
-#: apps/reports/services.py:179
+#: apps/reports/services.py:197
 msgid "This run has no report to show."
 msgstr "Dieser Lauf hat keinen Report, der sich zeigen ließe."
 
@@ -3955,7 +3967,7 @@ msgstr ""
 #: templates/fantasy/partials/trade_body.html:267
 #: templates/fantasy/partials/trade_body.html:329
 #: templates/fantasy/roster_history.html:128
-#: templates/reports/partials/trade_card.html:32
+#: templates/reports/partials/trade_card.html:59
 msgid "Cash after"
 msgstr "Cash danach"
 
@@ -6503,7 +6515,7 @@ msgid "The figures come from the newest snapshot."
 msgstr "Die Werte stammen aus dem neuesten Snapshot."
 
 #: templates/nba/partials/team_schedule.html:11
-#: templates/reports/partials/briefing.html:72
+#: templates/reports/partials/briefing.html:74
 msgid "Schedule"
 msgstr "Spielplan"
 
@@ -7526,19 +7538,24 @@ msgstr "Manuell"
 msgid "What matters this week"
 msgstr "Was diese Woche zählt"
 
-#: templates/reports/partials/briefing.html:68
+#: templates/reports/partials/briefing.html:69
+#: templates/reports/partials/trade_side.html:17
+msgid "Stepping up"
+msgstr "Rückt nach"
+
+#: templates/reports/partials/briefing.html:70
 msgid "Minutes opening up"
 msgstr "Minuten werden frei"
 
-#: templates/reports/partials/briefing.html:69
+#: templates/reports/partials/briefing.html:71
 msgid "On the rise"
 msgstr "Im Aufwind"
 
-#: templates/reports/partials/briefing.html:70
+#: templates/reports/partials/briefing.html:72
 msgid "Cooling off"
 msgstr "Kühlt ab"
 
-#: templates/reports/partials/briefing.html:71
+#: templates/reports/partials/briefing.html:73
 msgid "Salary watch"
 msgstr "Gehalt im Blick"
 
@@ -7569,13 +7586,19 @@ msgid "Too early to tell"
 msgstr "Noch zu früh"
 
 #: templates/reports/partials/outcomes.html:24
+#: templates/reports/partials/outcomes.html:31
 #, python-format
 msgid "in %(counter)s day"
 msgid_plural "in %(counter)s days"
 msgstr[0] "in %(counter)s Tag"
 msgstr[1] "in %(counter)s Tagen"
 
-#: templates/reports/partials/outcomes.html:29
+#: templates/reports/partials/outcomes.html:35
+#, python-format
+msgid "%(days)s-day result on %(day)s"
+msgstr "%(days)s-Tage-Bilanz am %(day)s"
+
+#: templates/reports/partials/outcomes.html:43
 msgid "Trade made"
 msgstr "Trade gemacht"
 
@@ -7818,30 +7841,58 @@ msgstr "Erste Wahl"
 msgid "Alternative"
 msgstr "Alternative"
 
-#: templates/reports/partials/trade_card.html:11
+#: templates/reports/partials/trade_card.html:15
+msgid "How long the gain should last"
+msgstr "Wie lange der Gewinn anhalten sollte"
+
+#: templates/reports/partials/trade_card.html:30
 msgid "High confidence"
 msgstr "Hohe Sicherheit"
 
-#: templates/reports/partials/trade_card.html:11
+#: templates/reports/partials/trade_card.html:30
 msgid "Medium confidence"
 msgstr "Mittlere Sicherheit"
 
-#: templates/reports/partials/trade_card.html:11
+#: templates/reports/partials/trade_card.html:30
 msgid "Low confidence"
 msgstr "Geringe Sicherheit"
 
-#: templates/reports/partials/trade_card.html:28
+#: templates/reports/partials/trade_card.html:49
+msgid "Projected rest-of-season points gained, on season form"
+msgstr "Prognostizierter Punktegewinn für die Restsaison, nach Saisonform"
+
+#: templates/reports/partials/trade_card.html:49
 msgid "Projected gain"
 msgstr "Prognostizierter Gewinn"
 
-#: templates/reports/partials/trade_card.html:36
+#: templates/reports/partials/trade_card.html:54
+msgid ""
+"Projected points gained if both players keep their form of the last three "
+"weeks"
+msgstr ""
+"Prognostizierter Punktegewinn, wenn beide Spieler ihre Form der letzten drei"
+" Wochen halten"
+
+#: templates/reports/partials/trade_card.html:54
+msgid "On recent form"
+msgstr "Nach aktueller Form"
+
+#: templates/reports/partials/trade_card.html:63
 msgid "Predicted salary change at the next Sunday update: in minus out"
 msgstr ""
 "Vorhergesagte Gehaltsänderung beim nächsten Sonntags-Update: rein minus raus"
 
-#: templates/reports/partials/trade_card.html:36
+#: templates/reports/partials/trade_card.html:63
 msgid "Sunday swing"
 msgstr "Sonntags-Effekt"
+
+#: templates/reports/partials/trade_card.html:80
+msgid "Why it should last"
+msgstr "Warum es anhalten sollte"
+
+#: templates/reports/partials/trade_card.html:91
+msgid "What would end it"
+msgstr "Was es beenden würde"
 
 #: templates/reports/partials/trade_side.html:12
 msgid "Out"
@@ -7851,12 +7902,31 @@ msgstr "Raus"
 msgid "In"
 msgstr "Rein"
 
-#: templates/reports/partials/trade_side.html:18
+#: templates/reports/partials/trade_side.html:15
+msgid ""
+"Form up over the last three weeks, and more points since a teammate went out"
+msgstr ""
+"Form in den letzten drei Wochen gestiegen, und mehr Punkte seit dem Ausfall "
+"eines Mitspielers"
+
+#: templates/reports/partials/trade_side.html:15
+msgid "More points since a teammate went out"
+msgstr "Mehr Punkte seit dem Ausfall eines Mitspielers"
+
+#: templates/reports/partials/trade_side.html:15
+msgid "Form up over the last three weeks"
+msgstr "Form in den letzten drei Wochen gestiegen"
+
+#: templates/reports/partials/trade_side.html:17
+msgid "Rising"
+msgstr "Im Aufwind"
+
+#: templates/reports/partials/trade_side.html:25
 #, python-format
 msgid "%(projected)s proj."
 msgstr "%(projected)s Prog."
 
-#: templates/reports/partials/trade_side.html:20
+#: templates/reports/partials/trade_side.html:27
 msgid "Predicted salary change at the next update"
 msgstr "Vorhergesagte Gehaltsänderung beim nächsten Update"
 

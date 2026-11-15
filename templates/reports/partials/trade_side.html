@@ -1,5 +1,5 @@
 {% load i18n money %}
-{# One side of a trade card. Context: player, side ("out"/"in"), salary, projected, change. #}
+{# One side of a trade card. Context: player, side ("out"/"in"), salary, projected, change, rising (set of "form"/"opening", or empty). #}
 <div class="flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5
   {% if side == 'out' %}bg-rose-50/70 dark:bg-rose-500/5{% else %}bg-emerald-50/70 dark:bg-emerald-500/5{% endif %}">
   <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold
@@ -8,8 +8,15 @@
     {% else %}bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300{% endif %}"
     title="{{ player.get_position_display }}">{{ player.position }}</span>
   <div class="min-w-0 flex-1">
-    <p class="text-[11px] font-bold uppercase tracking-wide {% if side == 'out' %}text-rose-600 dark:text-rose-300{% else %}text-emerald-600 dark:text-emerald-300{% endif %}">
+    <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-bold uppercase tracking-wide {% if side == 'out' %}text-rose-600 dark:text-rose-300{% else %}text-emerald-600 dark:text-emerald-300{% endif %}">
       {% if side == 'out' %}{% translate "Out" %}{% else %}{% translate "In" %}{% endif %}
+      {% if rising %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-white px-1.5 py-px text-[10px] font-semibold normal-case tracking-normal text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-200 dark:ring-emerald-500/30"
+              title="{% if 'opening' in rising and 'form' in rising %}{% translate 'Form up over the last three weeks, and more points since a teammate went out' %}{% elif 'opening' in rising %}{% translate 'More points since a teammate went out' %}{% else %}{% translate 'Form up over the last three weeks' %}{% endif %}">
+          <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 17 6-6 4 4 8-8M15 7h6v6"/></svg>
+          {% if 'opening' in rising and 'form' not in rising %}{% translate "Stepping up" %}{% else %}{% translate "Rising" %}{% endif %}
+        </span>
+      {% endif %}
     </p>
     <a href="{% url 'nba:player-detail' player.slug %}" class="block truncate font-semibold text-tertiary-700 hover:text-primary-600 hover:underline dark:text-neutral-100 dark:hover:text-primary-400">{{ player.full_name }}</a>
     <p class="flex flex-wrap gap-x-2 text-xs tabular-nums text-neutral-500 dark:text-neutral-400">

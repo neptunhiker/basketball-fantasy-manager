@@ -60,12 +60,14 @@
             {% include "reports/partials/briefing_icon.html" with kind=item.kind %}
             <div class="min-w-0 flex-1">
               <p class="text-[11px] font-bold uppercase tracking-wide
-                {% if item.kind == 'injury_opening' %}text-rose-600 dark:text-rose-300
+                {% if item.kind == 'opportunity' %}text-violet-600 dark:text-violet-300
+                {% elif item.kind == 'injury_opening' %}text-rose-600 dark:text-rose-300
                 {% elif item.kind == 'riser' %}text-emerald-600 dark:text-emerald-300
                 {% elif item.kind == 'faller' %}text-amber-600 dark:text-amber-300
                 {% elif item.kind == 'salary_watch' %}text-primary-600 dark:text-primary-300
                 {% else %}text-sky-600 dark:text-sky-300{% endif %}">
-                {% if item.kind == 'injury_opening' %}{% translate "Minutes opening up" %}
+                {% if item.kind == 'opportunity' %}{% translate "Stepping up" %}
+                {% elif item.kind == 'injury_opening' %}{% translate "Minutes opening up" %}
                 {% elif item.kind == 'riser' %}{% translate "On the rise" %}
                 {% elif item.kind == 'faller' %}{% translate "Cooling off" %}
                 {% elif item.kind == 'salary_watch' %}{% translate "Salary watch" %}

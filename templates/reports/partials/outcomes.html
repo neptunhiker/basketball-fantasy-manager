@@ -1,5 +1,5 @@
 {% load i18n %}
-{# The track record of recommended trades. Context: outcomes (pages.Outcome list), title. #}
+{# The track record of recommended trades, after a week and after three. Context: outcomes (pages.Outcome list), title. #}
 <div class="rounded-2xl border border-primary-100 bg-primary-50/40 p-4 dark:border-primary-500/20 dark:bg-primary-500/5">
   <p class="flex items-center gap-2 text-sm font-semibold text-tertiary-700 dark:text-neutral-100">
     <svg class="h-4 w-4 text-primary-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l4-4 3 3 6-7"/></svg>
@@ -22,6 +22,20 @@
               {% if outcome.gained > 0 %}+{% endif %}{{ outcome.gained|floatformat:"0" }} FP
             </span>
             <span class="text-neutral-500 dark:text-neutral-400">{% blocktranslate count counter=outcome.days %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}</span>
+            {% for window in outcome.later %}
+              <span class="h-3 w-px bg-primary-200 dark:bg-primary-500/20" aria-hidden="true"></span>
+              {% if window.complete %}
+                <span class="badge tabular-nums {% if window.gained > 0 %}badge-success{% elif window.gained < 0 %}bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300{% else %}badge-neutral{% endif %}">
+                  {% if window.gained > 0 %}+{% endif %}{{ window.gained|floatformat:"0" }} FP
+                </span>
+                <span class="text-neutral-500 dark:text-neutral-400">{% blocktranslate count counter=window.days %}in {{ counter }} day{% plural %}in {{ counter }} days{% endblocktranslate %}</span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>
+                  {% blocktranslate with days=window.days day=window.ends_on|date:"D j M" %}{{ days }}-day result on {{ day }}{% endblocktranslate %}
+                </span>
+              {% endif %}
+            {% endfor %}
           {% endif %}
           {% if outcome.followed %}
             <span class="inline-flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-300">

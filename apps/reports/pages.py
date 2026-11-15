@@ -20,8 +20,9 @@ from apps.nba.models import Player
 
 from .models import RecommendedTrade, Report, ReportRun
 
-# How long a recommendation is followed for its track record.
-TRACK_DAYS = 7
+# How long a recommendation is followed for its track record: the first week,
+# and the three weeks the advice is meant to look ahead.
+TRACK_DAYS = (7, 21)
 
 
 @dataclass
@@ -47,6 +48,29 @@ class TradeCard:
     change_in: Decimal | None
     confidence: str
     reasoning: str
+    # Empty on reports from before these were asked for.
+    horizon: str = ""
+    why_it_lasts: str = ""
+    what_ends_it: str = ""
+    # Why the incoming player counted as rising ("form", "opening"), or None.
+    riser: str | None = None
+    # The gain if both players keep their recent form, None on older reports.
+    fp_gain_recent: int | None = None
+
+    @property
+    def horizon_label(self):
+        return RecommendedTrade.Horizon(self.horizon).label if self.horizon else ""
+
+    @property
+    def riser_kinds(self):
+        return set((self.riser or "").split("+")) - {""}
+
+    @property
+    def shows_recent_gain(self):
+        """Worth its own figure: when recent form tells a different story."""
+        return self.fp_gain_recent is not None and (
+            self.riser or abs(self.fp_gain_recent - self.fp_gain) >= 50
+        )
 
     @property
     def salary_swing(self):
@@ -57,18 +81,48 @@ class TradeCard:
 
 
 @dataclass
+class Window:
+    """Points the newcomer scored minus points the departing player scored,
+    over the first `days` days after the advice (`elapsed` of them so far)."""
+
+    days: int
+    elapsed: int
+    gained: Decimal | None
+    ends_on: dt.date
+
+    @property
+    def complete(self):
+        return self.gained is not None and self.elapsed >= self.days
+
+
+@dataclass
 class Outcome:
-    """How a recommended trade has done since: points the newcomer scored
-    minus points the departing player scored, over `days` days."""
+    """How a recommended trade has done since, over each of `TRACK_DAYS`."""
 
     trade: RecommendedTrade
-    gained: Decimal | None
-    days: int
+    windows: list
     followed: bool
+
+    @property
+    def first(self):
+        return self.windows[0]
+
+    @property
+    def gained(self):
+        return self.first.gained
+
+    @property
+    def days(self):
+        return self.first.elapsed
 
     @property
     def pending(self):
         return self.gained is None
+
+    @property
+    def later(self):
+        """The longer windows, once the first week is over."""
+        return self.windows[1:] if self.first.complete else []
 
 
 @dataclass
@@ -224,6 +278,11 @@ def _trade_cards(report, players):
                 change_in=_decimal(data.get("change_in")),
                 confidence=pick["confidence"],
                 reasoning=pick["reasoning"],
+                horizon=pick.get("horizon", ""),
+                why_it_lasts=pick.get("why_it_lasts", ""),
+                what_ends_it=pick.get("what_ends_it", ""),
+                riser=data.get("riser"),
+                fp_gain_recent=data.get("fp_gain_recent"),
             )
         )
     return cards
@@ -288,15 +347,8 @@ def _outcomes(report, run, newest, history):
     if not trades:
         return []
     start = run.data_as_of
-    end = min(newest, start + dt.timedelta(days=TRACK_DAYS)) if newest else start
     outcomes = []
     for trade in trades:
-        gained = None
-        if history.points is not None and end > start:
-            scored_in = history.points.spell_points(trade.player_in_id, start, end)
-            scored_out = history.points.spell_points(trade.player_out_id, start, end)
-            if scored_in is not None and scored_out is not None:
-                gained = scored_in - scored_out
         followed = any(
             roster_id == report.roster_id
             and out_id == trade.player_out_id
@@ -307,9 +359,25 @@ def _outcomes(report, run, newest, history):
         outcomes.append(
             Outcome(
                 trade=trade,
-                gained=gained,
-                days=max((end - start).days, 0),
+                windows=[_window(trade, start, days, newest, history) for days in TRACK_DAYS],
                 followed=followed,
             )
         )
     return outcomes
+
+
+def _window(trade, start, days, newest, history):
+    full = start + dt.timedelta(days=days)
+    end = min(newest, full) if newest else start
+    gained = None
+    if history.points is not None and end > start:
+        scored_in = history.points.spell_points(trade.player_in_id, start, end)
+        scored_out = history.points.spell_points(trade.player_out_id, start, end)
+        if scored_in is not None and scored_out is not None:
+            gained = scored_in - scored_out
+    return Window(
+        days=days,
+        elapsed=max((end - start).days, 0),
+        gained=gained,
+        ends_on=timezone.localdate(full),
+    )

@@ -1,13 +1,16 @@
 {# A briefing item's icon tile, coloured by its kind. Context: kind. #}
 <span aria-hidden="true"
       class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl
-        {% if kind == 'injury_opening' %}bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300
+        {% if kind == 'opportunity' %}bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300
+        {% elif kind == 'injury_opening' %}bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300
         {% elif kind == 'riser' %}bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300
         {% elif kind == 'faller' %}bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300
         {% elif kind == 'salary_watch' %}bg-primary-100 text-primary-600 dark:bg-primary-500/15 dark:text-primary-300
         {% else %}bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300{% endif %}">
   <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-    {% if kind == 'injury_opening' %}
+    {% if kind == 'opportunity' %}
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19a6 6 0 0 0-12 0M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M16 11h6"/>
+    {% elif kind == 'injury_opening' %}
       <path stroke-linecap="round" stroke-linejoin="round" d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7V3Z"/>
     {% elif kind == 'riser' %}
       <path stroke-linecap="round" stroke-linejoin="round" d="m3 17 6-6 4 4 8-8M15 7h6v6"/>

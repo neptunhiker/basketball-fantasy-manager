@@ -245,3 +245,123 @@ def test_queries_do_not_grow_with_rosters(client, user, season, run_of):
         response = client.get(reverse("reports:index"))
     assert len(response.context["sections"]) == 1
     assert len(three) == len(one)
+
+
+def test_a_trade_card_shows_its_horizon_and_what_could_end_it(
+    signed_in, season, manager, run_of, fake_ai
+):
+    make_world(season, manager)
+    fake_ai.answer = lambda call: schemas.RosterAdvice(
+        headline="Buy the fill-in",
+        situation="Room for one move.",
+        decision="trade",
+        trades=[
+            schemas.TradePick(
+                trade_id="T01",
+                priority=1,
+                horizon="few_weeks",
+                reasoning="More points.",
+                why_it_lasts="He starts while the star is out.",
+                what_ends_it="The star's return around 24 November.",
+                confidence="medium",
+            )
+        ],
+        hold_reason="",
+        watch=[],
+        risks="",
+    )
+    run = run_of()
+    report = run.reports.get(kind=Report.Kind.ROSTER)
+    report.shortlist[0] |= {
+        "riser": "opening",
+        "fp_gain_recent": report.shortlist[0]["fp_gain"] + 300,
+    }
+    report.save(update_fields=["shortlist"])
+
+    response = signed_in.get(reverse("reports:index"))
+
+    (card,) = response.context["sections"][0].trades
+    assert card.horizon_label == "A few weeks" and card.shows_recent_gain
+    html = response.content.decode()
+    assert "A few weeks" in html
+    assert "Why it should last" in html and "He starts while the star is out." in html
+    assert "What would end it" in html and "around 24 November" in html
+    assert "Stepping up" in html and "On recent form" in html
+
+
+def test_cards_from_older_reports_show_no_horizon(signed_in, season, manager, run_of):
+    make_world(season, manager)
+    run = run_of()
+    report = run.reports.get(kind=Report.Kind.ROSTER)
+    for trade in report.output["trades"]:
+        for key in ("horizon", "why_it_lasts", "what_ends_it"):
+            trade.pop(key)
+    for trade in report.shortlist:
+        trade.pop("riser")
+        trade.pop("fp_gain_recent")
+    report.save(update_fields=["output", "shortlist"])
+
+    response = signed_in.get(reverse("reports:index"))
+
+    (card,) = response.context["sections"][0].trades
+    assert card.horizon == "" and card.riser is None and not card.shows_recent_gain
+    html = response.content.decode()
+    assert "Why it should last" not in html and "On recent form" not in html
+
+
+def test_the_briefing_names_an_opportunity(signed_in, season, manager, run_of, fake_ai):
+    make_world(season, manager)
+    fake_ai.briefing = schemas.Briefing(
+        headline="Openings",
+        summary="A starter is out.",
+        items=[schemas.BriefingItem(kind="opportunity", player_refs=["P001"], text="Starts now.")],
+    )
+    run_of()
+
+    html = signed_in.get(reverse("reports:index")).content.decode()
+
+    assert "Stepping up" in html and "Starts now." in html
+
+
+def test_the_track_record_adds_three_weeks_after_the_first(signed_in, season, manager, run_of):
+    _, rosters = make_world(season, manager)
+    run = run_of()
+    trade = Report.objects.get(run=run, roster=rosters[0]).trades.get()
+    # A week on: +50. Three weeks on: +120 in all.
+    for days, gained_in, gained_out in ((7, 60, 10), (21, 150, 30)):
+        for player, gained in ((trade.player_in, gained_in), (trade.player_out, gained_out)):
+            snapshot(
+                season,
+                player,
+                LATEST + dt.timedelta(days=days),
+                total=player.current_total_fp + gained,
+                games=9,
+            )
+
+    (outcome,) = signed_in.get(reverse("reports:index")).context["sections"][0].outcomes
+
+    assert [(w.days, w.elapsed, w.gained) for w in outcome.windows] == [
+        (7, 7, Decimal(50)),
+        (21, 21, Decimal(120)),
+    ]
+    assert outcome.later == outcome.windows[1:]
+
+
+def test_before_three_weeks_the_page_says_when(signed_in, season, manager, run_of):
+    _, rosters = make_world(season, manager)
+    run = run_of()
+    trade = Report.objects.get(run=run, roster=rosters[0]).trades.get()
+    for player, gained in ((trade.player_in, 60), (trade.player_out, 10)):
+        snapshot(
+            season,
+            player,
+            LATEST + dt.timedelta(days=8),
+            total=player.current_total_fp + gained,
+            games=9,
+        )
+
+    response = signed_in.get(reverse("reports:index"))
+
+    (outcome,) = response.context["sections"][0].outcomes
+    assert not outcome.later[0].complete
+    assert "21-day result on Sun 6 Dec" in response.content.decode()

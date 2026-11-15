@@ -6,39 +6,93 @@
       <span class="flex h-5 w-5 items-center justify-center rounded-full bg-tertiary-700 text-[11px] font-bold text-white dark:bg-neutral-100 dark:text-tertiary-800">{{ card.rank }}</span>
       {% if card.rank == 1 %}{% translate "First choice" %}{% else %}{% translate "Alternative" %}{% endif %}
     </p>
-    <span class="badge
-      {% if card.confidence == 'high' %}badge-success{% elif card.confidence == 'medium' %}bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300{% else %}badge-warning{% endif %}">
-      {% if card.confidence == 'high' %}{% translate "High confidence" %}{% elif card.confidence == 'medium' %}{% translate "Medium confidence" %}{% else %}{% translate "Low confidence" %}{% endif %}
-    </span>
+    <p class="flex flex-wrap items-center gap-1.5">
+      {% if card.horizon %}
+        <span class="badge ring-1 ring-inset
+          {% if card.horizon == 'short_term' %}bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/25
+          {% elif card.horizon == 'few_weeks' %}bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-200 dark:ring-violet-500/25
+          {% else %}bg-teal-50 text-teal-700 ring-teal-200 dark:bg-teal-500/10 dark:text-teal-200 dark:ring-teal-500/25{% endif %}"
+          title="{% translate 'How long the gain should last' %}">
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            {% if card.horizon == 'short_term' %}
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z"/>
+            {% elif card.horizon == 'few_weeks' %}
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 3v3M16 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1ZM8 13h3m-3 3h6"/>
+            {% else %}
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 21V4m0 0h11l-2 4 2 4H5"/>
+            {% endif %}
+          </svg>
+          {{ card.horizon_label }}
+        </span>
+      {% endif %}
+      <span class="badge
+        {% if card.confidence == 'high' %}badge-success{% elif card.confidence == 'medium' %}bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300{% else %}badge-warning{% endif %}">
+        {% if card.confidence == 'high' %}{% translate "High confidence" %}{% elif card.confidence == 'medium' %}{% translate "Medium confidence" %}{% else %}{% translate "Low confidence" %}{% endif %}
+      </span>
+    </p>
   </div>
 
   {# Out and in: side by side from `sm`, one above the other on phones. #}
   <div class="grid items-stretch gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:p-4">
-    {% include "reports/partials/trade_side.html" with player=card.out side="out" salary=card.salary_out projected=card.projected_out change=card.change_out %}
+    {% include "reports/partials/trade_side.html" with player=card.out side="out" salary=card.salary_out projected=card.projected_out change=card.change_out rising=None %}
     <div class="flex items-center justify-center" aria-hidden="true">
       <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 text-white shadow-sm">
         <svg class="h-4 w-4 rotate-90 sm:rotate-0" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
       </span>
     </div>
-    {% include "reports/partials/trade_side.html" with player=card.into side="in" salary=card.salary_in projected=card.projected_in change=card.change_in %}
+    {% include "reports/partials/trade_side.html" with player=card.into side="in" salary=card.salary_in projected=card.projected_in change=card.change_in rising=card.riser_kinds %}
   </div>
 
-  <dl class="grid grid-cols-3 divide-x divide-neutral-100 border-y border-neutral-100 text-center dark:divide-neutral-800 dark:border-neutral-800">
-    <div class="px-2 py-2.5">
-      <dt class="text-[11px] text-neutral-500 dark:text-neutral-400">{% translate "Projected gain" %}</dt>
-      <dd class="text-sm font-bold tabular-nums text-emerald-600 sm:text-base dark:text-emerald-400">+{{ card.fp_gain|floatformat:"0g" }} <span class="text-xs font-semibold">FP</span></dd>
+  {# The figures: 2 x 2 on phones when there are four, one row from `sm`. #}
+  <dl class="grid gap-px border-y border-neutral-100 bg-neutral-100 text-center dark:border-neutral-800 dark:bg-neutral-800 {% if card.shows_recent_gain %}grid-cols-2 sm:grid-cols-4{% else %}grid-cols-3{% endif %}">
+    <div class="bg-white px-2 py-2.5 dark:bg-neutral-900">
+      <dt class="text-[11px] text-neutral-500 dark:text-neutral-400" title="{% translate 'Projected rest-of-season points gained, on season form' %}">{% translate "Projected gain" %}</dt>
+      <dd class="text-sm font-bold tabular-nums sm:text-base {% if card.fp_gain > 0 %}text-emerald-600 dark:text-emerald-400{% elif card.fp_gain < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-600 dark:text-neutral-300{% endif %}">{% if card.fp_gain > 0 %}+{% endif %}{{ card.fp_gain|floatformat:"0g" }} <span class="text-xs font-semibold">FP</span></dd>
     </div>
-    <div class="px-2 py-2.5">
+    {% if card.shows_recent_gain %}
+      <div class="bg-white px-2 py-2.5 dark:bg-neutral-900">
+        <dt class="text-[11px] text-neutral-500 dark:text-neutral-400" title="{% translate 'Projected points gained if both players keep their form of the last three weeks' %}">{% translate "On recent form" %}</dt>
+        <dd class="text-sm font-bold tabular-nums sm:text-base {% if card.fp_gain_recent > 0 %}text-emerald-600 dark:text-emerald-400{% elif card.fp_gain_recent < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-600 dark:text-neutral-300{% endif %}">{% if card.fp_gain_recent > 0 %}+{% endif %}{{ card.fp_gain_recent|floatformat:"0g" }} <span class="text-xs font-semibold">FP</span></dd>
+      </div>
+    {% endif %}
+    <div class="bg-white px-2 py-2.5 dark:bg-neutral-900">
       <dt class="text-[11px] text-neutral-500 dark:text-neutral-400">{% translate "Cash after" %}</dt>
       <dd class="text-sm font-bold tabular-nums text-tertiary-700 sm:text-base dark:text-neutral-100" title="{{ card.cash_after|exact }}">{{ card.cash_after|millions }}</dd>
     </div>
-    <div class="px-2 py-2.5">
+    <div class="bg-white px-2 py-2.5 dark:bg-neutral-900">
       <dt class="text-[11px] text-neutral-500 dark:text-neutral-400" title="{% translate 'Predicted salary change at the next Sunday update: in minus out' %}">{% translate "Sunday swing" %}</dt>
       <dd class="text-sm font-bold tabular-nums sm:text-base {% if card.salary_swing > 0 %}text-emerald-600 dark:text-emerald-400{% elif card.salary_swing < 0 %}text-rose-600 dark:text-rose-400{% else %}text-neutral-600 dark:text-neutral-300{% endif %}">{{ card.salary_swing|signed_millions }}</dd>
     </div>
   </dl>
 
   {% if card.reasoning %}
-    <p class="px-4 py-3.5 text-sm leading-6 text-neutral-700 dark:text-neutral-200">{{ card.reasoning|linebreaksbr }}</p>
+    <p class="px-4 pt-3.5 text-sm leading-6 text-neutral-700 dark:text-neutral-200 {% if card.why_it_lasts or card.what_ends_it %}pb-3{% else %}pb-3.5{% endif %}">{{ card.reasoning|linebreaksbr }}</p>
+  {% endif %}
+
+  {% if card.why_it_lasts or card.what_ends_it %}
+    <div class="grid gap-2 px-3 pb-3 sm:grid-cols-2 sm:px-4 sm:pb-4 {% if not card.reasoning %}pt-3 sm:pt-4{% endif %}">
+      {% if card.why_it_lasts %}
+        <div class="flex gap-2.5 rounded-xl bg-emerald-50/70 p-3 dark:bg-emerald-500/5">
+          <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" aria-hidden="true">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M5 10l7-7 7 7"/></svg>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{% translate "Why it should last" %}</p>
+            <p class="mt-0.5 text-sm leading-6 text-neutral-700 dark:text-neutral-200">{{ card.why_it_lasts }}</p>
+          </div>
+        </div>
+      {% endif %}
+      {% if card.what_ends_it %}
+        <div class="flex gap-2.5 rounded-xl bg-neutral-50 p-3 ring-1 ring-inset ring-neutral-200/70 dark:bg-neutral-800/40 dark:ring-neutral-700/60">
+          <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" aria-hidden="true">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v5m0 3.5v.01M10.3 3.9 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+          </span>
+          <div class="min-w-0">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-neutral-600 dark:text-neutral-300">{% translate "What would end it" %}</p>
+            <p class="mt-0.5 text-sm leading-6 text-neutral-700 dark:text-neutral-200">{{ card.what_ends_it }}</p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
   {% endif %}
 </section>

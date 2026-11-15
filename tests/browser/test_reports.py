@@ -32,6 +32,7 @@ def fake_ai(monkeypatch):
                 kind=kind, player_refs=refs, text=f"{label}: the figures behind it, briefly."
             )
             for kind, refs, label in (
+                ("opportunity", ["P007"], "Starts while the centre is out"),
                 ("injury_opening", ["P002", "P005"], "A starter is out for two weeks"),
                 ("riser", ["P001"], "Scoring well above the season average"),
                 ("faller", ["P003", "P004"], "Two regulars have cooled off"),
@@ -83,6 +84,18 @@ def test_the_report_fits_every_screen(report, game, open_page, size, dark):
     expect(page.get_by_role("heading", name="Bulla Ballers")).to_be_visible()
     expect(page.get_by_text("Trade this week")).to_be_visible()
     expect(page.get_by_text("Projected gain")).to_be_visible()
+    expect(page.get_by_text("Stepping up").first).to_be_visible()
+    # The card's horizon and the two reasons beside or under the reasoning.
+    card = page.locator("section[aria-label='Recommended trade 1']")
+    expect(card.get_by_text("A few weeks")).to_be_visible()
+    expect(card.get_by_text("Why it should last")).to_be_visible()
+    expect(card.get_by_text("What would end it")).to_be_visible()
+    reasons = card.get_by_text("Why it should last").bounding_box()
+    ends = card.get_by_text("What would end it").bounding_box()
+    if size == "phone":
+        assert ends["y"] > reasons["y"]  # stacked
+    else:
+        assert abs(ends["y"] - reasons["y"]) < 2  # side by side
     assert page_overflow(page) == 0
     shot(page, FOLDER, f"report-{size}-{'dark' if dark else 'light'}")
 

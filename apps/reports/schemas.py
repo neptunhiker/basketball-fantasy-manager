@@ -12,10 +12,13 @@ from pydantic import BaseModel, Field
 
 
 class BriefingItem(BaseModel):
-    kind: Literal["injury_opening", "riser", "faller", "salary_watch", "schedule"] = Field(
-        description="injury_opening: an injury that hands minutes to someone else. "
-        "riser/faller: clearly improving or declining form. salary_watch: a notable "
-        "predicted salary change before Sunday's update. schedule: a busy or light week."
+    kind: Literal[
+        "opportunity", "injury_opening", "riser", "faller", "salary_watch", "schedule"
+    ] = Field(
+        description="opportunity: a teammate who gains from an absence (name him, and the "
+        "absent player). injury_opening: an injury itself, and what it opens up. "
+        "riser/faller: a lasting change in form, week over week. salary_watch: a notable "
+        "predicted salary change before Sunday's update. schedule: a busy or light stretch."
     )
     player_refs: list[str] = Field(
         max_length=3, description="Refs (P001...) of the players the item is about."
@@ -32,9 +35,22 @@ class Briefing(BaseModel):
 class TradePick(BaseModel):
     trade_id: str = Field(description="A shortlist ref, T01...")
     priority: Literal[1, 2]
+    horizon: Literal["short_term", "few_weeks", "rest_of_season"] = Field(
+        description="How long the gain should last: short_term (about a week, e.g. a "
+        "salary bump or a busy schedule), few_weeks (e.g. while a teammate is out), "
+        "rest_of_season (a lasting role or level)."
+    )
     reasoning: str = Field(
         description="Two or three sentences: why, with figures. Name the players, "
         "never the trade id."
+    )
+    why_it_lasts: str = Field(
+        description="One sentence: what should keep the gain going (role, minutes, an "
+        "absence, a steady weekly rise)."
+    )
+    what_ends_it: str = Field(
+        description="One sentence: what would end it, with a date when the data has one "
+        "(e.g. a starter's expected return)."
     )
     confidence: Literal["low", "medium", "high"]
 

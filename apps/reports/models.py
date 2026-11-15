@@ -243,6 +243,11 @@ class RecommendedTrade(TimeStampedModel):
         MEDIUM = "medium", "Medium"
         HIGH = "high", "High"
 
+    class Horizon(models.TextChoices):
+        SHORT_TERM = "short_term", _("Short-term")
+        FEW_WEEKS = "few_weeks", _("A few weeks")
+        REST_OF_SEASON = "rest_of_season", _("Rest of season")
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     report = models.ForeignKey(
         Report, verbose_name="Report", on_delete=models.CASCADE, related_name="trades"
@@ -259,6 +264,8 @@ class RecommendedTrade(TimeStampedModel):
     salary_in = models.DecimalField("Salary in", max_digits=12, decimal_places=2)
     confidence = models.CharField("Confidence", max_length=8, choices=Confidence.choices)
     reasoning = models.TextField("Reasoning", blank=True)
+    # How long the gain should last; empty on trades from before it was asked.
+    horizon = models.CharField("Horizon", max_length=16, choices=Horizon.choices, blank=True)
 
     class Meta:
         ordering = ["rank"]

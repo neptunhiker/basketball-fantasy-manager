@@ -199,7 +199,13 @@ class FakeAi:
                 decision="trade",
                 trades=[
                     schemas.TradePick(
-                        trade_id="T01", priority=1, reasoning="More points.", confidence="high"
+                        horizon="few_weeks",
+                        why_it_lasts="His role grew.",
+                        what_ends_it="The starter's return.",
+                        trade_id="T01",
+                        priority=1,
+                        reasoning="More points.",
+                        confidence="high",
                     )
                 ],
                 hold_reason="",

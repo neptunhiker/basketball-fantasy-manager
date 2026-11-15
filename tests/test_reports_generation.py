@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from apps.reports import schemas, services
+from apps.reports import prompts, schemas, services
 from apps.reports.models import RecommendedTrade, Report, ReportRun
 from tests.reports_factories import FakeAi, at, make_run, make_season, make_world
 
@@ -99,7 +99,17 @@ def test_answers_are_held_to_our_own_lists(season, manager, start, fake_ai):
             headline="Do something",
             situation="",
             decision="trade",
-            trades=[schemas.TradePick(trade_id="T99", priority=1, reasoning="", confidence="low")],
+            trades=[
+                schemas.TradePick(
+                    horizon="few_weeks",
+                    why_it_lasts="His role grew.",
+                    what_ends_it="The starter's return.",
+                    trade_id="T99",
+                    priority=1,
+                    reasoning="",
+                    confidence="low",
+                )
+            ],
             hold_reason="",
             watch=[schemas.WatchItem(player_ref="P999", text="Who?")],
             risks="",
@@ -122,7 +132,17 @@ def test_a_hold_drops_the_trades_it_also_listed(season, manager, start, fake_ai)
         headline="Wait",
         situation="",
         decision="hold",
-        trades=[schemas.TradePick(trade_id="T01", priority=1, reasoning="", confidence="low")],
+        trades=[
+            schemas.TradePick(
+                horizon="few_weeks",
+                why_it_lasts="His role grew.",
+                what_ends_it="The starter's return.",
+                trade_id="T01",
+                priority=1,
+                reasoning="",
+                confidence="low",
+            )
+        ],
         hold_reason="Nothing beats your bench.",
         watch=[],
         risks="",
@@ -300,7 +320,13 @@ def test_codes_readers_never_see_become_names(season, manager, start, fake_ai):
         decision="trade",
         trades=[
             schemas.TradePick(
-                trade_id="T01", priority=1, reasoning="T01 brings in P001.", confidence="high"
+                horizon="few_weeks",
+                why_it_lasts="His role grew.",
+                what_ends_it="The starter's return.",
+                trade_id="T01",
+                priority=1,
+                reasoning="T01 brings in P001.",
+                confidence="high",
             )
         ],
         hold_reason="",
@@ -336,4 +362,72 @@ def test_an_answer_without_codes_is_stored_as_written(season, manager, start, fa
     make_world(season, manager)
     run = start()
     assert run.reports.get(kind=Report.Kind.ROSTER).error == ""
-    assert run.prompt_version == "2026-11-15.2"
+    assert run.prompt_version == prompts.VERSION
+
+
+def test_the_horizon_and_its_reasons_are_stored_in_names(season, manager, start, fake_ai):
+    players, _ = make_world(season, manager)
+    fake_ai.answer = lambda call: schemas.RosterAdvice(
+        headline="Buy the backup",
+        situation="Room for one move.",
+        decision="trade",
+        trades=[
+            schemas.TradePick(
+                trade_id="T01",
+                priority=1,
+                horizon="few_weeks",
+                reasoning="More points.",
+                why_it_lasts="P001 starts while the star is out.",
+                what_ends_it="T01 sours when the star returns on 2026-11-24.",
+                confidence="medium",
+            )
+        ],
+        hold_reason="",
+        watch=[],
+        risks="",
+    )
+
+    run = start()
+
+    report = run.reports.get(kind=Report.Kind.ROSTER)
+    star = players[-1].full_name
+    (trade,) = report.output["trades"]
+    assert trade["horizon"] == "few_weeks"
+    assert trade["why_it_lasts"] == f"{star} starts while the star is out."
+    assert "T01" not in trade["what_ends_it"] and "2026-11-24" in trade["what_ends_it"]
+    assert report.trades.get().horizon == RecommendedTrade.Horizon.FEW_WEEKS
+
+
+def test_an_opportunity_item_is_kept(season, manager, start, fake_ai):
+    make_world(season, manager)
+    fake_ai.briefing = schemas.Briefing(
+        headline="Openings",
+        summary="A starter is out.",
+        items=[schemas.BriefingItem(kind="opportunity", player_refs=["P001"], text="Starts now.")],
+    )
+
+    run = start()
+
+    items = run.reports.get(kind=Report.Kind.BRIEFING).output["items"]
+    assert items[0]["kind"] == "opportunity"
+
+
+def test_the_prompt_asks_for_weeks_not_days(season, manager, start, fake_ai):
+    make_world(season, manager)
+
+    start()
+
+    preamble = fake_ai.calls[0].preamble
+    assert "next three to six weeks" in preamble
+    assert "never on its own a reason to trade" in preamble
+    assert "WHO BENEFITS" in preamble and "RETURNED" in preamble
+    roster_task = fake_ai.calls[1].task
+    assert "horizon" in roster_task
+
+
+def test_the_schema_requires_a_horizon():
+    fields = schemas.TradePick.model_json_schema()["properties"]
+    assert fields["horizon"]["enum"] == ["short_term", "few_weeks", "rest_of_season"]
+    assert {"why_it_lasts", "what_ends_it"} <= set(
+        schemas.TradePick.model_json_schema()["required"]
+    )

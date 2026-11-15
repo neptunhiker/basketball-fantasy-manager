@@ -37,7 +37,17 @@ MAX_TRADES = 2
 PLAYER_REF = re.compile(r"\bP\d{3}\b")
 TRADE_REF = re.compile(r"\bT\d{2}\b")
 # The keys in a stored answer that hold text for readers.
-TEXT_KEYS = {"headline", "summary", "situation", "hold_reason", "risks", "text", "reasoning"}
+TEXT_KEYS = {
+    "headline",
+    "summary",
+    "situation",
+    "hold_reason",
+    "risks",
+    "text",
+    "reasoning",
+    "why_it_lasts",
+    "what_ends_it",
+}
 
 
 class ReportsUnavailable(Exception):
@@ -329,6 +339,7 @@ def _succeed(report, result, started):
                 salary_out=by_ref[pick.trade_id]["salary_out"],
                 salary_in=by_ref[pick.trade_id]["salary_in"],
                 confidence=pick.confidence,
+                horizon=pick.horizon,
                 reasoning=output["trades"][rank - 1]["reasoning"],
             )
             for rank, pick in enumerate(picks, start=1)
@@ -387,7 +398,10 @@ def _clean_roster(advice, report, refs):
             {
                 "trade_id": pick.trade_id,
                 "priority": rank,
+                "horizon": pick.horizon,
                 "reasoning": pick.reasoning.strip(),
+                "why_it_lasts": pick.why_it_lasts.strip(),
+                "what_ends_it": pick.what_ends_it.strip(),
                 "confidence": pick.confidence,
             }
             for rank, pick in enumerate(picks, start=1)

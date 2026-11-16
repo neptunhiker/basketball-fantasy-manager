@@ -13,7 +13,7 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 from django.db.models import Case, DecimalField, ExpressionWrapper, F, Value, When
-from django.db.models.functions import Greatest, Round
+from django.db.models.functions import Exp, Greatest, Round
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -50,23 +50,31 @@ def injury_state(status):
 
 MILLION = Decimal("1000000")
 
-# The expected-salary curve: millions of dollars for a scoring rate, highest
-# power first. The one copy, read by `predict_salary` and by its database twin
-# `expected_salary_expression` -- three hand-kept copies once drifted, with the
-# constant term written as 4.668975, and put every list $4.2M too high.
-SALARY_POLYNOMIAL = (
-    Decimal("8.753479e-6"),
-    Decimal("-8.583448e-4"),
-    Decimal("3.058140e-2"),
-    Decimal("-5.762906e-2"),
-    Decimal("4.668975e-1"),
-)
+# The expected-salary curve, in millions of dollars for a scoring rate x:
+#
+#     SALARY_SLOPE * x + SALARY_INTERCEPT + SALARY_BEND * exp(-x / SALARY_BEND_SCALE)
+#
+# A straight line that bends down for low scorers: a further point per game is
+# worth about $0.25M around 5 FP, rising towards $0.43M at the top. Fitted to
+# the first update of 2026-27 (15 Nov 2026, the 364 players with more than five
+# games), it misses by $0.023M (RMSE) where the old quartic missed by $0.145M.
+# Polynomials fitted those salaries as closely but bend away above the best
+# scorer (45.6 FP); this shape keeps its slope there.
+#
+# The one copy, read by `predict_salary` and by its database twin
+# `expected_salary_expression` -- three hand-kept copies of the old curve once
+# drifted, with a coefficient written ten times too large, and put every list
+# $4.2M too high.
+SALARY_SLOPE = Decimal("0.43048")
+SALARY_INTERCEPT = Decimal("-2.62167")
+SALARY_BEND = Decimal("2.67774")
+SALARY_BEND_SCALE = Decimal("7.329")
 
 
 def predict_salary(fantasy_points_per_game: float | Decimal) -> Decimal:
     """Return the expected salary in millions for a fantasy scoring rate.
 
-    Never below `MIN_SALARY`: the polynomial dips under it for low scorers.
+    Never below `MIN_SALARY`: the curve dips under it for low scorers.
     Rounded half up, as Postgres rounds, so the database twin agrees to the cent.
     """
     if isinstance(fantasy_points_per_game, Decimal):
@@ -77,9 +85,7 @@ def predict_salary(fantasy_points_per_game: float | Decimal) -> Decimal:
     if x < 0:
         return MIN_SALARY
 
-    salary = Decimal("0")
-    for coefficient in SALARY_POLYNOMIAL:
-        salary = salary * x + coefficient
+    salary = SALARY_SLOPE * x + SALARY_INTERCEPT + SALARY_BEND * (-x / SALARY_BEND_SCALE).exp()
 
     return max(MIN_SALARY, salary).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
@@ -92,20 +98,18 @@ def expected_salary_expression(field):
     printed in its rows are the same number.
     """
     x = F(field)
-    degree = len(SALARY_POLYNOMIAL) - 1
-    millions = Value(SALARY_POLYNOMIAL[-1])
-    for index, coefficient in enumerate(SALARY_POLYNOMIAL[:-1]):
-        term = Value(coefficient)
-        for _power in range(degree - index):
-            term = term * x
-        millions = term + millions
+    millions = (
+        Value(SALARY_SLOPE) * x
+        + Value(SALARY_INTERCEPT)
+        + Value(SALARY_BEND) * Exp(-x / Value(SALARY_BEND_SCALE))
+    )
     dollars = DecimalField(max_digits=20, decimal_places=2)
     expected = ExpressionWrapper(
         Round(Greatest(Value(MIN_SALARY), millions), 2) * Value(MILLION), output_field=dollars
     )
     return Case(
         # Negative points per game get the minimum outright, as in
-        # `predict_salary`: the polynomial climbs again left of zero.
+        # `predict_salary`: the curve climbs again left of zero.
         When(**{f"{field}__lt": 0}, then=Value(MIN_SALARY * MILLION)),
         When(**{f"{field}__isnull": False}, then=expected),
         output_field=dollars,

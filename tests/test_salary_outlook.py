@@ -473,7 +473,7 @@ def test_each_past_update_is_predicted_as_it_would_have_been(season):
     rows = past_updates(list(player.snapshots.all()), salary_baseline(now=local(2026, 11, 24)))
 
     second, first = rows
-    # The first update: no premium yet, so the polynomial alone.
+    # The first update: no premium yet, so the curve alone.
     assert first.moment == FIRST_UPDATE
     assert first.predicted == poly(20)
     assert first.error == PREMIUM

@@ -504,13 +504,21 @@ def test_hotness_is_sortable(signed_in, roster):
 def test_predict_salary_matches_formula_and_floor():
     from apps.nba.models import predict_salary
 
-    assert predict_salary(Decimal("20")) == Decimal("6.08")
+    assert predict_salary(Decimal("20")) == Decimal("6.16")
     assert predict_salary(Decimal("-1")) == Decimal("0.50")
+
+
+def test_predict_salary_keeps_its_slope_above_the_best_scorers():
+    """Above the fitted data the curve rises by about $0.43M per point, no faster."""
+    from apps.nba.models import predict_salary
+
+    assert predict_salary(Decimal("50")) == Decimal("18.91")
+    assert predict_salary(Decimal("60")) - predict_salary(Decimal("50")) == Decimal("4.30")
 
 
 @pytest.mark.parametrize("fp_per_game", ["-5", "0", "1", "2.5", 0, 1.0])
 def test_predict_salary_never_below_the_minimum_salary(fp_per_game):
-    """The game's minimum salary is 0.5M; the polynomial dips under it below ~2.5 FP."""
+    """The game's minimum salary is 0.5M; the curve dips under it below ~3.3 FP."""
     from apps.nba.models import MIN_SALARY, predict_salary
 
     assert Decimal("0.50") == MIN_SALARY
@@ -521,7 +529,7 @@ def test_predict_salary_above_the_minimum_is_untouched():
     from apps.nba.models import MIN_SALARY, predict_salary
 
     assert predict_salary(Decimal("10")) > MIN_SALARY
-    assert predict_salary(Decimal("10")) == Decimal("2.18")
+    assert predict_salary(Decimal("10")) == Decimal("2.37")
 
 
 @pytest.mark.parametrize("fp_per_game", ["-3.00", "0.00", "1.00"])
@@ -550,7 +558,7 @@ def test_player_predicted_salary_uses_current_points_per_game(db):
     assert player.predicted_salary is None
 
     player.current_fp_per_game = Decimal("20")
-    assert player.predicted_salary == Decimal("6.08")
+    assert player.predicted_salary == Decimal("6.16")
 
 
 def test_filter_by_owned_roster(signed_in, roster, manager, other_manager):

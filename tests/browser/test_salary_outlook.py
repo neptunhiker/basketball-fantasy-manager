@@ -162,7 +162,7 @@ def test_the_trade_dialog_weighs_both_players_next_update(repriced, open_page, s
         # The header's Trade: step 1 picks who goes out.
         page.get_by_role("button", name="Trade", exact=True).first.click()
         page.wait_for_selector("#trade-body")
-        assert page.locator("#trade-body").get_by_text("-$0.60M").first.is_visible()
+        assert page.locator("#trade-body").get_by_text("-$0.58M").first.is_visible()
         page.locator("#trade-body").get_by_role("button", name="Bam Adebayo").click()
         page.get_by_text("Step 2 of 2").wait_for(state="visible", timeout=3000)
     else:

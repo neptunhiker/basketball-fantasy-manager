@@ -6,10 +6,10 @@ published; this app reads a salary as two parts:
 
     salary = expected salary for his points per game + pick premium
 
-The expected salary is the polynomial of `apps.nba.models.predict_salary`: what
+The expected salary is the curve of `apps.nba.models.predict_salary`: what
 his output alone is worth. The pick premium is the rest -- how many managers
 bought or sold him. Nobody publishes picks, so the premium is read off the last
-update, as the part of that salary the polynomial does not explain, and carried
+update, as the part of that salary the curve does not explain, and carried
 over in full:
 
     premium   = salary - expected salary, both from the first snapshot after the last update

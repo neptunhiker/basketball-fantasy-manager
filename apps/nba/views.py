@@ -1503,6 +1503,7 @@ class PlayerDetailView(LoginRequiredMixin, DetailView):
             context["salary_outlook"] = salary_outlook(self.object, baseline, snapshots)
             context["past_updates"] = updates
             context["average_error"] = average_error(updates)
+            context["skipped_updates"] = any(row.skipped for row in updates)
         context["notes"] = with_note_urls(
             self.object.notes.filter(user=self.request.user)
             .select_related("player")

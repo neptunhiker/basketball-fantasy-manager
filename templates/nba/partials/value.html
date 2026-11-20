@@ -1,4 +1,6 @@
-{% load money %}
+{% load i18n money player_stats %}
 {# Value = expected salary for his points per game minus actual salary. #}
-{# Positive is a bargain (green), negative is overpaid (red). Context: amount (dollars or None). #}
-{% if amount is None %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% elif amount > 0 %}<span class="font-medium text-emerald-700 dark:text-emerald-400" title="{{ amount|exact }}">+{{ amount|millions }}</span>{% elif amount < 0 %}<span class="font-medium text-rose-700 dark:text-rose-400" title="{{ amount|exact }}">{{ amount|millions }}</span>{% else %}<span title="{{ amount|exact }}">{{ amount|millions }}</span>{% endif %}
+{# Positive is a bargain (green), negative is overpaid (red). Context: amount (dollars or None), #}
+{# `locked` when he is short of the games an update needs: the gap is real, but no update #}
+{# closes it yet, so it is shown quietly, with a padlock, rather than as a bargain today. #}
+{% if amount is None %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% elif locked %}{% min_games_for_update as needed %}<span class="inline-flex items-center gap-1 whitespace-nowrap text-neutral-400 dark:text-neutral-500" title="{% blocktranslate count counter=needed %}Priced at his starting salary until he has played {{ counter }} game: no update closes this gap before then.{% plural %}Priced at his starting salary until he has played {{ counter }} games: no update closes this gap before then.{% endblocktranslate %}">{% include "nba/partials/salary_lock_icon.html" %}{% if amount > 0 %}+{% endif %}{{ amount|millions }}</span>{% elif amount > 0 %}<span class="font-medium text-emerald-700 dark:text-emerald-400" title="{{ amount|exact }}">+{{ amount|millions }}</span>{% elif amount < 0 %}<span class="font-medium text-rose-700 dark:text-rose-400" title="{{ amount|exact }}">{{ amount|millions }}</span>{% else %}<span title="{{ amount|exact }}">{{ amount|millions }}</span>{% endif %}

@@ -1,4 +1,5 @@
-{% load i18n money %}
+{% load i18n money player_stats %}
+{% min_games_for_update as needed_games %}
 {% translate "Player" as player_label %}
 {% translate "Position" as position_label %}
 {% translate "Team" as team_label %}
@@ -7,9 +8,9 @@
 {% translate "Value" as value_label %}
 {% translate "Points" as points_label %}
 {% translate "Premium" as premium_label %}
-{% translate "Premium is the pick premium: how far his salary was above (+) or below (−) the expected salary for his points per game right after the last update. We put that part down to managers buying or selling him, and expect it to stay." as premium_help %}
+{% blocktranslate with games=needed_games asvar premium_help %}Premium is the pick premium: how far his salary was above (+) or below (−) the expected salary for his points per game right after the last update. We put that part down to managers buying or selling him, and expect it to stay. A dash means that update skipped him: with fewer than {{ games }} games he was still on his starting salary.{% endblocktranslate %}
 {% translate "Next update" as outlook_label %}
-{% translate "Next update is the salary we expect after the coming Sunday update: the expected salary for his points per game now, plus his pick premium. The big figure is the change from today's salary, the small one the predicted salary." as outlook_help %}
+{% blocktranslate with games=needed_games asvar outlook_help %}Next update is the salary we expect after the coming Sunday update: the expected salary for his points per game now, plus his pick premium. The big figure is the change from today's salary, the small one the predicted salary. A padlock means he has played fewer than {{ games }} games: the game does not reprice him before then, so he keeps his salary.{% endblocktranslate %}
 {% translate "FP/$M" as fp_per_million_label %}
 {% translate "FP/$M is his fantasy points this season per $1 million of his current salary. It counts total points, not points per game, so players who rarely miss a game rise to the top." as fp_per_million_help %}
 {% translate "Avg/game" as avg_game_label %}
@@ -18,7 +19,7 @@
 {% translate "Latest FP" as latest_fp_label %}
 {% translate "Latest FP is what a player scored between the two newest snapshots, with the change in his points per game beneath it. DNP means his team played without him, with the injury report at tip-off beneath it; a dash means his team had no game. 0.0 means he played and scored nothing." as latest_fp_help %}
 {% translate "Return" as return_label %}
-{% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
+{% blocktranslate with games=needed_games asvar value_help %}Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid. Greyed out with a padlock: he is still on his starting salary, and no update closes the gap before he has played {{ games }} games.{% endblocktranslate %}
 {% translate "Hotness shows how often a player's points per game went up after his recent games. We look at his last 10 games: each time his season average rose after a game, that counts as a rise. Days without a game don't count. Hot: a rise in at least 6 of 10 games. Cold: 4 or fewer. Steady: in between. With fewer than 3 games to compare, only the count is shown." as hotness_help %}
 {% translate "Watchlist" as watchlist_label %}
 {% translate "Proj. FP" as projected_label %}
@@ -159,7 +160,7 @@
                 {# column it is sorted by would otherwise be a swipe away. #}
                 {% if current_sort == "outlook" and player.outlook_change is not None %}
                   <span class="mt-0.5 flex whitespace-nowrap text-[0.7rem] font-normal leading-tight tabular-nums md:hidden">
-                    {% include "nba/partials/outlook_gist.html" with change=player.outlook_change %}
+                    {% include "nba/partials/outlook_gist.html" with change=player.outlook_change locked=player.salary_locked games=player.current_games_played %}
                   </span>
                 {# Sorted by Latest FP, a phone shows it under the name too: a DNP is the news. #}
                 {% elif current_sort == "latest" and player.latest_status %}
@@ -221,7 +222,7 @@
                 {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
               </td>
               <td class="px-4 py-3 text-right tabular-nums">
-                {% include "nba/partials/value.html" with amount=player.salary_difference_amount %}
+                {% include "nba/partials/value.html" with amount=player.salary_difference_amount locked=player.salary_locked %}
               </td>
               {% if show_premium %}
                 <td class="px-4 py-3 text-right text-xs tabular-nums">
@@ -230,7 +231,7 @@
               {% endif %}
               {% if salary_baseline %}
                 <td class="px-4 py-3 text-right tabular-nums {% if current_sort == 'outlook' %}bg-primary-50/40 dark:bg-primary-500/5{% endif %}">
-                  {% include "nba/partials/outlook.html" with change=player.outlook_change salary=player.outlook_salary %}
+                  {% include "nba/partials/outlook.html" with change=player.outlook_change salary=player.outlook_salary locked=player.salary_locked games=player.current_games_played %}
                 </td>
               {% endif %}
               <td class="px-4 py-3 text-right tabular-nums">
@@ -299,6 +300,7 @@
       <strong class="font-medium">{{ value_label }}:</strong> {% translate "expected salary for his points per game minus actual salary — + means a bargain." %}
       {% if salary_baseline %}<strong class="ml-2 font-medium">{{ outlook_label }}:</strong> {% translate "expected salary for his points per game now plus his pick premium, against today's salary." %}{% endif %}
       {% if show_premium %}<strong class="ml-2 font-medium">{{ premium_label }}:</strong> {% translate "salary minus expected salary right after the last update — the part picks explain." %}{% endif %}
+      <strong class="ml-2 inline-block align-[-0.1em] font-medium" role="img" aria-label="{% translate 'Padlock' %}">{% include "nba/partials/salary_lock_icon.html" %}</strong> {% blocktranslate with games=needed_games %}under {{ games }} games the game does not reprice him: he keeps his salary, and his Value waits.{% endblocktranslate %}
       <strong class="ml-2 font-medium">{{ fp_per_million_label }}:</strong> {% translate "season points per $1M of current salary — missed games pull it down." %}
       <strong class="ml-2 font-medium">{{ hotness_label }}:</strong> {% translate "how often his average rose over his last 10 games." %}
       <strong class="ml-2 font-medium">{{ latest_fp_label }}:</strong> {% translate "points since the previous snapshot — DNP: his team played without him, – : his team had no game." %}

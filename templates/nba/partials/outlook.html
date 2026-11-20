@@ -1,8 +1,10 @@
-{% load money %}
+{% load i18n money player_stats %}
 {% comment %}
   The predicted change at the next salary update, with the predicted salary
   beneath. Context: change and salary (dollars or None), and `size` "lg" for a
-  headline figure.
+  headline figure. `locked` (with `games`, his games played) when he is short
+  of the games an update needs: the change is then zero by the game's rule,
+  and the line beneath counts the games instead of repeating today's salary.
 
   Coloured, unlike a past change (see change.html): this is read before a trade,
   where a rise is what you buy a player for -- and the arrow says the direction
@@ -10,6 +12,17 @@
 {% endcomment %}
 {% if change is None %}
   <span class="text-neutral-400 dark:text-neutral-500">–</span>
+{% elif locked %}
+  {% min_games_for_update as needed %}
+  <span class="inline-flex flex-col leading-tight {% if size == 'lg' %}items-start{% else %}items-end{% endif %}"
+        title="{% blocktranslate with amount=salary|millions count counter=needed %}No salary update before {{ counter }} game: he keeps his salary of {{ amount }}.{% plural %}No salary update before {{ counter }} games: he keeps his salary of {{ amount }}.{% endblocktranslate %}">
+    <span class="inline-flex items-center gap-1 whitespace-nowrap font-semibold text-neutral-500 dark:text-neutral-400">
+      {% include "nba/partials/salary_lock_icon.html" %}±{{ change|millions }}
+    </span>
+    <span class="mt-0.5 whitespace-nowrap font-medium text-amber-700 dark:text-amber-300 {% if size == 'lg' %}text-xs{% else %}text-[0.7rem]{% endif %}">
+      {% blocktranslate with games=games|default:0 count counter=needed %}{{ games }}/{{ counter }} game{% plural %}{{ games }}/{{ counter }} games{% endblocktranslate %}
+    </span>
+  </span>
 {% else %}
   <span class="inline-flex flex-col leading-tight {% if size == 'lg' %}items-start{% else %}items-end{% endif %}">
     <span class="inline-flex items-center gap-1 whitespace-nowrap font-semibold {% if change > 0 %}text-emerald-700 dark:text-emerald-400{% elif change < 0 %}text-rose-700 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}"

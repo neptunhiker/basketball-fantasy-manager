@@ -1,4 +1,4 @@
-{% load i18n money %}
+{% load i18n money player_stats %}
 {% comment %}
   The player page's next-update card: where Sunday's update should take his
   salary, what that is made of, and how the same prediction did at the updates
@@ -20,12 +20,57 @@
             {% endif %}
           </p>
         </div>
-        {% if salary_baseline.is_preseason %}
-          <span class="badge badge-neutral">{% translate "Before the first update" %}</span>
-        {% endif %}
+        <div class="flex flex-wrap items-center gap-1.5">
+          {% if salary_baseline.is_preseason %}
+            <span class="badge badge-neutral">{% translate "Before the first update" %}</span>
+          {% endif %}
+          {% if outlook.frozen %}
+            <span class="badge badge-warning">{% include "nba/partials/salary_lock_icon.html" %}{% translate "Salary locked" %}</span>
+          {% elif outlook.first_repricing %}
+            <span class="badge badge-pending">{% translate "First repricing" %}</span>
+          {% endif %}
+        </div>
       </div>
 
-      {% if outlook %}
+      {% if outlook.frozen %}
+        {% min_games_for_update as needed %}
+        <div class="grid gap-5 p-4 sm:grid-cols-2 sm:items-center sm:gap-8 sm:p-5">
+          {# The answer first: nothing moves on Sunday. #}
+          <div>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">{% translate "Expected change" %}</p>
+            <p class="mt-1 inline-flex items-center gap-2 text-3xl font-bold tracking-tight text-neutral-500 tabular-nums dark:text-neutral-400">
+              {% include "nba/partials/salary_lock_icon.html" %}±{{ outlook.change|millions }}
+            </p>
+            <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+              {% blocktranslate with now=player.current_salary|millions %}He keeps <strong class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ now }}</strong>{% endblocktranslate %}
+            </p>
+          </div>
+
+          {# Then why: the games he still needs, as a meter that fills up. #}
+          <div class="w-full rounded-xl bg-amber-50 p-3 ring-1 ring-inset ring-amber-200 sm:max-w-md sm:justify-self-end sm:p-4 dark:bg-amber-500/10 dark:ring-amber-500/25">
+            <div class="flex items-baseline justify-between gap-3">
+              <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{% translate "Games towards his first update" %}</p>
+              <p class="shrink-0 text-sm font-bold tabular-nums text-amber-800 dark:text-amber-200">{{ outlook.games_played|default:0 }}<span class="font-medium text-amber-700/70 dark:text-amber-300/70">/{{ needed }}</span></p>
+            </div>
+            <div class="mt-2.5 grid gap-1" style="grid-template-columns: repeat({{ needed }}, minmax(0, 1fr));"
+                 role="meter" aria-valuemin="0" aria-valuemax="{{ needed }}" aria-valuenow="{{ outlook.games_played|default:0 }}"
+                 aria-label="{% translate 'Games played towards a salary update' %}">
+              {% for played in outlook.games_meter %}
+                <span class="h-2 rounded-full {% if played %}bg-amber-500 dark:bg-amber-400{% else %}bg-amber-200/80 dark:bg-amber-500/20{% endif %}"></span>
+              {% endfor %}
+            </div>
+            <p class="mt-3 text-xs leading-relaxed text-amber-900/80 dark:text-amber-100/80">
+              {% blocktranslate count counter=outlook.games_to_go %}One more game and an update can reprice him.{% plural %}{{ counter }} more games and an update can reprice him.{% endblocktranslate %}
+              {% if outlook.expected is not None %}
+                {% blocktranslate with fp=player.current_fp_per_game|floatformat:"2g" expected=outlook.expected|millions %}His {{ fp }} FP/G are worth about <strong class="font-semibold text-amber-900 dark:text-amber-100">{{ expected }}</strong> today.{% endblocktranslate %}
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
+          {% blocktranslate count counter=needed %}The game only reprices a player who has played {{ counter }} game by the update. Until then he keeps the salary he started the season with.{% plural %}The game only reprices a player who has played {{ counter }} games by the update. Until then he keeps the salary he started the season with.{% endblocktranslate %}
+        </p>
+      {% elif outlook %}
         <div class="grid gap-5 p-4 sm:grid-cols-2 sm:items-center sm:gap-8 sm:p-5">
           {# The answer first: how much, which way. #}
           <div>
@@ -53,6 +98,8 @@
               <dd class="tabular-nums">
                 {% if salary_baseline.is_preseason %}
                   <span class="text-neutral-400 dark:text-neutral-500" title="{% translate 'Pre-season prices are set by the game, not by picks.' %}">{{ outlook.premium|millions }}</span>
+                {% elif outlook.first_repricing %}
+                  <span class="text-neutral-400 dark:text-neutral-500" title="{% translate 'The last update skipped him: his salary is still his starting price, with no picks in it.' %}">{% translate "none yet" %}</span>
                 {% else %}
                   {% include "nba/partials/premium.html" with amount=outlook.premium %}
                 {% endif %}
@@ -69,6 +116,9 @@
         <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
           {% if salary_baseline.is_preseason %}
             {% translate "No update yet this season: the prediction is the expected salary for his points per game, compared with his pre-season price." %}
+          {% elif outlook.first_repricing %}
+            {% min_games_for_update as needed %}
+            {% blocktranslate with date=outlook.baseline.as_of|date:"MONTH_DAY_FORMAT" count counter=needed %}At the update on {{ date }} he had played fewer than {{ counter }} game, so he kept his starting salary and there is no pick premium to read. Now he has enough: the next update prices him on his points per game.{% plural %}At the update on {{ date }} he had played fewer than {{ counter }} games, so he kept his starting salary and there is no pick premium to read. Now he has enough: the next update prices him on his points per game.{% endblocktranslate %}
           {% else %}
             {% blocktranslate with date=outlook.baseline.as_of|date:"MONTH_DAY_FORMAT" %}The pick premium is his salary minus the expected salary for his points per game right after the update on {{ date }} — the part we put down to managers buying or selling him.{% endblocktranslate %}
           {% endif %}
@@ -80,7 +130,7 @@
             {% if salary_baseline.is_preseason %}
               {% translate "It needs points per game this season and a snapshot from before the season." %}
             {% else %}
-              {% translate "It needs points per game now and a snapshot right after the last update with games played." %}
+              {% translate "It needs a snapshot of him from right after the last update." %}
             {% endif %}
           </p>
         </div>
@@ -114,6 +164,11 @@
                   <tr class="align-top transition hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
                     <td class="px-4 py-3 sm:pl-5 max-md:sticky max-md:left-0 max-md:z-[1] max-md:bg-white max-md:shadow-[inset_-1px_0_0_var(--color-neutral-200)] max-md:dark:bg-neutral-900 max-md:dark:shadow-[inset_-1px_0_0_var(--color-neutral-800)]">
                       <span class="font-medium">{{ row.moment|date:"D" }}, {{ row.moment|date:"MONTH_DAY_FORMAT" }}</span>
+                      {% if row.skipped %}
+                        <span class="mt-0.5 flex items-center gap-1 text-[0.7rem] font-medium leading-tight text-amber-700 dark:text-amber-300">
+                          {% include "nba/partials/salary_lock_icon.html" %}{% blocktranslate count counter=row.after.games_played %}skipped · {{ counter }} game{% plural %}skipped · {{ counter }} games{% endblocktranslate %}
+                        </span>
+                      {% endif %}
                     </td>
                     <td class="px-4 py-3 text-right tabular-nums">
                       {% if row.before %}{{ row.before.fp_per_game|floatformat:"2g"|default:"–" }}{% else %}<span class="text-neutral-400 dark:text-neutral-500">–</span>{% endif %}
@@ -128,6 +183,8 @@
                     <td class="px-4 py-3 text-right tabular-nums">
                       {% if row.error is None %}
                         <span class="text-neutral-400 dark:text-neutral-500">–</span>
+                      {% elif row.skipped %}
+                        <span class="text-neutral-400 dark:text-neutral-500" title="{% translate 'Left out of the average: the update skipped him.' %}">{{ row.error|signed_millions }}</span>
                       {% else %}
                         <span class="text-neutral-600 dark:text-neutral-300" title="{{ row.error|exact }}">{{ row.error|signed_millions }}</span>
                       {% endif %}
@@ -142,6 +199,10 @@
           </div>
           <p class="border-t border-neutral-200 px-4 py-2.5 text-xs text-neutral-500 sm:px-5 dark:border-neutral-800 dark:text-neutral-400">
             {% translate "Predicted: what this page would have said just before the update. Off by: actual minus predicted — plus means he rose more than expected, which is the picks showing." %}
+            {% if skipped_updates %}
+              {% min_games_for_update as needed %}
+              {% blocktranslate count counter=needed %}Skipped: fewer than {{ counter }} game at that update, so the game left his salary alone — those updates are left out of the average.{% plural %}Skipped: fewer than {{ counter }} games at that update, so the game left his salary alone — those updates are left out of the average.{% endblocktranslate %}
+            {% endif %}
           </p>
         </div>
       {% endif %}

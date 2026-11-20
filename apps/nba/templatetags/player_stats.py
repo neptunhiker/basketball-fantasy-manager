@@ -6,12 +6,22 @@ from django.utils import dateformat
 from django.utils.formats import get_format
 from django.utils.translation import gettext, ngettext
 
+from apps.nba.models import MIN_GAMES_FOR_UPDATE
 from apps.nba.stats import hotness_reading as _hotness_reading
 
 # What an empty figure shows, spelled out so it is not mistaken for a hyphen.
 DASH = "\N{EN DASH}"
 
 register = template.Library()
+
+
+@register.simple_tag
+def min_games_for_update():
+    """The games a player needs before a salary update reprices him.
+
+    `{% min_games_for_update as needed %}`
+    """
+    return MIN_GAMES_FOR_UPDATE
 
 
 @register.filter

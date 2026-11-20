@@ -89,7 +89,7 @@
                   <span class="shrink-0 text-right text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
                     <span class="block" title="{{ membership.player.current_salary|exact }}">{{ membership.player.current_salary|millions }}</span>
                     {% if membership.player.outlook_change is not None %}
-                      <span class="mt-0.5 flex justify-end text-[0.7rem]">{% include "nba/partials/outlook_gist.html" with change=membership.player.outlook_change short=True %}</span>
+                      <span class="mt-0.5 flex justify-end text-[0.7rem]">{% include "nba/partials/outlook_gist.html" with change=membership.player.outlook_change short=True locked=membership.player.salary_locked games=membership.player.current_games_played %}</span>
                     {% endif %}
                   </span>
                 </button>
@@ -201,7 +201,7 @@
                   <span class="shrink-0 text-right text-xs tabular-nums {% if player.affordable %}text-neutral-500 dark:text-neutral-400{% else %}text-neutral-400 dark:text-neutral-500{% endif %}">
                     <span class="block" title="{{ player.current_salary|exact }}">{{ player.current_salary|millions }}</span>
                     {% if player.outlook_change is not None %}
-                      <span class="mt-0.5 flex justify-end text-[0.7rem]">{% include "nba/partials/outlook_gist.html" with change=player.outlook_change short=True %}</span>
+                      <span class="mt-0.5 flex justify-end text-[0.7rem]">{% include "nba/partials/outlook_gist.html" with change=player.outlook_change short=True locked=player.salary_locked games=player.current_games_played %}</span>
                     {% endif %}
                   </span>
                 </button>

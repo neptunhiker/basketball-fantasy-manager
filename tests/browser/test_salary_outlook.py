@@ -1,69 +1,11 @@
 """The next-update prediction on the player list, in a real browser."""
 
-import datetime as dt
 from decimal import Decimal
 
 import pytest
 from django.urls import reverse
-from django.utils import timezone
-
-from apps.nba.models import MILLION, predict_salary
 
 from .conftest import SCREENS, page_overflow, shot
-
-
-@pytest.fixture
-def repriced(game):
-    """The game a few days after its second Sunday update: every player came
-    out of the first with a pick premium, gained or lost a little more at the
-    second, and has played on since."""
-    from apps.fantasy import services
-
-    season = game["season"]
-    # The newest snapshot of the game is at about `now`; these come after it.
-    now = timezone.now() + dt.timedelta(minutes=30)
-    # The last Sunday 22:00 at least a day back, as the official game reprices,
-    # and the one before it.
-    second = timezone.localtime(now - dt.timedelta(days=1)).replace(
-        hour=22, minute=0, second=0, microsecond=0
-    )
-    second -= dt.timedelta(days=(second.weekday() + 1) % 7)
-    first = second - dt.timedelta(days=7)
-    season.trade_market_opens_at = first
-    season.starts_on = timezone.localdate(first) - dt.timedelta(days=5)
-    season.save(update_fields=["trade_market_opens_at", "starts_on"])
-
-    def read(player, when, salary, fp_per_game, games):
-        services.record_snapshot(
-            player,
-            season,
-            when,
-            salary=max(Decimal(500_000), salary),
-            total_fp=fp_per_game * games,
-            games_played=games,
-            team=player.team,
-            position=player.position,
-        )
-
-    def expected(fp_per_game):
-        return predict_salary(fp_per_game) * MILLION
-
-    for index, player in enumerate(game["players"]):
-        games = player.current_games_played
-        at_first = player.current_fp_per_game
-        premium = Decimal((index * 370_000) % 2_700_000 - 1_200_000)
-        salary = expected(at_first) + premium
-        read(player, first + dt.timedelta(minutes=15), salary, at_first, games)
-        # A week of games, some well above his average and some well below.
-        at_second = at_first + Decimal((index * 3) % 9 - 4) / 2
-        read(player, second - dt.timedelta(hours=2), salary, at_second, games + 3)
-        more_picks = Decimal((index * 130_000) % 700_000 - 300_000)
-        salary = expected(at_second) + premium + more_picks
-        read(player, second + dt.timedelta(minutes=15), salary, at_second, games + 3)
-        at_now = at_second + Decimal((index * 5) % 23 - 11) / 4
-        read(player, now, salary, at_now, games + 5)
-        player.refresh_from_db()
-    return game
 
 
 def outlook_cells(page):

@@ -172,7 +172,7 @@
     {% translate "Hotness" as hotness_label %}
     {% translate "Latest FP" as latest_fp_label %}
     {% translate "Latest FP is what a player scored between the two newest snapshots, with the change in his points per game beneath it. DNP means his team played without him, with the injury report at tip-off beneath it; a dash means his team had no game. 0.0 means he played and scored nothing." as latest_fp_help %}
-    {% translate "Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid." as value_help %}
+    {% min_games_for_update as needed_games %}{% blocktranslate with games=needed_games asvar value_help %}Value is the salary we would expect for his points per game, minus what he actually costs. A plus means a bargain, a minus means he is overpaid. Greyed out with a padlock: he is still on his starting salary, and no update closes the gap before he has played {{ games }} games.{% endblocktranslate %}
     {% translate "Hotness shows how often a player's points per game went up after his recent games. We look at his last 10 games: each time his season average rose after a game, that counts as a rise. Days without a game don't count. Hot: a rise in at least 6 of 10 games. Cold: 4 or fewer. Steady: in between. With fewer than 3 games to compare, only the count is shown." as hotness_help %}
     <div class="grid grid-cols-2 gap-px border-t border-neutral-200 bg-neutral-200 sm:grid-cols-4 xl:grid-cols-8 dark:border-neutral-800 dark:bg-neutral-800">
       <div class="bg-white p-4 dark:bg-neutral-900">
@@ -199,7 +199,7 @@
           {{ value_label }} {% include "partials/info_popover.html" with text=value_help label=value_label %}
         </p>
         <p class="mt-1 text-lg font-bold tabular-nums">
-          {% include "nba/partials/value.html" with amount=salary_difference_amount %}
+          {% include "nba/partials/value.html" with amount=salary_difference_amount locked=player.salary_locked %}
         </p>
       </div>
       <div class="bg-white p-4 dark:bg-neutral-900">

@@ -143,7 +143,7 @@
                     {% if player.predicted_salary is not None %}${{ player.predicted_salary|floatformat:"2" }}M{% else %}–{% endif %}
                   </td>
                   <td class="px-4 py-3 text-right tabular-nums">
-                    {% include "nba/partials/value.html" with amount=player.salary_difference_amount %}
+                    {% include "nba/partials/value.html" with amount=player.salary_difference_amount locked=player.salary_locked %}
                   </td>
                   <td class="px-4 py-3 text-right tabular-nums">
                     {{ player.current_total_fp|floatformat:"2g"|default:"–" }}

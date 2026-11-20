@@ -348,6 +348,14 @@ class Player(TimeStampedModel):
         return predict_salary(self.current_fp_per_game)
 
     @property
+    def salary_locked(self):
+        """Short of the games an update needs: Sunday leaves his salary alone.
+
+        Only says something about a player with a salary on record.
+        """
+        return self.current_salary is not None and not repriced_at_update(self.current_games_played)
+
+    @property
     def latest_injury(self):
         injuries = getattr(self, "injury_history", None)
         if injuries is None:

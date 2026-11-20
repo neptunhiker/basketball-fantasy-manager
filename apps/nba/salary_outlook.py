@@ -204,6 +204,13 @@ class SalaryOutlook:
         """Games he still needs before an update reprices him; 0 once he has them."""
         return max(0, MIN_GAMES_FOR_UPDATE - (self.games_played or 0))
 
+    @property
+    def games_meter(self):
+        """One flag per game an update needs, True for each one played: the
+        segments of the page's progress bar."""
+        played = min(self.games_played or 0, MIN_GAMES_FOR_UPDATE)
+        return [index < played for index in range(MIN_GAMES_FOR_UPDATE)]
+
 
 def salary_outlook(player, baseline, snapshots=None):
     """The player's `SalaryOutlook`, or None when a figure it needs is missing.

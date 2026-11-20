@@ -83,7 +83,7 @@
             </div>
             <div class="stat-tile sm:min-w-0 {% if current_sort == 'difference' %}stat-tile-sorted{% endif %}" {% if current_sort == 'difference' %}data-sorted{% endif %}>
               <dt>{{ value_label }} {% include "partials/info_popover.html" with text=value_help label=value_label %}</dt>
-              <dd class="text-sm tabular-nums">{% include "nba/partials/value.html" with amount=player.salary_difference_amount %}</dd>
+              <dd class="text-sm tabular-nums">{% include "nba/partials/value.html" with amount=player.salary_difference_amount locked=player.salary_locked %}</dd>
             </div>
             {% if show_premium %}
               <div class="stat-tile sm:min-w-0 {% if current_sort == 'premium' %}stat-tile-sorted{% endif %}" {% if current_sort == 'premium' %}data-sorted{% endif %}>
@@ -94,7 +94,7 @@
             {% if salary_baseline %}
               <div class="stat-tile sm:min-w-0 {% if current_sort == 'outlook' %}stat-tile-sorted{% endif %}" {% if current_sort == 'outlook' %}data-sorted{% endif %}>
                 <dt>{{ outlook_label }} {% include "partials/info_popover.html" with text=outlook_help label=outlook_label %}</dt>
-                <dd class="text-sm tabular-nums [&>span]:items-start">{% include "nba/partials/outlook.html" with change=player.outlook_change salary=player.outlook_salary %}</dd>
+                <dd class="text-sm tabular-nums [&>span]:items-start">{% include "nba/partials/outlook.html" with change=player.outlook_change salary=player.outlook_salary locked=player.salary_locked games=player.current_games_played %}</dd>
               </div>
             {% endif %}
             <div class="stat-tile relative ms-3 before:absolute before:inset-y-2 before:-left-2.5 before:w-px before:bg-neutral-200 sm:ms-0 sm:min-w-0 sm:before:hidden dark:before:bg-neutral-700 {% if current_sort == 'points' %}stat-tile-sorted{% endif %}" {% if current_sort == 'points' %}data-sorted{% endif %}>

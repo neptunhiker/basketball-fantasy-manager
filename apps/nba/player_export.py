@@ -31,7 +31,7 @@ from openpyxl.utils import get_column_letter
 from apps.core.search import search_query
 from apps.fantasy.models import Roster
 
-from .models import HEALTHY, Player, Team
+from .models import HEALTHY, MIN_GAMES_FOR_UPDATE, Player, Team
 from .stats import hotness_reading
 
 CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -468,7 +468,12 @@ def _legend(options):
         ),
         (
             _("Value"),
-            _("expected salary for his points per game minus actual salary — + means a bargain."),
+            _(
+                "expected salary for his points per game minus actual salary — + means a "
+                "bargain. Under %(games)d games no update closes the gap: he keeps his "
+                "starting salary."
+            )
+            % {"games": MIN_GAMES_FOR_UPDATE},
         ),
     ]
     if options["show_premium"]:
@@ -477,8 +482,9 @@ def _legend(options):
                 _("Premium"),
                 _(
                     "salary minus expected salary right after the last update — the part picks "
-                    "explain."
-                ),
+                    "explain. Empty when that update skipped him (under %(games)d games)."
+                )
+                % {"games": MIN_GAMES_FOR_UPDATE},
             )
         )
     if options["salary_baseline"]:
@@ -487,8 +493,9 @@ def _legend(options):
                 _("Next update"),
                 _(
                     "expected salary for his points per game now plus his pick premium, against "
-                    "today's salary."
-                ),
+                    "today's salary. Under %(games)d games: 0, he keeps his salary."
+                )
+                % {"games": MIN_GAMES_FOR_UPDATE},
             )
         )
     rows += [

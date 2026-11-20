@@ -375,14 +375,55 @@ def test_python_and_database_agree_before_the_first_update(season):
     assert row.outlook_change == outlook.change
 
 
-def test_the_database_leaves_missing_figures_empty(season):
+def test_the_database_keeps_the_salary_of_a_player_without_games(season):
     player = make_player()
     read(player, season, local(2026, 11, 15, 22, 15), 1 * MILLION, 0, 0)
     row = annotated(player, salary_baseline(now=local(2026, 11, 19)))
 
     assert row.pick_premium is None
+    assert row.outlook_salary == 1 * MILLION
+    assert row.outlook_change == 0
+
+
+def test_the_database_leaves_a_player_without_a_baseline_empty(season):
+    other = make_player("Other")
+    read(other, season, local(2026, 11, 15, 22, 15), 1 * MILLION, 10, 8)
+    newcomer = make_player()
+    read(newcomer, season, local(2026, 11, 14, 12), 1 * MILLION, 10, 8)
+
+    row = annotated(newcomer, salary_baseline(now=local(2026, 11, 19)))
+
+    assert row.pick_premium is None
     assert row.outlook_salary is None
     assert row.outlook_change is None
+
+
+@pytest.mark.parametrize(
+    ("games_at_update", "games_now"), [(0, 0), (3, 5), (5, 5), (5, 6), (0, 9), (6, 6), (6, 9)]
+)
+def test_python_and_database_agree_on_the_six_game_rule(season, games_at_update, games_now):
+    player = short_at_the_update(season, games_at_update, games_now)
+    baseline = salary_baseline(now=local(2026, 11, 19))
+
+    outlook = salary_outlook(player, baseline)
+    row = annotated(player, baseline)
+
+    assert row.pick_premium == outlook.premium
+    assert row.outlook_salary == outlook.salary
+    assert row.outlook_change == outlook.change
+
+
+def test_python_and_database_agree_before_the_first_update_short_of_six_games(season):
+    player = make_player()
+    read(player, season, local(2026, 10, 13, 20), 4 * MILLION, 0, 0)
+    read(player, season, local(2026, 11, 1, 12), 4 * MILLION, 30, 5)
+    baseline = salary_baseline(now=local(2026, 11, 2))
+
+    outlook = salary_outlook(player, baseline)
+    row = annotated(player, baseline)
+
+    assert row.outlook_salary == outlook.salary == 4 * MILLION
+    assert row.outlook_change == outlook.change == 0
 
 
 def test_no_baseline_annotates_nothing(db):

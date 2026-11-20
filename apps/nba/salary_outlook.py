@@ -43,13 +43,14 @@ from django.db.models import (
     DecimalField,
     ExpressionWrapper,
     F,
+    IntegerField,
     OuterRef,
     Q,
     Subquery,
     Value,
     When,
 )
-from django.db.models.functions import Greatest
+from django.db.models.functions import Coalesce, Greatest
 from django.utils import timezone
 
 from apps.fantasy.models import PlayerSnapshot, Season
@@ -265,27 +266,38 @@ def with_salary_outlook(qs, baseline):
     qs = qs.annotate(
         baseline_salary=Subquery(snapshot.values("salary"), output_field=DOLLARS),
         baseline_fp_per_game=Subquery(snapshot.values("fp_per_game"), output_field=POINTS),
+        baseline_games=Subquery(snapshot.values("games_played"), output_field=IntegerField()),
     )
     if baseline.is_preseason:
         premium = Case(
             When(baseline_salary__isnull=False, then=Value(Decimal("0"))), output_field=DOLLARS
         )
     else:
-        # NULL arithmetic does the rest: no games at the update, no premium.
-        premium = F("baseline_salary") - expected_salary_expression("baseline_fp_per_game")
+        # Only an update that repriced him has picks in it to read.
+        premium = Case(
+            When(
+                baseline_games__gte=MIN_GAMES_FOR_UPDATE,
+                then=F("baseline_salary") - expected_salary_expression("baseline_fp_per_game"),
+            ),
+            output_field=DOLLARS,
+        )
     qs = qs.annotate(pick_premium=premium)
-    # GREATEST skips NULLs in Postgres, so a missing part has to be ruled out
-    # first -- or every player without a premium would be "predicted" $0.5M.
-    complete = Q(
-        current_fp_per_game__isnull=False, pick_premium__isnull=False, current_salary__isnull=False
-    )
+    # Nothing to say without his salary at the baseline and today.
+    known = Q(baseline_salary__isnull=False, current_salary__isnull=False)
+    frozen = Q(current_games_played__isnull=True) | Q(current_games_played__lt=MIN_GAMES_FOR_UPDATE)
     qs = qs.annotate(
         outlook_salary=Case(
+            # Too few games for the update to reprice him: he keeps today's salary.
+            When(known & frozen, then=F("current_salary")),
+            # GREATEST skips NULLs in Postgres, so the points per game have to
+            # be ruled in first -- or he would be "predicted" $0.5M. No premium
+            # (the last update skipped him) carries nothing.
             When(
-                complete,
+                known & Q(current_fp_per_game__isnull=False),
                 then=Greatest(
                     Value(MIN_SALARY * MILLION),
-                    expected_salary_expression("current_fp_per_game") + F("pick_premium"),
+                    expected_salary_expression("current_fp_per_game")
+                    + Coalesce(F("pick_premium"), Value(Decimal("0"))),
                 ),
             ),
             output_field=DOLLARS,

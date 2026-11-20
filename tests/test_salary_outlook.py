@@ -633,6 +633,31 @@ def test_a_week_without_a_snapshot_has_no_row(season):
     assert [row.moment for row in rows] == [local(2026, 11, 29, 22), FIRST_UPDATE]
 
 
+def test_an_update_that_skipped_him_was_predicted_to_keep_his_salary(season):
+    """Four games at the first update, eight at the second: skipped, then repriced."""
+    player = make_player()
+    read(player, season, local(2026, 10, 13, 20), STARTING_PRICE, 0, 0)
+    read(player, season, local(2026, 11, 15, 12, 15), STARTING_PRICE, 12, 4)
+    read(player, season, local(2026, 11, 15, 22, 15), STARTING_PRICE, 12, 4)
+    read(player, season, local(2026, 11, 22, 12, 15), STARTING_PRICE, 14, 8)
+    read(player, season, local(2026, 11, 22, 22, 15), poly(14) + 100_000, 14, 8)
+
+    rows = past_updates(list(player.snapshots.all()), salary_baseline(now=local(2026, 11, 24)))
+
+    second, first = rows
+    assert first.skipped
+    assert first.predicted == STARTING_PRICE
+    assert first.error == 0
+    assert first.premium is None
+    # His first repricing: the curve alone, no "premium" out of his $9M.
+    assert not second.skipped
+    assert second.predicted == poly(14)
+    assert second.error == 100_000
+    assert second.premium == 100_000
+    # The skipped update says nothing about the curve: it is left out.
+    assert average_error(rows) == {"error": Decimal("100000"), "count": 1}
+
+
 def test_no_past_updates_before_the_first(season):
     assert past_updates([], salary_baseline(now=local(2026, 11, 1))) == []
 

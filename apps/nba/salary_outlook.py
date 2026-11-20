@@ -356,6 +356,11 @@ class PastUpdate:
     premium: Decimal | None
 
     @property
+    def skipped(self):
+        """Too few games at this update for the game to reprice him."""
+        return not repriced_at_update(self.after.games_played)
+
+    @property
     def change(self):
         return self.after.salary - self.before.salary if self.before else None
 
@@ -371,7 +376,7 @@ def past_updates(snapshots, baseline):
     the prediction above it has moved on from it. Each prediction is rebuilt
     the way it would have been made at the time: the premium out of the update
     before (none before the first), applied to the points per game of his last
-    snapshot ahead of this one.
+    snapshot ahead of this one -- or, short of six games then, his salary kept.
     """
     if baseline is None or baseline.is_preseason:
         return []
@@ -391,14 +396,12 @@ def past_updates(snapshots, baseline):
         if index + 1 < len(moments) and after.as_of >= moments[index + 1]:
             continue
         before = next((snapshot for snapshot in reversed(own) if snapshot.as_of < moment), None)
-        start = baseline_snapshot(own, previous)
-        premium = pick_premium(start, previous.is_preseason) if start else None
         rows.append(
             PastUpdate(
                 moment=moment,
                 before=before,
                 after=after,
-                predicted=predicted_salary(before.fp_per_game, premium) if before else None,
+                predicted=_predicted_at(before, baseline_snapshot(own, previous), previous),
                 premium=pick_premium(after),
             )
         )
@@ -406,10 +409,26 @@ def past_updates(snapshots, baseline):
     return rows[::-1]
 
 
+def _predicted_at(before, start, previous):
+    """What `salary_outlook` would have said at `before`, from the baseline
+    snapshot `start` of the `previous` update -- the same three cases."""
+    if before is None or start is None:
+        return None
+    if not repriced_at_update(before.games_played):
+        return before.salary
+    premium = pick_premium(start, previous.is_preseason)
+    carried = premium if premium is not None else Decimal("0")
+    return predicted_salary(before.fp_per_game, carried)
+
+
 def average_error(rows):
     """How far the predictions were off on average, either way, and over how
-    many updates: `{"error": ..., "count": ...}`, or None without one."""
-    errors = [abs(row.error) for row in rows if row.error is not None]
+    many updates: `{"error": ..., "count": ...}`, or None without one.
+
+    Updates that skipped him are left out: "he keeps his salary" is right by
+    the game's rule, and would only flatter the curve and the premium.
+    """
+    errors = [abs(row.error) for row in rows if row.error is not None and not row.skipped]
     if not errors:
         return None
     return {"error": sum(errors, Decimal("0")) / len(errors), "count": len(errors)}

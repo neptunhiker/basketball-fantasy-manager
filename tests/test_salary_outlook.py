@@ -227,12 +227,18 @@ def test_the_last_snapshot_before_the_season_is_the_preseason_baseline(season):
     assert outlook.baseline.as_of == local(2026, 10, 13, 20)
 
 
-def test_no_prediction_without_games_at_the_update(season):
+def test_without_games_at_the_update_he_keeps_his_salary(season):
     player = make_player()
     read(player, season, local(2026, 11, 15, 22, 15), 1 * MILLION, 0, 0)
     read(player, season, local(2026, 11, 18, 12), 1 * MILLION, 15, 1)
 
-    assert salary_outlook(player, salary_baseline(now=local(2026, 11, 19))) is None
+    outlook = salary_outlook(player, salary_baseline(now=local(2026, 11, 19)))
+
+    assert outlook.frozen
+    assert outlook.premium is None
+    assert outlook.salary == 1 * MILLION
+    assert outlook.change == 0
+    assert outlook.games_to_go == 5
 
 
 def test_no_prediction_for_a_player_first_listed_after_the_update(season):
@@ -247,12 +253,90 @@ def test_no_prediction_for_a_player_first_listed_after_the_update(season):
 
 def test_a_large_negative_premium_bottoms_out_at_the_minimum_salary(season):
     player = make_player()
-    read(player, season, local(2026, 11, 15, 22, 15), poly(10) - 3 * MILLION, 10, 5)
-    read(player, season, local(2026, 11, 18, 12), poly(10) - 3 * MILLION, 5, 6)
+    read(player, season, local(2026, 11, 15, 22, 15), poly(10) - 3 * MILLION, 10, 8)
+    read(player, season, local(2026, 11, 18, 12), poly(10) - 3 * MILLION, 5, 9)
 
     outlook = salary_outlook(player, salary_baseline(now=local(2026, 11, 19)))
 
     assert outlook.salary == Decimal("500000")
+
+
+# --- the six-game rule ------------------------------------------------------------
+#
+# The game only reprices a player with six games at the update; short of that
+# he keeps his starting salary, whatever his average says.
+
+STARTING_PRICE = 9 * MILLION
+
+
+def short_at_the_update(season, games_at_update, games_now, fp_now=13):
+    """A player priced at $9M before the season, with too few games on 15 Nov."""
+    player = make_player()
+    read(player, season, local(2026, 10, 13, 20), STARTING_PRICE, 0, 0)
+    read(player, season, local(2026, 11, 15, 22, 15), STARTING_PRICE, 12, games_at_update)
+    return read(player, season, local(2026, 11, 18, 12), STARTING_PRICE, fp_now, games_now)
+
+
+def test_still_short_of_six_games_he_keeps_his_salary(season):
+    player = short_at_the_update(season, games_at_update=4, games_now=5)
+
+    outlook = salary_outlook(player, salary_baseline(now=local(2026, 11, 19)))
+
+    assert outlook.frozen
+    assert not outlook.first_repricing
+    # His $9M is a starting price, not $5.9M of picks on top of 12 FP/G.
+    assert outlook.premium is None
+    assert outlook.salary == STARTING_PRICE
+    assert outlook.change == 0
+    assert outlook.games_to_go == 1
+    # What his average would be worth, for the page to explain the gap.
+    assert outlook.expected == poly(13)
+
+
+def test_reaching_six_games_he_gets_the_expected_salary_without_a_premium(season):
+    player = short_at_the_update(season, games_at_update=5, games_now=6)
+
+    outlook = salary_outlook(player, salary_baseline(now=local(2026, 11, 19)))
+
+    assert not outlook.frozen
+    assert outlook.first_repricing
+    assert outlook.premium is None
+    assert outlook.salary == poly(13)
+    assert outlook.change == poly(13) - STARTING_PRICE
+    assert outlook.games_to_go == 0
+
+
+def test_without_any_game_at_the_update_the_first_repricing_is_predicted_too(season):
+    player = short_at_the_update(season, games_at_update=0, games_now=7, fp_now=20)
+
+    outlook = salary_outlook(player, salary_baseline(now=local(2026, 11, 19)))
+
+    assert outlook.first_repricing
+    assert outlook.salary == poly(20)
+
+
+def test_six_games_at_the_update_is_enough_to_read_a_premium(season):
+    player = make_player()
+    read(player, season, local(2026, 11, 15, 22, 15), poly(20) + PREMIUM, 20, 6)
+    read(player, season, local(2026, 11, 18, 12), poly(20) + PREMIUM, 22, 7)
+
+    outlook = salary_outlook(player, salary_baseline(now=local(2026, 11, 19)))
+
+    assert outlook.premium == PREMIUM
+    assert not outlook.first_repricing
+    assert outlook.salary == poly(22) + PREMIUM
+
+
+def test_before_the_first_update_a_player_short_of_six_games_keeps_his_price(season):
+    player = make_player()
+    read(player, season, local(2026, 10, 13, 20), 4 * MILLION, 0, 0)
+    read(player, season, local(2026, 11, 1, 12), 4 * MILLION, 30, 5)
+
+    outlook = salary_outlook(player, salary_baseline(now=local(2026, 11, 2)))
+
+    assert outlook.frozen
+    assert outlook.salary == 4 * MILLION
+    assert outlook.change == 0
 
 
 # --- Python and the database agree ---------------------------------------------

@@ -34,6 +34,17 @@ INJURED = "injured"
 # so no expected salary is either.
 MIN_SALARY = Decimal("0.50")
 
+# The games a player needs at a salary update for the game to reprice him.
+# Short of it he keeps the salary he started the season with. At the first
+# update (15 Nov 2026) not one of the 100 players with one to five games moved,
+# and 360 of the 364 with six or more did.
+MIN_GAMES_FOR_UPDATE = 6
+
+
+def repriced_at_update(games_played):
+    """Whether a player with `games_played` games gets a new salary at an update."""
+    return games_played is not None and games_played >= MIN_GAMES_FOR_UPDATE
+
 
 def injury_state(status):
     """`HEALTHY`, `DAY_TO_DAY` or `INJURED` for an injury report's status.

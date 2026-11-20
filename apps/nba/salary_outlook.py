@@ -20,6 +20,15 @@ Salaries only move at an update, so the change comes down to how far his
 points per game have moved along the curve since then; the premium sets the
 level, and shows who is priced above his output.
 
+The game only reprices a player who has played `MIN_GAMES_FOR_UPDATE` games
+by the update; short of that he keeps his starting salary. So:
+
+- fewer games than that now: no change predicted, he keeps today's salary;
+- fewer at the last update, enough now: his first repricing is coming. His
+  salary then was his starting price, not a price picks moved, so there is no
+  premium to read (None) and none is carried: predicted = expected salary;
+- enough at both: the premium as above.
+
 Before a season's first update there is no premium to read: pre-season prices
 are set by the game, not by picks. It counts as zero then, and the baseline is
 the last snapshot before the season starts.
@@ -45,7 +54,14 @@ from django.utils import timezone
 
 from apps.fantasy.models import PlayerSnapshot, Season
 
-from .models import MILLION, MIN_SALARY, expected_salary_expression, predict_salary
+from .models import (
+    MILLION,
+    MIN_GAMES_FOR_UPDATE,
+    MIN_SALARY,
+    expected_salary_expression,
+    predict_salary,
+    repriced_at_update,
+)
 
 AFTER_UPDATE = "update"
 PRESEASON = "preseason"
@@ -135,11 +151,14 @@ def expected_amount(fp_per_game):
 def pick_premium(snapshot, preseason=False):
     """How far a snapshot's salary sits above (or below) its expected salary.
 
-    Zero for a pre-season price, which no pick has moved yet. None without
-    points per game: no games, nothing to tell the two parts apart by.
+    Zero for a pre-season price, which no pick has moved yet. None for a
+    player the update skipped -- fewer than `MIN_GAMES_FOR_UPDATE` games, so
+    his salary is still his starting price and says nothing about picks.
     """
     if preseason:
         return Decimal("0")
+    if not repriced_at_update(snapshot.games_played):
+        return None
     expected = expected_amount(snapshot.fp_per_game)
     if expected is None:
         return None
@@ -156,13 +175,33 @@ def predicted_salary(fp_per_game, premium):
 
 @dataclass(frozen=True)
 class SalaryOutlook:
-    """One player's prediction for the next update, in dollars."""
+    """One player's prediction for the next update, in dollars.
+
+    `frozen`: too few games for the update to reprice him, so `salary` is
+    today's and `change` zero. `premium` is None when the last update skipped
+    him (see `pick_premium`); `expected` is None without points per game.
+    `games_played` is his count now.
+    """
 
     baseline: PlayerSnapshot
-    premium: Decimal
-    expected: Decimal
+    premium: Decimal | None
+    expected: Decimal | None
     salary: Decimal
     change: Decimal
+    games_played: int | None = None
+    frozen: bool = False
+
+    games_needed = MIN_GAMES_FOR_UPDATE
+
+    @property
+    def first_repricing(self):
+        """Skipped at the last update, enough games for the next one."""
+        return not self.frozen and self.premium is None
+
+    @property
+    def games_to_go(self):
+        """Games he still needs before an update reprices him; 0 once he has them."""
+        return max(0, MIN_GAMES_FOR_UPDATE - (self.games_played or 0))
 
 
 def salary_outlook(player, baseline, snapshots=None):
@@ -180,15 +219,30 @@ def salary_outlook(player, baseline, snapshots=None):
     if snapshot is None:
         return None
     premium = pick_premium(snapshot, baseline.is_preseason)
-    salary = predicted_salary(player.current_fp_per_game, premium)
+    expected = expected_amount(player.current_fp_per_game)
+    if not repriced_at_update(player.current_games_played):
+        return SalaryOutlook(
+            baseline=snapshot,
+            premium=premium,
+            expected=expected,
+            salary=player.current_salary,
+            change=Decimal("0"),
+            frozen=True,
+            games_played=player.current_games_played,
+        )
+    # No premium means the last update skipped him: his salary is still his
+    # starting price, with no picks in it to carry over.
+    carried = premium if premium is not None else Decimal("0")
+    salary = predicted_salary(player.current_fp_per_game, carried)
     if salary is None:
         return None
     return SalaryOutlook(
         baseline=snapshot,
         premium=premium,
-        expected=expected_amount(player.current_fp_per_game),
+        expected=expected,
         salary=salary,
         change=salary - player.current_salary,
+        games_played=player.current_games_played,
     )
 
 

@@ -69,14 +69,16 @@ def make_player(season, name, position, salary, fp_then=20, fp_now=20):
         position=position,
         current_salary=Decimal(salary) * M,
         current_fp_per_game=Decimal(fp_now),
+        # Past the six games the game needs before it reprices anyone.
+        current_games_played=10,
     )
     PlayerSnapshot.objects.create(
         player=player,
         season=season,
         as_of=berlin(2026, 11, 16, 12, 15),
         salary=Decimal(salary) * M,
-        total_fp=Decimal(fp_then) * 5,
-        games_played=5,
+        total_fp=Decimal(fp_then) * 10,
+        games_played=10,
         position=position,
     )
     return player

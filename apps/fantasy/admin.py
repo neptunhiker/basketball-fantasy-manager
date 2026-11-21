@@ -13,6 +13,7 @@ from .models import (
     TradeGrant,
     TradePlan,
     Transaction,
+    TransactionCorrection,
 )
 
 
@@ -95,6 +96,13 @@ class RosterAdmin(admin.ModelAdmin):
     list_select_related = ["manager", "manager__user", "season"]
     autocomplete_fields = ["manager"]
     inlines = [RosterPlayerInline]
+    # The balance and the trade count are what the ledger adds up to, so they
+    # are not typed in here: an edit would leave the history page saying the
+    # two disagree, with nothing to show how. A wrong move is corrected by the
+    # manager on that page (`services.move_transaction`, `undo_transaction`),
+    # which keeps all three records in step. The starting budget is the
+    # ledger's first line, so it is locked for the same reason.
+    readonly_fields = ["starting_cash", "cash", "trades_available"]
 
     def get_queryset(self, request):
         # Both derived columns below are counted from the squad, so the
@@ -146,6 +154,39 @@ class TransactionAdmin(admin.ModelAdmin):
     @admin.display(description="Kind")
     def kind_display(self, obj):
         return obj.get_kind_display()
+
+
+@admin.register(TransactionCorrection)
+class TransactionCorrectionAdmin(admin.ModelAdmin):
+    """What managers corrected in their own history: read-only, like the ledger."""
+
+    list_display = [
+        "created_at",
+        "roster",
+        "action",
+        "kind",
+        "player_out",
+        "player_in",
+        "occurred_at_before",
+        "occurred_at_after",
+        "cash_delta_before",
+        "cash_delta_after",
+        "made_by",
+    ]
+    list_filter = ["action", "kind", "roster__season"]
+    search_fields = ["roster__name", "roster__manager__nick_name", "made_by__email"]
+    list_select_related = ["roster", "player_out", "player_in", "made_by"]
+    date_hierarchy = "created_at"
+    readonly_fields = [f.name for f in TransactionCorrection._meta.fields]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(PlayerSnapshot)

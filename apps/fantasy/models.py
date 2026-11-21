@@ -970,6 +970,93 @@ class Transaction(TimeStampedModel):
                 )
 
 
+class TransactionCorrection(TimeStampedModel):
+    """A manager's correction of a past move: its date changed, or the move undone.
+
+    The ledger itself only says what is true now, so this is the one place that
+    remembers what it said before. Written by `services.move_transaction` and
+    `services.undo_transaction`, never by hand -- which is why the admin shows
+    it read-only.
+
+    `transaction_id` is a plain UUID rather than a foreign key on purpose: an
+    undo deletes the row it refers to, and the record of that has to outlive it.
+    Everything needed to tell the story afterwards is copied here instead.
+    """
+
+    class Action(models.TextChoices):
+        MOVED = "MOVED", _("Date changed")
+        UNDONE = "UNDONE", _("Undone")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    roster = models.ForeignKey(
+        Roster, verbose_name="Roster", on_delete=models.CASCADE, related_name="corrections"
+    )
+    transaction_id = models.UUIDField("Move")
+    action = models.CharField("Action", max_length=10, choices=Action.choices)
+    kind = models.CharField("Kind", max_length=20, choices=Transaction.Kind.choices)
+    player_out = models.ForeignKey(
+        Player,
+        verbose_name="Player out",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    player_in = models.ForeignKey(
+        Player,
+        verbose_name="Player in",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    occurred_at_before = models.DateTimeField("Date before")
+    # Empty for an undo: the move no longer happened at all.
+    occurred_at_after = models.DateTimeField("Date after", null=True, blank=True)
+    price_out_before = models.DecimalField(
+        "Price out before", max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    price_out_after = models.DecimalField(
+        "Price out after", max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    price_in_before = models.DecimalField(
+        "Price in before", max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    price_in_after = models.DecimalField(
+        "Price in after", max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    cash_delta_before = models.DecimalField("Cash flow before", max_digits=12, decimal_places=2)
+    cash_delta_after = models.DecimalField(
+        "Cash flow after", max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    made_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Made by",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Move correction"
+        verbose_name_plural = "Move corrections"
+        constraints = [
+            # A move keeps a date, an undo has none: the two shapes cannot mix.
+            models.CheckConstraint(
+                condition=(
+                    Q(action="MOVED", occurred_at_after__isnull=False)
+                    | Q(action="UNDONE", occurred_at_after__isnull=True)
+                ),
+                name="a_correction_has_a_new_date_only_when_moved",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_action_display()}: {self.get_kind_display()} ({self.roster})"
+
+
 class PlayerSnapshotQuerySet(models.QuerySet):
     def latest_per_player(self):
         """One row per player: the most recent one.

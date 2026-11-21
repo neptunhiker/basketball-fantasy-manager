@@ -1,0 +1,76 @@
+{% extends "partials/modal.html" %}
+{% load i18n %}
+
+{% comment %}
+  Take back a past move, after saying what that does. With a problem the
+  confirm button is gone and the modal only explains -- the same convention
+  as `partials/modal_confirm.html` with an empty confirm label.
+
+  Context: roster, move, correction, error, action_url.
+{% endcomment %}
+
+{% block modal_title %}
+  {% if move.kind == 'TRADE' %}{% translate "Undo this trade?" %}
+  {% elif move.kind == 'BUY_TRADE' %}{% translate "Undo this trade purchase?" %}
+  {% else %}{% translate "Undo this trade sale?" %}{% endif %}
+{% endblock %}
+
+{% block modal_content %}
+  <form hx-post="{{ action_url }}" hx-target="#modal-root" hx-swap="innerHTML">
+    {% csrf_token %}
+
+    {% include "fantasy/partials/move_summary.html" %}
+
+    {% if correction.ok %}
+      <ul class="mt-4 space-y-2">
+        {% if move.kind == 'TRADE' %}
+          <li class="flex items-start gap-2.5">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden="true"></span>
+            <span>{% blocktranslate with player=move.player_out.full_name %}<strong class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ player }}</strong> comes back to the roster.{% endblocktranslate %}</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" aria-hidden="true"></span>
+            <span>{% blocktranslate with player=move.player_in.full_name %}<strong class="font-semibold text-tertiary-700 dark:text-neutral-100">{{ player }}</strong> leaves it again, as if the trade had never happened.{% endblocktranslate %}</span>
+          </li>
+        {% elif move.kind == 'BUY_TRADE' %}
+          <li class="flex items-start gap-2.5">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500" aria-hidden="true"></span>
+            <span>{% translate "The money comes back, and the trade you bought goes again." %}</span>
+          </li>
+        {% else %}
+          <li class="flex items-start gap-2.5">
+            <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500" aria-hidden="true"></span>
+            <span>{% translate "The trade comes back, and the money you got for it goes again." %}</span>
+          </li>
+        {% endif %}
+      </ul>
+    {% endif %}
+
+    <div class="mt-4">
+      {% include "fantasy/partials/move_effects.html" %}
+    </div>
+
+    {% if error %}
+      <p class="form-error mt-3" role="alert">{{ error }}</p>
+    {% endif %}
+
+    {% if correction.ok %}
+      <p class="mt-4 text-xs text-neutral-500 dark:text-neutral-400">
+        {% translate "The move disappears from your history. The correction itself is logged." %}
+      </p>
+    {% endif %}
+
+    <div class="modal-actions">
+      <button type="button" @click="open = false" class="btn btn-secondary">
+        {% if correction.ok %}{% translate "Cancel" %}{% else %}{% translate "Close" %}{% endif %}
+      </button>
+      {% if correction.ok %}
+        <button type="submit" class="btn btn-danger">
+          {% if move.kind == 'TRADE' %}{% translate "Undo trade" %}
+          {% elif move.kind == 'BUY_TRADE' %}{% translate "Undo purchase" %}
+          {% else %}{% translate "Undo sale" %}{% endif %}
+        </button>
+      {% endif %}
+    </div>
+  </form>
+{% endblock %}

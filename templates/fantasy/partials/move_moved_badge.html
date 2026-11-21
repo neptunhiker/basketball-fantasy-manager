@@ -1,0 +1,9 @@
+{% load i18n %}
+{# A move whose date was corrected, and the day it was first recorded on. #}
+{# Context: moved_from; `inline` for the phone card's header line. #}
+<span class="{% if not inline %}mt-1 {% endif %}inline-flex items-center gap-1 rounded-md bg-primary-50 px-1.5 py-0.5 text-[0.65rem] font-medium text-primary-700 dark:bg-primary-500/15 dark:text-primary-300"
+      title="{% blocktranslate with date=moved_from|date:'SHORT_DATETIME_FORMAT' %}First recorded on {{ date }}{% endblocktranslate %}">
+  <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12h12M12 6l6 6-6 6"/></svg>
+  {% translate "Date changed" %}
+  <span class="sr-only">{% blocktranslate with date=moved_from|date:'SHORT_DATETIME_FORMAT' %}First recorded on {{ date }}{% endblocktranslate %}</span>
+</span>

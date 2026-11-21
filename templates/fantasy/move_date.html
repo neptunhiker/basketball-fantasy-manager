@@ -1,0 +1,93 @@
+{% extends "partials/modal.html" %}
+{% load i18n %}
+
+{% comment %}
+  Move a past move to the day it really happened.
+
+  The date input reloads only the preview below it (`?body=1`), so the verdict
+  follows the day as it is picked; the arrows either side step one day at a
+  time, which is the mistake this is mostly for. The confirm button lives in
+  the preview, because whether it may be pressed is the preview's answer.
+
+  Context: roster, move, day, first_day, last_day, current_day, correction,
+  error, action_url.
+{% endcomment %}
+
+{% block modal_title %}{% translate "Change the date" %}{% endblock %}
+
+{% block modal_content %}
+  <p>
+    {% blocktranslate with time=move.occurred_at|time:"TIME_FORMAT" %}Pick the day this move really happened. It keeps its time of day ({{ time }}), and everything that came after it is checked again.{% endblocktranslate %}
+  </p>
+
+  <div class="mt-4">
+    {% include "fantasy/partials/move_summary.html" %}
+  </div>
+
+  <form hx-post="{{ action_url }}"
+        hx-target="#modal-root"
+        hx-swap="innerHTML"
+        class="mt-5">
+    {% csrf_token %}
+
+    {% if first_day %}
+      <div x-data="{
+             day: '{{ day|date:'Y-m-d'|default:'' }}',
+             min: '{{ first_day|date:'Y-m-d' }}',
+             max: '{{ last_day|date:'Y-m-d' }}',
+             start: '{{ current_day|date:'Y-m-d' }}',
+             step(by) {
+               const base = this.day || this.start;
+               const next = new Date(base + 'T12:00:00Z');
+               next.setUTCDate(next.getUTCDate() + by);
+               const value = next.toISOString().slice(0, 10);
+               if (value < this.min || value > this.max) return;
+               this.day = value;
+               this.$nextTick(() => this.$refs.day.dispatchEvent(new Event('change', { bubbles: true })));
+             },
+           }">
+        <label for="move-day" class="form-label">{% translate "New date" %}</label>
+        <div class="flex items-stretch gap-2">
+          <button type="button" @click="step(-1)"
+                  :disabled="(day || start) <= min"
+                  class="btn btn-secondary shrink-0 !px-3"
+                  aria-label="{% translate 'One day earlier' %}" title="{% translate 'One day earlier' %}">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <input type="date" id="move-day" name="day" x-ref="day" x-model="day"
+                 value="{{ day|date:'Y-m-d'|default:'' }}"
+                 min="{{ first_day|date:'Y-m-d' }}" max="{{ last_day|date:'Y-m-d' }}"
+                 required
+                 hx-get="{{ action_url }}?body=1"
+                 hx-trigger="change"
+                 hx-target="#move-preview"
+                 hx-swap="outerHTML"
+                 hx-sync="this:replace"
+                 aria-describedby="move-day-help"
+                 class="min-w-0 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base font-medium text-neutral-900 shadow-sm tabular-nums transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 sm:text-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:[color-scheme:dark]">
+          <button type="button" @click="step(1)"
+                  :disabled="(day || start) >= max"
+                  class="btn btn-secondary shrink-0 !px-3"
+                  aria-label="{% translate 'One day later' %}" title="{% translate 'One day later' %}">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <p id="move-day-help" class="form-help flex items-start gap-1.5 text-xs">
+          <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500" aria-hidden="true"></span>
+          {% translate "Salaries update every Sunday at 22:00. A trade moved across an update is priced at that week's salaries." %}
+        </p>
+      </div>
+
+      <div class="mt-5">
+        {% include "fantasy/partials/move_date_preview.html" %}
+      </div>
+    {% else %}
+      <p class="rounded-xl border border-dashed border-neutral-300 px-4 py-6 text-center dark:border-neutral-700">
+        {% translate "There is no other day this move could be dated to." %}
+      </p>
+      <div class="modal-actions">
+        <button type="button" @click="open = false" class="btn btn-secondary">{% translate "Close" %}</button>
+      </div>
+    {% endif %}
+  </form>
+{% endblock %}

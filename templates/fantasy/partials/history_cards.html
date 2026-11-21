@@ -14,7 +14,12 @@
             {% else %}bg-secondary-100 text-secondary-700 dark:bg-secondary-400/15 dark:text-secondary-300{% endif %}">
             {{ move.get_kind_display }}
           </span>
-          <time class="text-xs text-neutral-500 dark:text-neutral-400" datetime="{{ move.occurred_at|date:'c' }}">{{ move.occurred_at|date:"SHORT_DATETIME_FORMAT" }}</time>
+          <span class="flex items-center gap-2">
+            {% if row.moved_from %}
+              {% include "fantasy/partials/move_moved_badge.html" with moved_from=row.moved_from inline=True %}
+            {% endif %}
+            <time class="text-xs text-neutral-500 dark:text-neutral-400" datetime="{{ move.occurred_at|date:'c' }}">{{ move.occurred_at|date:"SHORT_DATETIME_FORMAT" }}</time>
+          </span>
         </div>
         <p class="mt-1.5">
           {% if move.kind == 'GRANT_TRADE' %}
@@ -32,6 +37,11 @@
           </span>
           <span class="text-neutral-500 dark:text-neutral-400">{% translate "Balance" %} <span class="font-medium text-tertiary-700 dark:text-neutral-100">{{ row.balance|millions }}</span></span>
         </div>
+        {% if row.correctable %}
+          <div class="mt-2.5 flex justify-end">
+            {% include "fantasy/partials/move_actions.html" with labelled=True %}
+          </div>
+        {% endif %}
       </li>
     {% endwith %}
   {% endfor %}

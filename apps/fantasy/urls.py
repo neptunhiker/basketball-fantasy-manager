@@ -53,6 +53,16 @@ urlpatterns = [
     ),
     path("rosters/<uuid:pk>/trade/", views.RosterTradeView.as_view(), name="roster-trade"),
     path("rosters/<uuid:pk>/history/", views.RosterHistoryView.as_view(), name="roster-history"),
+    path(
+        "rosters/<uuid:pk>/moves/<uuid:move_pk>/date/",
+        views.RosterMoveDateView.as_view(),
+        name="roster-move-date",
+    ),
+    path(
+        "rosters/<uuid:pk>/moves/<uuid:move_pk>/undo/",
+        views.RosterMoveUndoView.as_view(),
+        name="roster-move-undo",
+    ),
     path("rosters/<uuid:pk>/latest/", views.RosterLatestView.as_view(), name="roster-latest"),
     # --- trade plans ---
     path("rosters/<uuid:pk>/plans/", plan_views.PlanListView.as_view(), name="plan-list"),

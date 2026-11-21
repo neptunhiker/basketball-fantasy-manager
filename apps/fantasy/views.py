@@ -53,7 +53,7 @@ from apps.nba.salary_outlook import (
 )
 from apps.nba.stats import DESCENDING_FIRST
 
-from . import services
+from . import ledger, services
 from .forms import SeasonForm, TradeGrantForm
 from .latest import roster_latest
 from .models import (
@@ -68,6 +68,8 @@ from .models import (
     RosterPlayer,
     Season,
     TradeGrant,
+    Transaction,
+    TransactionCorrection,
     WatchlistEntry,
 )
 from .timeline import roster_timeline
@@ -766,11 +768,31 @@ class RosterHistoryView(OwnRosterMixin, TemplateView):
             ).order_by("occurred_at", "created_at")
         )
 
+        # The moves a manager may still move to another day or undo, and for a
+        # row that was moved, the date it was first recorded on -- one query,
+        # so the page says the history was corrected rather than hiding it.
+        # Oldest correction first, so a move moved twice keeps its original.
+        today = timezone.localdate()
+        first_dates = {}
+        for transaction_id, before in (
+            roster.corrections.filter(action=TransactionCorrection.Action.MOVED)
+            .order_by("created_at")
+            .values_list("transaction_id", "occurred_at_before")
+        ):
+            first_dates.setdefault(transaction_id, before)
+
         balance = roster.starting_cash
         rows = []
         for move in moves:
             balance += move.cash_delta
-            rows.append({"move": move, "balance": balance})
+            rows.append(
+                {
+                    "move": move,
+                    "balance": balance,
+                    "correctable": ledger.is_correctable(move, roster.season, today),
+                    "moved_from": first_dates.get(move.pk),
+                }
+            )
 
         context["roster"] = roster
         context["rows"] = list(reversed(rows))
@@ -778,6 +800,7 @@ class RosterHistoryView(OwnRosterMixin, TemplateView):
         context["ledger_balance"] = balance
         context["reconciles"] = balance == roster.cash
         context["counts"] = Counter(move.kind for move in moves)
+        context["any_correctable"] = any(row["correctable"] for row in rows)
         # Rows that predate per-side prices, counted so the page can admit to
         # them instead of quietly showing a blank column.
         context["unpriced"] = sum(1 for move in moves if not move.is_priced)
@@ -786,6 +809,120 @@ class RosterHistoryView(OwnRosterMixin, TemplateView):
         timeline = roster_timeline(roster)
         context["timeline"] = timeline.as_json() if timeline else None
         return context
+
+
+class OwnMoveMixin(OwnRosterMixin):
+    """One of the roster's own moves that a manager may correct.
+
+    Anything else -- someone else's move, a signing, a free trade -- is a 404,
+    in the queryset rather than in an `if`. Whether the season still lets the
+    move be corrected is the ledger's question, and its answer is shown.
+    """
+
+    def get_move(self):
+        if not hasattr(self, "_move"):
+            self._move = get_object_or_404(
+                Transaction.objects.select_related(
+                    "player_in", "player_in__team", "player_out", "player_out__team"
+                ),
+                pk=self.kwargs["move_pk"],
+                roster=self.get_roster(),
+                kind__in=ledger.CORRECTABLE,
+            )
+        return self._move
+
+    def done(self, request, message):
+        """Back to a fresh history page, where every balance is redrawn."""
+        roster = self.get_roster()
+        messages.success(request, message)
+        response = HttpResponse(status=204)
+        response["HX-Redirect"] = reverse("fantasy:roster-history", args=[roster.pk])
+        return response
+
+
+class RosterMoveDateView(OwnMoveMixin, View):
+    """Move a past trade, bought or sold trade to the day it really happened.
+
+    GET renders the modal, or only its preview (`?body=1`) when the picked day
+    changes; the preview is the ledger's verdict on that day, with the confirm
+    button enabled only when there is nothing wrong with it. POST makes the
+    correction, which the service judges again under the roster's lock.
+    """
+
+    template_name = "fantasy/move_date.html"
+    body_template = "fantasy/partials/move_date_preview.html"
+
+    def _day(self, data):
+        try:
+            return dt.date.fromisoformat(data.get("day", ""))
+        except ValueError:
+            return None
+
+    def get_context(self, day, error=None):
+        roster, move = self.get_roster(), self.get_move()
+        days = ledger.day_range(move, roster.season)
+        correction = ledger.preview_move(roster, move, day) if day is not None else None
+        return {
+            "roster": roster,
+            "move": move,
+            "day": day,
+            "first_day": days[0] if days else None,
+            "last_day": days[1] if days else None,
+            "current_day": timezone.localdate(move.occurred_at),
+            "correction": correction,
+            "error": error,
+            "action_url": reverse("fantasy:roster-move-date", args=[roster.pk, move.pk]),
+            "panel_class": "modal-panel-wide",
+        }
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context(self._day(request.GET))
+        template = self.body_template if request.GET.get("body") else self.template_name
+        return render(request, template, context)
+
+    def post(self, request, *args, **kwargs):
+        roster, move = self.get_roster(), self.get_move()
+        day = self._day(request.POST)
+        if day is None:
+            return render(request, self.template_name, self.get_context(None, _("Pick a day.")))
+        try:
+            services.move_transaction(roster, move, day, user=request.user)
+        except ValidationError as exc:
+            return render(request, self.template_name, self.get_context(day, exc.messages[0]))
+        return self.done(
+            request,
+            _("%(move)s moved to %(date)s.")
+            % {"move": ledger.describe(move), "date": local_date(day)},
+        )
+
+
+class RosterMoveUndoView(OwnMoveMixin, View):
+    """Take back a past trade, bought or sold trade, after showing what that does."""
+
+    template_name = "fantasy/move_undo.html"
+
+    def get_context(self, error=None):
+        roster, move = self.get_roster(), self.get_move()
+        return {
+            "roster": roster,
+            "move": move,
+            "correction": ledger.preview_undo(roster, move),
+            "error": error,
+            "action_url": reverse("fantasy:roster-move-undo", args=[roster.pk, move.pk]),
+            "panel_class": "modal-panel-wide",
+        }
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, self.get_context())
+
+    def post(self, request, *args, **kwargs):
+        roster, move = self.get_roster(), self.get_move()
+        description = ledger.describe(move)
+        try:
+            services.undo_transaction(roster, move, user=request.user)
+        except ValidationError as exc:
+            return render(request, self.template_name, self.get_context(exc.messages[0]))
+        return self.done(request, _("%(move)s undone.") % {"move": description})
 
 
 def _picker_filters(request):

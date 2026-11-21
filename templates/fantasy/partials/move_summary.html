@@ -1,0 +1,64 @@
+{% load i18n money %}
+{% comment %}
+  The move being corrected, as it stands in the ledger: what it was and when.
+  The same card at the top of both correction modals, so "which move is this
+  about" never has to be read out of a sentence. Context: move.
+
+  A trade is two players with an arrow between them -- stacked on phones,
+  side by side from `sm` -- each with the team and the price it was recorded
+  at. A bought or sold trade has no players, only its price.
+{% endcomment %}
+<div class="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50/70 dark:border-neutral-800 dark:bg-neutral-950/40">
+  <div class="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-2.5 dark:border-neutral-800">
+    <span class="inline-flex rounded-md px-2 py-0.5 text-xs font-semibold
+      {% if move.kind == 'TRADE' %}bg-secondary-100 text-secondary-700 dark:bg-secondary-400/15 dark:text-secondary-300
+      {% else %}bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300{% endif %}">
+      {{ move.get_kind_display }}
+    </span>
+    <time datetime="{{ move.occurred_at|date:'c' }}"
+          class="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-600 tabular-nums dark:text-neutral-300">
+      <svg class="h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path stroke-linecap="round" d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+      {{ move.occurred_at|date:"D j M Y" }} · {{ move.occurred_at|date:"TIME_FORMAT" }}
+    </time>
+  </div>
+
+  {% if move.kind == 'TRADE' %}
+    <div class="grid gap-2 p-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-4">
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300" aria-hidden="true">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M6 13l6 6 6-6"/></svg>
+        </span>
+        <div class="min-w-0">
+          <p class="text-[0.65rem] font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "Out" %}</p>
+          <p class="truncate font-semibold text-tertiary-700 dark:text-neutral-100">{{ move.player_out.full_name }}</p>
+          <p class="truncate text-xs text-neutral-500 tabular-nums dark:text-neutral-400">
+            {% if move.player_out.team %}{{ move.player_out.team.abbreviation }} · {% endif %}<span title="{{ move.price_out|exact }}">{{ move.price_out|millions }}</span>
+          </p>
+        </div>
+      </div>
+      <svg class="hidden h-5 w-5 text-neutral-300 sm:block dark:text-neutral-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300" aria-hidden="true">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M6 11l6-6 6 6"/></svg>
+        </span>
+        <div class="min-w-0">
+          <p class="text-[0.65rem] font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{% translate "In" %}</p>
+          <p class="truncate font-semibold text-tertiary-700 dark:text-neutral-100">{{ move.player_in.full_name }}</p>
+          <p class="truncate text-xs text-neutral-500 tabular-nums dark:text-neutral-400">
+            {% if move.player_in.team %}{{ move.player_in.team.abbreviation }} · {% endif %}<span title="{{ move.price_in|exact }}">{{ move.price_in|millions }}</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="flex items-center justify-between gap-3 p-4">
+      <p class="font-semibold text-tertiary-700 dark:text-neutral-100">
+        {% if move.kind == 'BUY_TRADE' %}{% translate "Bought 1 trade" %}{% else %}{% translate "Sold 1 trade" %}{% endif %}
+      </p>
+      <p class="text-sm font-medium tabular-nums {% if move.cash_delta > 0 %}text-emerald-700 dark:text-emerald-400{% else %}text-rose-700 dark:text-rose-400{% endif %}"
+         title="{{ move.cash_delta|exact }}">
+        {{ move.cash_delta|signed_millions }}
+      </p>
+    </div>
+  {% endif %}
+</div>

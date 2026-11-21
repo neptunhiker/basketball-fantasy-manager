@@ -1,0 +1,118 @@
+{% load i18n money %}
+{% comment %}
+  What a correction would do, as the ledger worked it out: each figure before
+  and after, then whatever stops it and whatever only deserves a look.
+  Context: correction (a `ledger.Correction`), move.
+
+  Problems block the correction; the modal hides its confirm button for them.
+  Warnings do not -- a trade that leaves a position short is allowed when it is
+  made, so it stays allowed when it is moved.
+{% endcomment %}
+{% with c=correction %}
+  {% if c.problems %}
+    <div class="flex gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200"
+         role="alert">
+      <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7.5v5.5M12 16.5h.01"/></svg>
+      <div class="min-w-0">
+        <p class="font-semibold">{% translate "This would not work out" %}</p>
+        <ul class="mt-1 space-y-1">
+          {% for problem in c.problems %}<li>{{ problem }}</li>{% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% else %}
+    <dl class="divide-y divide-neutral-200 overflow-hidden rounded-xl border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+      {% if c.action == 'move' %}
+        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
+          <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Date" %}</dt>
+          <dd class="flex items-center gap-2 font-medium tabular-nums">
+            <span class="text-neutral-400 line-through decoration-neutral-300 dark:text-neutral-500 dark:decoration-neutral-600">{{ move.occurred_at|date:"D j M" }}</span>
+            <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <span class="rounded-md bg-primary-50 px-2 py-0.5 text-primary-700 dark:bg-primary-500/15 dark:text-primary-300">{{ c.occurred_at_after|date:"D j M" }} · {{ c.occurred_at_after|date:"TIME_FORMAT" }}</span>
+          </dd>
+        </div>
+        {% if move.kind == 'TRADE' %}
+          <div class="px-4 py-3">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+              <dt class="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
+                {% translate "Prices" %}
+                {% if c.repriced %}
+                  <span class="badge badge-pending">{% translate "Repriced" %}</span>
+                {% else %}
+                  <span class="badge badge-neutral">{% translate "Unchanged" %}</span>
+                {% endif %}
+              </dt>
+              <dd class="text-right text-xs leading-5 tabular-nums">
+                <span class="block">
+                  <span class="text-neutral-500 dark:text-neutral-400">{{ move.player_out.last_name }}</span>
+                  {% if c.repriced %}<span class="text-neutral-400 line-through dark:text-neutral-500">{{ move.price_out|millions }}</span> →{% endif %}
+                  <span class="font-semibold" title="{{ c.price_out_after|exact }}">{{ c.price_out_after|millions }}</span>
+                </span>
+                <span class="block">
+                  <span class="text-neutral-500 dark:text-neutral-400">{{ move.player_in.last_name }}</span>
+                  {% if c.repriced %}<span class="text-neutral-400 line-through dark:text-neutral-500">{{ move.price_in|millions }}</span> →{% endif %}
+                  <span class="font-semibold" title="{{ c.price_in_after|exact }}">{{ c.price_in_after|millions }}</span>
+                </span>
+              </dd>
+            </div>
+            {% if c.repriced %}
+              <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+                {% blocktranslate with date=c.repriced_by|date:"D j M" %}The new day is on the other side of the salary update of {{ date }}, so both players are priced at that week's salaries — as the official game charged them.{% endblocktranslate %}
+              </p>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
+        <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Cash" %}</dt>
+        <dd class="flex items-center gap-2 tabular-nums">
+          {% if c.cash_change %}
+            <span class="text-neutral-400 dark:text-neutral-500" title="{{ c.cash_before|exact }}">{{ c.cash_before|millions }}</span>
+            <span class="text-neutral-400" aria-hidden="true">→</span>
+          {% endif %}
+          <span class="font-semibold" title="{{ c.cash_after|exact }}">{{ c.cash_after|millions }}</span>
+          {% if c.cash_change %}
+            <span class="rounded-md px-1.5 py-0.5 text-xs font-medium {% if c.cash_change > 0 %}bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400{% else %}bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300{% endif %}">{{ c.cash_change|signed_millions }}</span>
+          {% else %}
+            <span class="text-xs text-neutral-400 dark:text-neutral-500">{% translate "no change" %}</span>
+          {% endif %}
+        </dd>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
+        <dt class="text-neutral-500 dark:text-neutral-400">{% translate "Available trades" %}</dt>
+        <dd class="flex items-center gap-2 tabular-nums">
+          {% if c.trades_change %}
+            <span class="text-neutral-400 dark:text-neutral-500">{{ c.trades_before }}</span>
+            <span class="text-neutral-400" aria-hidden="true">→</span>
+          {% endif %}
+          <span class="font-semibold">{{ c.trades_after }}</span>
+          {% if c.trades_change %}
+            <span class="rounded-md px-1.5 py-0.5 text-xs font-medium {% if c.trades_change > 0 %}bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400{% else %}bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300{% endif %}">{% if c.trades_change > 0 %}+{% endif %}{{ c.trades_change }}</span>
+          {% else %}
+            <span class="text-xs text-neutral-400 dark:text-neutral-500">{% translate "no change" %}</span>
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+
+    {% if c.warnings %}
+      <div class="mt-3 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+        <svg class="mt-0.5 h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linejoin="round" d="M10.3 4.2 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z"/><path stroke-linecap="round" d="M12 9.5v4M12 17h.01"/></svg>
+        <div class="min-w-0">
+          <p class="font-semibold">{% translate "Worth a look" %}</p>
+          <ul class="mt-1 space-y-1">
+            {% for warning in c.warnings %}<li>{{ warning }}</li>{% endfor %}
+          </ul>
+          <p class="mt-1 text-xs opacity-80">{% translate "You can still go ahead: the game allows it, as it did when the trade was made." %}</p>
+        </div>
+      </div>
+    {% else %}
+      <p class="mt-3 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400">
+        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+        {% translate "Every move after it still works out." %}
+      </p>
+    {% endif %}
+  {% endif %}
+{% endwith %}

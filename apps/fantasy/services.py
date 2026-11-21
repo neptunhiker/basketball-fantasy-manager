@@ -5,6 +5,8 @@ in step that would otherwise drift apart.
 
 `buy`/`sell`/`trade` -- membership, cash and the transaction log are three
 records of the same event, so every change is atomic and goes through here.
+The same holds for correcting one afterwards (`move_transaction`,
+`undo_transaction`).
 
 `record_snapshot` -- a scraped snapshot is also the newest word on which team a
 player is on, so writing one may update `Player` too.
@@ -38,6 +40,7 @@ from .models import (
     RosterPlayer,
     TradePlan,
     Transaction,
+    TransactionCorrection,
     WatchlistEntry,
     position_shortfalls,
 )
@@ -372,6 +375,121 @@ def sell_trade(roster, occurred_at=None, note=""):
         cash_delta=TRADE_SELL_PRICE,
         kind=Transaction.Kind.SELL_TRADE,
         note=note or "Sold 1 trade",
+    )
+
+
+# --- correcting past moves -----------------------------------------------------
+#
+# A manager who recorded a move on the wrong day, or should not have made it,
+# corrects it here rather than in the admin: these keep the ledger row, the
+# spells and the roster's balances in step, and refuse a correction whenever
+# anything that happened afterwards could then not have. The judging is
+# `apps.fantasy.ledger`'s; these only lock, ask, write, and log.
+
+
+def _locked_move(locked, move):
+    return (
+        Transaction.objects.select_related("player_in", "player_out")
+        .select_for_update(of=("self",))
+        .get(pk=move.pk, roster=locked)
+    )
+
+
+def _refuse_unless_ok(correction):
+    if not correction.ok:
+        raise ValidationError(correction.problems[0])
+
+
+@transaction.atomic
+def move_transaction(roster, move, day, user=None, now=None):
+    """Move a past trade, bought or sold trade to `day`, keeping its clock time.
+
+    Judged again here, under the roster's lock, whatever a preview said a
+    moment ago: another tab may have made a move in between. Returns the
+    `TransactionCorrection` that records it.
+    """
+    from .ledger import preview_move
+
+    now = now or timezone.now()
+    locked = _lock(roster)
+    move = _locked_move(locked, move)
+    correction = preview_move(locked, move, day, now=now)
+    _refuse_unless_ok(correction)
+
+    log = _correction_log(locked, move, TransactionCorrection.Action.MOVED, user)
+    moment = correction.occurred_at_after
+    if correction.out_spell is not None:
+        correction.out_spell.removed_at = moment
+        correction.out_spell.save(update_fields=["removed_at", "updated_at"])
+        correction.in_spell.added_at = moment
+        correction.in_spell.save(update_fields=["added_at", "updated_at"])
+
+    locked.cash += correction.cash_delta_after - move.cash_delta
+    locked.save(update_fields=["cash", "updated_at"])
+
+    move.occurred_at = moment
+    move.price_out = correction.price_out_after
+    move.price_in = correction.price_in_after
+    move.cash_delta = correction.cash_delta_after
+    move.save(update_fields=["occurred_at", "price_out", "price_in", "cash_delta", "updated_at"])
+
+    log.occurred_at_after = moment
+    log.price_out_after = move.price_out
+    log.price_in_after = move.price_in
+    log.cash_delta_after = move.cash_delta
+    log.save()
+    roster.refresh_from_db()
+    return log
+
+
+@transaction.atomic
+def undo_transaction(roster, move, user=None, now=None):
+    """Take back a past trade, bought or sold trade as if it had never been made.
+
+    A trade puts the outgoing player back on the roster and removes the
+    incoming one's spell; every undo returns the money and the trade count to
+    what they would have been. Returns the `TransactionCorrection`.
+    """
+    from .ledger import preview_undo
+
+    now = now or timezone.now()
+    locked = _lock(roster)
+    move = _locked_move(locked, move)
+    correction = preview_undo(locked, move, now=now)
+    _refuse_unless_ok(correction)
+
+    log = _correction_log(locked, move, TransactionCorrection.Action.UNDONE, user)
+    log.save()
+    if correction.out_spell is not None:
+        # The incoming spell first: the outgoing player's reopened spell must
+        # not meet a still-open one of his own (he cannot be, but the
+        # constraint is checked row by row).
+        correction.in_spell.delete()
+        correction.out_spell.removed_at = None
+        correction.out_spell.save(update_fields=["removed_at", "updated_at"])
+
+    locked.cash = correction.cash_after
+    locked.trades_available = correction.trades_after
+    locked.save(update_fields=["cash", "trades_available", "updated_at"])
+    move.delete()
+    roster.refresh_from_db()
+    return log
+
+
+def _correction_log(locked, move, action, user):
+    """The log row with the move's values before the change; saved by the caller."""
+    return TransactionCorrection(
+        roster=locked,
+        transaction_id=move.pk,
+        action=action,
+        kind=move.kind,
+        player_out=move.player_out,
+        player_in=move.player_in,
+        occurred_at_before=move.occurred_at,
+        price_out_before=move.price_out,
+        price_in_before=move.price_in,
+        cash_delta_before=move.cash_delta,
+        made_by=user if user is not None and user.is_authenticated else None,
     )
 
 

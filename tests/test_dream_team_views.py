@@ -294,6 +294,9 @@ def test_the_current_salary_is_what_the_fifteen_cost_today(signed_in, league, se
         Decimal(30_000_000),
         Decimal(15_000_000),
     ]
+    text = response.text
+    assert "$75.00M" in text
+    assert "+$15.00M since draft day" in text
 
 
 def test_the_next_update_is_the_roster_panels_prediction(signed_in, league, season):
@@ -337,3 +340,4 @@ def test_without_an_update_left_there_is_no_next_update(signed_in, league, seaso
     assert response.context["outlook"] is None
     assert response.context["expected_salary"] is None
     assert response.context["current_salary"] == Decimal(75_000_000)
+    assert "No salary update ahead" in response.text

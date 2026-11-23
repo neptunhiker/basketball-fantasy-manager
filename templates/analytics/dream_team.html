@@ -202,7 +202,8 @@
                 <td class="hidden px-3 py-2.5 text-right tabular-nums text-neutral-600 sm:table-cell dark:text-neutral-300" title="{{ pick.salary|exact }}">{{ pick.salary|millions }}</td>
                 <td class="hidden px-3 py-2.5 text-right sm:table-cell">
                   <span class="block font-medium tabular-nums" title="{{ pick.current_salary|exact }}">{{ pick.current_salary|millions }}</span>
-                  {% if pick.salary_locked %}
+                  {# Only with an update ahead: past the last one, "4/6" would promise nothing. #}
+                  {% if pick.salary_locked and pick.outlook_change is not None %}
                     {% min_games_for_update as needed %}
                     <span class="mt-0.5 inline-flex items-center gap-1 whitespace-nowrap text-[0.7rem] font-semibold leading-4 tabular-nums text-amber-700 dark:text-amber-300"
                           title="{% blocktranslate count counter=needed %}No salary update before {{ counter }} game.{% plural %}No salary update before {{ counter }} games.{% endblocktranslate %}">

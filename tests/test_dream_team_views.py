@@ -316,6 +316,7 @@ def test_the_next_update_is_the_roster_panels_prediction(signed_in, league, seas
     assert not picks["C3"].salary_locked
     assert picks["G2"].outlook_change == 0
     assert picks["G2"].salary_locked
+    assert "No salary update before 6 games." in response.text
 
 
 def test_without_a_salary_on_record_the_draft_price_stands_in(signed_in, league, season):
@@ -341,3 +342,5 @@ def test_without_an_update_left_there_is_no_next_update(signed_in, league, seaso
     assert response.context["expected_salary"] is None
     assert response.context["current_salary"] == Decimal(75_000_000)
     assert "No salary update ahead" in response.text
+    # Nobody is waiting for an update that is not coming.
+    assert "No salary update before 6 games." not in response.text

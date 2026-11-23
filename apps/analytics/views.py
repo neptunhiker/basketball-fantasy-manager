@@ -10,6 +10,7 @@ from django.views.generic import TemplateView
 from apps.fantasy.models import Season
 from apps.nba.charts import scatter_chart
 from apps.nba.models import Player
+from apps.nba.salary_outlook import salary_baseline, squad_outlook, with_salary_outlook
 
 from . import charts
 from .dream_team import changes, missing_reason
@@ -72,10 +73,13 @@ class DreamTeamView(AnalyticsMixin, TemplateView):
 
         result = changes(dream_team)
         picks = list(dream_team.picks.all())
+        # Before `_groups`, which sums the current salaries per position.
+        salaries = _salaries(dream_team, picks, salary_baseline(season))
         context.update(
             dream_team=dream_team,
             changes=result,
             groups=_groups(picks, {pick.player_id for pick in result.came_in}),
+            **salaries,
             games=sum(pick.games_played for pick in picks),
             # Share of the budget spent, for the bar under "Salary used".
             budget_used=round(dream_team.total_salary / dream_team.budget * 100)
@@ -163,10 +167,58 @@ def _groups(picks, new_ids):
                 "label": label,
                 "rows": rows,
                 "salary": sum(pick.salary for pick in rows),
+                "current_salary": sum(pick.current_salary for pick in rows),
                 "points": sum(pick.total_fp for pick in rows),
             }
         )
     return groups
+
+
+def _salaries(dream_team, picks, baseline):
+    """What the fifteen cost today, and after the next salary update.
+
+    The team is chosen at draft-day prices; these are the same players at
+    today's, for comparison. Read live rather than stored: the page only ever
+    shows the newest result, and salaries only move at an update.
+
+    Sets on every pick `current_salary` (his draft price when the player has
+    no salary on record, counted in `current_missing`), and `outlook_change`
+    and `salary_locked` for the "Now" column. The next-update prediction is
+    `apps.nba.salary_outlook`'s, the roster panel's: one query for all fifteen,
+    none at all without a baseline (the season's last update is behind it).
+    """
+    outlook = {}
+    if baseline is not None:
+        outlook = {
+            row["pk"]: row["outlook_change"]
+            for row in with_salary_outlook(
+                Player.objects.filter(pk__in=[pick.player_id for pick in picks]), baseline
+            ).values("pk", "outlook_change")
+        }
+    missing = 0
+    for pick in picks:
+        player = pick.player
+        if player.current_salary is None:
+            pick.current_salary = pick.salary
+            missing += 1
+        else:
+            pick.current_salary = player.current_salary
+        pick.outlook_change = outlook.get(pick.player_id)
+        pick.salary_locked = player.salary_locked
+        pick.games_now = player.current_games_played or 0
+
+    current = sum((pick.current_salary for pick in picks), Decimal(0))
+    squad = squad_outlook(picks, baseline)
+    return {
+        "current_salary": current,
+        "current_missing": missing,
+        "salary_since_draft": current - dream_team.total_salary,
+        # Players without a prediction stay at today's salary in the total,
+        # which is what the "without a prediction" note under it says.
+        "outlook": squad,
+        "expected_salary": current + squad["change"] if squad else None,
+        "next_update": baseline.next_update if baseline else None,
+    }
 
 
 def _pool(dream_team, picks):

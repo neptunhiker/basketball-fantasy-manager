@@ -13,7 +13,7 @@ from django.urls import reverse
 from apps.analytics.dream_team import refresh
 from apps.fantasy.models import PlayerSnapshot, Season
 from apps.nba import charts
-from apps.nba.models import Player, Team
+from apps.nba.models import Player, Team, predict_salary
 
 pytestmark = pytest.mark.django_db
 
@@ -264,3 +264,76 @@ def test_a_scatter_chart_can_be_drawn_at_another_size():
     assert narrow["plot_right"] == 360 - charts.PAD_RIGHT
     assert max(dot["x"] for dot in narrow["dots"]) <= narrow["plot_right"]
     assert narrow["plot_bottom"] > default["plot_bottom"]
+
+
+# --- today's salary and the next update ----------------------------------------------
+
+
+def price(players, salary, games=3, fp_per_game=None):
+    """Give `players` today's salary, games and scoring rate, as an import would."""
+    for p in players:
+        p.current_salary = Decimal(salary)
+        p.current_games_played = games
+        p.current_fp_per_game = fp_per_game
+        p.save()
+
+
+def test_the_current_salary_is_what_the_fifteen_cost_today(signed_in, league, season):
+    price(league.values(), 5_000_000)
+    refresh(season, SECOND_IMPORT)
+
+    response = signed_in.get(URL)
+    context = response.context
+    # 15 x $5M today, against 15 x $4M on draft day.
+    assert context["current_salary"] == Decimal(75_000_000)
+    assert context["salary_since_draft"] == Decimal(15_000_000)
+    assert context["current_missing"] == 0
+    # Per position too, for the table's group rows.
+    assert [group["current_salary"] for group in context["groups"]] == [
+        Decimal(30_000_000),
+        Decimal(30_000_000),
+        Decimal(15_000_000),
+    ]
+
+
+def test_the_next_update_is_the_roster_panels_prediction(signed_in, league, season):
+    """Before the first update every premium is zero, so a player with six
+    games is predicted his curve salary; everyone short of six keeps his."""
+    price(league.values(), 5_000_000)
+    price([league["C3"]], 5_000_000, games=8, fp_per_game=Decimal(30))
+    refresh(season, SECOND_IMPORT)
+
+    response = signed_in.get(URL)
+    context = response.context
+    change = predict_salary(Decimal(30)) * 1_000_000 - 5_000_000
+    assert context["outlook"] == {"change": change, "missing": 0}
+    assert context["expected_salary"] == Decimal(75_000_000) + change
+    picks = {pick.player.last_name: pick for group in context["groups"] for pick in group["rows"]}
+    assert picks["C3"].outlook_change == change
+    assert not picks["C3"].salary_locked
+    assert picks["G2"].outlook_change == 0
+    assert picks["G2"].salary_locked
+
+
+def test_without_a_salary_on_record_the_draft_price_stands_in(signed_in, league, season):
+    price(league.values(), 5_000_000)
+    league["G2"].current_salary = None
+    league["G2"].save()
+    refresh(season, SECOND_IMPORT)
+
+    context = signed_in.get(URL).context
+    assert context["current_salary"] == Decimal(14 * 5_000_000 + 4_000_000)
+    assert context["current_missing"] == 1
+    # Nothing to predict from either; he is named as missing, not as unchanged.
+    assert context["outlook"]["missing"] == 1
+
+
+def test_without_an_update_left_there_is_no_next_update(signed_in, league, season, monkeypatch):
+    monkeypatch.setattr("apps.analytics.views.salary_baseline", lambda season: None)
+    price(league.values(), 5_000_000)
+    refresh(season, SECOND_IMPORT)
+
+    response = signed_in.get(URL)
+    assert response.context["outlook"] is None
+    assert response.context["expected_salary"] is None
+    assert response.context["current_salary"] == Decimal(75_000_000)

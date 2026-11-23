@@ -1,4 +1,5 @@
-"""The points race: every active roster's running total against the Dream Team.
+"""The points race: every active roster's running total against the Dream Team --
+and, beside it, what each of them is worth.
 
 One figure per day for each line, from the day signings closed -- where every
 line starts at zero -- to the newest import. A day's figure is the last
@@ -12,6 +13,11 @@ bought on draft day, as it stood after each import. It is a different fifteen
 from one day to the next, and it never trades -- so it can be beaten by a
 manager who trades well, which is rather the point of drawing it.
 
+Each line also carries its team value per day (`Line.values_salary`): a
+roster's from `apps.fantasy.value`, squad at that day's salaries plus cash;
+the Dream Team's is that day's fifteen at that day's salaries plus the money
+its draft left over, so the two compare like for like.
+
 Reads only; works out nothing that is not already stored except the sums.
 """
 
@@ -19,13 +25,22 @@ import datetime as dt
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from django.db.models import Prefetch
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from apps.fantasy.models import PlayerSnapshot, Roster
-from apps.fantasy.points import ZERO, cutoff, roster_points_by_moment
+from apps.fantasy.points import (
+    ZERO,
+    PointsHistory,
+    cutoff,
+    roster_points_by_moment,
+    roster_spells,
+    spell_players,
+)
+from apps.fantasy.value import roster_value_by_moment
 
-from .models import DreamTeam
+from .models import DreamTeam, DreamTeamPick
 
 DREAM_TEAM = "dream-team"
 # How many rosters get a colour of their own. The palette (`.race-*` in
@@ -49,6 +64,8 @@ class Line:
     is_own: bool = False
     # Which `.race-*` colour draws it: "dt", "1".."7", or MUTED.
     color: str = MUTED
+    # Team value per day, like `values` (None: no figure that day).
+    values_salary: list = field(default_factory=list)
 
     @property
     def latest(self):
@@ -60,12 +77,23 @@ class Line:
         known = [value for value in self.values if value is not None]
         return known[-1] - known[-2] if len(known) >= 2 else None
 
+    @property
+    def latest_value(self):
+        return next((value for value in reversed(self.values_salary) if value is not None), None)
+
+    @property
+    def value_change(self):
+        """The newest team value against the first one: what it gained since the start."""
+        known = [value for value in self.values_salary if value is not None]
+        return known[-1] - known[0] if len(known) >= 2 else None
+
 
 @dataclass
 class Race:
     days: list  # local dates, oldest first; the first is the day signings closed
     lines: list = field(default_factory=list)  # the Dream Team first, then by points
     as_of: dt.datetime | None = None  # the newest import drawn
+    budget: Decimal | None = None  # the season's starting budget, the value chart's reference
 
     @property
     def dream_team(self):
@@ -134,8 +162,18 @@ def points_race(season, viewer=None):
         days = [timezone.localdate(start), *days]
 
     rosters = list(Roster.objects.filter(season=season, is_active=True).select_related("manager"))
-    totals = roster_points_by_moment(rosters, season, moments)
-    lines = [_dream_team_line(season, start, moments)]
+    results = _dream_team_results(season, start, moments[-1])
+    # Points and value read the same spells and snapshots: loaded once, for
+    # the rosters' players and the Dream Team's alike.
+    spells = roster_spells(rosters, season, moments[-1])
+    history = PointsHistory(
+        season,
+        spell_players(spells) | {pick.player_id for team in results for pick in team.picks.all()},
+        until=moments[-1],
+    )
+    totals = roster_points_by_moment(rosters, season, moments, spells=spells, history=history)
+    worth = roster_value_by_moment(rosters, season, moments, spells=spells, history=history)
+    lines = [_dream_team_line(results, start, moments, history)]
     roster_lines = [
         Line(
             key=str(roster.pk),
@@ -143,6 +181,7 @@ def points_race(season, viewer=None):
             manager=roster.manager.nick_name,
             icon=roster.icon,
             values=totals[roster.pk],
+            values_salary=worth[roster.pk],
             is_own=viewer is not None and roster.manager.user_id == viewer.pk,
         )
         for roster in rosters
@@ -150,7 +189,7 @@ def points_race(season, viewer=None):
     _assign_colors(roster_lines, {str(roster.pk): roster.created_at for roster in rosters})
     roster_lines.sort(key=lambda line: (-(line.latest or ZERO), line.name.lower(), line.manager))
     lines += roster_lines
-    return Race(days=days, lines=lines, as_of=moments[-1])
+    return Race(days=days, lines=lines, as_of=moments[-1], budget=season.starting_cash)
 
 
 def _assign_colors(lines, created):
@@ -164,21 +203,51 @@ def _assign_colors(lines, created):
         line.color = str(index + 1) if index < COLORS else MUTED
 
 
-def _dream_team_line(season, start, moments):
-    """The Dream Team's total at each moment, from the stored results.
+def _dream_team_results(season, start, until):
+    """The stored Dream Teams between the start and `until`, oldest first,
+    each with its picks' players. Two queries."""
+    return list(
+        DreamTeam.objects.filter(season=season, as_of__gt=start, as_of__lte=until)
+        .order_by("as_of")
+        .only("as_of", "total_fp", "budget", "total_salary")
+        .prefetch_related(
+            Prefetch("picks", queryset=DreamTeamPick.objects.only("dream_team_id", "player_id"))
+        )
+    )
+
+
+def _dream_team_value(team, moment, history):
+    """`team`'s fifteen at their salaries at `moment`, plus what its draft left over."""
+    squad = sum(
+        (history.salary_at(pick.player_id, moment) or ZERO for pick in team.picks.all()), ZERO
+    )
+    return squad + team.budget - team.total_salary
+
+
+def _dream_team_line(results, start, moments, history):
+    """The Dream Team's total and team value at each moment, from the stored results.
 
     A day takes its last stored result. A day whose import produced none --
     not worked out yet, or nobody could be bought -- has no figure and the
-    line has a gap there, rather than a made-up zero. The start is zero.
+    line has a gap there, rather than a made-up zero. The start's points are
+    zero; its value is the first result's fifteen at the start's prices, the
+    closest there is to what it would have been worth then.
     """
-    by_day = {}
-    for as_of, total in (
-        DreamTeam.objects.filter(season=season, as_of__gt=start, as_of__lte=moments[-1])
-        .order_by("as_of")
-        .values_list("as_of", "total_fp")
-    ):
-        by_day[timezone.localdate(as_of)] = Decimal(total)
-    values = [
-        ZERO if moment == start else by_day.get(timezone.localdate(moment)) for moment in moments
-    ]
-    return Line(key=DREAM_TEAM, name=_("Dream Team"), values=values, is_dream_team=True, color="dt")
+    by_day = {timezone.localdate(team.as_of): team for team in results}
+    values, worth = [], []
+    for moment in moments:
+        if moment == start:
+            values.append(ZERO)
+            worth.append(_dream_team_value(results[0], moment, history) if results else None)
+            continue
+        team = by_day.get(timezone.localdate(moment))
+        values.append(Decimal(team.total_fp) if team else None)
+        worth.append(_dream_team_value(team, moment, history) if team else None)
+    return Line(
+        key=DREAM_TEAM,
+        name=_("Dream Team"),
+        values=values,
+        values_salary=worth,
+        is_dream_team=True,
+        color="dt",
+    )

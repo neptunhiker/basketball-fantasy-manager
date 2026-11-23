@@ -9,7 +9,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
 from apps.analytics.insights import points_race, race_moments
-from apps.analytics.models import DreamTeam
+from apps.analytics.models import DreamTeam, DreamTeamPick
 from apps.fantasy.models import Manager, PlayerSnapshot, Roster, RosterPlayer, Season
 from apps.nba.models import Player
 
@@ -212,8 +212,9 @@ def test_the_race_takes_a_fixed_number_of_queries(season, manager, other_manager
     with CaptureQueriesContext(connection) as queries:
         race = points_race(season)
 
-    # Import moments, rosters with managers, spells, snapshots, Dream Teams.
-    assert len(queries) == 5
+    # Import moments, rosters with managers, Dream Teams and their picks,
+    # spells, snapshots (points and value alike), moves.
+    assert len(queries) == 7
     assert len(race.rosters) == 3
 
 
@@ -241,3 +242,92 @@ def test_colours_follow_the_roster_own_first_then_oldest(season, manager, other_
         "muted",
         "muted",
     ]
+
+
+# --- team value ----------------------------------------------------------------------
+
+M = Decimal(1_000_000)
+
+
+def priced(season, who, salaries):
+    """Snapshots of `who` at these moments and salaries (in millions), no points."""
+    for moment, millions in salaries.items():
+        PlayerSnapshot.objects.create(
+            player=who,
+            season=season,
+            as_of=moment,
+            salary=Decimal(millions) * M,
+            total_fp=0,
+            games_played=1,
+            position="G",
+        )
+
+
+def pick(team, who):
+    DreamTeamPick.objects.create(
+        dream_team=team, player=who, position="G", salary=3 * M, total_fp=0, games_played=1
+    )
+
+
+def worth(line):
+    return [None if value is None else value / M for value in line.values_salary]
+
+
+def test_a_rosters_line_carries_its_team_value(season, manager):
+    """Squad at each day's salary plus cash: the starting $60M less the $3M
+    the player cost, so $60M while he is priced at $3M, $62M at $5M."""
+    day1, day2 = at(10, 21, 20), at(10, 22, 20)
+    team = Roster.objects.create(manager=manager, season=season, name="Koalas")
+    team.cash = 57 * M
+    team.save(update_fields=["cash"])
+    who = player()
+    RosterPlayer.objects.create(roster=team, player=who, added_at=at(10, 10))
+    priced(season, who, {at(10, 15): 3, day1: 3, day2: 5})
+
+    line = points_race(season).rosters[0]
+
+    assert worth(line) == [60, 60, 62]
+    assert line.latest_value == 62 * M
+    assert line.value_change == 2 * M
+
+
+def test_the_dream_teams_value_is_that_days_fifteen_at_that_days_prices(season):
+    """Plus what its draft left over ($60M budget, $59M spent): the day's
+    picks, not the first day's, at the day's salaries, not draft day's."""
+    day1, day2 = at(10, 21, 20), at(10, 22, 20)
+    early, late = player(), player()
+    priced(season, early, {at(10, 15): 3, day1: 3, day2: 4})
+    priced(season, late, {at(10, 15): 7})
+    pick(dream_team(season, day1, 100), early)
+    pick(dream_team(season, day2, 200), late)
+
+    race = points_race(season)
+
+    # The start prices the first result's team at the start: $3M + $1M.
+    assert worth(race.dream_team) == [4, 4, 8]
+    assert race.budget == 60 * M
+
+
+def test_a_day_without_a_dream_team_has_no_value_either(season, manager):
+    day1, day2, day3 = at(10, 21, 20), at(10, 22, 20), at(10, 23, 20)
+    roster_with(season, manager, "Koalas", {day1: 1, day2: 2, day3: 3})
+    who = player()
+    priced(season, who, {at(10, 15): 3})
+    pick(dream_team(season, day1, 100), who)
+    pick(dream_team(season, day3, 300), who)
+
+    race = points_race(season)
+
+    assert worth(race.dream_team) == [4, 4, None, 4]
+    assert race.dream_team.value_change == 0
+
+
+def test_without_any_dream_team_its_value_line_is_empty(season, manager):
+    day1 = at(10, 21, 20)
+    roster_with(season, manager, "Koalas", {day1: 1})
+
+    race = points_race(season)
+
+    assert worth(race.dream_team) == [None, None]
+    assert race.dream_team.latest_value is None
+    assert race.dream_team.value_change is None

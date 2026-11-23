@@ -182,11 +182,16 @@ def test_the_tabs_switch_between_the_pages(race, open_page, size):
     ).to_have_attribute("aria-current", "page")
 
 
+POINTS = "section[aria-labelledby=points-race-heading]"
+VALUE = "section[aria-labelledby=value-race-heading]"
+
+
 @pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
-def test_each_screen_gets_the_drawing_made_for_it(race, open_page, size):
+@pytest.mark.parametrize("key", ["points-race", "value-race"])
+def test_each_screen_gets_the_drawing_made_for_it(race, open_page, size, key):
     page = open_page(race["user"], URL, size=size)
     drawings = {
-        name: page.locator(f"svg:has(+ script#points-race-{name})")
+        name: page.locator(f"svg:has(+ script#{key}-{name})")
         for name in ("wide", "medium", "compact")
     }
     made_for = {"phone": "compact", "tablet": "medium", "desktop": "wide"}[size]
@@ -200,57 +205,99 @@ def test_each_screen_gets_the_drawing_made_for_it(race, open_page, size):
     # Six lines: five rosters and the dashed Dream Team.
     expect(shown.locator("path.race-stroke[stroke-linejoin]")).to_have_count(6)
     expect(shown.locator("path[stroke-dasharray]")).to_have_count(1)
+    # The value chart, and only it, marks the budget everyone started with.
+    expect(shown.get_by_text("Budget")).to_have_count(1 if key == "value-race" else 0)
 
 
 def test_a_mouse_reads_every_line_at_the_day_under_it(race, open_page):
     page = open_page(race["user"], URL, size="desktop")
-    svg = page.locator("svg:has(+ script#points-race-wide)")
+    points, value = page.locator(POINTS), page.locator(VALUE)
+    svg = points.locator("svg:has(+ script#points-race-wide)")
     box = svg.bounding_box()
 
     page.mouse.move(box["x"] + box["width"] * 0.45, box["y"] + box["height"] * 0.5)
 
-    tooltip = page.locator("[data-race-tooltip]")
+    tooltip = points.locator("[data-race-tooltip]")
     expect(tooltip).to_be_visible()
     expect(tooltip.locator("li")).to_have_count(6)
     day = tooltip.locator("[data-race-tooltip-day]").inner_text()
-    expect(page.locator("[data-race-day]")).to_have_text(day)
+    expect(points.locator("[data-race-day]")).to_have_text(day)
     expect(svg.locator("[data-race-hover]")).to_have_attribute("visibility", "visible")
+    # Linked: the value chart shows the same day, its guide and its legend,
+    # but no second tooltip.
+    expect(value.locator("[data-race-day]")).to_have_text(day)
+    expect(value.locator("svg:has(+ script#value-race-wide) [data-race-hover]")).to_have_attribute(
+        "visibility", "visible"
+    )
+    expect(value.locator("[data-race-tooltip]")).to_be_hidden()
     shot(page, FOLDER, "hover-desktop")
 
     page.mouse.move(box["x"] + box["width"] * 0.5, box["y"] - 80)
 
     expect(tooltip).to_be_hidden()
-    latest = page.locator("[data-race-day]").get_attribute("data-latest")
-    expect(page.locator("[data-race-day]")).to_have_text(latest)
+    for card in (points, value):
+        latest = card.locator("[data-race-day]").get_attribute("data-latest")
+        expect(card.locator("[data-race-day]")).to_have_text(latest)
 
 
-def test_a_tap_on_a_phone_reads_out_in_the_legend(race, open_page):
+def test_hovering_the_value_chart_reads_out_in_millions(race, open_page):
+    page = open_page(race["user"], URL, size="desktop")
+    points, value = page.locator(POINTS), page.locator(VALUE)
+    svg = value.locator("svg:has(+ script#value-race-wide)")
+    svg.scroll_into_view_if_needed()
+    box = svg.bounding_box()
+
+    page.mouse.move(box["x"] + box["width"] * 0.7, box["y"] + box["height"] * 0.5)
+
+    tooltip = value.locator("[data-race-tooltip]")
+    expect(tooltip).to_be_visible()
+    expect(tooltip.locator("li").first).to_contain_text("$")
+    expect(tooltip.locator("li").first).to_contain_text("M")
+    expect(points.locator("[data-race-tooltip]")).to_be_hidden()
+    expect(points.locator("[data-race-day]")).to_have_text(
+        tooltip.locator("[data-race-tooltip-day]").inner_text()
+    )
+    shot(page, FOLDER, "hover-value-desktop")
+
+
+def test_a_tap_on_a_phone_reads_out_in_both_legends(race, open_page):
     page = open_page(race["user"], URL, size="phone")
-    svg = page.locator("svg:has(+ script#points-race-compact)")
-    latest = page.locator("[data-race-day]").inner_text()
-    dream_team = page.locator("[data-race-legend='0'] [data-race-value]")
-    latest_value = dream_team.inner_text()
+    points, value = page.locator(POINTS), page.locator(VALUE)
+    svg = value.locator("svg:has(+ script#value-race-compact)")
+    svg.scroll_into_view_if_needed()
+    latest = value.locator("[data-race-day]").inner_text()
+    dream_points = points.locator("[data-race-legend='0'] [data-race-value]")
+    dream_value = value.locator("[data-race-legend='0'] [data-race-value]")
+    before = dream_points.inner_text(), dream_value.inner_text()
 
-    svg.tap(position={"x": 60, "y": 100})
+    svg.tap(position={"x": 120, "y": 100})
 
-    expect(page.locator("[data-race-tooltip]")).to_be_hidden()
-    expect(page.locator("[data-race-day]")).not_to_have_text(latest)
-    expect(dream_team).not_to_have_text(latest_value)
+    expect(page.locator("[data-race-tooltip]:visible")).to_have_count(0)
+    for card in (points, value):
+        expect(card.locator("[data-race-day]")).not_to_have_text(latest)
+    expect(dream_points).not_to_have_text(before[0])
+    expect(dream_value).not_to_have_text(before[1])
     shot(page, FOLDER, "tap-phone")
 
 
-def test_the_arrow_keys_step_through_the_days(race, open_page):
+def test_the_arrow_keys_step_both_charts_through_the_days(race, open_page):
     page = open_page(race["user"], URL, size="desktop")
-    stage = page.locator("[data-race-stage]")
-    day = page.locator("[data-race-day]")
+    points, value = page.locator(POINTS), page.locator(VALUE)
+    days = points.locator("[data-race-day]"), value.locator("[data-race-day]")
 
-    stage.focus()
+    points.locator("[data-race-stage]").focus()
     page.keyboard.press("Home")
-    first = day.inner_text()
+    first = days[0].inner_text()
+    expect(days[1]).to_have_text(first)
     page.keyboard.press("ArrowRight")
 
-    expect(day).not_to_have_text(first)
+    expect(days[0]).not_to_have_text(first)
+    expect(days[1]).to_have_text(days[0].inner_text())
+    # Tab to the value chart: the day stays, and the keys go on from it.
+    page.keyboard.press("Tab")
+    expect(value.locator("[data-race-stage]")).to_be_focused()
     page.keyboard.press("ArrowLeft")
-    expect(day).to_have_text(first)
+    expect(days[0]).to_have_text(first)
+    expect(days[1]).to_have_text(first)
     page.keyboard.press("Escape")
-    expect(page.locator("[data-race-tooltip]")).to_be_hidden()
+    expect(page.locator("[data-race-tooltip]:visible")).to_have_count(0)

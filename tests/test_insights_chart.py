@@ -8,7 +8,9 @@ from apps.analytics.charts import (
     COMPACT,
     END_LABEL_GAP,
     MEDIUM,
+    SALARY,
     WIDE,
+    nice_range,
     race_chart,
     race_readout,
 )
@@ -158,3 +160,86 @@ def test_the_start_gets_a_label_only_where_it_does_not_crowd_the_next():
         chart = race_chart(race(line("A", *range(22))), **size)
         xs = sorted(label["x"] for label in chart["x_labels"])
         assert all(b - a >= 45 for a, b in pairwise(xs)), (size, xs)
+
+
+# --- the team value chart ---------------------------------------------------------------
+
+M = 1_000_000
+
+
+def valued(name, *millions_per_day, **extra):
+    """A line with points of zero and these team values (in millions)."""
+    return line(
+        name,
+        *[0] * len(millions_per_day),
+        values_salary=[None if value is None else Decimal(value) * M for value in millions_per_day],
+        **extra,
+    )
+
+
+def value_race(*lines, budget=63):
+    built = race(*lines)
+    built.budget = Decimal(budget) * M
+    return built
+
+
+def test_the_value_axis_fits_the_data_and_takes_in_the_budget():
+    chart = race_chart(
+        value_race(valued("A", 63, 64.2, 66.8), valued("B", 63, 61.5, 60.9)), **WIDE, series=SALARY
+    )
+
+    values = [tick["value"] for tick in chart["y_ticks"]]
+    # Round steps around $60.9M..$66.8M, not from zero.
+    assert values[0] == "$60M" and values[-1] == "$68M"
+    assert all(value.startswith("$") and value.endswith("M") for value in values)
+    # Bottom tick on the plot's floor, top tick on its ceiling.
+    assert chart["y_ticks"][0]["y"] == chart["plot_bottom"]
+    assert chart["y_ticks"][-1]["y"] == chart["plot_top"]
+
+
+def test_the_budget_is_a_reference_line_inside_the_plot():
+    chart = race_chart(value_race(valued("A", 63, 70), budget=63), **WIDE, series=SALARY)
+
+    reference = chart["reference"]
+    assert reference["label"] == "Budget"
+    assert chart["plot_top"] <= reference["y"] <= chart["plot_bottom"]
+    # Every line starts at the budget, so it starts on the reference line.
+    assert chart["lines"][0]["ys"][0] == reference["y"]
+
+
+def test_a_budget_outside_the_data_still_widens_the_axis_to_show_it():
+    chart = race_chart(value_race(valued("A", 70, 72), budget=63), **WIDE, series=SALARY)
+
+    # $63M..$72M steps by $2.5M: the floor is the round step under the budget.
+    assert chart["y_ticks"][0]["value"] == "$62.5M"
+    assert chart["plot_top"] <= chart["reference"]["y"] <= chart["plot_bottom"]
+
+
+def test_half_steps_get_the_decimals_they_need():
+    assert nice_range(60.9, 66.8) == (60, 68, 2)
+    assert nice_range(62.1, 64.3)[2] == 1
+    assert nice_range(63, 63.4)[2] == 0.1
+    # Nothing to span: a flat line still gets a step around it.
+    bottom, top, step = nice_range(63, 63)
+    assert bottom <= 63 < top and step > 0
+    chart = race_chart(value_race(valued("A", 63, 63.4), budget=63), **WIDE, series=SALARY)
+    assert chart["y_ticks"][1]["value"] == "$63.1M"
+
+
+def test_without_any_value_there_is_no_value_chart():
+    assert race_chart(value_race(valued("A", None, None)), **WIDE, series=SALARY) is None
+
+
+def test_the_points_axis_still_starts_at_zero_and_draws_no_reference():
+    chart = race_chart(value_race(valued("A", 63, 64)), **WIDE)
+
+    assert chart["y_ticks"][0]["value"] == "0"
+    assert chart["reference"] is None
+
+
+def test_the_value_readout_speaks_in_millions():
+    readout = race_readout(value_race(valued("A", 63, 64.25), valued("B", None, 61)), series=SALARY)
+
+    assert readout["lines"][0]["labels"] == ["$63.00M", "$64.25M"]
+    assert readout["lines"][1]["labels"] == [None, "$61.00M"]
+    assert readout["lines"][0]["values"] == [63_000_000.0, 64_250_000.0]

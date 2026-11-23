@@ -14,15 +14,27 @@ Built three times per page: a wide drawing and a tablet-sized one, each
 with every line named at its end, and a narrow one for phones that leaves
 the naming to the legend under it, since names beside the lines would leave
 no room for the lines.
+
+Two series share the drawing: `points` (the race itself, an axis from zero)
+and `salary` (team value). Team values all sit near the budget, so their
+axis fits the data on round steps instead -- from zero, every line would be
+pressed into one band at the top -- and the budget gets a faint line of its
+own, where everyone started.
 """
 
 import math
 from itertools import pairwise
 
 from django.utils.formats import number_format
+from django.utils.translation import gettext as _
 
+from apps.core.templatetags.money import millions
 from apps.nba.templatetags.player_stats import short_month_day
 from apps.perf.charts import nice_top
+
+POINTS = "points"
+SALARY = "salary"
+MILLION = 1_000_000
 
 # `end_labels`: how many characters of a name fit beside its line (0: none).
 WIDE = {"width": 920, "height": 360, "max_labels": 7, "end_labels": 16}
@@ -47,10 +59,53 @@ START_LABEL_ROOM = 70
 END_LABEL_GAP = 15
 
 
-def race_chart(race, width, height, max_labels, end_labels):
-    """Coordinates for `insights.points_race(...)`, or None with fewer than two days."""
+def series_of(line, series):
+    """The figures a line has for `series`, one per day."""
+    return line.values_salary if series == SALARY else line.values
+
+
+def nice_range(low, high, ticks=TICKS):
+    """`(bottom, top, step)`: round numbers around `low`..`high` on a nice step.
+
+    For an axis that does not start at zero. A range with no width still
+    gets one step, so a flat line sits in the drawing rather than on its edge.
+    """
+    span = high - low
+    if span <= 0:
+        span = abs(high) / 10 or 1
+    rough = span / ticks
+    magnitude = 10 ** math.floor(math.log10(rough))
+    step = next(magnitude * factor for factor in (1, 2, 2.5, 5, 10) if magnitude * factor >= rough)
+    bottom = math.floor(low / step) * step
+    top = math.ceil(high / step) * step
+    if top == bottom:
+        top += step
+    return bottom, top, step
+
+
+def _tick_millions(value, step):
+    """`$62.5M`: a tick of the value axis, with as many decimals as the step needs."""
+    places = next(places for places in range(4) if round(step * 10**places, 6) % 1 == 0)
+    return f"${number_format(value, decimal_pos=places, force_grouping=True)}M"
+
+
+def race_chart(race, width, height, max_labels, end_labels, series=POINTS):
+    """Coordinates for `insights.points_race(...)`, or None with fewer than two days.
+
+    `series` picks the figures: `POINTS` or `SALARY` (team value, drawn in
+    millions on a fitted axis with the budget as a reference line). None as
+    well when no line has a single figure of it.
+    """
     days = race.days
     if len(days) < 2:
+        return None
+    known = [
+        float(value)
+        for line in race.lines
+        for value in series_of(line, series)
+        if value is not None
+    ]
+    if series == SALARY and not known:
         return None
 
     plot_left = PAD_LEFT
@@ -61,11 +116,17 @@ def race_chart(race, width, height, max_labels, end_labels):
     plot_width = plot_right - plot_left
     plot_height = plot_bottom - plot_top
 
-    highest = max(
-        (float(value) for line in race.lines for value in line.values if value is not None),
-        default=0,
-    )
-    top, step = nice_top(highest, TICKS)
+    # Team values in millions: round numbers to step along, and to print.
+    scale = MILLION if series == SALARY else 1
+    reference = None
+    if series == SALARY:
+        known = [value / scale for value in known]
+        budget = float(race.budget) / scale if race.budget else None
+        bounds = [*known, budget] if budget is not None else known
+        bottom, top, step = nice_range(min(bounds), max(bounds), TICKS)
+    else:
+        top, step = nice_top(max(known, default=0), TICKS)
+        bottom = 0
     last = len(days) - 1
 
     def x_of(index):
@@ -74,12 +135,17 @@ def race_chart(race, width, height, max_labels, end_labels):
     def y_of(value):
         if value is None:
             return None
-        return round(plot_bottom - float(value) / top * plot_height, 2)
+        return round(
+            plot_bottom - (float(value) / scale - bottom) / (top - bottom) * plot_height, 2
+        )
+
+    if series == SALARY and race.budget:
+        reference = {"y": y_of(race.budget), "label": _("Budget"), "x": plot_left + 6}
 
     xs = [x_of(index) for index in range(len(days))]
     lines = []
     for index, line in enumerate(race.lines):
-        ys = [y_of(value) for value in line.values]
+        ys = [y_of(value) for value in series_of(line, series)]
         lines.append(
             {
                 # Its place in `race.lines`, which the readout and `hover.y` follow.
@@ -120,8 +186,13 @@ def race_chart(race, width, height, max_labels, end_labels):
         x_labels.insert(0, {"x": xs[0], "label": short_month_day(days[0]), "anchor": "start"})
 
     y_ticks = [
-        {"y": y_of(value), "value": number_format(round(value), force_grouping=True)}
-        for value in (step * n for n in range(round(top / step) + 1))
+        {
+            "y": y_of(value * scale),
+            "value": _tick_millions(value, step)
+            if series == SALARY
+            else number_format(round(value), force_grouping=True),
+        }
+        for value in (bottom + step * n for n in range(round((top - bottom) / step) + 1))
     ]
 
     return {
@@ -136,6 +207,7 @@ def race_chart(race, width, height, max_labels, end_labels):
         "label_bottom": plot_bottom + 20,
         "y_ticks": y_ticks,
         "x_labels": x_labels,
+        "reference": reference,
         # Drawing order: the grey rosters first, then the coloured ones, the
         # viewer's own above those and the Dream Team on top of everything.
         "lines": sorted(lines, key=_layer),
@@ -146,12 +218,21 @@ def race_chart(race, width, height, max_labels, end_labels):
     }
 
 
-def race_readout(race):
-    """What the hover readout says at each day, shared by both drawings.
+def race_readout(race, series=POINTS):
+    """What the hover readout says at each day, shared by a chart's drawings.
 
     The lines in the order of `race.lines` (the same order as the drawings'
-    `hover.y`), and per day its label and every line's points, formatted.
+    `hover.y`), and per day its label and every line's figure, formatted:
+    points as a whole number, team value as `$63.42M`.
     """
+
+    def label(value):
+        if value is None:
+            return None
+        if series == SALARY:
+            return millions(value)
+        return number_format(round(value), force_grouping=True)
+
     return {
         "days": [short_month_day(day) for day in race.days],
         "lines": [
@@ -161,11 +242,10 @@ def race_readout(race):
                 "color": line.color,
                 "own": line.is_own,
                 "dreamTeam": line.is_dream_team,
-                "values": [None if value is None else float(value) for value in line.values],
-                "labels": [
-                    None if value is None else number_format(round(value), force_grouping=True)
-                    for value in line.values
+                "values": [
+                    None if value is None else float(value) for value in series_of(line, series)
                 ],
+                "labels": [label(value) for value in series_of(line, series)],
             }
             for line in race.lines
         ],

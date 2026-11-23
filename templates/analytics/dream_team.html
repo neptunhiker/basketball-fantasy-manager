@@ -1,5 +1,5 @@
 {% extends "analytics/base.html" %}
-{% load i18n static money %}
+{% load i18n static money player_stats %}
 
 {% comment %}
   Season analytics: The Dream Team. The fifteen players who, bought on draft
@@ -164,7 +164,7 @@
             <th scope="col" class="py-2 pl-5 pr-3 text-left font-medium sm:pl-6">{% translate "Player" %}</th>
             <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium sm:table-cell">{% translate "Draft price" %}</th>
             <th scope="col" class="hidden px-3 py-2 text-right font-medium sm:table-cell" title="{% translate 'Salary today, and the change the next update should bring' %}">{% translate "Now" %}</th>
-            <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium md:table-cell" title="{% translate 'Points per $1M of draft-day salary' %}">{% translate "Points per $M" %}</th>
+            <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium md:table-cell xl:hidden 2xl:table-cell" title="{% translate 'Points per $1M of draft-day salary' %}">{% translate "Points per $M" %}</th>
             <th scope="col" class="py-2 pl-3 pr-5 text-right font-medium sm:pr-6">{% translate "Points" %}</th>
           </tr>
         </thead>
@@ -177,12 +177,12 @@
               </th>
               <td class="hidden px-3 py-2 text-right text-xs tabular-nums text-primary-800 sm:table-cell dark:text-primary-300">{{ group.salary|millions }}</td>
               <td class="hidden px-3 py-2 text-right text-xs tabular-nums text-primary-800 sm:table-cell dark:text-primary-300">{{ group.current_salary|millions }}</td>
-              <td class="hidden md:table-cell"></td>
+              <td class="hidden md:table-cell xl:hidden 2xl:table-cell"></td>
               <td class="py-2 pl-3 pr-5 text-right text-xs font-semibold tabular-nums text-primary-800 sm:pr-6 dark:text-primary-300">{{ group.points|floatformat:"1g" }}</td>
             </tr>
             {% for pick in group.rows %}
               <tr class="border-t border-neutral-100 transition hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/40">
-                <td class="py-2.5 pl-5 pr-3 sm:pl-6">
+                <td class="w-full max-w-0 py-2.5 pl-5 pr-3 sm:pl-6">
                   <div class="flex min-w-0 items-center gap-3">
                     {% include "analytics/partials/position_badge.html" with position=pick.position label=pick.get_position_display %}
                     <div class="min-w-0">
@@ -190,8 +190,11 @@
                         <a href="{% url 'nba:player-detail' pick.player.slug %}" class="truncate font-semibold text-tertiary-700 hover:text-primary-600 hover:underline dark:text-neutral-100 dark:hover:text-primary-400">{{ pick.player.first_name }} {{ pick.player.last_name }}</a>
                         {% if pick.is_new %}<span class="badge badge-success px-2 py-0 text-[11px]">{% translate "New" %}</span>{% endif %}
                       </p>
-                      <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                        {{ pick.player.team.abbreviation|default:"–" }}<span class="sm:hidden tabular-nums"> · {{ pick.salary|millions }}{% if pick.current_salary != pick.salary %} → <span class="font-medium text-tertiary-700 dark:text-neutral-200">{{ pick.current_salary|millions }}</span>{% endif %}</span>
+                      {# Phones have no price columns: draft -> now goes here, and wraps #}
+                      {# below the team as one piece when the row is narrow. #}
+                      <p class="flex flex-wrap gap-x-2 text-xs text-neutral-500 dark:text-neutral-400">
+                        <span>{{ pick.player.team.abbreviation|default:"–" }}</span>
+                        <span class="whitespace-nowrap tabular-nums sm:hidden">{{ pick.salary|millions }}{% if pick.current_salary != pick.salary %} → <span class="font-medium text-tertiary-700 dark:text-neutral-200">{{ pick.current_salary|millions }}</span>{% endif %}</span>
                       </p>
                     </div>
                   </div>
@@ -199,11 +202,17 @@
                 <td class="hidden px-3 py-2.5 text-right tabular-nums text-neutral-600 sm:table-cell dark:text-neutral-300" title="{{ pick.salary|exact }}">{{ pick.salary|millions }}</td>
                 <td class="hidden px-3 py-2.5 text-right sm:table-cell">
                   <span class="block font-medium tabular-nums" title="{{ pick.current_salary|exact }}">{{ pick.current_salary|millions }}</span>
-                  {% if pick.outlook_change is not None %}
-                    <span class="mt-0.5 block whitespace-nowrap text-[0.7rem] leading-4 tabular-nums">{% include "nba/partials/outlook_gist.html" with change=pick.outlook_change short=True locked=pick.salary_locked games=pick.games_now %}</span>
+                  {% if pick.salary_locked %}
+                    {% min_games_for_update as needed %}
+                    <span class="mt-0.5 inline-flex items-center gap-1 whitespace-nowrap text-[0.7rem] font-semibold leading-4 tabular-nums text-amber-700 dark:text-amber-300"
+                          title="{% blocktranslate count counter=needed %}No salary update before {{ counter }} game.{% plural %}No salary update before {{ counter }} games.{% endblocktranslate %}">
+                      {% include "nba/partials/salary_lock_icon.html" %}{{ pick.games_now }}/{{ needed }}
+                    </span>
+                  {% elif pick.outlook_change is not None %}
+                    <span class="mt-0.5 block whitespace-nowrap text-[0.7rem] leading-4 tabular-nums">{% include "nba/partials/outlook_gist.html" with change=pick.outlook_change short=True %}</span>
                   {% endif %}
                 </td>
-                <td class="hidden px-3 py-2.5 text-right tabular-nums text-neutral-600 md:table-cell dark:text-neutral-300">{{ pick.fp_per_million|floatformat:"1g"|default:"–" }}</td>
+                <td class="hidden px-3 py-2.5 text-right tabular-nums text-neutral-600 md:table-cell xl:hidden 2xl:table-cell dark:text-neutral-300">{{ pick.fp_per_million|floatformat:"1g"|default:"–" }}</td>
                 <td class="py-2.5 pl-3 pr-5 text-right sm:pr-6">
                   <span class="font-semibold tabular-nums">{{ pick.total_fp|floatformat:"1g" }}</span>
                   <span class="ml-auto mt-1 block h-1 w-16 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800" aria-hidden="true">

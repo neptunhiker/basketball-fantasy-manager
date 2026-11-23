@@ -127,3 +127,80 @@ def test_the_fixture_has_two_imports_to_compare(dreamed):
     teams = list(dreamed["season"].dream_teams.order_by("as_of"))
     assert len(teams) == 2
     assert teams[0].as_of < teams[1].as_of - dt.timedelta(days=1)
+
+
+def table_fits_its_card(page):
+    """The picks table no wider than its card. The card clips what sticks out,
+    so a too-wide table loses its right-hand columns without any scrollbar."""
+    return page.locator("section[aria-labelledby=picks-heading]").evaluate(
+        "card => card.querySelector('table').getBoundingClientRect().width <= card.clientWidth + 1"
+    )
+
+
+@pytest.mark.parametrize("width", [320, 390, 640, 768, 1024, 1280, 1536])
+def test_the_picks_table_keeps_every_column_in_its_card(dreamed, open_page, width):
+    page = open_page(dreamed["user"], URL, size="phone" if width < 768 else "desktop")
+    page.set_viewport_size({"width": width, "height": 900})
+
+    assert table_fits_its_card(page)
+    # From `sm` up the table shows today's salary in a column of its own.
+    now = page.get_by_role("columnheader", name="Now", exact=True)
+    expect(now).to_be_visible() if width >= 640 else expect(now).to_be_hidden()
+
+
+# --- today's salary and the next update, after real updates ---------------------------
+
+
+@pytest.fixture
+def repriced_dream(repriced):
+    """The Dream Team a few days after the second Sunday update, when every
+    salary carries a pick premium -- and one pick short of six games, so the
+    table shows the padlock."""
+    season = repriced["season"]
+    dream_team = refresh(season)
+    pick = dream_team.picks.select_related("player").order_by("total_fp").first().player
+    pick.current_games_played = 4
+    pick.save(update_fields=["current_games_played"])
+    repriced["dream_team"] = dream_team
+    repriced["locked"] = pick
+    return repriced
+
+
+@pytest.mark.parametrize("size", ["phone", "tablet", "desktop"])
+@pytest.mark.parametrize("dark", [False, True], ids=["light", "dark"])
+def test_the_salary_figures_on_every_screen(repriced_dream, open_page, size, dark):
+    page = open_page(repriced_dream["user"], URL, size=size, dark=dark)
+
+    assert page_overflow(page) == 0
+    assert table_fits_its_card(page)
+    summary = page.locator("section[aria-labelledby=dream-team-heading] dl")
+    expect(summary.get_by_text("Current salary")).to_be_visible()
+    expect(summary.get_by_text("since draft day")).to_be_visible()
+    expect(summary.get_by_text("Next update")).to_be_visible()
+    # The next Sunday is known: the tile names it.
+    expect(summary.locator("time")).to_be_visible()
+    shot(page, FOLDER, f"salary-{size}-{mode(dark)}")
+
+
+def test_a_pick_short_of_six_games_shows_the_padlock(repriced_dream, open_page):
+    page = open_page(repriced_dream["user"], URL, size="desktop")
+    locked = repriced_dream["locked"]
+
+    row = page.locator("main tbody tr").filter(
+        has=page.get_by_role("link", name=f"{locked.first_name} {locked.last_name}")
+    )
+    expect(row.get_by_title("No salary update before 6 games.")).to_have_text("4/6")
+
+
+@pytest.mark.parametrize("width", [320, 1024])
+def test_german_labels_fit_too(repriced_dream, open_page, width):
+    user = repriced_dream["user"]
+    user.language = "de"
+    user.save(update_fields=["language"])
+    page = open_page(user, URL, size="phone" if width < 768 else "desktop")
+    page.set_viewport_size({"width": width, "height": 900})
+
+    assert page_overflow(page) == 0
+    assert table_fits_its_card(page)
+    expect(page.get_by_text("Aktuelles Gehalt", exact=True)).to_be_visible()
+    shot(page, FOLDER, f"salary-de-{width}")

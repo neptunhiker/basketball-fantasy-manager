@@ -32,9 +32,10 @@ def cutoff(season):
 
 
 class PointsHistory:
-    """Each player's season total over time, from the snapshots of one season.
+    """Each player's season total and salary over time, from the snapshots of one season.
 
-    One query for any number of players. `total_at` then answers from memory.
+    One query for any number of players. `total_at` and `salary_at` then
+    answer from memory.
     """
 
     def __init__(self, season, player_ids, until=None):
@@ -43,12 +44,13 @@ class PointsHistory:
         snapshots = PlayerSnapshot.objects.filter(season=season, player_id__in=set(player_ids))
         if until is not None:
             snapshots = snapshots.filter(as_of__lte=until)
-        for player_id, as_of, total in snapshots.order_by("player_id", "as_of").values_list(
-            "player_id", "as_of", "total_fp"
+        for player_id, as_of, total, salary in snapshots.order_by("player_id", "as_of").values_list(
+            "player_id", "as_of", "total_fp", "salary"
         ):
-            moments, totals = self._series.setdefault(player_id, ([], []))
+            moments, totals, salaries = self._series.setdefault(player_id, ([], [], []))
             moments.append(as_of)
             totals.append(total)
+            salaries.append(salary)
 
     def __contains__(self, player_id):
         return player_id in self._series
@@ -58,9 +60,22 @@ class PointsHistory:
 
         None when nothing had been recorded for him yet.
         """
-        moments, totals = self._series.get(player_id, ((), ()))
+        moments, totals, _salaries = self._series.get(player_id, ((), (), ()))
         index = bisect.bisect_right(moments, moment) - 1
         return totals[index] if index >= 0 else None
+
+    def salary_at(self, player_id, moment):
+        """His salary as the last snapshot at or before `moment` had it.
+
+        Before his first snapshot, that first one's: a player bought before
+        the game had priced him into a snapshot still had a price, and his
+        earliest is the closest on record. None without any snapshot at all.
+        """
+        moments, _totals, salaries = self._series.get(player_id, ((), (), ()))
+        if not moments:
+            return None
+        index = bisect.bisect_right(moments, moment) - 1
+        return salaries[max(index, 0)]
 
     def spell_points(self, player_id, start, end):
         """What he scored between `start` and `end`, or None when unknown.
@@ -85,7 +100,28 @@ class PointsHistory:
         return max(ZERO, after - before)
 
 
-def roster_points_by_moment(rosters, season, moments):
+def roster_spells(rosters, season, until):
+    """Every spell that counts for `rosters` from the cutoff up to `until`.
+
+    `{roster.pk: [RosterPlayer, ...]}`: the spells begun by `until` that had
+    not ended by the cutoff. One query for any number of rosters.
+    """
+    start_moment = cutoff(season)
+    spells_by_roster = {roster.pk: [] for roster in rosters}
+    for spell in RosterPlayer.objects.filter(roster__in=rosters, added_at__lte=until).only(
+        "roster_id", "player_id", "added_at", "removed_at"
+    ):
+        if spell.removed_at is None or spell.removed_at > start_moment:
+            spells_by_roster[spell.roster_id].append(spell)
+    return spells_by_roster
+
+
+def spell_players(spells_by_roster):
+    """Every player any of the spells is about."""
+    return {spell.player_id for spells in spells_by_roster.values() for spell in spells}
+
+
+def roster_points_by_moment(rosters, season, moments, *, spells=None, history=None):
     """Each roster's points so far at each of `moments` (oldest first).
 
     Returns `{roster.pk: [Decimal, ...]}`, one figure per moment: the sum of
@@ -94,6 +130,9 @@ def roster_points_by_moment(rosters, season, moments):
     nothing, as on the roster timeline. Moments before the cutoff are zero.
 
     Two queries for any number of rosters: their spells and the snapshots.
+    A caller that needs them for something else as well -- Insights, for the
+    rosters' value -- passes `spells` (from `roster_spells`) and `history`
+    (covering their players up to the last moment), and this reads nothing.
     """
     moments = list(moments)
     rosters = list(rosters)
@@ -102,18 +141,9 @@ def roster_points_by_moment(rosters, season, moments):
 
     start_moment = cutoff(season)
     until = moments[-1]
-    spells_by_roster = {roster.pk: [] for roster in rosters}
-    for spell in RosterPlayer.objects.filter(roster__in=rosters, added_at__lte=until).only(
-        "roster_id", "player_id", "added_at", "removed_at"
-    ):
-        if spell.removed_at is None or spell.removed_at > start_moment:
-            spells_by_roster[spell.roster_id].append(spell)
-
-    history = PointsHistory(
-        season,
-        {spell.player_id for spells in spells_by_roster.values() for spell in spells},
-        until=until,
-    )
+    spells_by_roster = spells if spells is not None else roster_spells(rosters, season, until)
+    if history is None:
+        history = PointsHistory(season, spell_players(spells_by_roster), until=until)
 
     result = {}
     for roster in rosters:

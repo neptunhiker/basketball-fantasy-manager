@@ -13,7 +13,7 @@
     <tr>
       <th scope="col" class="w-10 py-2 pl-5 pr-1 text-left font-medium sm:pl-6"><span class="sr-only">{% translate "Place" %}</span>#</th>
       <th scope="col" class="px-3 py-2 text-left font-medium">{% translate "Roster" %}</th>
-      <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium md:table-cell">{% translate "Last import" %}</th>
+      <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium xl:table-cell">{% translate "Last import" %}</th>
       <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium sm:table-cell">{% translate "Gap to Dream Team" %}</th>
       <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium sm:table-cell">{% translate "Team value" %}</th>
       <th scope="col" class="py-2 pl-3 pr-5 text-right font-medium sm:pr-6">{% translate "Points" %}</th>
@@ -28,7 +28,8 @@
           {# so a long name truncates instead of pushing Points off a phone. #}
           <td class="w-full max-w-0 px-3 py-3">
             <div class="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <svg class="race-{{ line.color }} h-2.5 w-5 shrink-0" viewBox="0 0 20 10" aria-hidden="true">
+              {# On the narrowest phones the name needs the room more; the legends above still key the colours. #}
+              <svg class="race-{{ line.color }} h-2.5 w-5 shrink-0 max-[359px]:hidden" viewBox="0 0 20 10" aria-hidden="true">
                 <line x1="2" y1="5" x2="18" y2="5" class="race-stroke" stroke-width="3" stroke-linecap="round" {% if line.is_dream_team %}stroke-dasharray="4 4"{% endif %} />
               </svg>
               {% if line.is_dream_team %}
@@ -49,7 +50,7 @@
               </div>
             </div>
           </td>
-          <td class="hidden px-3 py-3 text-right text-xs whitespace-nowrap tabular-nums text-neutral-500 md:table-cell dark:text-neutral-400">
+          <td class="hidden px-3 py-3 text-right text-xs whitespace-nowrap tabular-nums text-neutral-500 xl:table-cell dark:text-neutral-400">
             {% if row.line.last_gain is not None %}+{{ row.line.last_gain|floatformat:"0g" }}{% else %}–{% endif %}
           </td>
           <td class="hidden px-3 py-3 text-right whitespace-nowrap tabular-nums sm:table-cell">

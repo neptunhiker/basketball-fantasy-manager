@@ -28,12 +28,14 @@
   </div>
 
   {# Focusable, so the arrow keys can step through the days as the pointer does. #}
+  {# The wide drawing from xl: at lg the sidebar leaves the card about 700px, #}
+  {# which is what the tablet drawing is made for. #}
   <div class="relative mt-4 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-500"
        tabindex="0" data-race-stage aria-label="{{ stage_label }}">
-    <div class="hidden lg:block" data-race-drawing>
+    <div class="hidden xl:block" data-race-drawing>
       {% include "analytics/partials/points_race_svg.html" with chart=wide geometry_id=key|add:"-wide" label=drawing_label %}
     </div>
-    <div class="hidden md:block lg:hidden" data-race-drawing>
+    <div class="hidden md:block xl:hidden" data-race-drawing>
       {% include "analytics/partials/points_race_svg.html" with chart=medium geometry_id=key|add:"-medium" label=drawing_label %}
     </div>
     <div class="md:hidden" data-race-drawing>
@@ -49,7 +51,7 @@
 
   {# The legend, which is also the readout on a touch screen: its numbers #}
   {# follow the day picked on the chart, the newest day otherwise. #}
-  <ul class="mt-5 grid gap-x-6 gap-y-1 border-t border-neutral-100 pt-4 sm:grid-cols-2 lg:grid-cols-3 dark:border-neutral-800"
+  <ul class="mt-5 grid gap-x-6 gap-y-1 border-t border-neutral-100 pt-4 sm:grid-cols-2 xl:grid-cols-3 dark:border-neutral-800"
       aria-label="{% translate 'Legend' %}">
     {% for line in race.lines %}
       <li class="flex min-w-0 items-center gap-2.5 rounded-lg px-1.5 py-1.5" data-race-legend="{{ forloop.counter0 }}">

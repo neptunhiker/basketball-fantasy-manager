@@ -301,3 +301,45 @@ def test_the_arrow_keys_step_both_charts_through_the_days(race, open_page):
     expect(days[1]).to_have_text(first)
     page.keyboard.press("Escape")
     expect(page.locator("[data-race-tooltip]:visible")).to_have_count(0)
+
+
+def table_fits_its_card(page):
+    """The standings table no wider than its card, which clips what sticks out."""
+    return page.locator("section[aria-labelledby=standings-heading]").evaluate(
+        "card => card.querySelector('table').getBoundingClientRect().width <= card.clientWidth + 1"
+    )
+
+
+@pytest.mark.parametrize("width", [320, 390, 640, 768, 1024, 1280, 1536])
+def test_nothing_spills_at_in_between_widths(race, open_page, width):
+    page = open_page(race["user"], URL, size="phone" if width < 768 else "desktop")
+    page.set_viewport_size({"width": width, "height": 900})
+
+    assert page_overflow(page) == 0
+    assert table_fits_its_card(page)
+    # Both charts fit their cards: the drawing shown is no wider than its stage.
+    for card in (POINTS, VALUE):
+        assert page.locator(card).evaluate(
+            "card => [...card.querySelectorAll('[data-race-svg]')]"
+            ".filter(svg => svg.getBoundingClientRect().width > 0)"
+            ".every(svg => svg.getBoundingClientRect().width"
+            " <= card.querySelector('[data-race-stage]').clientWidth + 1)"
+        )
+    # From `sm` up the value has a column; below it, the roster's second line.
+    column = page.locator("section[aria-labelledby=standings-heading] th", has_text="Team value")
+    expect(column).to_be_visible() if width >= 640 else expect(column).to_be_hidden()
+    shot(page, FOLDER, f"page-{width}")
+
+
+@pytest.mark.parametrize("width", [320, 1024])
+def test_german_fits_too(race, open_page, width):
+    user = race["user"]
+    user.language = "de"
+    user.save(update_fields=["language"])
+    page = open_page(user, URL, size="phone" if width < 768 else "desktop")
+    page.set_viewport_size({"width": width, "height": 900})
+
+    assert page_overflow(page) == 0
+    assert table_fits_its_card(page)
+    expect(page.get_by_role("heading", name="Teamwert")).to_be_visible()
+    shot(page, FOLDER, f"page-de-{width}")

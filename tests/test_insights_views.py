@@ -220,3 +220,66 @@ def test_in_german_the_coordinates_stay_numbers_the_browser_can_draw(signed_in, 
     assert not [value for value in coordinates if "," in value]
     # The figures themselves are German: 1.250 rather than 1,250.
     assert "1.250" in response.text
+
+
+# --- team value ------------------------------------------------------------------------
+
+
+def raise_salary(roster, millions):
+    """Reprice the roster's player at the second import."""
+    PlayerSnapshot.objects.filter(player__roster_memberships__roster=roster, as_of=DAY2).update(
+        salary=Decimal(millions) * 1_000_000
+    )
+
+
+def test_the_team_value_chart_is_drawn_like_the_points_race(signed_in, raced):
+    response = signed_in.get(URL)
+    text = response.text
+
+    for name in ("wide", "medium", "compact"):
+        assert f'id="value-race-{name}"' in text
+    assert 'id="value-race-readout"' in text
+    assert 'id="value-race-heading"' in text
+    # One script for both cards, which it links.
+    assert text.count("js/points_race.js") == 1
+    assert ">Budget<" in text
+    assert response.context["value_readout"]["days"] == response.context["race_readout"]["days"]
+
+
+def test_the_standings_show_each_rosters_team_value_and_its_change(signed_in, raced):
+    # $60M cash and a $3M player: $63M at the start, $64.50M once he is $4.5M.
+    raise_salary(raced["mine"], "4.5")
+
+    response = signed_in.get(URL)
+    text = response.text
+
+    assert ">Team value</th>" in text
+    assert "$64.50M" in text
+    assert "+$1.50M" in text
+    assert "text-emerald-700" in text
+    # On a phone the value leads the roster's second line.
+    assert re.search(r"\$64\.50M · </span>Bulla", text)
+
+
+def test_a_loss_of_value_is_rose_and_no_change_is_grey(signed_in, raced):
+    raise_salary(raced["theirs"], "2")
+
+    text = signed_in.get(URL).text
+
+    assert "-$1.00M" in text and "text-rose-700" in text
+    # The Dream Team has no stored picks here: no value, a dash, no change line.
+    row = re.search(r"Best roster from draft day.*?</tr>", text, re.S)[0]
+    assert "\u2013" in row  # the en dash `millions` writes for no amount
+    assert "Since signings closed" not in row
+
+
+def test_in_german_the_values_are_german_too(signed_in, raced, user):
+    raise_salary(raced["mine"], "4.5")
+    user.language = "de"
+    user.save()
+
+    text = signed_in.get(URL).text
+
+    assert "$64,50M" in text
+    coordinates = re.findall(r'\b(?:x|y|x1|y1|x2|y2|cx|cy)="([^"]*)"', text)
+    assert not [value for value in coordinates if "," in value]

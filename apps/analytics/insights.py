@@ -217,10 +217,14 @@ def _dream_team_results(season, start, until):
 
 
 def _dream_team_value(team, moment, history):
-    """`team`'s fifteen at their salaries at `moment`, plus what its draft left over."""
-    squad = sum(
-        (history.salary_at(pick.player_id, moment) or ZERO for pick in team.picks.all()), ZERO
-    )
+    """`team`'s fifteen at their salaries at `moment`, plus what its draft left over.
+
+    None for a result without picks: its left over alone is not a team's worth.
+    """
+    picks = team.picks.all()
+    if not picks:
+        return None
+    squad = sum((history.salary_at(pick.player_id, moment) or ZERO for pick in picks), ZERO)
     return squad + team.budget - team.total_salary
 
 

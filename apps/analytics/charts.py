@@ -140,7 +140,15 @@ def race_chart(race, width, height, max_labels, end_labels, series=POINTS):
         )
 
     if series == SALARY and race.budget:
-        reference = {"y": y_of(race.budget), "label": _("Budget"), "x": plot_left + 6}
+        # Labelled just above its left end: salaries only move at the Sunday
+        # updates, so the lines lie on it there and the space above is free.
+        budget_y = y_of(race.budget)
+        reference = {
+            "y": budget_y,
+            "label": _("Budget"),
+            "x": plot_left + 6,
+            "label_y": round(budget_y - 6, 2),
+        }
 
     xs = [x_of(index) for index in range(len(days))]
     lines = []

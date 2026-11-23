@@ -1,19 +1,21 @@
-{% load i18n static %}
+{% load i18n static money %}
 {% comment %}
   Every line of the points race, best first: the table under the chart and
   its accessible twin. Context: standings (rows from `InsightsView`).
 
   Each row's key is a short stroke of its line's colour -- dashed for the
   Dream Team, as on the chart -- so colour never carries the identity alone:
-  the name is right beside it. On a phone the gap folds under the points.
+  the name is right beside it. On a phone the gap folds under the points,
+  and the team value moves into the roster's second line.
 {% endcomment %}
 <table class="w-full text-sm">
   <thead class="border-y border-neutral-100 bg-neutral-50/70 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800/40 dark:text-neutral-400">
     <tr>
       <th scope="col" class="w-10 py-2 pl-5 pr-1 text-left font-medium sm:pl-6"><span class="sr-only">{% translate "Place" %}</span>#</th>
       <th scope="col" class="px-3 py-2 text-left font-medium">{% translate "Roster" %}</th>
-      <th scope="col" class="hidden px-3 py-2 text-right font-medium md:table-cell">{% translate "Last import" %}</th>
-      <th scope="col" class="hidden px-3 py-2 text-right font-medium sm:table-cell">{% translate "Gap to Dream Team" %}</th>
+      <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium md:table-cell">{% translate "Last import" %}</th>
+      <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium sm:table-cell">{% translate "Gap to Dream Team" %}</th>
+      <th scope="col" class="hidden whitespace-nowrap px-3 py-2 text-right font-medium sm:table-cell">{% translate "Team value" %}</th>
       <th scope="col" class="py-2 pl-3 pr-5 text-right font-medium sm:pr-6">{% translate "Points" %}</th>
     </tr>
   </thead>
@@ -42,7 +44,7 @@
                   {% if line.is_own %}<span class="badge badge-pending shrink-0 px-2 py-0 text-[11px]">{% translate "You" %}</span>{% endif %}
                 </p>
                 <p class="truncate text-xs text-neutral-500 dark:text-neutral-400">
-                  {% if line.is_dream_team %}{% translate "Best roster from draft day, no trades" %}{% else %}{{ line.manager }}{% endif %}
+                  {% if line.latest_value is not None %}<span class="font-medium tabular-nums text-neutral-700 sm:hidden dark:text-neutral-200">{{ line.latest_value|millions }} · </span>{% endif %}{% if line.is_dream_team %}{% translate "Best roster from draft day, no trades" %}{% else %}{{ line.manager }}{% endif %}
                 </p>
               </div>
             </div>
@@ -52,6 +54,14 @@
           </td>
           <td class="hidden px-3 py-3 text-right whitespace-nowrap tabular-nums sm:table-cell">
             {% include "analytics/partials/standings_gap.html" %}
+          </td>
+          <td class="hidden px-3 py-3 text-right whitespace-nowrap sm:table-cell">
+            <span class="block font-medium tabular-nums" title="{{ line.latest_value|exact }}">{{ line.latest_value|millions }}</span>
+            {% if line.value_change is not None %}
+              {# A gain in green: team value is buying power. #}
+              <span class="block text-xs tabular-nums {% if line.value_change > 0 %}text-emerald-700 dark:text-emerald-400{% elif line.value_change < 0 %}text-rose-700 dark:text-rose-400{% else %}text-neutral-500 dark:text-neutral-400{% endif %}"
+                    title="{% translate 'Since signings closed' %}">{{ line.value_change|signed_millions }}</span>
+            {% endif %}
           </td>
           <td class="py-3 pl-3 pr-5 text-right whitespace-nowrap sm:pr-6">
             <span class="text-base font-semibold tabular-nums">{{ line.latest|floatformat:"0g"|default:"–" }}</span>

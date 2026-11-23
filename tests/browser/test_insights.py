@@ -6,12 +6,13 @@ from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.db.models import F
 from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import expect
 
 from apps.analytics.dream_team import refresh
-from apps.fantasy.models import Manager, PlayerSnapshot, Roster, RosterPlayer
+from apps.fantasy.models import Manager, PlayerSnapshot, Roster, RosterPlayer, Transaction
 from apps.fantasy.points import cutoff
 
 from .conftest import page_overflow, shot
@@ -27,7 +28,11 @@ User = get_user_model()
 def race(game):
     """Three weeks of daily imports since signings closed, five managers with a
     roster each (one of them the game's own user), a trade, and a Dream Team
-    worked out after every import."""
+    worked out after every import.
+
+    Priced like the real game, so the team value chart looks as it will: a
+    squad of 15 fits the budget, every roster paid for its players, and two
+    weekly salary updates move each price with its player's scoring pace."""
     season, players = game["season"], game["players"]
     now = timezone.now()
     close = now - dt.timedelta(days=DAYS, hours=2)
@@ -43,18 +48,27 @@ def race(game):
     draft = close - dt.timedelta(days=3)
     moments = [close + dt.timedelta(days=day, hours=1) for day in range(1, DAYS + 1)]
     rows = []
+    salaries = {}  # player -> his salary each day
     for index, player in enumerate(players):
-        salary = Decimal(2_000_000 + (index * 317_000) % 11_000_000)
+        drafted = Decimal(1_000_000 + (index * 317_000) % 5_000_000)
         pace = 18 + (index * 13) % 34
-        rows.append(_snapshot(player, season, draft, salary, 0, 0))
+        # What each weekly update does to him: scorers rise, the rest fall.
+        weekly = Decimal((pace - 35) * 25_000 + ((index * 7) % 5 - 2) * 60_000)
+        rows.append(_snapshot(player, season, draft, drafted, 0, 0))
         total = Decimal(0)
+        salaries[player.pk] = []
         for day, moment in enumerate(moments, start=1):
             if (index + day) % 7:  # a night off every week or so
                 total += Decimal(pace + (index * day) % 9)
+            salary = max(Decimal(500_000), drafted + weekly * ((day - 1) // 7))
+            salaries[player.pk].append(salary)
             rows.append(_snapshot(player, season, moment, salary, total, day))
     PlayerSnapshot.objects.bulk_create(rows)
 
     RosterPlayer.objects.filter(roster__season=season).delete()
+    # The game's own buys are stamped "now", after the last import: gone with
+    # the squads they bought, so the ledger matches the rosters built below.
+    Transaction.objects.filter(roster__season=season).delete()
     nicknames = ["Bulla", "Rival", "Hoopsie", "Splash", "Lobcity"]
     names = ["Bulla Ballers", "Kangaroo Court", "Dunk Tank", "Splash Bros FC", "Alley-Oops"]
     icons = ["koala", "tiger", "owl", "fox", "panda"]
@@ -72,6 +86,9 @@ def race(game):
             RosterPlayer.objects.create(
                 roster=roster, player=player, added_at=close - dt.timedelta(days=2)
             )
+        # Bought at draft-day prices, out of the season's budget.
+        spent = sum(_drafted(season, player) for player in squad)
+        Roster.objects.filter(pk=roster.pk).update(cash=season.starting_cash - spent)
         rosters.append(roster)
 
     # One trade, halfway: Dunk Tank swaps its first player for a hot one.
@@ -85,6 +102,19 @@ def race(game):
         if not RosterPlayer.objects.filter(roster=rosters[2], player=player).exists()
     )
     RosterPlayer.objects.create(roster=rosters[2], player=hot, added_at=traded_at)
+    # At that week's prices, both ways.
+    price_out, price_in = (salaries[player.pk][10] for player in (out.player, hot))
+    Transaction.objects.create(
+        roster=rosters[2],
+        occurred_at=traded_at,
+        kind=Transaction.Kind.TRADE,
+        player_out=out.player,
+        player_in=hot,
+        price_out=price_out,
+        price_in=price_in,
+        cash_delta=price_out - price_in,
+    )
+    Roster.objects.filter(pk=rosters[2].pk).update(cash=F("cash") + price_out - price_in)
 
     # A what-if that must not show.
     Roster.objects.create(manager=game["manager"], season=season, name="What If", is_active=False)
@@ -94,6 +124,14 @@ def race(game):
     assert cutoff(season) == close
     game["rosters"] = rosters
     return game
+
+
+def _drafted(season, player):
+    return (
+        PlayerSnapshot.objects.filter(season=season, player=player, games_played=0)
+        .values_list("salary", flat=True)
+        .get()
+    )
 
 
 def _snapshot(player, season, moment, salary, total, games):

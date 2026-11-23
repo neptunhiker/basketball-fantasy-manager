@@ -130,6 +130,11 @@ class InsightsView(AnalyticsMixin, TemplateView):
             race_medium_chart=charts.race_chart(race, **charts.MEDIUM),
             race_compact_chart=charts.race_chart(race, **charts.COMPACT),
             race_readout=charts.race_readout(race),
+            # The same three drawings of what every line is worth.
+            value_chart=charts.race_chart(race, **charts.WIDE, series=charts.SALARY),
+            value_medium_chart=charts.race_chart(race, **charts.MEDIUM, series=charts.SALARY),
+            value_compact_chart=charts.race_chart(race, **charts.COMPACT, series=charts.SALARY),
+            value_readout=charts.race_readout(race, series=charts.SALARY),
             standings=rows,
             leader=next((row for row in rows if not row["line"].is_dream_team), None),
             own_best=own[0] if own else None,
